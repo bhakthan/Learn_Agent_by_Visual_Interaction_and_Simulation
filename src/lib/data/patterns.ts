@@ -36,6 +36,904 @@ export interface PatternData {
 
 export const agentPatterns: PatternData[] = [
   {
+    id: 'react-agent',
+    name: 'ReAct Agent',
+    description: 'A reasoning and acting framework where an agent alternates between reasoning (using LLMs) and acting (using tools like Google or email).',
+    useCases: ['Multi-Step Problem Solving', 'Research Tasks', 'Information Gathering'],
+    nodes: [
+      {
+        id: 'input',
+        type: 'input',
+        data: { label: 'User Query', nodeType: 'input' },
+        position: { x: 100, y: 150 }
+      },
+      {
+        id: 'llm1',
+        type: 'default',
+        data: { label: 'LLM 1 (Reason)', nodeType: 'llm' },
+        position: { x: 300, y: 100 }
+      },
+      {
+        id: 'tools',
+        type: 'default',
+        data: { label: 'Tools', nodeType: 'tool' },
+        position: { x: 500, y: 100 }
+      },
+      {
+        id: 'llm2',
+        type: 'default',
+        data: { label: 'LLM 2 (Act)', nodeType: 'llm' },
+        position: { x: 300, y: 200 }
+      },
+      {
+        id: 'output',
+        type: 'output',
+        data: { label: 'Output', nodeType: 'output' },
+        position: { x: 700, y: 150 }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: 'input', target: 'llm1', animated: true },
+      { id: 'e2-3', source: 'llm1', target: 'tools', animated: true, label: 'Reason' },
+      { id: 'e3-4', source: 'tools', target: 'llm2', animated: true },
+      { id: 'e4-2', source: 'llm2', target: 'llm1', animated: true, label: 'Action' },
+      { id: 'e2-5', source: 'llm1', target: 'output', animated: true }
+    ],
+    codeExample: `// ReAct Agent implementation
+const executeReAct = async (query: string, maxCycles = 5) => {
+  try {
+    let currentCycle = 0;
+    let done = false;
+    let contextHistory = [];
+    let finalAnswer = '';
+
+    // Add initial query to context
+    contextHistory.push(\`User query: \${query}\`);
+
+    // Available tools
+    const tools = {
+      search: async (query) => {
+        return \`Search results for "\${query}": [simulated search results]\`;
+      },
+      calculate: (expression) => {
+        try {
+          return \`Calculation result: \${eval(expression)}\`;
+        } catch (error) {
+          return \`Error in calculation: \${error.message}\`;
+        }
+      },
+      lookup: (entity) => {
+        return \`Information about \${entity}: [simulated encyclopedia entry]\`;
+      }
+    };
+
+    while (!done && currentCycle < maxCycles) {
+      currentCycle++;
+      
+      // Step 1: Reasoning phase
+      console.log(\`Cycle \${currentCycle}: Reasoning...\`);
+      
+      const reasoningPrompt = \`
+        You are a ReAct agent that solves problems through cycles of reasoning and action.
+        
+        Task: \${query}
+        
+        Previous steps:
+        \${contextHistory.join('\\n')}
+        
+        Think step by step about the problem. Either:
+        1. Use a tool to gather more information by responding with:
+           Thought: <your reasoning>
+           Action: <tool_name>
+           Action Input: <tool input>
+           
+        2. Or provide the final answer if you have enough information:
+           Thought: <your reasoning>
+           Final Answer: <your answer>
+      \`;
+      
+      const reasoningResponse = await llm(reasoningPrompt);
+      contextHistory.push(reasoningResponse);
+      
+      // Parse the reasoning response
+      if (reasoningResponse.includes('Final Answer:')) {
+        // Extract the final answer
+        const answerMatch = reasoningResponse.match(/Final Answer:(.*?)$/s);
+        if (answerMatch) {
+          finalAnswer = answerMatch[1].trim();
+          done = true;
+        }
+      } else {
+        // Extract tool call
+        const actionMatch = reasoningResponse.match(/Action:(.*?)\\n/);
+        const actionInputMatch = reasoningResponse.match(/Action Input:(.*?)(?:\\n|$)/s);
+        
+        if (actionMatch && actionInputMatch) {
+          const toolName = actionMatch[1].trim();
+          const toolInput = actionInputMatch[1].trim();
+          
+          // Step 2: Action phase - call the appropriate tool
+          console.log(\`Cycle \${currentCycle}: Taking action with tool "\${toolName}"...\`);
+          
+          if (tools[toolName]) {
+            const toolResult = await tools[toolName](toolInput);
+            contextHistory.push(\`Observation: \${toolResult}\`);
+          } else {
+            contextHistory.push(\`Observation: Error - Tool "\${toolName}" not found.\`);
+          }
+        }
+      }
+    }
+    
+    return {
+      status: done ? 'success' : 'max_cycles_reached',
+      cycles: currentCycle,
+      result: finalAnswer || 'No final answer reached.',
+      history: contextHistory
+    };
+  } catch (error) {
+    return { status: 'failed', reason: error.message };
+  }
+};`,
+    implementation: [
+      'Import necessary libraries and set up environment',
+      'Define available tools that the agent can use (search, calculate, etc.)',
+      'Create the main ReAct loop that alternates between reasoning and acting',
+      'Implement parsing logic to extract actions from LLM output',
+      'Build a context tracking system to maintain conversation history',
+      'Add termination conditions to know when the answer is found',
+      'Implement error handling and maximum cycle limitations',
+      'Format the final response with relevant context'
+    ]
+  },
+  {
+    id: 'codeact-agent',
+    name: 'CodeAct Agent',
+    description: 'Allows agents to autonomously execute Python code instead of using JSON, enabling them to handle complex tasks more efficiently.',
+    useCases: ['Complex Computational Tasks', 'Data Analysis', 'Algorithmic Problem Solving'],
+    nodes: [
+      {
+        id: 'user',
+        type: 'input',
+        data: { label: 'User', nodeType: 'input' },
+        position: { x: 100, y: 150 }
+      },
+      {
+        id: 'agent',
+        type: 'default',
+        data: { label: 'Agent', nodeType: 'llm' },
+        position: { x: 300, y: 150 }
+      },
+      {
+        id: 'think',
+        type: 'default',
+        data: { label: 'Think', nodeType: 'llm' },
+        position: { x: 400, y: 250 }
+      },
+      {
+        id: 'codeact',
+        type: 'default',
+        data: { label: 'CodeAct', nodeType: 'tool' },
+        position: { x: 500, y: 150 }
+      },
+      {
+        id: 'environment',
+        type: 'default',
+        data: { label: 'Environment', nodeType: 'tool' },
+        position: { x: 700, y: 150 }
+      },
+      {
+        id: 'result',
+        type: 'output',
+        data: { label: 'Result', nodeType: 'output' },
+        position: { x: 300, y: 50 }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: 'user', target: 'agent', animated: true, label: 'Query' },
+      { id: 'e2-3', source: 'agent', target: 'think' },
+      { id: 'e3-2', source: 'think', target: 'agent' },
+      { id: 'e2-4', source: 'agent', target: 'codeact', animated: true, label: 'Action' },
+      { id: 'e4-5', source: 'codeact', target: 'environment' },
+      { id: 'e5-2', source: 'environment', target: 'agent', label: 'Observation', animated: true },
+      { id: 'e2-6', source: 'agent', target: 'result', animated: true }
+    ],
+    codeExample: `// CodeAct Agent implementation
+const executeCodeAct = async (query: string, maxCycles = 5) => {
+  try {
+    let currentCycle = 0;
+    let done = false;
+    let contextHistory = [];
+    let finalResult = '';
+
+    // Simulate Python code execution environment
+    const executeCode = async (code) => {
+      console.log("Executing Python code (simulated):");
+      console.log(code);
+      
+      // This is a simulation - in a real implementation, this would execute the Python code
+      // and return the results. For this example, we'll return a simulated result.
+      
+      if (code.includes('import')) {
+        if (code.includes('numpy') || code.includes('pandas')) {
+          return "Library imported successfully.";
+        }
+      }
+      
+      if (code.includes('print(')) {
+        const printMatch = code.match(/print\\(([^)]+)\\)/);
+        if (printMatch) {
+          return \`Output: \${printMatch[1]}\`;
+        }
+      }
+      
+      if (code.includes('def ')) {
+        return "Function defined successfully.";
+      }
+      
+      // Default simulated response
+      return "Code executed. Result: [simulated output based on the provided code]";
+    };
+
+    // Add the initial query to context
+    contextHistory.push(\`User query: \${query}\`);
+
+    while (!done && currentCycle < maxCycles) {
+      currentCycle++;
+      
+      // Generate agent response
+      const agentPrompt = \`
+        You are a CodeAct agent that solves problems by writing and executing Python code.
+        
+        Task: \${query}
+        
+        Previous interactions:
+        \${contextHistory.join('\\n\\n')}
+        
+        Based on the current state, either:
+        
+        1. Write Python code to make progress, formatted as:
+           Thought: <your reasoning>
+           Code:
+           \`\`\`python
+           # Your Python code here
+           \`\`\`
+           
+        2. Or provide the final answer if you've solved the problem:
+           Thought: <your reasoning>
+           Final Answer: <your answer>
+      \`;
+      
+      const agentResponse = await llm(agentPrompt);
+      contextHistory.push(\`Agent: \${agentResponse}\`);
+      
+      // Check if the response contains a final answer
+      if (agentResponse.includes('Final Answer:')) {
+        const answerMatch = agentResponse.match(/Final Answer:(.*?)$/s);
+        if (answerMatch) {
+          finalResult = answerMatch[1].trim();
+          done = true;
+        }
+      } 
+      // Check if the response contains code
+      else if (agentResponse.includes('\`\`\`python')) {
+        // Extract code block
+        const codeMatch = agentResponse.match(/\`\`\`python\\n([\\s\\S]*?)\\n\`\`\`/);
+        if (codeMatch) {
+          const code = codeMatch[1].trim();
+          
+          // Execute the code (simulated)
+          const executionResult = await executeCode(code);
+          
+          // Add the observation to the history
+          contextHistory.push(\`Observation: \${executionResult}\`);
+        }
+      }
+    }
+    
+    return {
+      status: done ? 'success' : 'max_cycles_reached',
+      cycles: currentCycle,
+      result: finalResult || 'No final result reached.',
+      history: contextHistory
+    };
+  } catch (error) {
+    return { status: 'failed', reason: error.message };
+  }
+};`,
+    implementation: [
+      'Set up a secure Python code execution environment',
+      'Create an agent interface that can generate Python code',
+      'Implement code extraction and parsing from LLM output',
+      'Build a feedback mechanism to return execution results to the agent',
+      'Add context tracking to maintain the conversation and code history',
+      'Implement appropriate safeguards and limitations on code execution',
+      'Create termination conditions for task completion',
+      'Format the final result with relevant outputs and explanations'
+    ]
+  },
+  {
+    id: 'self-reflection',
+    name: 'Self-Reflection',
+    description: 'An agent that self-evaluates its outputs, using feedback to identify errors, and iteratively improves via learning or critiques.',
+    useCases: ['Content Generation', 'Decision Making', 'Problem Solving'],
+    nodes: [
+      {
+        id: 'user',
+        type: 'input',
+        data: { label: 'User', nodeType: 'input' },
+        position: { x: 100, y: 100 }
+      },
+      {
+        id: 'main-llm',
+        type: 'default',
+        data: { label: 'Main LLM', nodeType: 'llm' },
+        position: { x: 300, y: 100 }
+      },
+      {
+        id: 'memory',
+        type: 'default',
+        data: { label: 'Memory', nodeType: 'tool' },
+        position: { x: 200, y: 200 }
+      },
+      {
+        id: 'tools',
+        type: 'default',
+        data: { label: 'Tools', nodeType: 'tool' },
+        position: { x: 300, y: 250 }
+      },
+      {
+        id: 'first-draft',
+        type: 'default',
+        data: { label: 'First Draft', nodeType: 'output' },
+        position: { x: 500, y: 100 }
+      },
+      {
+        id: 'critique',
+        type: 'default',
+        data: { label: 'Critique', nodeType: 'llm' },
+        position: { x: 500, y: 250 }
+      },
+      {
+        id: 'generator',
+        type: 'default',
+        data: { label: 'Generator', nodeType: 'llm' },
+        position: { x: 100, y: 300 }
+      },
+      {
+        id: 'result',
+        type: 'output',
+        data: { label: 'Result', nodeType: 'output' },
+        position: { x: 100, y: 200 }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: 'user', target: 'main-llm', animated: true, label: 'Query' },
+      { id: 'e2-3', source: 'main-llm', target: 'memory', animated: true },
+      { id: 'e2-4', source: 'main-llm', target: 'tools' },
+      { id: 'e2-5', source: 'main-llm', target: 'first-draft', animated: true },
+      { id: 'e5-6', source: 'first-draft', target: 'critique', animated: true },
+      { id: 'e6-7', source: 'critique', target: 'generator', label: 'No' },
+      { id: 'e7-2', source: 'generator', target: 'main-llm', animated: true },
+      { id: 'e6-8', source: 'critique', target: 'result', label: 'Yes', animated: true }
+    ],
+    codeExample: `// Self-Reflection implementation
+const executeSelfReflection = async (query: string, maxRevisions = 3) => {
+  try {
+    let revisions = 0;
+    let currentResponse = '';
+    let isAccepted = false;
+    let reflectionHistory = [];
+    
+    // Initial response generation
+    console.log("Generating initial response...");
+    currentResponse = await llm(\`
+      Provide a comprehensive response to this query:
+      "\${query}"
+    \`);
+    
+    reflectionHistory.push({
+      version: 'initial',
+      content: currentResponse,
+      reflection: null
+    });
+    
+    while (!isAccepted && revisions < maxRevisions) {
+      revisions++;
+      
+      // Self-reflection/critique phase
+      console.log(\`Performing self-reflection round \${revisions}...\`);
+      const reflection = await llm(\`
+        You are a critical evaluator. Analyze this response to the query:
+        
+        Query: "\${query}"
+        
+        Response:
+        \${currentResponse}
+        
+        Provide a thorough critique identifying:
+        1. Factual errors or inaccuracies
+        2. Logical inconsistencies or gaps in reasoning
+        3. Missing important perspectives or information
+        4. Clarity and structure issues
+        
+        Then rate the response from 1-10 and decide if it needs revision.
+        
+        Format your response as:
+        Critique: <your detailed critique>
+        Score: <1-10>
+        Needs Revision: <Yes/No>
+      \`);
+      
+      // Parse the reflection results
+      const scoreMatch = reflection.match(/Score:\\s*(\\d+)/i);
+      const needsRevisionMatch = reflection.match(/Needs Revision:\\s*(Yes|No)/i);
+      
+      const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
+      const needsRevision = needsRevisionMatch 
+        ? needsRevisionMatch[1].toLowerCase() === 'yes' 
+        : score < 7;
+      
+      reflectionHistory.push({
+        version: \`revision-\${revisions}\`,
+        content: currentResponse,
+        reflection: reflection,
+        score: score
+      });
+      
+      if (!needsRevision || score >= 8) {
+        isAccepted = true;
+        break;
+      }
+      
+      // Generate improved version based on self-reflection
+      console.log(\`Generating revision \${revisions} based on self-reflection...\`);
+      currentResponse = await llm(\`
+        You are tasked with improving a response based on self-critique.
+        
+        Original query: "\${query}"
+        
+        Previous response:
+        \${currentResponse}
+        
+        Self-critique:
+        \${reflection}
+        
+        Please provide an improved response that addresses all the issues identified in the critique.
+      \`);
+    }
+    
+    return {
+      status: 'success',
+      query: query,
+      finalResponse: currentResponse,
+      revisions: revisions,
+      accepted: isAccepted,
+      history: reflectionHistory
+    };
+  } catch (error) {
+    return { status: 'failed', reason: error.message };
+  }
+};`,
+    implementation: [
+      'Create a main response generation function',
+      'Implement a self-critique mechanism with specific evaluation criteria',
+      'Design a scoring system to evaluate response quality',
+      'Build an iterative improvement loop based on self-feedback',
+      'Add a memory component to track changes over iterations',
+      'Implement termination criteria based on quality thresholds',
+      'Create logging for the self-improvement process',
+      'Format the final output with quality metrics'
+    ]
+  },
+  {
+    id: 'agentic-rag',
+    name: 'Agentic RAG',
+    description: 'AI agents retrieving and evaluating relevant data to generate context-aware and well-reasoned output using memory and tools.',
+    useCases: ['Enterprise Knowledge Management', 'Research Analysis', 'Expert Systems'],
+    nodes: [
+      {
+        id: 'user',
+        type: 'input',
+        data: { label: 'User', nodeType: 'input' },
+        position: { x: 100, y: 150 }
+      },
+      {
+        id: 'agent',
+        type: 'default',
+        data: { label: 'Agent', nodeType: 'llm' },
+        position: { x: 300, y: 150 }
+      },
+      {
+        id: 'tools',
+        type: 'default',
+        data: { label: 'Tools', nodeType: 'tool' },
+        position: { x: 500, y: 100 }
+      },
+      {
+        id: 'vector-search',
+        type: 'default',
+        data: { label: 'Vector Search', nodeType: 'tool' },
+        position: { x: 500, y: 150 }
+      },
+      {
+        id: 'vector-db',
+        type: 'default',
+        data: { label: 'Vector DB', nodeType: 'tool' },
+        position: { x: 700, y: 150 }
+      },
+      {
+        id: 'generator',
+        type: 'default',
+        data: { label: 'Generator', nodeType: 'llm' },
+        position: { x: 300, y: 250 }
+      },
+      {
+        id: 'output',
+        type: 'output',
+        data: { label: 'Output', nodeType: 'output' },
+        position: { x: 100, y: 250 }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: 'user', target: 'agent', animated: true, label: 'Query' },
+      { id: 'e2-3', source: 'agent', target: 'tools', animated: true },
+      { id: 'e2-4', source: 'agent', target: 'vector-search', animated: true },
+      { id: 'e4-5', source: 'vector-search', target: 'vector-db', animated: true },
+      { id: 'e5-2', source: 'vector-db', target: 'agent', style: { strokeDasharray: '5, 5' } },
+      { id: 'e2-6', source: 'agent', target: 'generator', animated: true },
+      { id: 'e6-7', source: 'generator', target: 'output', animated: true }
+    ],
+    codeExample: `// Agentic RAG implementation
+const executeAgenticRAG = async (query: string) => {
+  try {
+    // Simulated vector database and retrieval system
+    const vectorDB = {
+      search: async (query, topK = 3) => {
+        console.log(\`Searching vector DB for: "\${query}"\`);
+        // Simulate retrieving relevant chunks
+        return [
+          {
+            content: \`Relevant information about "\${query}" - Part 1\`,
+            source: "document1.pdf",
+            score: 0.92
+          },
+          {
+            content: \`Related context for "\${query}" - Part 2\`,
+            source: "document2.pdf",
+            score: 0.85
+          },
+          {
+            content: \`Additional information related to "\${query}" - Part 3\`,
+            source: "document3.pdf",
+            score: 0.79
+          }
+        ].slice(0, topK);
+      }
+    };
+    
+    // Additional tools available to the agent
+    const tools = {
+      webSearch: async (subQuery) => {
+        return \`Web search results for "\${subQuery}": [simulated web results]\`;
+      },
+      calculateRelevance: (chunk, query) => {
+        // Simulate scoring relevance between a chunk and the query
+        return { 
+          score: 0.7 + Math.random() * 0.3,
+          reasoning: \`This chunk addresses key aspects of "\${query}"\`
+        };
+      }
+    };
+    
+    // Step 1: Query analysis
+    console.log("Analyzing query...");
+    const queryAnalysis = await llm(\`
+      Analyze this query to identify key information needs and search terms:
+      "\${query}"
+      
+      Provide:
+      1. Core information need
+      2. Key entities or concepts
+      3. 2-3 specific search queries to find relevant information
+      4. Any ambiguities that need clarification
+      
+      Format as JSON.
+    \`, undefined, true);
+    
+    // Parse the query analysis
+    const analysisObj = typeof queryAnalysis === 'string' 
+      ? JSON.parse(queryAnalysis.match(/\\{[\\s\\S]*\\}/)[0])
+      : queryAnalysis;
+    
+    // Step 2: Retrieve relevant information
+    console.log("Retrieving relevant information...");
+    const searchQueries = analysisObj.searchQueries || [query];
+    
+    // Execute multiple searches to gather diverse information
+    const retrievalResults = await Promise.all(
+      searchQueries.map(sq => vectorDB.search(sq))
+    );
+    
+    // Flatten and deduplicate results
+    const allChunks = [];
+    const seenContent = new Set();
+    
+    retrievalResults.flat().forEach(chunk => {
+      if (!seenContent.has(chunk.content)) {
+        seenContent.add(chunk.content);
+        allChunks.push(chunk);
+      }
+    });
+    
+    // Step 3: Evaluate and filter retrieved information
+    console.log("Evaluating retrieved information...");
+    const evaluatedChunks = allChunks.map(chunk => {
+      const relevanceScore = tools.calculateRelevance(chunk.content, query);
+      return {
+        ...chunk,
+        evaluatedScore: relevanceScore.score,
+        evaluationReasoning: relevanceScore.reasoning
+      };
+    });
+    
+    // Sort by evaluation score and take top results
+    const topChunks = evaluatedChunks
+      .sort((a, b) => b.evaluatedScore - a.evaluatedScore)
+      .slice(0, 5);
+    
+    // Step 4: Generate a comprehensive response
+    console.log("Generating comprehensive response...");
+    const responseContext = topChunks
+      .map(chunk => \`Source: \${chunk.source} (Score: \${chunk.evaluatedScore.toFixed(2)})\\n\${chunk.content}\`)
+      .join('\\n\\n');
+    
+    const response = await llm(\`
+      You are an AI assistant with access to retrieved information.
+      
+      User query: "\${query}"
+      
+      Retrieved information:
+      \${responseContext}
+      
+      Generate a comprehensive, accurate response based on the retrieved information.
+      Include citations to sources when appropriate.
+      If the retrieved information doesn't sufficiently answer the query, acknowledge the limitations.
+    \`);
+    
+    return {
+      status: 'success',
+      query: query,
+      result: response,
+      retrievedChunks: topChunks,
+      analysisResults: analysisObj
+    };
+  } catch (error) {
+    return { status: 'failed', reason: error.message };
+  }
+};`,
+    implementation: [
+      'Set up vector database integration for knowledge retrieval',
+      'Create query analysis functionality to identify key information needs',
+      'Implement multi-query retrieval to gather diverse relevant information',
+      'Build an evaluation system to assess and rank retrieved content',
+      'Design a response generator that incorporates retrieved context',
+      'Add citation and attribution capabilities for source tracking',
+      'Implement relevance scoring for retrieved chunks',
+      'Create logging and monitoring for retrieval effectiveness'
+    ]
+  },
+  {
+    id: 'modern-tool-use',
+    name: 'Modern Tool Use',
+    description: 'Enables agents to leverage tools like Kagi Search, AWS and others using MCP for enhanced functionality with minimal code execution.',
+    useCases: ['API Integration', 'Multi-modal Tasks', 'Data Processing'],
+    nodes: [
+      {
+        id: 'query',
+        type: 'input',
+        data: { label: 'Query', nodeType: 'input' },
+        position: { x: 100, y: 150 }
+      },
+      {
+        id: 'agent',
+        type: 'default',
+        data: { label: 'Agent', nodeType: 'llm' },
+        position: { x: 300, y: 150 }
+      },
+      {
+        id: 'mcp-server1',
+        type: 'default',
+        data: { label: 'MCP Server 1', nodeType: 'tool' },
+        position: { x: 450, y: 100 }
+      },
+      {
+        id: 'mcp-server2',
+        type: 'default',
+        data: { label: 'MCP Server 2', nodeType: 'tool' },
+        position: { x: 450, y: 200 }
+      },
+      {
+        id: 'api1',
+        type: 'default',
+        data: { label: 'API', nodeType: 'tool' },
+        position: { x: 600, y: 100 }
+      },
+      {
+        id: 'api2',
+        type: 'default',
+        data: { label: 'API', nodeType: 'tool' },
+        position: { x: 600, y: 200 }
+      },
+      {
+        id: 'search-kagi',
+        type: 'default',
+        data: { label: 'Search (Kagi)', nodeType: 'tool' },
+        position: { x: 750, y: 100 }
+      },
+      {
+        id: 'cloud-aws',
+        type: 'default',
+        data: { label: 'Cloud (AWS)', nodeType: 'tool' },
+        position: { x: 750, y: 200 }
+      },
+      {
+        id: 'output',
+        type: 'output',
+        data: { label: 'Output', nodeType: 'output' },
+        position: { x: 500, y: 300 }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: 'query', target: 'agent', animated: true },
+      { id: 'e2-3', source: 'agent', target: 'mcp-server1', animated: true },
+      { id: 'e2-4', source: 'agent', target: 'mcp-server2', animated: true },
+      { id: 'e3-5', source: 'mcp-server1', target: 'api1', animated: true },
+      { id: 'e4-6', source: 'mcp-server2', target: 'api2', animated: true },
+      { id: 'e5-7', source: 'api1', target: 'search-kagi', animated: true },
+      { id: 'e6-8', source: 'api2', target: 'cloud-aws', animated: true },
+      { id: 'e2-9', source: 'agent', target: 'output', animated: true }
+    ],
+    codeExample: `// Modern Tool Use implementation
+const executeModernToolUse = async (query: string) => {
+  try {
+    // Simulate MCP-enabled tools
+    const tools = {
+      kagiSearch: async (searchQuery) => {
+        console.log(\`Performing Kagi search for: "\${searchQuery}"\`);
+        // Simulate Kagi search results
+        return {
+          results: [
+            {
+              title: \`Search result 1 for "\${searchQuery}"\`,
+              snippet: \`Relevant information about \${searchQuery}...\`,
+              url: \`https://example.com/result1\`
+            },
+            {
+              title: \`Search result 2 for "\${searchQuery}"\`,
+              snippet: \`Additional information related to \${searchQuery}...\`,
+              url: \`https://example.com/result2\`
+            }
+          ]
+        };
+      },
+      
+      awsService: async (service, action, params) => {
+        console.log(\`Accessing AWS \${service} with action \${action}\`);
+        // Simulate AWS service response
+        return {
+          service: service,
+          action: action,
+          result: \`Simulated response from AWS \${service} \${action}\`,
+          timestamp: new Date().toISOString()
+        };
+      }
+    };
+    
+    // MCP protocol handler - manages tool access
+    const mcpHandler = async (toolRequest) => {
+      // Validate and process the request through MCP protocol
+      console.log(\`MCP processing request for tool: \${toolRequest.tool}\`);
+      
+      // Apply security and access control
+      const securityCheck = true; // Simplified - would be actual validation in production
+      
+      if (!securityCheck) {
+        return { status: 'denied', reason: 'Access control restriction' };
+      }
+      
+      // Route to appropriate tool
+      switch (toolRequest.tool) {
+        case 'kagi_search':
+          return await tools.kagiSearch(toolRequest.parameters.query);
+        case 'aws':
+          return await tools.awsService(
+            toolRequest.parameters.service,
+            toolRequest.parameters.action,
+            toolRequest.parameters.params
+          );
+        default:
+          return { status: 'error', reason: \`Unknown tool: \${toolRequest.tool}\` };
+      }
+    };
+    
+    // Step 1: Analyze the query to determine required tools
+    const queryAnalysis = await llm(\`
+      Analyze this user query to determine which tools might help answer it:
+      "\${query}"
+      
+      Available tools:
+      - kagi_search: Performs web search using Kagi
+      - aws: Interacts with AWS services
+      
+      Respond with a JSON object listing the tools needed and why.
+    \`, undefined, true);
+    
+    // Parse tool requirements
+    const toolRequirements = typeof queryAnalysis === 'string'
+      ? JSON.parse(queryAnalysis.match(/\\{[\\s\\S]*\\}/)[0])
+      : queryAnalysis;
+    
+    // Step 2: Execute tool requests through MCP
+    const toolResults = {};
+    
+    // Process each required tool
+    for (const tool of (toolRequirements.tools || [])) {
+      console.log(\`Processing tool request for: \${tool.name}\`);
+      
+      // Create MCP-compliant tool request
+      const mcpRequest = {
+        tool: tool.name,
+        parameters: tool.parameters,
+        context: {
+          user_query: query,
+          purpose: tool.reason
+        }
+      };
+      
+      // Process through MCP protocol
+      toolResults[tool.name] = await mcpHandler(mcpRequest);
+    }
+    
+    // Step 3: Generate response using tool outputs
+    const toolOutputsText = Object.entries(toolResults)
+      .map(([tool, result]) => \`${tool} result: \${JSON.stringify(result, null, 2)}\`)
+      .join('\\n\\n');
+    
+    const response = await llm(\`
+      Using the following tool results, provide a comprehensive answer to the user's query.
+      
+      Query: "\${query}"
+      
+      Tool Results:
+      \${toolOutputsText}
+      
+      Generate a helpful response that synthesizes the information from these tools.
+    \`);
+    
+    return {
+      status: 'success',
+      query: query,
+      result: response,
+      toolsUsed: Object.keys(toolResults),
+      toolResults: toolResults
+    };
+  } catch (error) {
+    return { status: 'failed', reason: error.message };
+  }
+};`,
+    implementation: [
+      'Set up MCP protocol handler for standardized tool communication',
+      'Create interfaces for various external tools and APIs',
+      'Build security and access control mechanisms',
+      'Implement query analysis to determine required tools',
+      'Create tool request formatting and routing',
+      'Design response synthesis using multiple tool outputs',
+      'Add error handling and fallback mechanisms',
+      'Implement logging and monitoring for tool usage'
+    ]
+  },
+  {
     id: 'model-context-protocol',
     name: 'Model Context Protocol (MCP)',
     description: 'A standardized communication framework between models and context systems that ensures efficient information exchange.',

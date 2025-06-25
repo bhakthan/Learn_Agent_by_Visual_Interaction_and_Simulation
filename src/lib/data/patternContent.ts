@@ -12,6 +12,246 @@ export interface PatternContent {
 
 export const patternContents: PatternContent[] = [
   {
+    id: 'react-agent',
+    name: 'ReAct Agent',
+    longDescription: `
+      The ReAct (Reasoning + Acting) pattern is a powerful framework that enables AI agents to alternate between 
+      reasoning steps and action steps when solving problems. This approach combines the strengths of chain-of-thought 
+      reasoning with the ability to interact with external tools and information sources.
+      
+      In the ReAct pattern, an agent first reasons about the current state of a problem, then decides on an appropriate 
+      action to take (such as searching for information, performing a calculation, or using another tool). After 
+      receiving feedback from the action, the agent continues reasoning with this new information, creating a cycle 
+      of thinking and doing that mimics human problem-solving.
+      
+      This pattern is particularly effective for complex tasks that require both analytical thinking and retrieval of 
+      external information, as it gives agents the ability to break down problems, gather relevant data, and integrate 
+      that data into their reasoning process.
+    `,
+    advantages: [
+      "Combines reasoning capabilities with tool usage for more powerful problem-solving",
+      "Enables multi-step, adaptive approaches to complex tasks",
+      "Creates traceable reasoning paths that improve explainability",
+      "Allows for dynamic information gathering during the reasoning process",
+      "Can handle problems requiring both analytical thinking and factual knowledge"
+    ],
+    limitations: [
+      "May take more steps and time than direct approaches for simple tasks",
+      "Requires careful prompt engineering for effective reasoning and action decisions",
+      "Can encounter challenges in properly parsing tool outputs",
+      "Potential for getting stuck in reasoning or action loops",
+      "Tool availability significantly impacts overall capabilities"
+    ],
+    realWorldApplications: [
+      "Research assistants that can reason about questions and search for information",
+      "Customer support systems that analyze problems and access knowledge bases",
+      "Educational tutors that explain concepts and retrieve relevant examples",
+      "Data analysis agents that reason about data and execute queries",
+      "Planning systems that think through strategies and check feasibility"
+    ],
+    bestPractices: [
+      "Design clear structured output formats for both reasoning and action steps",
+      "Implement diverse and reliable tools that cover key capabilities",
+      "Include meta-reasoning about tool selection and action strategies",
+      "Maintain comprehensive context of past reasoning and actions",
+      "Build validation mechanisms for tool outputs",
+      "Set reasonable limits on reasoning-action cycles to prevent loops"
+    ],
+    relatedPatterns: ["Autonomous Workflow", "Plan and Execute", "CodeAct Agent"]
+  },
+  {
+    id: 'codeact-agent',
+    name: 'CodeAct Agent',
+    longDescription: `
+      CodeAct is a specialized agent architecture developed by Manus AI that enables LLM agents to directly execute Python code 
+      instead of relying on structured JSON output formats. This architecture significantly enhances an agent's ability to handle 
+      complex computational tasks by leveraging the full power and flexibility of a programming language.
+      
+      In the CodeAct pattern, the agent thinks through a problem, writes Python code to solve specific aspects of it, executes 
+      that code in a controlled environment, observes the results, and then continues the problem-solving process with this new 
+      information. This creates a powerful feedback loop between reasoning and computation.
+      
+      The key innovation of CodeAct is that it allows for much more sophisticated problem-solving compared to traditional 
+      function-calling approaches. While function calling restricts agents to pre-defined API operations, CodeAct enables 
+      dynamic creation of custom algorithms, data transformations, visualizations, and analyses tailored to the specific 
+      task at hand.
+    `,
+    advantages: [
+      "Enables handling of complex computational tasks beyond pre-defined functions",
+      "Allows for dynamic creation of custom algorithms and data transformations",
+      "Provides flexibility to implement novel solutions to unique problems",
+      "Enables rich data processing and visualization capabilities",
+      "Creates transparent, inspectable solution paths through code"
+    ],
+    limitations: [
+      "Requires secure sandbox execution environments for safety",
+      "Higher implementation complexity than standard function calling",
+      "Potential for code execution failures and debugging challenges",
+      "May produce less robust code than human developers",
+      "Performance depends on the LLM's coding abilities"
+    ],
+    realWorldApplications: [
+      "Data analysis platforms requiring custom processing pipelines",
+      "Scientific computing applications with unique algorithm needs",
+      "Automated programming assistants for code generation",
+      "Education platforms teaching programming concepts",
+      "Prototyping environments for rapid solution development"
+    ],
+    bestPractices: [
+      "Implement strict sandboxing and resource limitations for security",
+      "Provide clear error reporting from code execution back to the agent",
+      "Include standard libraries and common dependencies in the execution environment",
+      "Design prompts that encourage modular, well-commented code",
+      "Implement version control or history for code evolution",
+      "Create mechanisms for the agent to debug and iterate on its code"
+    ],
+    relatedPatterns: ["ReAct Agent", "Autonomous Workflow", "Modern Tool Use"]
+  },
+  {
+    id: 'self-reflection',
+    name: 'Self-Reflection',
+    longDescription: `
+      Self-Reflection (also known as Reflexion) is an architectural pattern where an AI agent critically evaluates its own outputs, 
+      identifies potential errors or improvements, and iteratively refines its responses. This meta-cognitive approach mimics the 
+      human ability to review and improve one's own work through critical thinking.
+      
+      In this pattern, after generating an initial response, the agent shifts into an evaluative mode where it analyzes the quality, 
+      accuracy, completeness, and other aspects of its response. Based on this self-critique, the agent then generates an improved 
+      version, potentially repeating this cycle multiple times until satisfactory quality is achieved.
+      
+      Self-Reflection can leverage both memory of past experiences and external tools for verification, but its distinguishing 
+      feature is the explicit step of critical analysis applied to the agent's own output rather than relying solely on external 
+      feedback or evaluation.
+    `,
+    advantages: [
+      "Improves output quality through iterative refinement",
+      "Enables identification of errors that might be missed in initial generation",
+      "Creates more thorough and well-reasoned responses",
+      "Reduces hallucinations by encouraging verification and critical thinking",
+      "Makes reasoning transparent through explicit self-evaluation"
+    ],
+    limitations: [
+      "Increases computational cost and latency due to multiple passes",
+      "May reinforce rather than correct certain biases or misconceptions",
+      "Can over-complicate responses or introduce unnecessary hedging",
+      "Limited by the LLM's ability to accurately critique its own work",
+      "Potential for diminishing returns after initial improvement cycles"
+    ],
+    realWorldApplications: [
+      "Content generation systems requiring high accuracy and quality",
+      "Critical reasoning assistants for education or research",
+      "Decision support systems where thoroughness is essential",
+      "Creative writing platforms with built-in editing capabilities",
+      "Expert systems where verification of logic is important"
+    ],
+    bestPractices: [
+      "Define specific quality criteria for the self-evaluation process",
+      "Limit the number of reflection cycles to avoid diminishing returns",
+      "Include access to verification tools during reflection",
+      "Design prompts that encourage honest self-assessment rather than justification",
+      "Track improvements across iterations to measure effectiveness",
+      "Consider different reflection focuses for different types of content"
+    ],
+    relatedPatterns: ["Evaluator-Optimizer", "Reflexion", "Autonomous Workflow"]
+  },
+  {
+    id: 'agentic-rag',
+    name: 'Agentic RAG',
+    longDescription: `
+      Agentic RAG (Retrieval-Augmented Generation) enhances traditional RAG systems by incorporating agent-like behaviors 
+      into the retrieval and generation process. While standard RAG simply retrieves relevant documents and feeds them 
+      directly to a language model, Agentic RAG adds intelligent intermediary steps including query planning, active 
+      retrieval strategies, evaluation of information quality, and synthesis across multiple sources.
+      
+      This pattern gives the system agency in how it interacts with knowledge sources - it can formulate multiple search 
+      queries, evaluate the relevance of retrieved information, decide when more information is needed, and intelligently 
+      synthesize across disparate sources to create coherent, well-reasoned responses.
+      
+      Agentic RAG systems typically leverage vector databases for efficient similarity search, but add layers of 
+      intelligence around query formulation, result filtering, and information synthesis that make them more powerful 
+      than simple vector lookups.
+    `,
+    advantages: [
+      "Produces more comprehensive responses by actively seeking relevant information",
+      "Improves accuracy by evaluating and filtering retrieved information",
+      "Handles complex queries requiring multiple retrieval steps",
+      "Creates more coherent syntheses across multiple information sources",
+      "Adapts retrieval strategies based on initial results"
+    ],
+    limitations: [
+      "Higher computational complexity than traditional RAG",
+      "Increased latency due to multiple retrieval and processing steps",
+      "More complex to implement and maintain",
+      "Potential for reinforcing biases in the retrieval strategy",
+      "Effectiveness depends on quality of available information sources"
+    ],
+    realWorldApplications: [
+      "Enterprise knowledge management systems with diverse information sources",
+      "Research assistants that need to synthesize across documents",
+      "Technical support systems requiring deep knowledge access",
+      "Legal or medical advisory systems with complex information needs",
+      "Educational platforms that construct comprehensive explanations"
+    ],
+    bestPractices: [
+      "Implement diverse query generation strategies for better coverage",
+      "Create effective relevance evaluation mechanisms",
+      "Build memory systems to track already-explored information",
+      "Include citation and attribution for retrieved information",
+      "Design fallback strategies when information is unavailable",
+      "Implement techniques to avoid hallucination when information is sparse"
+    ],
+    relatedPatterns: ["Model Context Protocol", "ReAct Agent", "Modern Tool Use"]
+  },
+  {
+    id: 'modern-tool-use',
+    name: 'Modern Tool Use',
+    longDescription: `
+      The Modern Tool Use pattern represents an evolved approach to integrating AI agents with external tools and APIs, 
+      particularly leveraging the Model Context Protocol (MCP) for standardized communication. This pattern focuses on 
+      enabling agents to access diverse specialized tools with minimal direct code execution, enhancing capabilities 
+      while maintaining security and simplicity.
+      
+      Unlike older approaches that required custom code for each tool integration, Modern Tool Use emphasizes standardized 
+      interfaces through protocols like MCP that create consistent ways for agents to discover, request, and utilize tool 
+      capabilities. This allows agents to leverage specialized services like Kagi Search for information retrieval, cloud 
+      services like AWS for computation and storage, and other tools without needing to understand their implementation details.
+      
+      The pattern typically involves an agent determining what tools are needed, constructing appropriate requests through a 
+      protocol layer, and then integrating the results into a unified response. This creates a more modular and extensible 
+      system where new tools can be added without changing the core agent logic.
+    `,
+    advantages: [
+      "Enables access to diverse specialized tools without custom code for each",
+      "Maintains security through standardized protocol layers",
+      "Creates extensible systems where new tools can be easily added",
+      "Allows agents to focus on reasoning rather than implementation details",
+      "Supports enterprise integration through standardized interfaces"
+    ],
+    limitations: [
+      "Adds protocol overhead compared to direct function calls",
+      "May require specialized adapters for tools without native protocol support",
+      "Potential latency impacts from multiple API calls",
+      "Protocol versioning and compatibility challenges",
+      "Requires careful security design across tool boundaries"
+    ],
+    realWorldApplications: [
+      "Enterprise assistants integrating with existing business systems",
+      "Research platforms accessing specialized search and analysis tools",
+      "Development environments connecting to cloud services and APIs",
+      "Knowledge workers' assistants integrating with productivity suites",
+      "Data analysis platforms connecting to diverse data sources"
+    ],
+    bestPractices: [
+      "Implement consistent error handling across tool interfaces",
+      "Create tool registry and discovery mechanisms",
+      "Design clear authentication and authorization flows",
+      "Build monitoring for tool usage and performance",
+      "Implement graceful fallbacks for tool failures",
+      "Create caching strategies for frequently used tool results"
+    ],
+    relatedPatterns: ["Model Context Protocol", "ReAct Agent", "Agentic RAG"]
+  },
+  {
     id: 'model-context-protocol',
     name: 'Model Context Protocol (MCP)',
     longDescription: `
