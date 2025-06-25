@@ -115,3 +115,187 @@ export const getNodeDataFlowParams = (nodeType?: string): DataFlowVisualParams =
       return { color: '#64748b', size: 'medium', speed: 'medium' };
   }
 };
+
+/**
+ * Generates message content based on node type and context
+ */
+export const generateFlowContent = (
+  sourceType: string, 
+  targetType: string,
+  context?: string
+): string => {
+  // Basic templates for different node interactions
+  const templates: Record<string, Record<string, string[]>> = {
+    input: {
+      llm: ["Processing user query: '{context}'", "User input: '{context}'"],
+      router: ["Determining routing for: '{context}'"],
+      default: ["Input: '{context}'"]
+    },
+    llm: {
+      output: ["Generated response: '{context}'", "AI response ready"],
+      evaluator: ["Submitting for evaluation", "Requesting quality check"],
+      aggregator: ["Contributing to aggregated response", "Adding AI insight to collection"],
+      router: ["Providing options to router"],
+      default: ["AI processing complete"]
+    },
+    router: {
+      llm: ["Routing to appropriate model", "Selected agent for processing"],
+      tool: ["Selecting tool: '{context}'", "Dispatching to external tool"],
+      executor: ["Routing task for execution"],
+      default: ["Routing decision made"]
+    },
+    aggregator: {
+      output: ["Combined results ready", "Aggregated multiple inputs"],
+      evaluator: ["Submitting aggregated result for quality check"],
+      default: ["Aggregation complete"]
+    },
+    evaluator: {
+      llm: ["Feedback: '{context}'", "Quality assessment returned"],
+      output: ["Evaluation passed: '{context}'"],
+      default: ["Evaluation complete"]
+    },
+    tool: {
+      aggregator: ["Tool result ready for aggregation"],
+      llm: ["Tool output for processing: '{context}'"],
+      default: ["Tool execution complete"]
+    },
+    planner: {
+      executor: ["Execution plan ready", "Tasks queued for execution"],
+      default: ["Planning complete"]
+    },
+    executor: {
+      output: ["Execution results: '{context}'"],
+      evaluator: ["Submitting execution results for evaluation"],
+      default: ["Execution complete"]
+    },
+    default: {
+      default: ["Processing data", "Transferring information"]
+    }
+  };
+  
+  // Get template options for this node type pair
+  const sourceTemplates = templates[sourceType] || templates.default;
+  const targetOptions = sourceTemplates[targetType] || sourceTemplates.default;
+  
+  // Select a random template from available options
+  const template = targetOptions[Math.floor(Math.random() * targetOptions.length)];
+  
+  // Replace context placeholder if available
+  return context ? template.replace('{context}', truncateFlowContent(context, 15)) : template;
+};
+
+/**
+ * Simulates a typical flow through a pattern based on its structure
+ */
+export const simulatePatternFlow = (
+  nodes: any[],
+  edges: any[],
+  onNodeStatus: (nodeId: string, status: string | null) => void,
+  onEdgeStatus: (edgeId: string, animated: boolean) => void,
+  onDataFlow: (flow: any) => void,
+  inputMessage: string = "What's the weather forecast?"
+) => {
+  // Clear any timers
+  const timers: NodeJS.Timeout[] = [];
+  
+  // Find the input node (usually the first one)
+  const inputNode = nodes.find(node => node.data.nodeType === 'input') || nodes[0];
+  if (!inputNode) return { cleanup: () => timers.forEach(clearTimeout) };
+  
+  // Track visited nodes to avoid loops
+  const visitedNodes = new Set<string>();
+  const activeFlows = new Set<string>();
+  
+  // Process a node and its outgoing connections
+  const processNode = (nodeId: string, delay: number, messageContext?: string) => {
+    // Skip if already processed (prevent cycles)
+    if (visitedNodes.has(nodeId)) return;
+    visitedNodes.add(nodeId);
+    
+    const timer = setTimeout(() => {
+      // Update node status to processing
+      onNodeStatus(nodeId, 'processing');
+      
+      // Find the current node
+      const currentNode = nodes.find(n => n.id === nodeId);
+      if (!currentNode) return;
+      
+      // Find outgoing edges
+      const outgoingEdges = edges.filter(e => e.source === nodeId);
+      
+      // After processing delay, update status and process outgoing connections
+      const processingTimer = setTimeout(() => {
+        // Update node status to success
+        onNodeStatus(nodeId, 'success');
+        
+        // Process each outgoing connection
+        outgoingEdges.forEach(edge => {
+          // Update edge animation
+          onEdgeStatus(edge.id, true);
+          
+          // Find target node
+          const targetNode = nodes.find(n => n.id === edge.target);
+          if (!targetNode) return;
+          
+          // Generate appropriate message for this connection
+          const nodeType = currentNode.data.nodeType || 'default';
+          const targetType = targetNode.data.nodeType || 'default'; 
+          const flowContent = generateFlowContent(nodeType, targetType, messageContext);
+          
+          // Create data flow
+          const flowId = `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+          activeFlows.add(flowId);
+          
+          // Determine flow type based on node types
+          let flowType: 'message' | 'data' | 'response' | 'error' = 'message';
+          if (nodeType === 'llm') flowType = 'response';
+          else if (nodeType === 'tool' || nodeType === 'aggregator') flowType = 'data';
+          else if (Math.random() > 0.95) flowType = 'error'; // 5% chance of error
+          
+          const newFlow = {
+            id: flowId,
+            edgeId: edge.id,
+            source: edge.source,
+            target: edge.target,
+            content: flowContent,
+            timestamp: Date.now(),
+            type: flowType,
+            progress: 0,
+            complete: false,
+            label: flowType === 'error' ? 'Error' : undefined
+          };
+          
+          // Emit the flow
+          onDataFlow(newFlow);
+          
+          // When flow completes, process the next node
+          // Calculate a variable delay based on node type
+          let targetDelay = 1000; // default
+          if (targetType === 'aggregator') targetDelay = 2000;
+          else if (targetType === 'router') targetDelay = 800;
+          else if (targetType === 'llm') targetDelay = 1500;
+          
+          // Process the target node after flow completion + targetDelay
+          const targetTimer = setTimeout(() => {
+            activeFlows.delete(flowId);
+            processNode(edge.target, 100, flowContent);
+          }, targetDelay);
+          
+          timers.push(targetTimer);
+        });
+      }, 1200);
+      
+      timers.push(processingTimer);
+    }, delay);
+    
+    timers.push(timer);
+  };
+  
+  // Start processing from the input node
+  processNode(inputNode.id, 100, inputMessage);
+  
+  // Return a cleanup function to cancel all timers
+  return {
+    cleanup: () => timers.forEach(clearTimeout)
+  };
+};

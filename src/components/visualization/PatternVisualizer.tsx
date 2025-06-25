@@ -23,7 +23,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Play, Stop, ArrowsCounterClockwise, Info } from '@phosphor-icons/react'
-import { createDataFlow } from '@/lib/utils/dataFlowUtils'
+import { createDataFlow, simulatePatternFlow } from '@/lib/utils/dataFlowUtils'
 import DataFlowVisualizer from './DataFlowVisualizer'
 
 interface PatternVisualizerProps {
@@ -146,7 +146,10 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
   // Reset flow and nodes when pattern changes
   useEffect(() => {
     resetVisualization();
-  }, [patternData]);
+    // Make sure isAnimating is reset when pattern changes
+    setIsAnimating(false);
+    setDataFlows([]);
+  }, [patternData.id]);
   
   const resetVisualization = useCallback(() => {
     // Clear any running timeouts
@@ -222,103 +225,53 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     resetVisualization();
     setIsAnimating(true);
     
-    // Start with the input node
-    const inputNode = nodes.find(node => node.data.nodeType === 'input');
-    if (!inputNode) return;
-    
-    // Track active nodes and edges to prevent duplicates
-    const activeNodeIds = new Set();
-    const activeEdgeIds = new Set();
-    
-    // Helper function to process a node after a delay
-    const processNode = (nodeId: string, delay: number, previousMessage?: string) => {
-      if (activeNodeIds.has(nodeId)) return; // Skip if already processed
-      activeNodeIds.add(nodeId);
-      
-      simulationRef.current = setTimeout(() => {
-        // Activate the current node
-        setNodes(currentNodes => currentNodes.map(node => ({
+    // Create handlers for the simulation
+    const handleNodeStatus = (nodeId: string, status: string | null) => {
+      setNodes(currentNodes => 
+        currentNodes.map(node => ({
           ...node,
           data: {
             ...node.data,
-            isActive: node.id === nodeId,
-            status: node.id === nodeId ? 'processing' : node.data.status
+            isActive: status !== null,
+            status: node.id === nodeId ? status : node.data.status
           }
-        })));
-        
-        // Find outgoing edges
-        const outgoingEdges = edges.filter(edge => edge.source === nodeId);
-        
-        // After a delay, mark as success and process next nodes
-        simulationRef.current = setTimeout(() => {
-          // Mark current node as success
-          setNodes(currentNodes => currentNodes.map(node => ({
-            ...node,
-            data: {
-              ...node.data,
-              status: node.id === nodeId ? 'success' : node.data.status
-            }
-          })));
-          
-          // Process each outgoing connection
-          outgoingEdges.forEach((edge, index) => {
-            if (activeEdgeIds.has(edge.id)) return; // Skip if already processed
-            activeEdgeIds.add(edge.id);
-            
-            // Animate the edge
-            setEdges(currentEdges => currentEdges.map(e => ({
-              ...e,
-              animated: e.id === edge.id ? true : e.animated
-            })));
-            
-            // Create a data flow along the edge
-            const sourceNode = nodes.find(n => n.id === nodeId);
-            const targetNode = nodes.find(n => n.id === edge.target);
-            
-            if (sourceNode && targetNode) {
-              const nodeType = sourceNode.data.nodeType || 'default';
-              let messageContent = 'Processing...';
-              
-              if (nodeType in messageTemplates) {
-                // Get the template function
-                const templateFn = messageTemplates[nodeType as keyof typeof messageTemplates];
-                // Check if it's a function before calling
-                if (typeof templateFn === 'function') {
-                  messageContent = templateFn(previousMessage || 'data');
-                }
-              }
-              
-              const flowType = Math.random() > 0.9 ? 'error' : 
-                              nodeType === 'llm' ? 'response' : 'message';
-                              
-              const newFlow = {
-                id: `flow-${Date.now()}-${index}`,
-                edgeId: edge.id,
-                source: edge.source,
-                target: edge.target,
-                content: messageContent,
-                timestamp: Date.now(),
-                type: flowType as 'message' | 'data' | 'response' | 'error',
-                progress: 0,
-                label: flowType === 'error' ? 'Error' : undefined
-              };
-              
-              setDataFlows(flows => [...flows, newFlow]);
-              
-              // Process the target node after a suitable delay
-              const targetDelay = sourceNode.data.nodeType === 'aggregator' ? 2000 : 
-                                sourceNode.data.nodeType === 'router' ? 1000 : 1500;
-                                
-              processNode(edge.target, targetDelay, messageContent);
-            }
-          });
-        }, 1500);
-        
-      }, delay);
+        }))
+      );
     };
     
-    // Start the simulation from the input node
-    processNode(inputNode.id, 100);
+    const handleEdgeStatus = (edgeId: string, animated: boolean) => {
+      setEdges(currentEdges => 
+        currentEdges.map(edge => ({
+          ...edge,
+          animated: edge.id === edgeId ? animated : edge.animated
+        }))
+      );
+    };
+    
+    const handleDataFlow = (flow: any) => {
+      setDataFlows(currentFlows => [...currentFlows, flow]);
+    };
+    
+    // Start the simulation using our utility
+    const { cleanup } = simulatePatternFlow(
+      nodes,
+      edges,
+      handleNodeStatus,
+      handleEdgeStatus,
+      handleDataFlow,
+      "Tell me about agent patterns"
+    );
+    
+    // Store the cleanup function to cancel simulation if needed
+    simulationRef.current = setTimeout(() => {
+      // This is just to have something in the ref to clean up
+      // The actual cleanup is called separately
+    }, 100);
+    
+    // Clean up the simulation when component unmounts or resets
+    return () => {
+      if (cleanup) cleanup();
+    };
   }, [nodes, edges, setNodes, setEdges, resetVisualization]);
   
   const onInit = useCallback((instance: ReactFlowInstance) => {
