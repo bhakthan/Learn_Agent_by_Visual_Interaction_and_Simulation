@@ -287,7 +287,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
               const targetDelay = sourceNode.data.nodeType === 'aggregator' ? 2000 : 
                                  sourceNode.data.nodeType === 'router' ? 1000 : 1500;
                                  
-              processNode(edge.target, targetDelay, message);
+              processNode(edge.target, targetDelay, messageContent);
             }
           });
         }, 1500);
