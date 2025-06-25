@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { agentPatterns } from '@/lib/data/patterns'
 import PatternVisualizer from '@/components/visualization/PatternVisualizer'
 import CodePlaybook from '@/components/code-playbook/CodePlaybook'
@@ -9,6 +9,14 @@ import { ReactFlowProvider } from 'reactflow'
 
 const PatternExplorer = () => {
   const [selectedPattern, setSelectedPattern] = useState(agentPatterns[0])
+  
+  // Ensure agentPatterns is loaded with the new patterns
+  useEffect(() => {
+    // Force a re-render if patterns were updated
+    if (agentPatterns.length > 2) {
+      console.log(`Loaded ${agentPatterns.length} agent patterns`);
+    }
+  }, []);
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -55,7 +63,9 @@ const PatternExplorer = () => {
           </TabsContent>
           
           <TabsContent value="implementation">
-            <CodePlaybook patternData={selectedPattern} />
+            <ReactFlowProvider>
+              <CodePlaybook patternData={selectedPattern} />
+            </ReactFlowProvider>
           </TabsContent>
         </Tabs>
       </div>

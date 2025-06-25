@@ -1,6 +1,6 @@
 // Utility functions for data flow animations and visual representations
 
-interface DataFlowPayload {
+export interface DataFlowPayload {
   id: string;
   source: string;
   target: string;
@@ -9,7 +9,7 @@ interface DataFlowPayload {
   type?: 'message' | 'data' | 'response' | 'error';
 }
 
-interface DataFlowVisualParams {
+export interface DataFlowVisualParams {
   speed?: 'slow' | 'medium' | 'fast';
   color?: string;
   size?: 'small' | 'medium' | 'large';

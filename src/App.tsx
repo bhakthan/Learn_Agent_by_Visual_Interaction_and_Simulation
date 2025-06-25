@@ -70,59 +70,57 @@ function App() {
       </header>
       
       <main className="flex-1 container mx-auto px-4 py-6">
-        <Tabs defaultValue="concepts" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="concepts" onClick={() => setActiveView('concepts')}>Core Concepts</TabsTrigger>
-            <TabsTrigger value="patterns" onClick={() => setActiveView('patterns')}>Agent Patterns</TabsTrigger>
-            <TabsTrigger value="playbook" onClick={() => setActiveView('playbook')}>Code Playbooks</TabsTrigger>
-          </TabsList>
-          <TabsContent value="concepts" className="space-y-6">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tight">Core Concepts</h2>
-              <p className="text-muted-foreground">Explore the fundamental concepts of Azure AI agents and how they work.</p>
-            </div>
-            <Separator />
-            <ConceptsExplorer />
-          </TabsContent>
-          <TabsContent value="patterns" className="space-y-6">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tight">Agent Patterns</h2>
-              <p className="text-muted-foreground">Interactive visualizations of common agent patterns and their use cases.</p>
-            </div>
-            <Separator />
-            <ReactFlowProvider>
+        <ReactFlowProvider>
+          <Tabs defaultValue="concepts" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-8">
+              <TabsTrigger value="concepts" onClick={() => setActiveView('concepts')}>Core Concepts</TabsTrigger>
+              <TabsTrigger value="patterns" onClick={() => setActiveView('patterns')}>Agent Patterns</TabsTrigger>
+              <TabsTrigger value="playbook" onClick={() => setActiveView('playbook')}>Code Playbooks</TabsTrigger>
+            </TabsList>
+            <TabsContent value="concepts" className="space-y-6">
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold tracking-tight">Core Concepts</h2>
+                <p className="text-muted-foreground">Explore the fundamental concepts of Azure AI agents and how they work.</p>
+              </div>
+              <Separator />
+              <ConceptsExplorer />
+            </TabsContent>
+            <TabsContent value="patterns" className="space-y-6">
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold tracking-tight">Agent Patterns</h2>
+                <p className="text-muted-foreground">Interactive visualizations of common agent patterns and their use cases.</p>
+              </div>
+              <Separator />
               <PatternExplorer />
-            </ReactFlowProvider>
-          </TabsContent>
-          <TabsContent value="playbook" className="space-y-6">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tight">Code Playbooks</h2>
-              <p className="text-muted-foreground">Step-by-step implementation guides with code examples for each pattern.</p>
-            </div>
-            <Separator />
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-              {agentPatterns.map((pattern) => (
-                <div
-                  key={pattern.id}
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedPatternId === pattern.id
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                  onClick={() => setSelectedPatternId(pattern.id)}
-                >
-                  <h3 className="font-medium">{pattern.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                    {pattern.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <ReactFlowProvider>
+            </TabsContent>
+            <TabsContent value="playbook" className="space-y-6">
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold tracking-tight">Code Playbooks</h2>
+                <p className="text-muted-foreground">Step-by-step implementation guides with code examples for each pattern.</p>
+              </div>
+              <Separator />
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+                {agentPatterns.map((pattern) => (
+                  <div
+                    key={pattern.id}
+                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                      selectedPatternId === pattern.id
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                    onClick={() => setSelectedPatternId(pattern.id)}
+                  >
+                    <h3 className="font-medium">{pattern.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      {pattern.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
               <CodePlaybook patternData={selectedPattern} />
-            </ReactFlowProvider>
-          </TabsContent>
-        </Tabs>
+            </TabsContent>
+          </Tabs>
+        </ReactFlowProvider>
       </main>
       
       <footer className="border-t border-border py-6 bg-muted">
