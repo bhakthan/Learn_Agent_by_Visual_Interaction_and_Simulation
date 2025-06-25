@@ -36,9 +36,9 @@
 - **Success Criteria**: Users can follow the implementation steps and understand the purpose of each code component
 
 ### 4. Interactive Examples
-- **Functionality**: Live, editable examples that demonstrate each pattern in action
+- **Functionality**: Live, editable examples that demonstrate each pattern and concept in action
 - **Purpose**: Allow hands-on experimentation to reinforce understanding
-- **Success Criteria**: Users can modify parameters and see how changes affect the behavior of the agent pattern
+- **Success Criteria**: Users can modify inputs and parameters to see how changes affect the behavior of the agent pattern
 
 ### 5. Pattern Comparison Tool
 - **Functionality**: Side-by-side comparison of different patterns

@@ -1,6 +1,9 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import A2ADemo from "../interactive-demos/A2ADemo"
+import MCPDemo from "../interactive-demos/MCPDemo"
 
 const ConceptsExplorer = () => {
   return (
@@ -174,6 +177,15 @@ const ConceptsExplorer = () => {
               <Button>Explore A2A Patterns</Button>
             </CardFooter>
           </Card>
+          
+          <Separator className="my-6" />
+          
+          <h2 className="text-2xl font-semibold tracking-tight mb-4">Interactive A2A Demonstration</h2>
+          <p className="text-muted-foreground mb-6">
+            See how multiple specialized agents work together to complete complex tasks through structured communication.
+          </p>
+          
+          <A2ADemo />
         </TabsContent>
 
         <TabsContent value="mcp" className="space-y-6 pt-6">
@@ -222,6 +234,15 @@ const ConceptsExplorer = () => {
               <Button>Explore MCP Implementation</Button>
             </CardFooter>
           </Card>
+          
+          <Separator className="my-6" />
+          
+          <h2 className="text-2xl font-semibold tracking-tight mb-4">Interactive MCP Demonstration</h2>
+          <p className="text-muted-foreground mb-6">
+            See how the ModelContextProtocol enables structured communication between agents with context preservation.
+          </p>
+          
+          <MCPDemo />
         </TabsContent>
       </Tabs>
     </div>

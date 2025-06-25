@@ -5,6 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Check } from "@phosphor-icons/react"
 import { Steps } from './Steps'
 import { PatternData } from '@/lib/data/patterns'
+import PatternDemo from '../interactive-demos/PatternDemo'
 
 interface CodePlaybookProps {
   patternData: PatternData
@@ -63,12 +64,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
             </TabsContent>
             
             <TabsContent value="interactive" className="py-4">
-              <div className="bg-muted p-6 rounded-md flex items-center justify-center">
-                <div className="text-center py-10">
-                  <p className="text-muted-foreground mb-4">Interactive example coming soon!</p>
-                  <p className="text-sm">This feature will allow you to experiment with the pattern in real-time.</p>
-                </div>
-              </div>
+              <PatternDemo patternData={patternData} />
             </TabsContent>
           </Tabs>
         </CardContent>
