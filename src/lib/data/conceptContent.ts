@@ -351,7 +351,7 @@ const mcpMessage = {
     attachments: []
   },
   context: {
-    references: ["msg_previous_id"],
+    references: ["message_previous_id"],
     conversation_state: "in_progress"
   },
   metadata: {

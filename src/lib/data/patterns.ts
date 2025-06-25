@@ -316,7 +316,7 @@ const executeAgentToAgent = async (taskInput: string, maxRounds = 3) => {
       work of multiple agents on this task: "\${taskInput}"
       
       Agent contributions:
-      \${resultMessages.map(msg => \`${msg.from}: ${msg.content}\`).join('\\n\\n')}
+      \${resultMessages.map(message => \`\${message.from}: \${message.content}\`).join('\\n\\n')}
       
       Synthesize these contributions into a cohesive final result.
     \`;
@@ -348,11 +348,11 @@ class MessageBus {
   }
   
   getMessagesFor(agent) {
-    return this.messages.filter(msg => msg.to === agent || msg.to === "all");
+    return this.messages.filter(message => message.to === agent || message.to === "all");
   }
   
   getMessagesByType(type) {
-    return this.messages.filter(msg => msg.messageType === type);
+    return this.messages.filter(message => message.messageType === type);
   }
   
   getAllMessages() {
@@ -372,7 +372,7 @@ const processAgentMessages = async (agentType, messageBus) => {
     case "research":
       agentPrompt = \`
         You are a research agent. Process these instructions and gather information:
-        \${messages.map(msg => msg.content).join('\\n')}
+        \${messages.map(message => message.content).join('\\n')}
         
         Provide your research findings in a structured format.
       \`;
@@ -380,7 +380,7 @@ const processAgentMessages = async (agentType, messageBus) => {
     case "analysis":
       agentPrompt = \`
         You are an analysis agent. Process this data and provide insights:
-        \${messages.map(msg => msg.content).join('\\n')}
+        \${messages.map(message => message.content).join('\\n')}
         
         Provide your analytical conclusions.
       \`;
@@ -388,7 +388,7 @@ const processAgentMessages = async (agentType, messageBus) => {
     case "critic":
       agentPrompt = \`
         You are a critic agent. Evaluate these proposals and identify issues:
-        \${messages.map(msg => msg.content).join('\\n')}
+        \${messages.map(message => message.content).join('\\n')}
         
         Provide constructive criticism and suggestions for improvement.
       \`;
