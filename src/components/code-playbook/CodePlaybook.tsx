@@ -6,6 +6,7 @@ import { Check } from "@phosphor-icons/react"
 import { Steps } from './Steps'
 import { PatternData } from '@/lib/data/patterns'
 import PatternDemo from '../interactive-demos/PatternDemo'
+import { ReactFlowProvider } from 'reactflow'
 
 interface CodePlaybookProps {
   patternData: PatternData
@@ -64,7 +65,9 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
             </TabsContent>
             
             <TabsContent value="interactive" className="py-4">
-              <PatternDemo patternData={patternData} />
+              <ReactFlowProvider>
+                <PatternDemo patternData={patternData} />
+              </ReactFlowProvider>
             </TabsContent>
           </Tabs>
         </CardContent>

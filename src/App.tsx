@@ -7,6 +7,7 @@ import PatternExplorer from './components/patterns/PatternExplorer'
 import { Separator } from "@/components/ui/separator"
 import { agentPatterns } from './lib/data/patterns'
 import CodePlaybook from './components/code-playbook/CodePlaybook'
+import { ReactFlowProvider } from 'reactflow'
 
 function App() {
   const [activeView, setActiveView] = useState<'concepts' | 'patterns' | 'playbook'>('concepts')
@@ -89,7 +90,9 @@ function App() {
               <p className="text-muted-foreground">Interactive visualizations of common agent patterns and their use cases.</p>
             </div>
             <Separator />
-            <PatternExplorer />
+            <ReactFlowProvider>
+              <PatternExplorer />
+            </ReactFlowProvider>
           </TabsContent>
           <TabsContent value="playbook" className="space-y-6">
             <div className="space-y-2">
@@ -115,7 +118,9 @@ function App() {
                 </div>
               ))}
             </div>
-            <CodePlaybook patternData={selectedPattern} />
+            <ReactFlowProvider>
+              <CodePlaybook patternData={selectedPattern} />
+            </ReactFlowProvider>
           </TabsContent>
         </Tabs>
       </main>

@@ -13,7 +13,8 @@ import ReactFlow, {
   useEdgesState,
   useReactFlow,
   getNodesBounds,
-  ReactFlowInstance
+  ReactFlowInstance,
+  ReactFlowProvider
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { PatternData } from '@/lib/data/patterns'
@@ -328,30 +329,32 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
           <p className="text-muted-foreground mb-4">{patternData.description}</p>
         </div>
         <div style={{ height: 400 }}>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            nodeTypes={nodeTypes}
-            fitView
-            onInit={onInit}
-          >
-            <Background />
-            <Controls />
-            <MiniMap />
-            <DataFlowVisualizer 
-              flows={dataFlows} 
+          <ReactFlowProvider>
+            <ReactFlow
+              nodes={nodes}
               edges={edges}
-              getEdgePoints={getEdgePoints}
-              onFlowComplete={onFlowComplete}
-            />
-            <Panel position="bottom-center">
-              <div className="bg-card p-2 rounded shadow-sm text-xs text-muted-foreground">
-                {isAnimating ? 'Visualizing data flow between agents...' : 'Click "Simulate Flow" to see data flow between agents'}
-              </div>
-            </Panel>
-          </ReactFlow>
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              nodeTypes={nodeTypes}
+              fitView
+              onInit={onInit}
+            >
+              <Background />
+              <Controls />
+              <MiniMap />
+              <DataFlowVisualizer 
+                flows={dataFlows} 
+                edges={edges}
+                getEdgePoints={getEdgePoints}
+                onFlowComplete={onFlowComplete}
+              />
+              <Panel position="bottom-center">
+                <div className="bg-card p-2 rounded shadow-sm text-xs text-muted-foreground">
+                  {isAnimating ? 'Visualizing data flow between agents...' : 'Click "Simulate Flow" to see data flow between agents'}
+                </div>
+              </Panel>
+            </ReactFlow>
+          </ReactFlowProvider>
         </div>
         <div className="p-4 border-t border-border">
           <h4 className="font-medium mb-2">Best Suited For:</h4>

@@ -5,6 +5,7 @@ import CodePlaybook from '@/components/code-playbook/CodePlaybook'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { ReactFlowProvider } from 'reactflow'
 
 const PatternExplorer = () => {
   const [selectedPattern, setSelectedPattern] = useState(agentPatterns[0])
@@ -48,7 +49,9 @@ const PatternExplorer = () => {
           </TabsList>
           
           <TabsContent value="visualization">
-            <PatternVisualizer patternData={selectedPattern} />
+            <ReactFlowProvider>
+              <PatternVisualizer patternData={selectedPattern} />
+            </ReactFlowProvider>
           </TabsContent>
           
           <TabsContent value="implementation">
