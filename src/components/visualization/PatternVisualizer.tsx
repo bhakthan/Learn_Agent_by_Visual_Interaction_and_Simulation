@@ -22,8 +22,7 @@ import { patternContents } from '@/lib/data/patternContent'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Play, Stop, ArrowsCounterClockwise } from '@phosphor-icons/react'
-import { Info } from '@phosphor-icons/react'
+import { Play, Stop, ArrowsCounterClockwise, Info } from '@phosphor-icons/react'
 import { createDataFlow } from '@/lib/utils/dataFlowUtils'
 import DataFlowVisualizer from './DataFlowVisualizer'
 
@@ -256,7 +255,16 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
             
             if (sourceNode && targetNode) {
               const nodeType = sourceNode.data.nodeType || 'default';
-              const message = messageTemplates[nodeType]?.(previousMessage || 'data') || 'Processing...';
+              let messageContent = 'Processing...';
+              
+              if (nodeType in messageTemplates) {
+                // Get the template function
+                const templateFn = messageTemplates[nodeType];
+                // Check if it's a function before calling
+                if (typeof templateFn === 'function') {
+                  messageContent = templateFn(previousMessage || 'data');
+                }
+              }
               
               const flowType = Math.random() > 0.9 ? 'error' : 
                                nodeType === 'llm' ? 'response' : 'message';
@@ -266,7 +274,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
                 edgeId: edge.id,
                 source: edge.source,
                 target: edge.target,
-                content: message,
+                content: messageContent,
                 timestamp: Date.now(),
                 type: flowType,
                 progress: 0,
