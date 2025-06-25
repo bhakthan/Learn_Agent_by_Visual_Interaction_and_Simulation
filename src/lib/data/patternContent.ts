@@ -12,6 +12,99 @@ export interface PatternContent {
 
 export const patternContents: PatternContent[] = [
   {
+    id: 'model-context-protocol',
+    name: 'Model Context Protocol (MCP)',
+    longDescription: `
+      The Model Context Protocol (MCP) is a standardized communication framework that defines how AI models interact with context systems. 
+      It establishes clear interfaces for requesting, delivering, and utilizing contextual information, allowing for a more efficient and 
+      secure exchange between knowledge sources and AI models.
+      
+      MCP addresses key challenges in enterprise AI deployments such as context management, security, and regulatory compliance. The protocol 
+      separates context handling from model execution, enabling specialized optimization of each component while maintaining interoperability.
+      
+      The key components of MCP include the context system (which receives queries and determines what information is needed), the context router 
+      (which directs requests to appropriate knowledge sources), security filters (which enforce access controls), and the context builder 
+      (which assembles and formats information for the model).
+    `,
+    advantages: [
+      "Standardizes communication between models and knowledge sources",
+      "Enhances security through centralized permission management",
+      "Improves efficiency by optimizing context retrieval separately from model execution",
+      "Enables more granular audit trails of information access",
+      "Facilitates compliance with data governance requirements"
+    ],
+    limitations: [
+      "Adds architectural complexity compared to direct integration",
+      "May introduce additional latency in the retrieval pipeline",
+      "Requires standardization across different systems and knowledge sources",
+      "Need for careful optimization to avoid context window limitations",
+      "Implementation overhead for establishing protocol interfaces"
+    ],
+    realWorldApplications: [
+      "Enterprise knowledge bases with strict access controls",
+      "Healthcare systems requiring HIPAA-compliant information access",
+      "Financial services applications with sensitive customer data",
+      "Large corporate environments with diverse knowledge repositories",
+      "Research platforms needing attribution and citation capabilities"
+    ],
+    bestPractices: [
+      "Implement caching strategies for frequently accessed context",
+      "Design clear authorization models for different types of information",
+      "Create standardized context formats for consistent model consumption",
+      "Establish metrics for context relevance and quality",
+      "Build comprehensive logging for security and audit purposes",
+      "Consider context compression techniques for efficient delivery"
+    ],
+    relatedPatterns: ["Agent to Agent", "Routing", "Orchestrator-Worker"]
+  },
+  {
+    id: 'agent-to-agent',
+    name: 'Agent to Agent (A2A)',
+    longDescription: `
+      The Agent to Agent (A2A) pattern establishes a framework for communication and collaboration between multiple AI agents, each with 
+      specialized capabilities. Rather than treating agents as isolated components, A2A creates a cooperative ecosystem where agents can 
+      request assistance, share information, and build on each other's work.
+      
+      A2A communication typically flows through a message bus or coordinator that manages the exchange of structured messages between agents. 
+      Each message contains metadata (sender, recipient, message type) and content relevant to the ongoing task. This structure allows agents 
+      to maintain context across multiple interactions.
+      
+      The pattern supports various collaboration models including hierarchical (with coordinator and worker agents), peer-to-peer (where agents 
+      operate as equals), and market-based (where agents "bid" on tasks based on their capabilities). This flexibility enables complex 
+      multi-agent systems that leverage diverse expertise.
+    `,
+    advantages: [
+      "Enables complex collaboration between specialized agents",
+      "Distributes workload across multiple agents with different capabilities",
+      "Creates systems that can handle diverse and unpredictable tasks",
+      "Supports emergent problem-solving approaches",
+      "Allows incremental system expansion through new agent types"
+    ],
+    limitations: [
+      "Communication overhead can impact performance",
+      "Coordination challenges increase with number of agents",
+      "Potential for cascading errors across agent interactions",
+      "Debugging multi-agent systems can be complex",
+      "May require sophisticated message routing and prioritization"
+    ],
+    realWorldApplications: [
+      "Research assistants with specialized agents for literature review, analysis, and synthesis",
+      "Product development systems with design, engineering, and marketing agents",
+      "Multi-domain virtual assistants with specialized knowledge experts",
+      "Collaborative writing systems with researcher, writer, and editor agents",
+      "Business process automation with specialized domain expert agents"
+    ],
+    bestPractices: [
+      "Define clear communication protocols between agents",
+      "Implement explicit mechanisms for conflict resolution",
+      "Design effective message formats with necessary context",
+      "Create monitoring systems to track agent interactions",
+      "Consider implementing reputation or trust mechanisms",
+      "Build in explainability features to trace collaborative decisions"
+    ],
+    relatedPatterns: ["Orchestrator-Worker", "Model Context Protocol", "Routing"]
+  },
+  {
     id: 'prompt-chaining',
     name: 'Prompt Chaining',
     longDescription: `

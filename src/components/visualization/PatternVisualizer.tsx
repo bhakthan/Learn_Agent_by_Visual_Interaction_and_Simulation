@@ -23,7 +23,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Play, Stop, ArrowsCounterClockwise } from '@phosphor-icons/react'
-import { InfoCircledIcon } from '@radix-ui/react-icons'
+import { Info } from '@phosphor-icons/react'
 import { createDataFlow } from '@/lib/utils/dataFlowUtils'
 import DataFlowVisualizer from './DataFlowVisualizer'
 
@@ -338,9 +338,9 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
                 className="text-primary text-sm underline-offset-4 hover:underline flex items-center gap-1"
               >
                 {showDetails ? (
-                  <><InfoCircledIcon className="h-4 w-4" /> Hide detailed explanation</>
+                  <><Info className="h-4 w-4" /> Hide detailed explanation</>
                 ) : (
-                  <><InfoCircledIcon className="h-4 w-4" /> Show detailed explanation</>
+                  <><Info className="h-4 w-4" /> Show detailed explanation</>
                 )}
               </button>
               
@@ -407,7 +407,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
               </div>
               <div>
                 <h4 className="font-medium text-secondary mb-2 flex items-center gap-1">
-                  <InfoCircledIcon className="h-4 w-4" /> Limitations to Consider
+                  <Info className="h-4 w-4" /> Limitations to Consider
                 </h4>
                 <ul className="text-sm space-y-1">
                   {patternContents.find(p => p.id === patternData.id)?.limitations.slice(0, 3).map((limitation, index) => (
