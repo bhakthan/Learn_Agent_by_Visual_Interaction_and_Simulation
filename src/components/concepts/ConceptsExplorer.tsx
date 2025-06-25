@@ -1,11 +1,26 @@
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import A2ADemo from "../interactive-demos/A2ADemo"
 import MCPDemo from "../interactive-demos/MCPDemo"
+import ConceptDetails from "./ConceptDetails"
+import { BookOpen } from "@phosphor-icons/react"
 
 const ConceptsExplorer = () => {
+  const [showDetails, setShowDetails] = useState({
+    agents: false,
+    a2a: false,
+    mcp: false
+  })
+
+  const toggleDetails = (concept: 'agents' | 'a2a' | 'mcp') => {
+    setShowDetails(prev => ({
+      ...prev,
+      [concept]: !prev[concept]
+    }))
+  }
   return (
     <div className="space-y-8">
       <Tabs defaultValue="agents" className="w-full">
@@ -58,9 +73,14 @@ const ConceptsExplorer = () => {
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button variant="outline">Learn More</Button>
-              <Button>Explore Patterns</Button>
+              <Button onClick={() => toggleDetails('agents')} className="flex items-center gap-2">
+                <BookOpen size={18} />
+                {showDetails.agents ? 'Hide Details' : 'Show Detailed Content'}
+              </Button>
             </CardFooter>
           </Card>
+          
+          {showDetails.agents && <ConceptDetails conceptId="agents" />}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
@@ -174,9 +194,14 @@ const ConceptsExplorer = () => {
               </div>
             </CardContent>
             <CardFooter>
-              <Button>Explore A2A Patterns</Button>
+              <Button onClick={() => toggleDetails('a2a')} className="flex items-center gap-2">
+                <BookOpen size={18} />
+                {showDetails.a2a ? 'Hide Details' : 'Show Detailed Content'}
+              </Button>
             </CardFooter>
           </Card>
+          
+          {showDetails.a2a && <ConceptDetails conceptId="a2a" />}
           
           <Separator className="my-6" />
           
@@ -231,9 +256,14 @@ const ConceptsExplorer = () => {
               </div>
             </CardContent>
             <CardFooter>
-              <Button>Explore MCP Implementation</Button>
+              <Button onClick={() => toggleDetails('mcp')} className="flex items-center gap-2">
+                <BookOpen size={18} />
+                {showDetails.mcp ? 'Hide Details' : 'Show Detailed Content'}
+              </Button>
             </CardFooter>
           </Card>
+          
+          {showDetails.mcp && <ConceptDetails conceptId="mcp" />}
           
           <Separator className="my-6" />
           

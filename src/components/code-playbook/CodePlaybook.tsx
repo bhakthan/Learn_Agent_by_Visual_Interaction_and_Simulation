@@ -2,11 +2,14 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Check } from "@phosphor-icons/react"
+import { Check, Code, Play, ListChecks } from "@phosphor-icons/react"
 import { Steps } from './Steps'
 import { PatternData } from '@/lib/data/patterns'
 import PatternDemo from '../interactive-demos/PatternDemo'
 import { ReactFlowProvider } from 'reactflow'
+import BestPractices from './BestPractices'
+import SyntaxHighlighter from 'react-syntax-highlighter'
+import { nightOwl } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 
 interface CodePlaybookProps {
   patternData: PatternData
@@ -26,10 +29,19 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="steps" className="w-full">
-            <TabsList>
-              <TabsTrigger value="steps">Implementation Steps</TabsTrigger>
-              <TabsTrigger value="code">Complete Code</TabsTrigger>
-              <TabsTrigger value="interactive">Interactive Example</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="steps" className="flex items-center gap-2">
+                <ListChecks size={16} /> Implementation Steps
+              </TabsTrigger>
+              <TabsTrigger value="code" className="flex items-center gap-2">
+                <Code size={16} /> Complete Code
+              </TabsTrigger>
+              <TabsTrigger value="practices" className="flex items-center gap-2">
+                <Check size={16} /> Best Practices
+              </TabsTrigger>
+              <TabsTrigger value="interactive" className="flex items-center gap-2">
+                <Play size={16} /> Interactive Example
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="steps" className="py-4">
@@ -42,9 +54,19 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
             
             <TabsContent value="code" className="py-4">
               <div className="relative">
-                <pre className="bg-muted p-4 rounded-md overflow-auto max-h-[500px] text-sm font-mono whitespace-pre-wrap">
+                <SyntaxHighlighter 
+                  language="typescript" 
+                  style={nightOwl}
+                  customStyle={{
+                    borderRadius: '0.5rem',
+                    padding: '1rem',
+                    marginBottom: '1rem',
+                    maxHeight: '500px',
+                    overflow: 'auto'
+                  }}
+                >
                   {patternData.codeExample}
-                </pre>
+                </SyntaxHighlighter>
                 <div className="absolute top-4 right-4">
                   <button 
                     className="p-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-xs"
@@ -62,6 +84,10 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                   This code demonstrates a basic implementation of the pattern. You may need to adapt it to your specific use case.
                 </AlertDescription>
               </Alert>
+            </TabsContent>
+            
+            <TabsContent value="practices" className="py-4">
+              <BestPractices patternId={patternData.id} />
             </TabsContent>
             
             <TabsContent value="interactive" className="py-4">

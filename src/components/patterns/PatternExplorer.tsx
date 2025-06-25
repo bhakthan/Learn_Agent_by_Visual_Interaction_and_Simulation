@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { agentPatterns } from '@/lib/data/patterns'
 import PatternVisualizer from '@/components/visualization/PatternVisualizer'
 import CodePlaybook from '@/components/code-playbook/CodePlaybook'
+import PatternDetails from './PatternDetails'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ReactFlowProvider } from 'reactflow'
+import { ChartLine, Code, Info } from '@phosphor-icons/react'
 
 const PatternExplorer = () => {
   const [selectedPattern, setSelectedPattern] = useState(agentPatterns[0])
@@ -51,15 +53,26 @@ const PatternExplorer = () => {
       
       <div className="lg:col-span-2 space-y-6">
         <Tabs defaultValue="visualization" className="w-full">
-          <TabsList>
-            <TabsTrigger value="visualization">Visualization</TabsTrigger>
-            <TabsTrigger value="implementation">Implementation</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="visualization" className="flex items-center gap-2">
+              <ChartLine size={16} /> Visualization
+            </TabsTrigger>
+            <TabsTrigger value="details" className="flex items-center gap-2">
+              <Info size={16} /> Educational Content
+            </TabsTrigger>
+            <TabsTrigger value="implementation" className="flex items-center gap-2">
+              <Code size={16} /> Implementation
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="visualization">
             <ReactFlowProvider>
               <PatternVisualizer patternData={selectedPattern} />
             </ReactFlowProvider>
+          </TabsContent>
+          
+          <TabsContent value="details">
+            <PatternDetails pattern={selectedPattern} />
           </TabsContent>
           
           <TabsContent value="implementation">

@@ -18,10 +18,12 @@ import ReactFlow, {
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { PatternData } from '@/lib/data/patterns'
+import { patternContents } from '@/lib/data/patternContent'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Play, Stop, ArrowsCounterClockwise } from '@phosphor-icons/react'
+import { InfoCircledIcon } from '@radix-ui/react-icons'
 import { createDataFlow } from '@/lib/utils/dataFlowUtils'
 import DataFlowVisualizer from './DataFlowVisualizer'
 
@@ -133,6 +135,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
   const [edges, setEdges, onEdgesChange] = useEdgesState(patternData.edges)
   const [dataFlows, setDataFlows] = useState<DataFlow[]>([])
   const [isAnimating, setIsAnimating] = useState(false)
+  const [showDetails, setShowDetails] = useState(false)
   const flowInstanceRef = useRef<ReactFlowInstance | null>(null)
   const simulationRef = useRef<NodeJS.Timeout | null>(null)
   const reactFlowInstance = useReactFlow()
@@ -327,6 +330,29 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
         </div>
         <div className="p-4">
           <p className="text-muted-foreground mb-4">{patternData.description}</p>
+          
+          {patternContents.find(p => p.id === patternData.id) && (
+            <div className="mt-2">
+              <button 
+                onClick={() => setShowDetails(!showDetails)}
+                className="text-primary text-sm underline-offset-4 hover:underline flex items-center gap-1"
+              >
+                {showDetails ? (
+                  <><InfoCircledIcon className="h-4 w-4" /> Hide detailed explanation</>
+                ) : (
+                  <><InfoCircledIcon className="h-4 w-4" /> Show detailed explanation</>
+                )}
+              </button>
+              
+              {showDetails && (
+                <div className="mt-3 p-3 bg-muted/50 rounded text-sm border border-muted">
+                  <p className="leading-relaxed">
+                    {patternContents.find(p => p.id === patternData.id)?.longDescription}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <div style={{ height: 400 }}>
           <ReactFlowProvider>
@@ -358,11 +384,42 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
         </div>
         <div className="p-4 border-t border-border">
           <h4 className="font-medium mb-2">Best Suited For:</h4>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mb-4">
             {patternData.useCases.map((useCase, index) => (
               <Badge key={index} variant="secondary">{useCase}</Badge>
             ))}
           </div>
+          
+          {patternContents.find(p => p.id === patternData.id) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <h4 className="font-medium text-primary mb-2 flex items-center gap-1">
+                  <Play size={14} className="text-primary" /> Key Advantages
+                </h4>
+                <ul className="text-sm space-y-1">
+                  {patternContents.find(p => p.id === patternData.id)?.advantages.slice(0, 3).map((advantage, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="text-primary mt-1">•</span>
+                      <span>{advantage}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-medium text-secondary mb-2 flex items-center gap-1">
+                  <InfoCircledIcon className="h-4 w-4" /> Limitations to Consider
+                </h4>
+                <ul className="text-sm space-y-1">
+                  {patternContents.find(p => p.id === patternData.id)?.limitations.slice(0, 3).map((limitation, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="text-secondary mt-1">•</span>
+                      <span>{limitation}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
