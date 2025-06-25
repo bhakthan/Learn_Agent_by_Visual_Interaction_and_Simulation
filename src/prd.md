@@ -16,7 +16,7 @@
 - **Key Moments**:
   1. The "aha" moment when users understand a complex agent pattern through the interactive visualization
   2. Successfully walking through an implementation step by step
-  3. Switching between different patterns to compare approaches
+  3. Seeing real-time data flow between agents during interactive demonstrations
 
 ## Essential Features
 
@@ -30,17 +30,22 @@
 - **Purpose**: Convert abstract concepts into visual models that clarify relationships and flows
 - **Success Criteria**: Users can manipulate the visualization to understand how data and control flow through different parts of the pattern
 
-### 3. Code Playbooks
+### 3. Real-time Data Flow Visualization
+- **Functionality**: Animated visualization showing how data and messages move between agents during operation
+- **Purpose**: Help users understand the dynamic behavior and communication patterns between agents
+- **Success Criteria**: Users can observe and track data as it moves through the system, with clear indicators of messaging types and processing states
+
+### 4. Code Playbooks
 - **Functionality**: Step-by-step implementation guides with associated code snippets for each pattern
 - **Purpose**: Bridge the gap between conceptual understanding and practical implementation
 - **Success Criteria**: Users can follow the implementation steps and understand the purpose of each code component
 
-### 4. Interactive Examples
+### 5. Interactive Examples
 - **Functionality**: Live, editable examples that demonstrate each pattern and concept in action
 - **Purpose**: Allow hands-on experimentation to reinforce understanding
 - **Success Criteria**: Users can modify inputs and parameters to see how changes affect the behavior of the agent pattern
 
-### 5. Pattern Comparison Tool
+### 6. Pattern Comparison Tool
 - **Functionality**: Side-by-side comparison of different patterns
 - **Purpose**: Help users select the most appropriate pattern for their use case
 - **Success Criteria**: Users can identify key differences and make informed decisions about which pattern to implement
@@ -91,6 +96,7 @@
 - **Purposeful Meaning**: Animations will show the flow of data between agent components and highlight active parts of the system
 - **Hierarchy of Movement**: Primary animations for data flow in visualizations, subtle transitions for UI navigation
 - **Contextual Appropriateness**: Subtle animations for navigation, more pronounced animations for demonstrating agent interactions
+- **Data Flow Visualization**: Animated particles traveling along edges represent messages/data between agents with color coding to indicate message types (requests, responses, errors)
 
 ### UI Elements & Component Selection
 - **Component Usage**: 

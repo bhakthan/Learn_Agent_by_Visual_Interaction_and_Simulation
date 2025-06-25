@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -6,7 +6,22 @@ import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { PatternData } from '@/lib/data/patterns'
-import { Play, ArrowsClockwise, CheckCircle, Clock, WarningCircle } from "@phosphor-icons/react"
+import { Play, ArrowsClockwise, CheckCircle, Clock, WarningCircle, ArrowBendDownRight } from "@phosphor-icons/react"
+import ReactFlow, {
+  ReactFlowProvider,
+  Node,
+  Edge,
+  Handle,
+  Position,
+  NodeTypes,
+  useNodesState,
+  useEdgesState,
+  Background,
+  MiniMap,
+  Controls
+} from 'reactflow'
+import 'reactflow/dist/style.css'
+import DataFlowVisualizer from '../visualization/DataFlowVisualizer'
 
 // Mock response generation to simulate LLM calls
 const generateMockResponse = (text: string, patternId: string) => {
@@ -36,18 +51,159 @@ interface StepState {
   endTime?: number;
 }
 
+interface DataFlowMessage {
+  id: string;
+  edgeId: string;
+  source: string;
+  target: string;
+  content: string;
+  timestamp: number;
+  type: 'message' | 'data' | 'response' | 'error';
+  progress: number;
+}
+
+// Custom node component for the demo
+const CustomDemoNode = ({ data, id }: { data: any, id: string }) => {
+  const getNodeStyle = () => {
+    const baseStyle = {
+      padding: '10px 20px',
+      borderRadius: '8px',
+      transition: 'all 0.2s ease',
+      width: '180px',
+    }
+    
+    // Add status-specific styling
+    const statusStyle = data.status === 'running' ? {
+      boxShadow: '0 0 0 2px var(--primary), 0 0 15px rgba(66, 153, 225, 0.5)',
+      transform: 'scale(1.02)'
+    } : data.status === 'complete' ? {
+      boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.6)',
+    } : data.status === 'failed' ? {
+      boxShadow: '0 0 0 2px rgba(239, 68, 68, 0.6)',
+    } : {};
+    
+    switch(data.nodeType) {
+      case 'input':
+        return { ...baseStyle, backgroundColor: 'rgb(226, 232, 240)', border: '1px solid rgb(203, 213, 225)', ...statusStyle }
+      case 'llm':
+        return { ...baseStyle, backgroundColor: 'rgb(219, 234, 254)', border: '1px solid rgb(147, 197, 253)', ...statusStyle }
+      case 'output':
+        return { ...baseStyle, backgroundColor: 'rgb(220, 252, 231)', border: '1px solid rgb(134, 239, 172)', ...statusStyle }
+      case 'router':
+        return { ...baseStyle, backgroundColor: 'rgb(254, 242, 220)', border: '1px solid rgb(253, 224, 71)', ...statusStyle }
+      case 'aggregator':
+        return { ...baseStyle, backgroundColor: 'rgb(240, 253, 240)', border: '1px solid rgb(187, 247, 208)', ...statusStyle }
+      default:
+        return { ...baseStyle, backgroundColor: 'white', border: '1px solid rgb(226, 232, 240)', ...statusStyle }
+    }
+  }
+  
+  return (
+    <div style={getNodeStyle()}>
+      <Handle type="target" position={Position.Left} />
+      <div>
+        <div className="flex items-center gap-2">
+          {data.status === 'running' && <Clock className="text-amber-500" size={16} />}
+          {data.status === 'complete' && <CheckCircle className="text-green-500" size={16} />}
+          {data.status === 'failed' && <WarningCircle className="text-destructive" size={16} />}
+          <strong>{data.label}</strong>
+        </div>
+        
+        {data.result && (
+          <div className="mt-2 text-xs bg-background/50 p-1.5 rounded border border-border/50">
+            {data.result.length > 40 ? `${data.result.substring(0, 40)}...` : data.result}
+          </div>
+        )}
+      </div>
+      <Handle type="source" position={Position.Right} />
+    </div>
+  )
+}
+
+const nodeTypes: NodeTypes = {
+  demoNode: CustomDemoNode
+}
+
 const PatternDemo = ({ patternData }: PatternDemoProps) => {
   const [userInput, setUserInput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [output, setOutput] = useState<string | null>(null);
   const [steps, setSteps] = useState<Record<string, StepState>>({});
   const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
+  const [dataFlows, setDataFlows] = useState<DataFlowMessage[]>([]);
+  
+  // Create demo nodes for visualization
+  const initialDemoNodes: Node[] = patternData.nodes.map(node => ({
+    ...node,
+    type: 'demoNode',
+    data: {
+      ...node.data,
+      status: 'idle',
+    },
+    draggable: false,
+    selectable: false,
+  }));
+  
+  // Optimize node positions for the demo display
+  const optimizedNodes = initialDemoNodes.map(node => {
+    // Scale and center the nodes for better visualization
+    return {
+      ...node,
+      position: {
+        x: node.position.x * 0.8 + 50,
+        y: node.position.y + 50
+      }
+    };
+  });
+  
+  const [nodes, setNodes, onNodesChange] = useNodesState(optimizedNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(patternData.edges);
+  
+  // Remove completed flows
+  const onFlowComplete = (flowId: string) => {
+    setDataFlows(prev => prev.filter(flow => flow.id !== flowId));
+  };
   
   const resetDemo = () => {
     setIsRunning(false);
     setOutput(null);
     setSteps({});
     setCurrentNodeId(null);
+    setDataFlows([]);
+    
+    // Reset nodes
+    setNodes(nodes.map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        status: 'idle',
+        result: undefined
+      }
+    })));
+    
+    // Reset edges (remove animation)
+    setEdges(patternData.edges.map(edge => ({
+      ...edge,
+      animated: false
+    })));
+  };
+
+  const getEdgePoints = (edgeId: string) => {
+    const edge = edges.find(e => e.id === edgeId);
+    if (!edge) return null;
+    
+    const sourceNode = nodes.find(n => n.id === edge.source);
+    const targetNode = nodes.find(n => n.id === edge.target);
+    
+    if (!sourceNode || !targetNode) return null;
+    
+    // Calculate center points of nodes
+    const sourceX = sourceNode.position.x + 150;  // assuming node width
+    const sourceY = sourceNode.position.y + 40;   // assuming node height
+    const targetX = targetNode.position.x;
+    const targetY = targetNode.position.y + 40;
+    
+    return { sourceX, sourceY, targetX, targetY };
   };
 
   const runDemo = async () => {
@@ -87,6 +243,14 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
       ...prev,
       [nodeId]: { ...prev[nodeId], status: 'running', startTime: Date.now() }
     }));
+    
+    // Update node status in visualization
+    setNodes(nodes => nodes.map(node => 
+      node.id === nodeId ? {
+        ...node,
+        data: { ...node.data, status: 'running' }
+      } : node
+    ));
     
     const node = patternData.nodes.find(n => n.id === nodeId);
     if (!node) throw new Error(`Node ${nodeId} not found`);
@@ -128,6 +292,18 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
         }
       }));
       
+      // Update node in visualization
+      setNodes(nodes => nodes.map(node => 
+        node.id === nodeId ? {
+          ...node,
+          data: { 
+            ...node.data, 
+            status: 'complete',
+            result
+          }
+        } : node
+      ));
+      
       // If output node, set final output
       if (node.data.nodeType === 'output') {
         setOutput(result);
@@ -140,7 +316,25 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
       // Process next nodes sequentially
       for (const edge of outgoingEdges) {
         // Animate edge
-        await new Promise(resolve => setTimeout(resolve, 300));
+        setEdges(edges => edges.map(e => 
+          e.id === edge.id ? { ...e, animated: true } : e
+        ));
+        
+        // Create data flow visualization
+        const newFlow = {
+          id: `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+          edgeId: edge.id,
+          source: edge.source,
+          target: edge.target,
+          content: result,
+          timestamp: Date.now(),
+          type: node.data.nodeType === 'router' ? 'data' : 
+                node.data.nodeType === 'llm' ? 'response' : 'message',
+          progress: 0
+        };
+        setDataFlows(flows => [...flows, newFlow]);
+        
+        await new Promise(resolve => setTimeout(resolve, 800));
         
         // Process target node
         await processNode(edge.target);
@@ -159,18 +353,51 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
         }
       }));
       
-      // Check if there are failure edges
-      const failureEdge = patternData.edges.find(edge => 
+      // Update node in visualization
+      setNodes(nodes => nodes.map(node => 
+        node.id === nodeId ? {
+          ...node,
+          data: { 
+            ...node.data, 
+            status: 'failed',
+            result: error instanceof Error ? error.message : 'Unknown error'
+          }
+        } : node
+      ));
+      
+      // Create error flow visualization
+      const failureEdges = patternData.edges.filter(edge => 
         edge.source === nodeId && 
         patternData.nodes.find(n => n.id === edge.target)?.data.label?.toLowerCase().includes('fail')
       );
       
-      if (failureEdge) {
+      for (const edge of failureEdges) {
+        // Animate edge
+        setEdges(edges => edges.map(e => 
+          e.id === edge.id ? { ...e, animated: true } : e
+        ));
+        
+        // Create error flow visualization
+        const errorFlow = {
+          id: `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+          edgeId: edge.id,
+          source: edge.source,
+          target: edge.target,
+          content: 'Error',
+          timestamp: Date.now(),
+          type: 'error',
+          progress: 0
+        };
+        setDataFlows(flows => [...flows, errorFlow]);
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         // Process failure path
-        await processNode(failureEdge.target);
-      } else {
-        throw error; // Propagate error if no failure path
+        await processNode(edge.target);
+        return;
       }
+      
+      throw error; // Propagate error if no failure path
     }
   };
   
@@ -209,12 +436,43 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
             </Button>
           </div>
           
+          {/* Flow visualization */}
+          <div className="border border-border rounded-md overflow-hidden" style={{ height: '400px' }}>
+            <ReactFlowProvider>
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                nodeTypes={nodeTypes}
+                fitView
+                panOnScroll
+                minZoom={0.5}
+                maxZoom={1.5}
+                defaultEdgeOptions={{
+                  style: { strokeWidth: 2 },
+                  markerEnd: { type: 'arrow' }
+                }}
+              >
+                <Background />
+                <Controls />
+                <MiniMap />
+                <DataFlowVisualizer 
+                  flows={dataFlows} 
+                  edges={edges}
+                  getEdgePoints={getEdgePoints}
+                  onFlowComplete={onFlowComplete}
+                />
+              </ReactFlow>
+            </ReactFlowProvider>
+          </div>
+          
           {Object.keys(steps).length > 0 && (
             <>
               <Separator />
               
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Execution Flow</h3>
+                <h3 className="text-lg font-medium">Execution Log</h3>
                 
                 <div className="space-y-3">
                   {patternData.nodes.map((node) => {
@@ -254,7 +512,10 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
                         
                         {step.result && (
                           <div className="text-sm mt-1">
-                            {step.result}
+                            <div className="flex items-start gap-1 text-muted-foreground">
+                              <ArrowBendDownRight size={14} className="mt-1" />
+                              <span>{step.result}</span>
+                            </div>
                           </div>
                         )}
                       </div>
