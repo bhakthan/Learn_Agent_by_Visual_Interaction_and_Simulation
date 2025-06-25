@@ -67,7 +67,7 @@ const PatternExplorer = () => {
           
           <TabsContent value="visualization">
             <ReactFlowProvider>
-              <PatternVisualizer patternData={selectedPattern} />
+              <PatternVisualizer key={selectedPattern.id} patternData={selectedPattern} />
             </ReactFlowProvider>
           </TabsContent>
           

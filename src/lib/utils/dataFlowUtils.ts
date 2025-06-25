@@ -57,7 +57,8 @@ export const getDataFlowAnimationStyle = (
     message: params.color || '#3b82f6', // blue
     data: params.color || '#10b981', // green
     response: params.color || '#8b5cf6', // purple
-    error: params.color || '#ef4444' // red
+    error: params.color || '#ef4444', // red
+    default: '#64748b' // gray
   };
   
   // Calculate size of the flow indicator
@@ -67,8 +68,10 @@ export const getDataFlowAnimationStyle = (
     large: 10
   };
   
+  const color = colorMap[type] || colorMap.default;
+  
   return {
-    stroke: colorMap[type],
+    stroke: color,
     strokeWidth: sizeMap[params.size || 'medium'],
     animationDuration: `${durationMap[speed]}s`,
     strokeDasharray: pulseEffect ? '5 5' : undefined,
@@ -104,6 +107,10 @@ export const getNodeDataFlowParams = (nodeType?: string): DataFlowVisualParams =
       return { color: '#06b6d4', size: 'medium', speed: 'medium' };
     case 'executor':
       return { color: '#d946ef', size: 'medium', speed: 'fast' };
+    case 'input':
+      return { color: '#475569', size: 'medium', speed: 'medium' };  
+    case 'output':
+      return { color: '#16a34a', size: 'medium', speed: 'medium' };
     default:
       return { color: '#64748b', size: 'medium', speed: 'medium' };
   }

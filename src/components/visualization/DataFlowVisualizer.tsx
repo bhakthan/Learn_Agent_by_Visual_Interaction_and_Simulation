@@ -31,22 +31,28 @@ const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete }: Dat
   // Update flow progress values
   useEffect(() => {
     const interval = setInterval(() => {
-      setActiveFlows(prevFlows => 
-        prevFlows.map(flow => {
+      setActiveFlows(prevFlows => {
+        if (prevFlows.length === 0) return prevFlows;
+        
+        const updatedFlows = prevFlows.map(flow => {
           // Increment progress
           const newProgress = flow.progress + 0.02;
           
           // If flow is complete, trigger callback
           if (newProgress >= 1 && onFlowComplete) {
-            onFlowComplete(flow.id);
+            setTimeout(() => {
+              onFlowComplete(flow.id);
+            }, 0);
           }
           
           return {
             ...flow, 
             progress: Math.min(newProgress, 1)
           };
-        }).filter(flow => flow.progress < 1)
-      );
+        });
+        
+        return updatedFlows.filter(flow => flow.progress < 1);
+      });
     }, 20);
     
     return () => clearInterval(interval);
@@ -54,13 +60,20 @@ const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete }: Dat
   
   // Add new flows to active flows
   useEffect(() => {
-    setActiveFlows(prevFlows => [
-      ...prevFlows, 
-      ...flows
-        .filter(flow => !prevFlows.some(pf => pf.id === flow.id))
-        .map(flow => ({ ...flow, progress: 0 }))
-    ]);
-  }, [flows]);
+    if (flows.length === 0) return;
+    
+    // Only add flows that aren't already in activeFlows
+    const newFlows = flows.filter(
+      flow => !activeFlows.some(pf => pf.id === flow.id)
+    );
+    
+    if (newFlows.length > 0) {
+      setActiveFlows(prevFlows => [
+        ...prevFlows, 
+        ...newFlows.map(flow => ({ ...flow, progress: 0 }))
+      ]);
+    }
+  }, [flows, activeFlows]);
   
   const renderFlowIndicator = useCallback((flow: DataFlow) => {
     // Find the edge for this flow
@@ -78,7 +91,7 @@ const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete }: Dat
     const y = sourceY + (targetY - sourceY) * flow.progress;
     
     // Get animation style based on flow type
-    const sourceNodeType = edge.sourceNode?.data?.nodeType;
+    const sourceNodeType = edge.sourceHandle ? edge.sourceHandle : 'default';
     const typeParams = getNodeDataFlowParams(sourceNodeType);
     const style = getDataFlowAnimationStyle(flow.type, typeParams);
     

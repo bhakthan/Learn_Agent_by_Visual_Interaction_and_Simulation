@@ -126,7 +126,11 @@ const messageTemplates = {
   aggregator: () => "Combining results from multiple sources...",
   tool: (tool: string) => `Using tool: ${tool || 'External API'}`,
   output: (text: string) => `Final result: "${text}"`,
-  error: () => "Error occurred during processing"
+  error: () => "Error occurred during processing",
+  planner: () => "Creating execution plan...",
+  executor: () => "Executing tasks...",
+  evaluator: () => "Evaluating results...",
+  default: () => "Processing data..."
 };
 
 const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
@@ -144,15 +148,18 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     resetVisualization();
   }, [patternData]);
   
-  const resetVisualization = () => {
+  const resetVisualization = useCallback(() => {
+    // Clear any running timeouts
     if (simulationRef.current) {
       clearTimeout(simulationRef.current);
+      simulationRef.current = null;
     }
+    
     setIsAnimating(false);
-    setDataFlows([]);
+    setDataFlows([]); // Clear all data flows
     
     // Reset all nodes (remove active state and status)
-    setNodes(nodes.map(node => ({
+    setNodes(currentNodes => currentNodes.map(node => ({
       ...node,
       data: {
         ...node.data,
@@ -166,7 +173,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       ...edge,
       animated: false
     })));
-  };
+  }, [patternData.edges, setNodes, setEdges]);
   
   const getEdgePoints = useCallback((edgeId: string) => {
     const edge = edges.find(e => e.id === edgeId);
@@ -187,24 +194,29 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
   }, [nodes, edges]);
   
   const onFlowComplete = useCallback((flowId: string) => {
-    const flow = dataFlows.find(f => f.id === flowId);
-    if (!flow) return;
-    
-    // Update the target node when flow reaches it
-    setNodes(nodes => nodes.map(node => {
-      if (node.id === flow.target) {
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            isActive: true,
-            status: flow.type === 'error' ? 'error' : 'processing'
-          }
-        };
-      }
-      return node;
-    }));
-  }, [dataFlows, setNodes]);
+    setDataFlows(currentFlows => {
+      const flow = currentFlows.find(f => f.id === flowId);
+      if (!flow) return currentFlows;
+      
+      // Update the target node when flow reaches it
+      setNodes(nodes => nodes.map(node => {
+        if (node.id === flow.target) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              isActive: true,
+              status: flow.type === 'error' ? 'error' : 'processing'
+            }
+          };
+        }
+        return node;
+      }));
+      
+      // Return flows with completed flow filtered out
+      return currentFlows.filter(f => f.id !== flowId);
+    });
+  }, [setNodes]);
   
   const simulatePatternFlow = useCallback(() => {
     resetVisualization();
@@ -214,11 +226,18 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     const inputNode = nodes.find(node => node.data.nodeType === 'input');
     if (!inputNode) return;
     
+    // Track active nodes and edges to prevent duplicates
+    const activeNodeIds = new Set();
+    const activeEdgeIds = new Set();
+    
     // Helper function to process a node after a delay
     const processNode = (nodeId: string, delay: number, previousMessage?: string) => {
+      if (activeNodeIds.has(nodeId)) return; // Skip if already processed
+      activeNodeIds.add(nodeId);
+      
       simulationRef.current = setTimeout(() => {
         // Activate the current node
-        setNodes(nodes => nodes.map(node => ({
+        setNodes(currentNodes => currentNodes.map(node => ({
           ...node,
           data: {
             ...node.data,
@@ -233,7 +252,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
         // After a delay, mark as success and process next nodes
         simulationRef.current = setTimeout(() => {
           // Mark current node as success
-          setNodes(nodes => nodes.map(node => ({
+          setNodes(currentNodes => currentNodes.map(node => ({
             ...node,
             data: {
               ...node.data,
@@ -243,8 +262,11 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
           
           // Process each outgoing connection
           outgoingEdges.forEach((edge, index) => {
+            if (activeEdgeIds.has(edge.id)) return; // Skip if already processed
+            activeEdgeIds.add(edge.id);
+            
             // Animate the edge
-            setEdges(edges => edges.map(e => ({
+            setEdges(currentEdges => currentEdges.map(e => ({
               ...e,
               animated: e.id === edge.id ? true : e.animated
             })));
@@ -259,7 +281,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
               
               if (nodeType in messageTemplates) {
                 // Get the template function
-                const templateFn = messageTemplates[nodeType];
+                const templateFn = messageTemplates[nodeType as keyof typeof messageTemplates];
                 // Check if it's a function before calling
                 if (typeof templateFn === 'function') {
                   messageContent = templateFn(previousMessage || 'data');
@@ -267,8 +289,8 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
               }
               
               const flowType = Math.random() > 0.9 ? 'error' : 
-                               nodeType === 'llm' ? 'response' : 'message';
-                               
+                              nodeType === 'llm' ? 'response' : 'message';
+                              
               const newFlow = {
                 id: `flow-${Date.now()}-${index}`,
                 edgeId: edge.id,
@@ -276,7 +298,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
                 target: edge.target,
                 content: messageContent,
                 timestamp: Date.now(),
-                type: flowType,
+                type: flowType as 'message' | 'data' | 'response' | 'error',
                 progress: 0,
                 label: flowType === 'error' ? 'Error' : undefined
               };
@@ -285,8 +307,8 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
               
               // Process the target node after a suitable delay
               const targetDelay = sourceNode.data.nodeType === 'aggregator' ? 2000 : 
-                                 sourceNode.data.nodeType === 'router' ? 1000 : 1500;
-                                 
+                                sourceNode.data.nodeType === 'router' ? 1000 : 1500;
+                                
               processNode(edge.target, targetDelay, messageContent);
             }
           });
@@ -297,7 +319,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     
     // Start the simulation from the input node
     processNode(inputNode.id, 100);
-  }, [nodes, edges, setNodes, setEdges]);
+  }, [nodes, edges, setNodes, setEdges, resetVisualization]);
   
   const onInit = useCallback((instance: ReactFlowInstance) => {
     flowInstanceRef.current = instance;
@@ -317,7 +339,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
               variant="outline" 
               size="sm"
               onClick={resetVisualization}
-              disabled={!isAnimating}
+              disabled={isAnimating}
             >
               <ArrowsCounterClockwise className="mr-2" size={14} />
               Reset
@@ -363,32 +385,30 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
           )}
         </div>
         <div style={{ height: 400 }}>
-          <ReactFlowProvider>
-            <ReactFlow
-              nodes={nodes}
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            nodeTypes={nodeTypes}
+            fitView
+            onInit={onInit}
+          >
+            <Background />
+            <Controls />
+            <MiniMap />
+            <DataFlowVisualizer 
+              flows={dataFlows} 
               edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              nodeTypes={nodeTypes}
-              fitView
-              onInit={onInit}
-            >
-              <Background />
-              <Controls />
-              <MiniMap />
-              <DataFlowVisualizer 
-                flows={dataFlows} 
-                edges={edges}
-                getEdgePoints={getEdgePoints}
-                onFlowComplete={onFlowComplete}
-              />
-              <Panel position="bottom-center">
-                <div className="bg-card p-2 rounded shadow-sm text-xs text-muted-foreground">
-                  {isAnimating ? 'Visualizing data flow between agents...' : 'Click "Simulate Flow" to see data flow between agents'}
-                </div>
-              </Panel>
-            </ReactFlow>
-          </ReactFlowProvider>
+              getEdgePoints={getEdgePoints}
+              onFlowComplete={onFlowComplete}
+            />
+            <Panel position="bottom-center">
+              <div className="bg-card p-2 rounded shadow-sm text-xs text-muted-foreground">
+                {isAnimating ? 'Visualizing data flow between agents...' : 'Click "Simulate Flow" to see data flow between agents'}
+              </div>
+            </Panel>
+          </ReactFlow>
         </div>
         <div className="p-4 border-t border-border">
           <h4 className="font-medium mb-2">Best Suited For:</h4>
