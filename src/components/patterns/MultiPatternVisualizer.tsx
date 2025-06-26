@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
-import { ArrowsCounterClockwise, Play, Stop, ArrowsHorizontal } from '@phosphor-icons/react'
+import { ArrowsCounterClockwise, Play, Stop, ArrowsHorizontal, ChartLine, Table } from '@phosphor-icons/react'
 import { ReactFlowProvider } from 'reactflow'
 import { PatternData, agentPatterns } from '@/lib/data/patterns'
 import PatternVisualizer from '@/components/visualization/PatternVisualizer'
 import AdvancedPatternVisualizer from '@/components/visualization/AdvancedPatternVisualizer'
+import ComparisonTimelineVisualizer from '@/components/visualization/ComparisonTimelineVisualizer'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
@@ -27,6 +28,7 @@ const MultiPatternVisualizer = ({ initialPatterns, useAdvancedVisualizer = true 
   const [isSimulating, setIsSimulating] = useState(false);
   const [showPatternSelector, setShowPatternSelector] = useState(false);
   const [useAdvanced, setUseAdvanced] = useState<boolean>(useAdvancedVisualizer);
+  const [viewMode, setViewMode] = useState<'individual' | 'timeline'>('individual');
   
   // Get actual pattern data objects from IDs
   const selectedPatterns = agentPatterns.filter(pattern => 
@@ -40,15 +42,20 @@ const MultiPatternVisualizer = ({ initialPatterns, useAdvancedVisualizer = true 
         return current.filter(id => id !== patternId);
       }
       
-      // If we already have 2 patterns, replace the last one
-      if (current.length >= 2) {
+      // If we already have 3 patterns in timeline mode, replace the last one
+      if (viewMode === 'timeline' && current.length >= 3) {
+        return [...current.slice(0, 2), patternId];
+      }
+      
+      // If we already have 2 patterns in individual mode, replace the last one
+      if (viewMode === 'individual' && current.length >= 2) {
         return [current[0], patternId];
       }
       
       // Otherwise add it
       return [...current, patternId];
     });
-  }, []);
+  }, [viewMode]);
 
   const simulateAll = () => {
     setIsSimulating(true);
@@ -68,6 +75,10 @@ const MultiPatternVisualizer = ({ initialPatterns, useAdvancedVisualizer = true 
     toast.info('All pattern visualizations reset');
   };
 
+  const toggleViewMode = () => {
+    setViewMode(current => current === 'individual' ? 'timeline' : 'individual');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -79,10 +90,28 @@ const MultiPatternVisualizer = ({ initialPatterns, useAdvancedVisualizer = true 
         </div>
         
         <div className="flex gap-2">
+          <Tabs 
+            value={viewMode} 
+            onValueChange={(value: string) => setViewMode(value as 'individual' | 'timeline')}
+            className="mr-2"
+          >
+            <TabsList>
+              <TabsTrigger value="individual" className="flex items-center gap-1">
+                <ChartLine size={14} />
+                Side by Side
+              </TabsTrigger>
+              <TabsTrigger value="timeline" className="flex items-center gap-1">
+                <Table size={14} />
+                Timeline
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          
           <Toggle
             className="flex gap-2 items-center"
             pressed={useAdvanced}
             onPressedChange={setUseAdvanced}
+            disabled={viewMode === 'timeline'}
           >
             Advanced Visualization
           </Toggle>
@@ -103,7 +132,7 @@ const MultiPatternVisualizer = ({ initialPatterns, useAdvancedVisualizer = true 
             disabled={isSimulating}
           >
             <ArrowsCounterClockwise className="mr-2" size={16} />
-            Reset All
+            Reset
           </Button>
           
           <Button 
@@ -125,7 +154,11 @@ const MultiPatternVisualizer = ({ initialPatterns, useAdvancedVisualizer = true 
         <Card className="mb-4">
           <CardHeader className="pb-2">
             <CardTitle>Select Patterns to Compare</CardTitle>
-            <CardDescription>Choose up to 2 patterns to compare side by side</CardDescription>
+            <CardDescription>
+              {viewMode === 'timeline' 
+                ? 'Choose up to 3 patterns to compare in timeline view' 
+                : 'Choose up to 2 patterns to compare side by side'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[200px]">
@@ -157,99 +190,110 @@ const MultiPatternVisualizer = ({ initialPatterns, useAdvancedVisualizer = true 
         </Card>
       )}
       
-      <div className={`grid gap-6 ${selectedPatterns.length > 1 ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
-        {selectedPatterns.map((pattern) => (
-          <ReactFlowProvider key={pattern.id}>
-            {useAdvanced ? (
-              <AdvancedPatternVisualizer patternData={pattern} />
-            ) : (
-              <PatternVisualizer patternData={pattern} />
+      {viewMode === 'individual' ? (
+        <>
+          <div className={`grid gap-6 ${selectedPatterns.length > 1 ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+            {selectedPatterns.map((pattern) => (
+              <ReactFlowProvider key={pattern.id}>
+                {useAdvanced ? (
+                  <AdvancedPatternVisualizer patternData={pattern} />
+                ) : (
+                  <PatternVisualizer patternData={pattern} />
+                )}
+              </ReactFlowProvider>
+            ))}
+            
+            {selectedPatterns.length === 0 && (
+              <div className="p-8 text-center border border-dashed rounded-lg">
+                <p className="text-muted-foreground">Select at least one pattern to visualize</p>
+              </div>
             )}
-          </ReactFlowProvider>
-        ))}
-        
-        {selectedPatterns.length === 0 && (
-          <div className="p-8 text-center border border-dashed rounded-lg">
-            <p className="text-muted-foreground">Select at least one pattern to visualize</p>
           </div>
-        )}
-      </div>
-      
-      {selectedPatterns.length > 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Pattern Comparison Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {selectedPatterns.map((pattern) => (
-                <div key={pattern.id} className="space-y-4">
-                  <div>
-                    <h3 className="font-medium text-lg">{pattern.name}</h3>
-                    <p className="text-sm text-muted-foreground">{pattern.description}</p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-semibold text-muted-foreground">Best For:</h4>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {pattern.useCases.map((useCase, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">{useCase}</Badge>
-                      ))}
+          
+          {selectedPatterns.length > 1 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Pattern Comparison Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {selectedPatterns.map((pattern) => (
+                    <div key={pattern.id} className="space-y-4">
+                      <div>
+                        <h3 className="font-medium text-lg">{pattern.name}</h3>
+                        <p className="text-sm text-muted-foreground">{pattern.description}</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-sm font-semibold text-muted-foreground">Best For:</h4>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {pattern.useCases.map((useCase, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">{useCase}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-sm font-semibold text-muted-foreground">Key Characteristics:</h4>
+                        <ul className="mt-1 space-y-1 list-disc list-inside text-sm">
+                          <li>Node Count: {pattern.nodes.length}</li>
+                          <li>Connection Count: {pattern.edges.length}</li>
+                          <li>Complexity: {
+                            pattern.edges.length / pattern.nodes.length > 1.5 ? 'High' : 
+                            pattern.edges.length / pattern.nodes.length > 1 ? 'Medium' : 'Low'
+                          }</li>
+                        </ul>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-semibold text-muted-foreground">Key Characteristics:</h4>
-                    <ul className="mt-1 space-y-1 list-disc list-inside text-sm">
-                      <li>Node Count: {pattern.nodes.length}</li>
-                      <li>Connection Count: {pattern.edges.length}</li>
-                      <li>Complexity: {
-                        pattern.edges.length / pattern.nodes.length > 1.5 ? 'High' : 
-                        pattern.edges.length / pattern.nodes.length > 1 ? 'Medium' : 'Low'
-                      }</li>
-                    </ul>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            
-            <Separator className="my-6" />
-            
-            <div className="space-y-4">
-              <h3 className="font-semibold">Key Differences</h3>
-              
-              {selectedPatterns.length === 2 && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-primary"></div>
-                    <p className="text-sm"><span className="font-medium">{selectedPatterns[0].name}</span> vs <span className="font-medium">{selectedPatterns[1].name}</span></p>
-                  </div>
+                
+                <Separator className="my-6" />
+                
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Key Differences</h3>
                   
-                  <ul className="space-y-2 text-sm pl-5">
-                    {/* Dynamically calculate differences */}
-                    <li>
-                      <span className="font-medium">{selectedPatterns[0].name}</span> uses {selectedPatterns[0].nodes.length} nodes compared to {selectedPatterns[1].nodes.length} in <span className="font-medium">{selectedPatterns[1].name}</span>
-                    </li>
-                    <li>
-                      <span className="font-medium">Communication path:</span> {
-                        selectedPatterns[0].nodes.some(n => n.data.nodeType === 'router') ? 
-                        `${selectedPatterns[0].name} uses routing for decision-making` : 
-                        `${selectedPatterns[0].name} has a more linear communication flow`
-                      }
-                    </li>
-                    <li>
-                      <span className="font-medium">Complexity trade-offs:</span> {
-                        selectedPatterns[0].nodes.length > selectedPatterns[1].nodes.length ? 
-                        `${selectedPatterns[0].name} is more complex but potentially more powerful` : 
-                        `${selectedPatterns[1].name} is more complex but potentially more powerful`
-                      }
-                    </li>
-                  </ul>
+                  {selectedPatterns.length === 2 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="h-3 w-3 rounded-full bg-primary"></div>
+                        <p className="text-sm"><span className="font-medium">{selectedPatterns[0].name}</span> vs <span className="font-medium">{selectedPatterns[1].name}</span></p>
+                      </div>
+                      
+                      <ul className="space-y-2 text-sm pl-5">
+                        {/* Dynamically calculate differences */}
+                        <li>
+                          <span className="font-medium">{selectedPatterns[0].name}</span> uses {selectedPatterns[0].nodes.length} nodes compared to {selectedPatterns[1].nodes.length} in <span className="font-medium">{selectedPatterns[1].name}</span>
+                        </li>
+                        <li>
+                          <span className="font-medium">Communication path:</span> {
+                            selectedPatterns[0].nodes.some(n => n.data.nodeType === 'router') ? 
+                            `${selectedPatterns[0].name} uses routing for decision-making` : 
+                            `${selectedPatterns[0].name} has a more linear communication flow`
+                          }
+                        </li>
+                        <li>
+                          <span className="font-medium">Complexity trade-offs:</span> {
+                            selectedPatterns[0].nodes.length > selectedPatterns[1].nodes.length ? 
+                            `${selectedPatterns[0].name} is more complex but potentially more powerful` : 
+                            `${selectedPatterns[1].name} is more complex but potentially more powerful`
+                          }
+                        </li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      ) : (
+        <ComparisonTimelineVisualizer 
+          patterns={selectedPatterns}
+          onSimulate={simulateAll}
+          onReset={resetAll}
+          isSimulating={isSimulating}
+        />
       )}
     </div>
   )
