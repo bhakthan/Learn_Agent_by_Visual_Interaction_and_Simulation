@@ -259,8 +259,9 @@ export const simulatePatternFlow = (
           else if (Math.random() > 0.95) flowType = 'error'; // 5% chance of error
           
           // Set the toolName if this is a tool node (fixes the toolName undefined error)
-          if (nodeType === 'tool' && currentNode.data.label) {
-            messageContext = currentNode.data.label;
+          if (nodeType === 'tool') {
+            const toolName = currentNode.data.label || 'External API';
+            messageContext = toolName;
           }
           
           const newFlow = {
