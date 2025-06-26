@@ -398,5 +398,7 @@ export const codeExecutionSteps: StepData = {
  * Gets the code execution steps for a specific pattern and language
  */
 export function getCodeExecutionSteps(patternId: string, language: 'python' | 'typescript'): CodeExecutionStep[] | undefined {
-  return codeExecutionSteps[patternId]?.[language];
+  const patternSteps = codeExecutionSteps[patternId];
+  if (!patternSteps) return undefined;
+  return patternSteps[language];
 }

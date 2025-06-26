@@ -418,8 +418,9 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
   };
   
   // Animation speeds
-  const [animationSpeed, setAnimationSpeed] = useState<number>(1); // Default to normal speed
-  const [iterations, setIterations] = useState<number>(0); // Add iterations variable with default value
+  const [animationSpeed, setAnimationSpeed] = useState<number>(1); // Default to normal speed (explicitly "Normal" for user clarity)
+  // Increment iterations counter
+  const [iterations, setIterations] = useState<number>(0); // Track number of steps in the execution
   
   return (
     <Card className="mb-6">

@@ -78,6 +78,7 @@ const EnhancedCodeVisualizer = ({ code, language, steps, title = "Code Execution
     setCurrentStep(-1);
     setIsPlaying(false);
     setExecutionHistory([]);
+    setActiveTab("code"); // Reset to code tab for better user experience
   };
 
   // Auto-advance when playing

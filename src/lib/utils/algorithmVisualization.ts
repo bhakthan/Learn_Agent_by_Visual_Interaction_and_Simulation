@@ -288,5 +288,10 @@ export const algorithmVisualizations: Record<string, AlgorithmVisualization> = {
  * Gets algorithm visualization steps for a specific pattern
  */
 export function getAlgorithmVisualization(patternId: string): AlgorithmVisualization | undefined {
-  return algorithmVisualizations[patternId];
+  // Return the visualization if it exists for this pattern ID
+  const visualization = algorithmVisualizations[patternId];
+  if (!visualization) {
+    console.log(`No algorithm visualization found for pattern: ${patternId}`);
+  }
+  return visualization;
 }
