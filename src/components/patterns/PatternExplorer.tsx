@@ -100,7 +100,7 @@ const PatternExplorer = () => {
           </Card>
           
           {/* Main Content Area */}
-          <div className="flex-1 md:ml-4">
+          <div className="flex-1 md:pl-[260px]">
             <Tabs defaultValue="visualization" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="visualization" className="flex items-center gap-2">

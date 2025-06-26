@@ -114,17 +114,17 @@ export function PatternSidebar({ activePatternId, onPatternSelect }: PatternSide
   };
 
   return (
-    <div className="relative h-full">
+    <div className="relative">
       {isCollapsed && <CollapsedSidebarButton />}
       
       <div 
         className={cn(
-          "h-full border-r border-border bg-background shadow-md sidebar-transition fixed z-30",
+          "border-r border-border bg-background shadow-md sidebar-transition fixed z-30 top-[142px] bottom-[80px] overflow-hidden",
           isCollapsed 
             ? "-translate-x-full opacity-0" 
             : "translate-x-0 opacity-100"
         )}
-        style={{ width: '250px' }}
+        style={{ width: '250px', height: 'calc(100vh - 222px)' }}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -178,54 +178,56 @@ export function PatternSidebar({ activePatternId, onPatternSelect }: PatternSide
           </div>
           
           {/* Pattern List */}
-          <ScrollArea className="flex-1 p-2">
-            {Object.entries(filteredCategories).length > 0 ? (
-              Object.entries(filteredCategories).map(([categoryName, patterns]) => (
-                <div key={categoryName} className="mb-4">
-                  <div className="flex items-center gap-2 px-2 py-1 text-sm font-medium text-muted-foreground">
-                    {getCategoryIcon(categoryName)}
-                    <span>{categoryName}</span>
+          <div className="overflow-y-auto flex-1" style={{ maxHeight: "calc(100vh - 250px)" }}>
+            <ScrollArea className="p-2 h-full">
+              {Object.entries(filteredCategories).length > 0 ? (
+                Object.entries(filteredCategories).map(([categoryName, patterns]) => (
+                  <div key={categoryName} className="mb-4">
+                    <div className="flex items-center gap-2 px-2 py-1 text-sm font-medium text-muted-foreground">
+                      {getCategoryIcon(categoryName)}
+                      <span>{categoryName}</span>
+                    </div>
+                    <div className="mt-1 space-y-1">
+                      {patterns.map(pattern => (
+                        <TooltipProvider key={pattern.id}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div 
+                                className={cn(
+                                  "px-2 py-1.5 rounded-md cursor-pointer transition-colors text-sm",
+                                  activePatternId === pattern.id 
+                                    ? "bg-primary/10 text-primary border-l-2 border-primary" 
+                                    : "hover:bg-muted"
+                                )}
+                                onClick={() => onPatternSelect(pattern.id)}
+                              >
+                                <span>{pattern.name}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" className="max-w-xs text-sm">
+                              {pattern.description}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ))}
+                    </div>
                   </div>
-                  <div className="mt-1 space-y-1">
-                    {patterns.map(pattern => (
-                      <TooltipProvider key={pattern.id}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div 
-                              className={cn(
-                                "px-2 py-1.5 rounded-md cursor-pointer transition-colors text-sm",
-                                activePatternId === pattern.id 
-                                  ? "bg-primary/10 text-primary border-l-2 border-primary" 
-                                  : "hover:bg-muted"
-                              )}
-                              onClick={() => onPatternSelect(pattern.id)}
-                            >
-                              <span>{pattern.name}</span>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="right" className="max-w-xs text-sm">
-                            {pattern.description}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ))}
-                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-8 text-center text-muted-foreground">
+                  <p>No patterns found</p>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="mt-2"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    Clear search
+                  </Button>
                 </div>
-              ))
-            ) : (
-              <div className="px-4 py-8 text-center text-muted-foreground">
-                <p>No patterns found</p>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="mt-2"
-                  onClick={() => setSearchQuery('')}
-                >
-                  Clear search
-                </Button>
-              </div>
-            )}
-          </ScrollArea>
+              )}
+            </ScrollArea>
+          </div>
         </div>
       </div>
     </div>
