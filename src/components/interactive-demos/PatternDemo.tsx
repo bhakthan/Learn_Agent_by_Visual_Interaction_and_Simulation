@@ -172,6 +172,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
     setSteps({});
     setCurrentNodeId(null);
     setDataFlows([]);
+    setIterations(0); // Reset iterations count
     
     // Reset nodes
     setNodes(nodes.map(node => ({
@@ -213,6 +214,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
     
     resetDemo();
     setIsRunning(true);
+    setIterations(0); // Initialize iterations counter
     
     // Initialize all nodes as idle
     const initialSteps = patternData.nodes.reduce((acc, node) => {
@@ -245,6 +247,9 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
       ...prev,
       [nodeId]: { ...prev[nodeId], status: 'running', startTime: Date.now() }
     }));
+    
+    // Increment iterations counter
+    setIterations(prev => prev + 1);
     
     // Update node status in visualization
     setNodes(nodes => nodes.map(node => 
@@ -414,6 +419,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
   
   // Animation speeds
   const [animationSpeed, setAnimationSpeed] = useState<number>(1); // Default to normal speed
+  const [iterations, setIterations] = useState<number>(0); // Add iterations variable with default value
   
   return (
     <Card className="mb-6">
@@ -474,6 +480,9 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
               >
                 Fast
               </Button>
+              <span className="ml-4 text-xs text-muted-foreground">
+                Iterations: {iterations}
+              </span>
             </div>
           </div>
           
