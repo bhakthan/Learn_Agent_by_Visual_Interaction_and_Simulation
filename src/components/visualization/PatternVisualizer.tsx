@@ -124,7 +124,7 @@ const messageTemplates = {
   llm: (text: string = '') => `Processing with AI: "${text}"`,
   router: () => "Routing decision being made...",
   aggregator: () => "Combining results from multiple sources...",
-  tool: (toolName: string = 'External API') => `Using tool: ${toolName || 'External API'}`,
+  tool: (toolName = 'External API') => `Using tool: ${toolName}`,
   output: (text: string = '') => `Final result: "${text}"`,
   error: () => "Error occurred during processing",
   planner: () => "Creating execution plan...",
