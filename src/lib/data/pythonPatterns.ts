@@ -158,19 +158,19 @@ class CodeActAgent:
                 
                 # Generate agent response
                 agent_prompt = (
-                    f"You are a CodeAct agent that solves problems by writing and executing Python code.\\n\\n"
-                    f"Task: {query}\\n\\n"
-                    f"Previous interactions:\\n{chr(10).join(context_history)}\\n\\n"
-                    f"Based on the current state, either:\\n\\n"
-                    f"1. Write Python code to make progress, formatted as:\\n"
-                    f"   Thought: <your reasoning>\\n"
-                    f"   Code:\\n"
-                    f"   ```python\\n"
-                    f"   # Your Python code here\\n"
-                    f"   ```\\n\\n"
-                    f"2. Or provide the final answer if you've solved the problem:\\n"
-                    f"   Thought: <your reasoning>\\n"
-                    f"   Final Answer: <your answer>"
+                    "You are a CodeAct agent that solves problems by writing and executing Python code.\n\n"
+                    f"Task: {query}\n\n"
+                    f"Previous interactions:\n{chr(10).join(context_history)}\n\n"
+                    "Based on the current state, either:\n\n"
+                    "1. Write Python code to make progress, formatted as:\n"
+                    "   Thought: <your reasoning>\n"
+                    "   Code:\n"
+                    "   ```python\n"
+                    "   # Your Python code here\n"
+                    "   ```\n\n"
+                    "2. Or provide the final answer if you've solved the problem:\n"
+                    "   Thought: <your reasoning>\n"
+                    "   Final Answer: <your answer>"
                 )
                 
                 agent_response = await self._llm_call(agent_prompt)
