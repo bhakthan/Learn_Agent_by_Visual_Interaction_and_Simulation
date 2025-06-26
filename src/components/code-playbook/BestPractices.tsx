@@ -30,13 +30,13 @@ const BestPractices: React.FC<BestPracticesProps> = ({ patternId }) => {
   return (
     <Card className="border-primary/20 shadow-sm">
       <CardHeader className="bg-muted/30">
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-2 text-lg">
             <InfoCircle size={20} className="text-primary" />
             Implementation Best Practices
           </div>
-          <Tabs value={practiceType} onValueChange={(v) => setPracticeType(v as 'general' | 'azure')} className="w-auto">
-            <TabsList className="h-8">
+          <Tabs value={practiceType} onValueChange={(v) => setPracticeType(v as 'general' | 'azure')} className="w-full sm:w-auto">
+            <TabsList className="h-8 w-full grid grid-cols-2 sm:w-auto sm:flex">
               <TabsTrigger value="general" className="text-xs px-3 py-1 h-7">General</TabsTrigger>
               <TabsTrigger value="azure" className="text-xs px-3 py-1 h-7">Azure AI Services</TabsTrigger>
             </TabsList>
@@ -97,24 +97,23 @@ const BestPractices: React.FC<BestPracticesProps> = ({ patternId }) => {
                       </ul>
                     </div>
                     
-                    <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-border">
-                      {service.capabilities.slice(0, 3).map((capability, i) => (
-                        <Badge key={i} variant="outline" className="bg-primary/5 text-xs">
-                          {capability}
-                        </Badge>
-                      ))}
-                      {service.capabilities.length > 3 && (
-                        <Badge variant="outline" className="bg-muted/20 text-xs">
-                          +{service.capabilities.length - 3} more
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <div className="pt-2 flex justify-end">
+                    <div className="pt-2 flex flex-col sm:flex-row sm:justify-between gap-2">
+                      <div className="flex flex-wrap gap-2 mb-2 sm:mb-0">
+                        {service.capabilities.slice(0, 2).map((capability, i) => (
+                          <Badge key={i} variant="outline" className="bg-primary/5 text-xs">
+                            {capability}
+                          </Badge>
+                        ))}
+                        {service.capabilities.length > 2 && (
+                          <Badge variant="outline" className="bg-muted/20 text-xs">
+                            +{service.capabilities.length - 2} more
+                          </Badge>
+                        )}
+                      </div>
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="text-xs" 
+                        className="text-xs w-full sm:w-auto" 
                         onClick={() => window.open(service.documentation, '_blank')}
                       >
                         Documentation

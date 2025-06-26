@@ -44,41 +44,66 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
   // Get interactive execution blocks if available
   const interactiveExecution = getCodeExecutionExample(patternData.id, language)
   
+  // Language selector component for reuse
+  const LanguageSelector = () => (
+    <div className="flex items-center mb-2 space-x-2 justify-between sm:justify-end">
+      <span className="text-sm text-muted-foreground">Language:</span>
+      <div className="space-x-1">
+        <Button
+          size="sm"
+          variant={language === 'python' ? 'default' : 'outline'}
+          onClick={() => setLanguage('python')}
+          className="px-2 sm:px-3"
+        >
+          Python
+        </Button>
+        <Button
+          size="sm"
+          variant={language === 'typescript' ? 'default' : 'outline'}
+          onClick={() => setLanguage('typescript')}
+          className="px-2 sm:px-3"
+        >
+          TypeScript
+        </Button>
+      </div>
+    </div>
+  );
+  
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="p-4 sm:p-6">
           <CardTitle>{patternData.name} Implementation</CardTitle>
           <CardDescription>
             Step-by-step guide to implementing the {patternData.name} pattern
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-8">
-              <TabsTrigger value="general" className="flex items-center gap-2">
-                <ListChecks size={16} /> General Guide
+            <TabsList className="flex w-full flex-wrap gap-2">
+              <TabsTrigger value="general" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
+                <ListChecks size={16} /> <span className="hidden sm:inline">General Guide</span><span className="sm:hidden">Guide</span>
               </TabsTrigger>
-              <TabsTrigger value="steps" className="flex items-center gap-2">
-                <ListChecks size={16} /> Implementation Steps
+              <TabsTrigger value="steps" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
+                <ListChecks size={16} /> <span className="hidden sm:inline">Implementation Steps</span><span className="sm:hidden">Steps</span>
               </TabsTrigger>
-              <TabsTrigger value="code" className="flex items-center gap-2">
-                <Code size={16} /> Complete Code
+              <TabsTrigger value="code" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
+                <Code size={16} /> <span className="hidden sm:inline">Complete Code</span><span className="sm:hidden">Code</span>
               </TabsTrigger>
-              <TabsTrigger value="visualizer" className="flex items-center gap-2">
-                <FileCode size={16} /> Code Visualizer
+              <TabsTrigger value="visualizer" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
+                <FileCode size={16} /> <span className="hidden sm:inline">Code Visualizer</span><span className="sm:hidden">Visualizer</span>
               </TabsTrigger>
-              <TabsTrigger value="interactive" className="flex items-center gap-2">
-                <Play size={16} /> Interactive Example
+              <TabsTrigger value="interactive" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
+                <Play size={16} /> <span className="hidden sm:inline">Interactive Example</span><span className="sm:hidden">Example</span>
               </TabsTrigger>
-              <TabsTrigger value="debugger" className="flex items-center gap-2">
-                <Bug size={16} /> Debugger
+              <TabsTrigger value="debugger" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
+                <Bug size={16} /> <span className="hidden sm:inline">Debugger</span><span className="sm:hidden">Debug</span>
               </TabsTrigger>
-              <TabsTrigger value="algorithm" className="flex items-center gap-2">
-                <Graph size={16} /> Algorithm Steps
+              <TabsTrigger value="algorithm" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
+                <Graph size={16} /> <span className="hidden sm:inline">Algorithm Steps</span><span className="sm:hidden">Algorithm</span>
               </TabsTrigger>
-              <TabsTrigger value="practices" className="flex items-center gap-2">
-                <Check size={16} /> Best Practices
+              <TabsTrigger value="practices" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
+                <Check size={16} /> <span className="hidden sm:inline">Best Practices</span><span className="sm:hidden">Practices</span>
               </TabsTrigger>
             </TabsList>
             
@@ -160,23 +185,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
             </TabsContent>
             
             <TabsContent value="code" className="py-4">
-              <div className="flex items-center justify-end mb-2 space-x-2">
-                <span className="text-sm text-muted-foreground mr-2">Language:</span>
-                <Button
-                  size="sm"
-                  variant={language === 'python' ? 'default' : 'outline'}
-                  onClick={() => setLanguage('python')}
-                >
-                  Python
-                </Button>
-                <Button
-                  size="sm"
-                  variant={language === 'typescript' ? 'default' : 'outline'}
-                  onClick={() => setLanguage('typescript')}
-                >
-                  TypeScript
-                </Button>
-              </div>
+              <LanguageSelector />
               
               <div className="relative">
                 <SyntaxHighlighter 
@@ -212,23 +221,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
             </TabsContent>
             
             <TabsContent value="visualizer" className="py-4">
-              <div className="flex items-center justify-end mb-2 space-x-2">
-                <span className="text-sm text-muted-foreground mr-2">Language:</span>
-                <Button
-                  size="sm"
-                  variant={language === 'python' ? 'default' : 'outline'}
-                  onClick={() => setLanguage('python')}
-                >
-                  Python
-                </Button>
-                <Button
-                  size="sm"
-                  variant={language === 'typescript' ? 'default' : 'outline'}
-                  onClick={() => setLanguage('typescript')}
-                >
-                  TypeScript
-                </Button>
-              </div>
+              <LanguageSelector />
               
               {executionSteps ? (
                 <EnhancedCodeVisualizer 
@@ -299,24 +292,9 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                 </AlertDescription>
               </Alert>
             </TabsContent>
+            
             <TabsContent value="debugger" className="py-4">
-              <div className="flex items-center justify-end mb-2 space-x-2">
-                <span className="text-sm text-muted-foreground mr-2">Language:</span>
-                <Button
-                  size="sm"
-                  variant={language === 'python' ? 'default' : 'outline'}
-                  onClick={() => setLanguage('python')}
-                >
-                  Python
-                </Button>
-                <Button
-                  size="sm"
-                  variant={language === 'typescript' ? 'default' : 'outline'}
-                  onClick={() => setLanguage('typescript')}
-                >
-                  TypeScript
-                </Button>
-              </div>
+              <LanguageSelector />
               
               {(() => {
                 const debugExample = getDebugExample(patternData.id, language);
@@ -368,7 +346,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
             </TabsContent>
           </Tabs>
         </CardContent>
-        <CardFooter className="flex justify-between border-t pt-6">
+        <CardFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between border-t p-4 sm:p-6">
           <div className="text-sm text-muted-foreground">
             Available in both Python and TypeScript for Azure AI SDK
           </div>
