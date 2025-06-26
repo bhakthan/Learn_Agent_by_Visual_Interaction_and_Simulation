@@ -4,10 +4,21 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Moon, Sun } from "@phosphor-icons/react";
+import { Moon, Sun, Check } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
 
 export function ThemeTester() {
-  const { theme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const [transitionActive, setTransitionActive] = useState(false);
+
+  const handleThemeChange = (newTheme: "light" | "dark") => {
+    setTransitionActive(true);
+    setTheme(newTheme);
+    
+    setTimeout(() => {
+      setTransitionActive(false);
+    }, 500);
+  };
 
   return (
     <Card className="w-full border-primary/20">
@@ -26,13 +37,38 @@ export function ThemeTester() {
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
-          <h3 className="text-lg font-medium mb-2">Current Theme: {theme}</h3>
+          <h3 className="text-lg font-medium mb-2">Current Theme: <span className="text-primary">{theme}</span></h3>
           <p className="text-sm text-muted-foreground">
             This panel shows various UI elements to verify that theme switching is working correctly.
+            Try switching between light and dark mode using the toggle in the header.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="flex items-center justify-center p-3 gap-4 border border-border rounded-md">
+          <Button 
+            variant={theme === "light" ? "default" : "outline"}
+            size="sm" 
+            onClick={() => handleThemeChange("light")}
+            className="min-w-[100px] flex items-center gap-2"
+          >
+            <Sun size={16} weight="fill" />
+            Light
+            {theme === "light" && <Check size={16} className="ml-1" weight="bold" />}
+          </Button>
+          
+          <Button 
+            variant={theme === "dark" ? "default" : "outline"}
+            size="sm"
+            onClick={() => handleThemeChange("dark")}
+            className="min-w-[100px] flex items-center gap-2"
+          >
+            <Moon size={16} weight="fill" />
+            Dark
+            {theme === "dark" && <Check size={16} className="ml-1" weight="bold" />}
+          </Button>
+        </div>
+
+        <div className={`grid grid-cols-2 gap-4 transition-opacity duration-300 ${transitionActive ? 'opacity-50' : 'opacity-100'}`}>
           <div className="space-y-3">
             <h4 className="font-medium">Text Colors</h4>
             <p className="text-foreground">Text foreground</p>
@@ -91,8 +127,12 @@ export function ThemeTester() {
       </CardContent>
       <CardFooter className="flex justify-between">
         <p className="text-sm text-muted-foreground">
-          CSS variables are applied correctly: {theme === "light" ? "✅" : "✅"}
+          Theme variables are applied correctly: {" "}
+          <span className="text-primary font-medium">✓</span>
         </p>
+        <Badge variant="outline" className={theme === "light" ? "bg-primary/10" : "bg-primary/20"}>
+          {theme === "light" ? "Light Mode Active" : "Dark Mode Active"}
+        </Badge>
       </CardFooter>
     </Card>
   );

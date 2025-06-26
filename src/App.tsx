@@ -29,7 +29,10 @@ function App() {
           <h1 className="text-2xl font-bold text-primary">Azure AI Agents Visualization</h1>
           
           <div className="flex items-center space-x-4">
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <span className="text-xs text-muted-foreground hidden md:inline-block">Night Mode</span>
+            </div>
             <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>

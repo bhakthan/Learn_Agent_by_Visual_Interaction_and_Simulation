@@ -63,6 +63,23 @@ export function ThemeProvider({
     localStorage.setItem(storageKey, theme);
   }, [theme, storageKey]);
 
+  // Listen for system theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    
+    const handleChange = (e: MediaQueryListEvent) => {
+      // Only update if no manual preference was set
+      if (!localStorage.getItem(storageKey)) {
+        setTheme(e.matches ? "dark" : "light");
+      }
+    };
+    
+    // Listener for system theme changes
+    mediaQuery.addEventListener("change", handleChange);
+    
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, [storageKey]);
+
   const toggleTheme = () => {
     setTheme(theme === "light" ? "dark" : "light");
   };

@@ -25,13 +25,17 @@ export function ThemeToggle() {
             variant="outline"
             size="icon"
             onClick={toggleTheme}
-            className="rounded-full h-9 w-9 border-primary/20"
+            className={`rounded-full h-9 w-9 transition-all duration-300 ${
+              theme === "light" 
+              ? "border-primary/20 bg-background" 
+              : "border-primary/40 bg-primary/10"
+            }`}
             aria-label="Toggle theme"
           >
             {theme === "light" ? (
-              <Moon size={18} weight="fill" className="text-foreground" />
+              <Moon size={18} weight="fill" className="text-primary transition-all duration-300" />
             ) : (
-              <Sun size={18} weight="fill" className="text-foreground" />
+              <Sun size={18} weight="fill" className="text-primary transition-all duration-300" />
             )}
             <span className="sr-only">Toggle theme</span>
           </Button>

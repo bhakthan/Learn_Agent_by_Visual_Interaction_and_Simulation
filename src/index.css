@@ -11,8 +11,11 @@
     --transition-duration: 0.3s;
   }
   
-  body {
-    transition: background-color var(--transition-duration) ease, color var(--transition-duration) ease;
+  body, button, a, div {
+    transition: background-color var(--transition-duration) ease, 
+                color var(--transition-duration) ease,
+                border-color var(--transition-duration) ease,
+                box-shadow var(--transition-duration) ease;
   }
 }
 
