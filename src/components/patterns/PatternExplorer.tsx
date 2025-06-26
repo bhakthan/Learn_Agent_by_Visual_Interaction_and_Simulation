@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { agentPatterns } from '@/lib/data/patterns'
 import PatternVisualizer from '@/components/visualization/PatternVisualizer'
+import AdvancedPatternVisualizer from '@/components/visualization/AdvancedPatternVisualizer'
 import CodePlaybook from '@/components/code-playbook/CodePlaybook'
 import PatternDetails from './PatternDetails'
 import MultiPatternVisualizer from './MultiPatternVisualizer'
@@ -10,10 +11,12 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { ReactFlowProvider } from 'reactflow'
 import { ChartLine, Code, Info, Swap } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
+import { Toggle } from '@/components/ui/toggle'
 
 const PatternExplorer = () => {
   const [selectedPattern, setSelectedPattern] = useState(agentPatterns[0])
   const [viewMode, setViewMode] = useState<'single' | 'compare'>('single')
+  const [useAdvancedVisualizer, setUseAdvancedVisualizer] = useState<boolean>(true)
   
   // Ensure agentPatterns is loaded with the new patterns
   useEffect(() => {
@@ -31,14 +34,25 @@ const PatternExplorer = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Agent Patterns</h2>
-        <Button 
-          variant="outline" 
-          onClick={toggleViewMode}
-          className="flex items-center gap-2"
-        >
-          <Swap size={16} />
-          {viewMode === 'single' ? 'Compare Patterns' : 'Single Pattern View'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Toggle
+            className="flex gap-2 items-center"
+            pressed={useAdvancedVisualizer}
+            onPressedChange={setUseAdvancedVisualizer}
+          >
+            <Info className="h-4 w-4" />
+            {useAdvancedVisualizer ? "Advanced Mode" : "Standard Mode"}
+          </Toggle>
+          
+          <Button 
+            variant="outline" 
+            onClick={toggleViewMode}
+            className="flex items-center gap-2"
+          >
+            <Swap size={16} />
+            {viewMode === 'single' ? 'Compare Patterns' : 'Single Pattern View'}
+          </Button>
+        </div>
       </div>
       
       {viewMode === 'single' ? (
@@ -88,7 +102,11 @@ const PatternExplorer = () => {
               
               <TabsContent value="visualization">
                 <ReactFlowProvider>
-                  <PatternVisualizer key={selectedPattern.id} patternData={selectedPattern} />
+                  {useAdvancedVisualizer ? (
+                    <AdvancedPatternVisualizer key={selectedPattern.id} patternData={selectedPattern} />
+                  ) : (
+                    <PatternVisualizer key={selectedPattern.id} patternData={selectedPattern} />
+                  )}
                 </ReactFlowProvider>
               </TabsContent>
               

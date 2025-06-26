@@ -7,6 +7,7 @@ export interface DataFlowPayload {
   content: string;
   timestamp: number;
   type?: 'message' | 'data' | 'response' | 'error';
+  category?: 'user-input' | 'system-message' | 'tool-call' | 'reasoning' | 'decision';
 }
 
 export interface DataFlowVisualParams {
@@ -15,6 +16,8 @@ export interface DataFlowVisualParams {
   size?: 'small' | 'medium' | 'large';
   pulseEffect?: boolean;
   label?: string;
+  category?: string;
+  detailLevel?: 'basic' | 'detailed' | 'timeline';
 }
 
 /**
@@ -24,7 +27,8 @@ export const createDataFlow = (
   source: string,
   target: string,
   content: string,
-  type: 'message' | 'data' | 'response' | 'error' = 'message'
+  type: 'message' | 'data' | 'response' | 'error' = 'message',
+  category?: 'user-input' | 'system-message' | 'tool-call' | 'reasoning' | 'decision'
 ): DataFlowPayload => {
   return {
     id: `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
@@ -32,7 +36,8 @@ export const createDataFlow = (
     target,
     content,
     timestamp: Date.now(),
-    type
+    type,
+    category
   };
 };
 
@@ -43,7 +48,7 @@ export const getDataFlowAnimationStyle = (
   type: 'message' | 'data' | 'response' | 'error',
   params: DataFlowVisualParams = {}
 ) => {
-  const { speed = 'medium', pulseEffect = false } = params;
+  const { speed = 'medium', pulseEffect = false, detailLevel = 'basic' } = params;
   
   // Calculate animation duration based on speed
   const durationMap = {
@@ -61,17 +66,19 @@ export const getDataFlowAnimationStyle = (
     default: '#64748b' // gray
   };
   
-  // Calculate size of the flow indicator
+  // Calculate size of the flow indicator - bigger for detailed mode
+  const sizeMultiplier = detailLevel === 'detailed' ? 1.5 : 1;
   const sizeMap = {
-    small: 6,
-    medium: 8,
-    large: 10
+    small: 6 * sizeMultiplier,
+    medium: 8 * sizeMultiplier,
+    large: 10 * sizeMultiplier
   };
   
   const color = colorMap[type] || colorMap.default;
   
   return {
     stroke: color,
+    fill: color + '15', // Light background color with opacity
     strokeWidth: sizeMap[params.size || 'medium'],
     animationDuration: `${durationMap[speed]}s`,
     strokeDasharray: pulseEffect ? '5 5' : undefined,
@@ -94,25 +101,76 @@ export const truncateFlowContent = (content: string, maxLength: number = 30): st
 export const getNodeDataFlowParams = (nodeType?: string): DataFlowVisualParams => {
   switch (nodeType) {
     case 'llm':
-      return { color: '#3b82f6', size: 'medium', speed: 'medium' };
+      return { 
+        color: '#3b82f6', 
+        size: 'medium', 
+        speed: 'medium', 
+        category: 'reasoning'
+      };
     case 'router':
-      return { color: '#f59e0b', size: 'small', speed: 'fast' };
+      return { 
+        color: '#f59e0b', 
+        size: 'small', 
+        speed: 'fast',
+        category: 'decision' 
+      };
     case 'aggregator':
-      return { color: '#10b981', size: 'large', speed: 'slow', pulseEffect: true };
+      return { 
+        color: '#10b981', 
+        size: 'large', 
+        speed: 'slow', 
+        pulseEffect: true,
+        category: 'system-message'
+      };
     case 'evaluator':
-      return { color: '#8b5cf6', size: 'medium', speed: 'medium' };
+      return { 
+        color: '#8b5cf6', 
+        size: 'medium', 
+        speed: 'medium',
+        category: 'reasoning'
+      };
     case 'tool':
-      return { color: '#ef4444', size: 'medium', speed: 'fast' };
+      return { 
+        color: '#ef4444', 
+        size: 'medium', 
+        speed: 'fast',
+        category: 'tool-call'
+      };
     case 'planner':
-      return { color: '#06b6d4', size: 'medium', speed: 'medium' };
+      return { 
+        color: '#06b6d4', 
+        size: 'medium', 
+        speed: 'medium',
+        category: 'reasoning'
+      };
     case 'executor':
-      return { color: '#d946ef', size: 'medium', speed: 'fast' };
+      return { 
+        color: '#d946ef', 
+        size: 'medium', 
+        speed: 'fast',
+        category: 'system-message'
+      };
     case 'input':
-      return { color: '#475569', size: 'medium', speed: 'medium' };  
+      return { 
+        color: '#475569', 
+        size: 'medium', 
+        speed: 'medium',
+        category: 'user-input'
+      };  
     case 'output':
-      return { color: '#16a34a', size: 'medium', speed: 'medium' };
+      return { 
+        color: '#16a34a', 
+        size: 'medium', 
+        speed: 'medium',
+        category: 'system-message'
+      };
     default:
-      return { color: '#64748b', size: 'medium', speed: 'medium' };
+      return { 
+        color: '#64748b', 
+        size: 'medium', 
+        speed: 'medium',
+        category: 'system-message'
+      };
   }
 };
 

@@ -6,16 +6,19 @@ import { ArrowsCounterClockwise, Play, Stop, ArrowsHorizontal } from '@phosphor-
 import { ReactFlowProvider } from 'reactflow'
 import { PatternData, agentPatterns } from '@/lib/data/patterns'
 import PatternVisualizer from '@/components/visualization/PatternVisualizer'
+import AdvancedPatternVisualizer from '@/components/visualization/AdvancedPatternVisualizer'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
+import { Toggle } from '@/components/ui/toggle'
 import { toast } from 'sonner'
 
 interface MultiPatternVisualizerProps {
   initialPatterns?: string[]
+  useAdvancedVisualizer?: boolean
 }
 
-const MultiPatternVisualizer = ({ initialPatterns }: MultiPatternVisualizerProps) => {
+const MultiPatternVisualizer = ({ initialPatterns, useAdvancedVisualizer = true }: MultiPatternVisualizerProps) => {
   // Default to comparing the first two patterns if not specified
   const defaultPatterns = initialPatterns || 
     [agentPatterns[0]?.id, agentPatterns[1]?.id].filter(Boolean);
@@ -23,6 +26,7 @@ const MultiPatternVisualizer = ({ initialPatterns }: MultiPatternVisualizerProps
   const [selectedPatternIds, setSelectedPatternIds] = useState<string[]>(defaultPatterns);
   const [isSimulating, setIsSimulating] = useState(false);
   const [showPatternSelector, setShowPatternSelector] = useState(false);
+  const [useAdvanced, setUseAdvanced] = useState<boolean>(useAdvancedVisualizer);
   
   // Get actual pattern data objects from IDs
   const selectedPatterns = agentPatterns.filter(pattern => 
@@ -75,6 +79,14 @@ const MultiPatternVisualizer = ({ initialPatterns }: MultiPatternVisualizerProps
         </div>
         
         <div className="flex gap-2">
+          <Toggle
+            className="flex gap-2 items-center"
+            pressed={useAdvanced}
+            onPressedChange={setUseAdvanced}
+          >
+            Advanced Visualization
+          </Toggle>
+          
           <Button 
             variant="outline" 
             size="sm"
@@ -148,7 +160,11 @@ const MultiPatternVisualizer = ({ initialPatterns }: MultiPatternVisualizerProps
       <div className={`grid gap-6 ${selectedPatterns.length > 1 ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
         {selectedPatterns.map((pattern) => (
           <ReactFlowProvider key={pattern.id}>
-            <PatternVisualizer patternData={pattern} />
+            {useAdvanced ? (
+              <AdvancedPatternVisualizer patternData={pattern} />
+            ) : (
+              <PatternVisualizer patternData={pattern} />
+            )}
           </ReactFlowProvider>
         ))}
         
