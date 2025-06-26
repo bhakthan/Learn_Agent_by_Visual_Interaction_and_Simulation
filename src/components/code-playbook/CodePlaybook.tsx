@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Check, Code, Play, ListChecks } from "@phosphor-icons/react"
+import { Check, Code, Play, ListChecks, FileCode } from "@phosphor-icons/react"
 import { Steps } from './Steps'
 import { PatternData } from '@/lib/data/patterns'
 import PatternDemo from '../interactive-demos/PatternDemo'
@@ -12,6 +12,10 @@ import SyntaxHighlighter from 'react-syntax-highlighter'
 import { nightOwl } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 import { Button } from '@/components/ui/button'
 import { pythonPatterns } from '@/lib/data/pythonPatterns'
+import CodeStepVisualizer from './CodeStepVisualizer'
+import { getCodeExecutionSteps } from '@/lib/utils/codeExecutionSteps'
+import InteractiveCodeExecution from './InteractiveCodeExecution'
+import { getCodeExecutionExample } from '@/lib/data/codeExamples'
 
 interface CodePlaybookProps {
   patternData: PatternData
@@ -20,6 +24,7 @@ interface CodePlaybookProps {
 const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
   const [currentStep, setCurrentStep] = useState(0)
   const [language, setLanguage] = useState<'python' | 'typescript'>('python')
+  const [visualizationMode, setVisualizationMode] = useState<'static' | 'interactive'>('static')
   
   const getCodeExample = () => {
     if (language === 'python') {
@@ -27,6 +32,12 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
     }
     return patternData.codeExample
   }
+  
+  // Get execution steps for the current pattern and language if available
+  const executionSteps = getCodeExecutionSteps(patternData.id, language)
+  
+  // Get interactive execution blocks if available
+  const interactiveExecution = getCodeExecutionExample(patternData.id, language)
   
   return (
     <div className="space-y-6">
@@ -39,12 +50,15 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="steps" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="steps" className="flex items-center gap-2">
                 <ListChecks size={16} /> Implementation Steps
               </TabsTrigger>
               <TabsTrigger value="code" className="flex items-center gap-2">
                 <Code size={16} /> Complete Code
+              </TabsTrigger>
+              <TabsTrigger value="visualizer" className="flex items-center gap-2">
+                <FileCode size={16} /> Code Visualizer
               </TabsTrigger>
               <TabsTrigger value="practices" className="flex items-center gap-2">
                 <Check size={16} /> Best Practices
@@ -110,6 +124,70 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
               <Alert className="mt-6">
                 <AlertDescription>
                   This code demonstrates a basic implementation of the pattern. You may need to adapt it to your specific use case.
+                </AlertDescription>
+              </Alert>
+            </TabsContent>
+            
+            <TabsContent value="visualizer" className="py-4">
+              <div className="flex items-center justify-end mb-2 space-x-2">
+                <span className="text-sm text-muted-foreground mr-2">Language:</span>
+                <Button
+                  size="sm"
+                  variant={language === 'python' ? 'default' : 'outline'}
+                  onClick={() => setLanguage('python')}
+                >
+                  Python
+                </Button>
+                <Button
+                  size="sm"
+                  variant={language === 'typescript' ? 'default' : 'outline'}
+                  onClick={() => setLanguage('typescript')}
+                >
+                  TypeScript
+                </Button>
+              </div>
+              
+              {executionSteps ? (
+                <CodeStepVisualizer 
+                  code={getCodeExample()} 
+                  language={language}
+                  steps={executionSteps}
+                />
+              ) : interactiveExecution ? (
+                <InteractiveCodeExecution
+                  codeBlocks={interactiveExecution.blocks}
+                  description={interactiveExecution.description}
+                  showConsole={true}
+                />
+              ) : (
+                <div className="border rounded-md p-6 text-center text-muted-foreground">
+                  <FileCode size={32} className="mx-auto mb-2" />
+                  <p>Step-by-step visualization not available for this pattern in {language}.</p>
+                  {language === 'python' ? (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setLanguage('typescript')}
+                      className="mt-2"
+                    >
+                      Try TypeScript Version
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setLanguage('python')}
+                      className="mt-2"
+                    >
+                      Try Python Version
+                    </Button>
+                  )}
+                </div>
+              )}
+              
+              <Alert className="mt-6">
+                <AlertDescription>
+                  Step through the code execution to understand how the {patternData.name} pattern works under the hood.
                 </AlertDescription>
               </Alert>
             </TabsContent>

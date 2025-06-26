@@ -263,12 +263,12 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
       
       if (node.data.nodeType === 'input') {
         result = `Processing input: "${userInput}"`;
-        await new Promise(resolve => setTimeout(resolve, 500)); // Short delay for input
+        await new Promise(resolve => setTimeout(resolve, 500 / animationSpeed)); // Short delay for input
       } else if (node.data.nodeType === 'llm') {
         result = await generateMockResponse(userInput, patternData.id);
       } else if (node.data.nodeType === 'router') {
         result = 'Determining next steps based on input analysis...';
-        await new Promise(resolve => setTimeout(resolve, 800)); // Delay for router decision
+        await new Promise(resolve => setTimeout(resolve, 800 / animationSpeed)); // Delay for router decision
         
         // Router logic - randomly choose a path for demo purposes
         const shouldSucceed = Math.random() > 0.2; // 80% success rate
@@ -277,10 +277,10 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
         }
       } else if (node.data.nodeType === 'aggregator') {
         result = 'Combining results from parallel processes...';
-        await new Promise(resolve => setTimeout(resolve, 1200)); // Longer delay for aggregation
+        await new Promise(resolve => setTimeout(resolve, 1200 / animationSpeed)); // Longer delay for aggregation
       } else {
         result = `Processed by ${node.data.label}`;
-        await new Promise(resolve => setTimeout(resolve, 700));
+        await new Promise(resolve => setTimeout(resolve, 700 / animationSpeed));
       }
       
       // Mark node as complete
@@ -336,7 +336,8 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
         };
         setDataFlows(flows => [...flows, newFlow]);
         
-        await new Promise(resolve => setTimeout(resolve, 800));
+        // Wait proportionally to the animation speed (faster speed = shorter delay)
+        await new Promise(resolve => setTimeout(resolve, 800 / animationSpeed));
         
         // Process target node
         await processNode(edge.target);
@@ -411,6 +412,9 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
     return '';
   };
   
+  // Animation speeds
+  const [animationSpeed, setAnimationSpeed] = useState<number>(1); // Default to normal speed
+  
   return (
     <Card className="mb-6">
       <CardHeader>
@@ -421,7 +425,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <Input
               placeholder="Enter some text to process..."
               value={userInput}
@@ -436,6 +440,41 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
               {isRunning ? <ArrowsClockwise className="mr-2 animate-spin" size={16} /> : <Play className="mr-2" size={16} />}
               {isRunning ? 'Running...' : 'Run Demo'}
             </Button>
+            <Button 
+              variant="outline" 
+              onClick={resetDemo}
+              disabled={isRunning}
+              className="ml-2"
+            >
+              Reset
+            </Button>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <div className="text-sm font-medium">Animation Speed:</div>
+            <div className="flex items-center gap-2">
+              <Button 
+                size="sm"
+                variant={animationSpeed === 0.5 ? "default" : "outline"}
+                onClick={() => setAnimationSpeed(0.5)}
+              >
+                Slow
+              </Button>
+              <Button 
+                size="sm"
+                variant={animationSpeed === 1 ? "default" : "outline"}
+                onClick={() => setAnimationSpeed(1)}
+              >
+                Normal
+              </Button>
+              <Button 
+                size="sm"
+                variant={animationSpeed === 2 ? "default" : "outline"}
+                onClick={() => setAnimationSpeed(2)}
+              >
+                Fast
+              </Button>
+            </div>
           </div>
           
           {/* Flow visualization */}
@@ -464,6 +503,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
                   edges={edges}
                   getEdgePoints={getEdgePoints}
                   onFlowComplete={onFlowComplete}
+                  speed={animationSpeed}
                 />
               </ReactFlow>
             </ReactFlowProvider>
