@@ -55,7 +55,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="general" className="flex items-center gap-2">
                 <ListChecks size={16} /> General Guide
               </TabsTrigger>
@@ -66,10 +66,10 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                 <Code size={16} /> Complete Code
               </TabsTrigger>
               <TabsTrigger value="visualizer" className="flex items-center gap-2">
+                <FileCode size={16} /> Code Visualizer
+              </TabsTrigger>
               <TabsTrigger value="interactive" className="flex items-center gap-2">
                 <Play size={16} /> Interactive Example
-              </TabsTrigger>
-                <FileCode size={16} /> Code Visualizer
               </TabsTrigger>
               <TabsTrigger value="debugger" className="flex items-center gap-2">
                 <Bug size={16} /> Debugger
@@ -233,7 +233,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                   steps={executionSteps}
                   title={`${patternData.name} Pattern Execution`}
                 />
-              ) : interactiveExecution ? (
+              ) : interactiveExecution && interactiveExecution.blocks ? (
                 <InteractiveCodeExecution
                   codeBlocks={interactiveExecution.blocks}
                   description={interactiveExecution.description}
@@ -277,26 +277,23 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
             </TabsContent>
             
             <TabsContent value="algorithm" className="py-4">
-              {getAlgorithmVisualization(patternData.id) ? (
-                <AlgorithmVisualizer visualization={getAlgorithmVisualization(patternData.id)!} />
-              ) : (
-                <div className="border rounded-md p-6 text-center text-muted-foreground">
-                  <Graph size={32} className="mx-auto mb-2" />
-                  <p>Algorithm visualization not available for this pattern.</p>
-                </div>
-              )}
+              {(() => {
+                const algorithmVis = getAlgorithmVisualization(patternData.id);
+                return algorithmVis ? (
+                  <AlgorithmVisualizer visualization={algorithmVis} />
+                ) : (
+                  <div className="border rounded-md p-6 text-center text-muted-foreground">
+                    <Graph size={32} className="mx-auto mb-2" />
+                    <p>Algorithm visualization not available for this pattern.</p>
+                  </div>
+                );
+              })()}
               
               <Alert className="mt-6">
                 <AlertDescription>
                   Step through the algorithm execution to understand the decision-making process in the {patternData.name} pattern.
                 </AlertDescription>
               </Alert>
-            </TabsContent>
-            
-            <TabsContent value="interactive" className="py-4">
-              <ReactFlowProvider>
-                <PatternDemo patternData={patternData} />
-              </ReactFlowProvider>
             </TabsContent>
             <TabsContent value="debugger" className="py-4">
               <div className="flex items-center justify-end mb-2 space-x-2">
@@ -317,38 +314,41 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                 </Button>
               </div>
               
-              {getDebugExample(patternData.id, language) ? (
-                <CodeDebugger
-                  code={getDebugExample(patternData.id, language)!.code}
-                  language={language}
-                  steps={getDebugExample(patternData.id, language)!.steps}
-                  title={`${patternData.name} Pattern Debug Mode`}
-                />
-              ) : (
-                <div className="border rounded-md p-6 text-center text-muted-foreground">
-                  <Bug size={32} className="mx-auto mb-2" />
-                  <p>Interactive debugger not available for this pattern in {language}.</p>
-                  {language === 'python' ? (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setLanguage('typescript')}
-                      className="mt-2"
-                    >
-                      Try TypeScript Version
-                    </Button>
-                  ) : (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setLanguage('python')}
-                      className="mt-2"
-                    >
-                      Try Python Version
-                    </Button>
-                  )}
-                </div>
-              )}
+              {(() => {
+                const debugExample = getDebugExample(patternData.id, language);
+                return debugExample ? (
+                  <CodeDebugger
+                    code={debugExample.code}
+                    language={language}
+                    steps={debugExample.steps}
+                    title={`${patternData.name} Pattern Debug Mode`}
+                  />
+                ) : (
+                  <div className="border rounded-md p-6 text-center text-muted-foreground">
+                    <Bug size={32} className="mx-auto mb-2" />
+                    <p>Interactive debugger not available for this pattern in {language}.</p>
+                    {language === 'python' ? (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setLanguage('typescript')}
+                        className="mt-2"
+                      >
+                        Try TypeScript Version
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setLanguage('python')}
+                        className="mt-2"
+                      >
+                        Try Python Version
+                      </Button>
+                    )}
+                  </div>
+                );
+              })()}
               
               <Alert className="mt-6">
                 <AlertDescription>

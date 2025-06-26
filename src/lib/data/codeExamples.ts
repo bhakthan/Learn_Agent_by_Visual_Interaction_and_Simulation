@@ -506,5 +506,6 @@ const executeReAct = async (query: string) => {
  * Get execution examples for a specific pattern and language
  */
 export function getCodeExecutionExample(patternId: string, language: 'python' | 'typescript') {
-  return codeExecutionExamples[patternId]?.[language];
+  const example = codeExecutionExamples[patternId]?.[language];
+  return example ?? null; // Return null instead of undefined
 }
