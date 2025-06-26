@@ -22,7 +22,8 @@ import { patternContents } from '@/lib/data/patternContent'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Play, Stop, ArrowsCounterClockwise, Info } from '@phosphor-icons/react'
+import { Slider } from '@/components/ui/slider'
+import { Play, Stop, ArrowsCounterClockwise, Info, FastForward, Pause, StepForward, Rewind } from '@phosphor-icons/react'
 import { createDataFlow, simulatePatternFlow } from '@/lib/utils/dataFlowUtils'
 import DataFlowVisualizer from './DataFlowVisualizer'
 
@@ -41,6 +42,16 @@ interface DataFlow {
   type: 'message' | 'data' | 'response' | 'error';
   progress: number;
   label?: string;
+}
+
+// Animation control state
+type AnimationSpeed = 'slow' | 'normal' | 'fast';
+type AnimationMode = 'auto' | 'step-by-step';
+interface AnimationState {
+  speed: AnimationSpeed;
+  mode: AnimationMode;
+  isPaused: boolean;
+  step: number;
 }
 
 // Custom node types
@@ -139,8 +150,17 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
   const [dataFlows, setDataFlows] = useState<DataFlow[]>([])
   const [isAnimating, setIsAnimating] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
+  const [animationState, setAnimationState] = useState<AnimationState>({
+    speed: 'normal',
+    mode: 'auto',
+    isPaused: false,
+    step: 0
+  })
+  const [speedFactor, setSpeedFactor] = useState<number>(1)
   const flowInstanceRef = useRef<ReactFlowInstance | null>(null)
   const simulationRef = useRef<NodeJS.Timeout | null>(null)
+  const simulationCleanupRef = useRef<(() => void) | null>(null)
+  const stepQueueRef = useRef<Array<() => void>>([])
   const reactFlowInstance = useReactFlow()
   
   // Reset flow and nodes when pattern changes
@@ -150,6 +170,16 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     setIsAnimating(false);
     setDataFlows([]);
   }, [patternData.id]);
+
+  // Speed factor effect
+  useEffect(() => {
+    const factors = {
+      'slow': 0.5,
+      'normal': 1,
+      'fast': 2
+    };
+    setSpeedFactor(factors[animationState.speed]);
+  }, [animationState.speed]);
   
   const resetVisualization = useCallback(() => {
     // Clear any running timeouts
@@ -158,8 +188,25 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       simulationRef.current = null;
     }
     
+    // Run cleanup if available
+    if (simulationCleanupRef.current) {
+      simulationCleanupRef.current();
+      simulationCleanupRef.current = null;
+    }
+    
     setIsAnimating(false);
     setDataFlows([]); // Clear all data flows
+    
+    // Reset animation state
+    setAnimationState({
+      speed: 'normal',
+      mode: 'auto',
+      isPaused: false,
+      step: 0
+    });
+    
+    // Clear step queue
+    stepQueueRef.current = [];
     
     // Reset all nodes (remove active state and status)
     setNodes(currentNodes => currentNodes.map(node => ({
@@ -221,6 +268,20 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     });
   }, [setNodes]);
   
+  const togglePauseSimulation = useCallback(() => {
+    setAnimationState(prev => ({ ...prev, isPaused: !prev.isPaused }));
+  }, []);
+  
+  const executeNextStep = useCallback(() => {
+    if (stepQueueRef.current.length > 0) {
+      const nextStep = stepQueueRef.current.shift();
+      if (nextStep) {
+        nextStep();
+        setAnimationState(prev => ({ ...prev, step: prev.step + 1 }));
+      }
+    }
+  }, []);
+  
   const startSimulation = useCallback(() => {
     resetVisualization();
     setIsAnimating(true);
@@ -252,6 +313,22 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       setDataFlows(currentFlows => [...currentFlows, flow]);
     };
     
+    // Create step handler for step-by-step mode
+    const handleAddStep = (stepFn: () => void) => {
+      if (animationState.mode === 'step-by-step') {
+        stepQueueRef.current.push(stepFn);
+      } else {
+        // In auto mode, execute based on speed factor
+        const timeoutId = setTimeout(() => {
+          if (!animationState.isPaused) {
+            stepFn();
+          }
+        }, 100 / speedFactor);
+        return timeoutId;
+      }
+      return null;
+    };
+    
     // Start the simulation using our utility
     const { cleanup } = simulatePatternFlow(
       nodes,
@@ -259,24 +336,41 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       handleNodeStatus,
       handleEdgeStatus,
       handleDataFlow,
-      "Tell me about agent patterns"
+      "Tell me about agent patterns",
+      handleAddStep,
+      animationState.mode === 'auto' ? speedFactor : undefined
     );
     
-    // Store the cleanup function to cancel simulation if needed
-    simulationRef.current = setTimeout(() => {
-      // This is just to have something in the ref to clean up
-      // The actual cleanup is called separately
-    }, 100);
+    // Store the cleanup function
+    simulationCleanupRef.current = cleanup;
+    
+    // In auto mode, start simulation immediately
+    if (animationState.mode === 'auto') {
+      simulationRef.current = setTimeout(() => {}, 100);
+    } else {
+      // In step mode, wait for user to trigger steps
+      console.log('Started in step-by-step mode. Click Next Step to proceed.');
+    }
     
     // Clean up the simulation when component unmounts or resets
     return () => {
       if (cleanup) cleanup();
     };
-  }, [nodes, edges, setNodes, setEdges, resetVisualization]);
+  }, [nodes, edges, setNodes, setEdges, resetVisualization, animationState.mode, animationState.isPaused, speedFactor]);
   
   const onInit = useCallback((instance: ReactFlowInstance) => {
     flowInstanceRef.current = instance;
   }, []);
+  
+  const changeAnimationSpeed = useCallback((newSpeed: AnimationSpeed) => {
+    setAnimationState(prev => ({ ...prev, speed: newSpeed }));
+  }, []);
+  
+  const changeAnimationMode = useCallback((newMode: AnimationMode) => {
+    // Reset visualization when changing mode
+    resetVisualization();
+    setAnimationState(prev => ({ ...prev, mode: newMode, step: 0 }));
+  }, [resetVisualization]);
 
   return (
     <Card className="mb-6">
@@ -292,25 +386,107 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
               variant="outline" 
               size="sm"
               onClick={resetVisualization}
-              disabled={isAnimating}
+              disabled={isAnimating && !animationState.isPaused}
             >
               <ArrowsCounterClockwise className="mr-2" size={14} />
               Reset
             </Button>
             <Button 
               size="sm"
-              onClick={startSimulation}
-              disabled={isAnimating}
+              onClick={isAnimating ? togglePauseSimulation : startSimulation}
+              disabled={isAnimating && animationState.mode === 'step-by-step'}
+              className={animationState.isPaused ? "bg-yellow-500 hover:bg-yellow-600" : ""}
             >
               {isAnimating ? (
-                <Stop className="mr-2" size={14} />
+                animationState.isPaused ? <Play className="mr-2" size={14} /> : <Pause className="mr-2" size={14} />
               ) : (
                 <Play className="mr-2" size={14} />
               )}
-              {isAnimating ? 'Running...' : 'Simulate Flow'}
+              {isAnimating ? 
+                (animationState.isPaused ? 'Resume' : 'Pause') : 
+                'Start Simulation'}
             </Button>
           </div>
         </div>
+        
+        {isAnimating && (
+          <div className="p-4 pt-0 bg-muted">
+            <div className="flex flex-wrap items-center gap-4 mt-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Mode:</span>
+                <div className="flex items-center gap-1">
+                  <Button 
+                    size="sm" 
+                    variant={animationState.mode === 'auto' ? "default" : "outline"}
+                    className="h-8"
+                    onClick={() => changeAnimationMode('auto')}
+                    disabled={isAnimating && !animationState.isPaused && animationState.mode !== 'auto'}
+                  >
+                    Auto
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant={animationState.mode === 'step-by-step' ? "default" : "outline"}
+                    className="h-8"
+                    onClick={() => changeAnimationMode('step-by-step')}
+                    disabled={isAnimating && !animationState.isPaused && animationState.mode !== 'step-by-step'}
+                  >
+                    Step by Step
+                  </Button>
+                </div>
+              </div>
+              
+              {animationState.mode === 'step-by-step' && (
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="h-8"
+                  onClick={executeNextStep}
+                  disabled={!isAnimating || stepQueueRef.current.length === 0}
+                >
+                  <StepForward size={14} className="mr-2" />
+                  Next Step {stepQueueRef.current.length > 0 ? `(${stepQueueRef.current.length})` : ''}
+                </Button>
+              )}
+              
+              {animationState.mode === 'auto' && (
+                <div className="flex items-center gap-2 flex-grow max-w-xs">
+                  <Rewind size={14} />
+                  <div className="flex-grow">
+                    <Slider
+                      defaultValue={[1]}
+                      min={0.5}
+                      max={2}
+                      step={0.5}
+                      value={[speedFactor]}
+                      onValueChange={(value) => {
+                        const factor = value[0];
+                        if (factor === 0.5) changeAnimationSpeed('slow');
+                        else if (factor === 1) changeAnimationSpeed('normal');
+                        else if (factor === 1.5 || factor === 2) changeAnimationSpeed('fast');
+                      }}
+                    />
+                  </div>
+                  <FastForward size={14} />
+                </div>
+              )}
+              
+              <div className="flex items-center gap-1 ml-auto">
+                <span className="text-sm">Speed:</span>
+                <Badge variant={animationState.speed === 'slow' ? 'default' : 'outline'} onClick={() => changeAnimationSpeed('slow')} className="cursor-pointer">
+                  Slow
+                </Badge>
+                <Badge variant={animationState.speed === 'normal' ? 'default' : 'outline'} onClick={() => changeAnimationSpeed('normal')} className="cursor-pointer">
+                  Normal
+                </Badge>
+                <Badge variant={animationState.speed === 'fast' ? 'default' : 'outline'} onClick={() => changeAnimationSpeed('fast')} className="cursor-pointer">
+                  Fast
+                </Badge>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="p-4">
           <p className="text-muted-foreground mb-4">{patternData.description}</p>
           
@@ -355,10 +531,15 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
               edges={edges}
               getEdgePoints={getEdgePoints}
               onFlowComplete={onFlowComplete}
+              speed={speedFactor}
             />
             <Panel position="bottom-center">
               <div className="bg-card p-2 rounded shadow-sm text-xs text-muted-foreground">
-                {isAnimating ? 'Visualizing data flow between agents...' : 'Click "Simulate Flow" to see data flow between agents'}
+                {isAnimating ? 
+                  animationState.mode === 'step-by-step' ? 
+                    `Step by step mode: ${animationState.step} steps completed` : 
+                    'Visualizing data flow between agents...' 
+                  : 'Click "Start Simulation" to see data flow between agents'}
               </div>
             </Panel>
           </ReactFlow>

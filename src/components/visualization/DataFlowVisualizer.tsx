@@ -20,12 +20,13 @@ interface DataFlowVisualizerProps {
   edges: Edge[];
   getEdgePoints?: (edgeId: string) => { sourceX: number; sourceY: number; targetX: number; targetY: number } | null;
   onFlowComplete?: (flowId: string) => void;
+  speed?: number; // Speed factor to control animation speed
 }
 
 /**
  * Component to visualize data flowing between nodes on the ReactFlow canvas
  */
-const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete }: DataFlowVisualizerProps) => {
+const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete, speed = 1 }: DataFlowVisualizerProps) => {
   const [activeFlows, setActiveFlows] = useState<DataFlow[]>([]);
   
   // Update flow progress values
@@ -35,8 +36,9 @@ const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete }: Dat
         if (prevFlows.length === 0) return prevFlows;
         
         const updatedFlows = prevFlows.map(flow => {
-          // Increment progress
-          const newProgress = flow.progress + 0.02;
+          // Increment progress based on speed factor
+          const incrementAmount = 0.02 * (speed || 1);
+          const newProgress = flow.progress + incrementAmount;
           
           // If flow is complete, trigger callback
           if (newProgress >= 1 && onFlowComplete) {
@@ -53,10 +55,10 @@ const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete }: Dat
         
         return updatedFlows.filter(flow => flow.progress < 1);
       });
-    }, 20);
+    }, 20); // Base interval for animation updates
     
     return () => clearInterval(interval);
-  }, [onFlowComplete]);
+  }, [onFlowComplete, speed]);
   
   // Add new flows to active flows
   useEffect(() => {

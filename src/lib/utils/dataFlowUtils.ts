@@ -199,7 +199,9 @@ export const simulatePatternFlow = (
   onNodeStatus: (nodeId: string, status: string | null) => void,
   onEdgeStatus: (edgeId: string, animated: boolean) => void,
   onDataFlow: (flow: any) => void,
-  inputMessage: string = "What's the weather forecast?"
+  inputMessage: string = "What's the weather forecast?",
+  queueStepFn?: (stepFn: () => void) => NodeJS.Timeout | null,
+  speedFactor: number = 1
 ) => {
   // Clear any timers
   const timers: NodeJS.Timeout[] = [];
@@ -218,7 +220,8 @@ export const simulatePatternFlow = (
     if (visitedNodes.has(nodeId)) return;
     visitedNodes.add(nodeId);
     
-    const timer = setTimeout(() => {
+    // Create a step function that will be either queued or executed directly
+    const executeNodeStep = () => {
       // Update node status to processing
       onNodeStatus(nodeId, 'processing');
       
@@ -230,80 +233,114 @@ export const simulatePatternFlow = (
       const outgoingEdges = edges.filter(e => e.source === nodeId);
       
       // After processing delay, update status and process outgoing connections
-      const processingTimer = setTimeout(() => {
+      const processEdges = () => {
         // Update node status to success
         onNodeStatus(nodeId, 'success');
         
         // Process each outgoing connection
-        outgoingEdges.forEach(edge => {
-          // Update edge animation
-          onEdgeStatus(edge.id, true);
-          
-          // Find target node
-          const targetNode = nodes.find(n => n.id === edge.target);
-          if (!targetNode) return;
-          
-          // Generate appropriate message for this connection
-          const nodeType = currentNode.data.nodeType || 'default';
-          const targetType = targetNode.data.nodeType || 'default'; 
-          const flowContent = generateFlowContent(nodeType, targetType, messageContext);
-          
-          // Create data flow
-          const flowId = `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-          activeFlows.add(flowId);
-          
-          // Determine flow type based on node types
-          let flowType: 'message' | 'data' | 'response' | 'error' = 'message';
-          if (nodeType === 'llm') flowType = 'response';
-          else if (nodeType === 'tool' || nodeType === 'aggregator') flowType = 'data';
-          else if (Math.random() > 0.95) flowType = 'error'; // 5% chance of error
-          
-          // Set the toolName if this is a tool node (fixes the toolName undefined error)
-          const localMessageContext = nodeType === 'tool' 
-            ? (currentNode.data.label || 'External API')
-            : messageContext;
-          
-          const newFlow = {
-            id: flowId,
-            edgeId: edge.id,
-            source: edge.source,
-            target: edge.target,
-            content: flowContent || "Processing data...", // Ensure content is never undefined
-            timestamp: Date.now(),
-            type: flowType,
-            progress: 0,
-            complete: false,
-            label: flowType === 'error' ? 'Error' : undefined
+        outgoingEdges.forEach((edge, index) => {
+          // Create a function to handle this edge
+          const processEdgeStep = () => {
+            // Update edge animation
+            onEdgeStatus(edge.id, true);
+            
+            // Find target node
+            const targetNode = nodes.find(n => n.id === edge.target);
+            if (!targetNode) return;
+            
+            // Generate appropriate message for this connection
+            const nodeType = currentNode.data.nodeType || 'default';
+            const targetType = targetNode.data.nodeType || 'default'; 
+            const flowContent = generateFlowContent(nodeType, targetType, messageContext);
+            
+            // Create data flow
+            const flowId = `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+            activeFlows.add(flowId);
+            
+            // Determine flow type based on node types
+            let flowType: 'message' | 'data' | 'response' | 'error' = 'message';
+            if (nodeType === 'llm') flowType = 'response';
+            else if (nodeType === 'tool' || nodeType === 'aggregator') flowType = 'data';
+            else if (Math.random() > 0.95) flowType = 'error'; // 5% chance of error
+            
+            // Set the toolName if this is a tool node (fixes the toolName undefined error)
+            const localMessageContext = nodeType === 'tool' 
+              ? (currentNode.data.label || 'External API')
+              : messageContext;
+            
+            const newFlow = {
+              id: flowId,
+              edgeId: edge.id,
+              source: edge.source,
+              target: edge.target,
+              content: flowContent || "Processing data...", // Ensure content is never undefined
+              timestamp: Date.now(),
+              type: flowType,
+              progress: 0,
+              complete: false,
+              label: flowType === 'error' ? 'Error' : undefined
+            };
+            
+            // Emit the flow
+            onDataFlow(newFlow);
+            
+            // When flow completes, process the next node
+            // Calculate a variable delay based on node type
+            let targetDelay = 1000 / speedFactor; // default
+            if (targetType === 'aggregator') targetDelay = 2000 / speedFactor;
+            else if (targetType === 'router') targetDelay = 800 / speedFactor;
+            else if (targetType === 'llm') targetDelay = 1500 / speedFactor;
+            
+            // Process the target node after flow completion + targetDelay
+            const processTargetNode = () => {
+              activeFlows.delete(flowId);
+              processNode(edge.target, 100 / speedFactor, localMessageContext);
+            };
+            
+            // Either queue or execute the target node processing
+            if (queueStepFn) {
+              const timer = queueStepFn(processTargetNode);
+              if (timer) timers.push(timer);
+            } else {
+              const timer = setTimeout(processTargetNode, targetDelay);
+              timers.push(timer);
+            }
           };
           
-          // Emit the flow
-          onDataFlow(newFlow);
-          
-          // When flow completes, process the next node
-          // Calculate a variable delay based on node type
-          let targetDelay = 1000; // default
-          if (targetType === 'aggregator') targetDelay = 2000;
-          else if (targetType === 'router') targetDelay = 800;
-          else if (targetType === 'llm') targetDelay = 1500;
-          
-          // Process the target node after flow completion + targetDelay
-          const targetTimer = setTimeout(() => {
-            activeFlows.delete(flowId);
-            processNode(edge.target, 100, localMessageContext);
-          }, targetDelay);
-          
-          timers.push(targetTimer);
+          // Either queue this edge step or execute it directly
+          if (queueStepFn) {
+            const timer = queueStepFn(processEdgeStep);
+            if (timer) timers.push(timer);
+          } else {
+            // Add a slight delay between multiple edges from the same node
+            const timer = setTimeout(processEdgeStep, index * 300 / speedFactor);
+            timers.push(timer);
+          }
         });
-      }, 1200);
+      };
       
-      timers.push(processingTimer);
-    }, delay);
+      // Either queue the edge processing or execute it directly
+      if (queueStepFn) {
+        const timer = queueStepFn(processEdges);
+        if (timer) timers.push(timer);
+      } else {
+        const processingTimer = setTimeout(processEdges, 1200 / speedFactor);
+        timers.push(processingTimer);
+      }
+    };
     
-    timers.push(timer);
+    // Either queue the node execution or execute it directly
+    if (queueStepFn) {
+      const timer = queueStepFn(executeNodeStep);
+      if (timer) timers.push(timer);
+    } else {
+      const timer = setTimeout(executeNodeStep, delay);
+      timers.push(timer);
+    }
   };
   
   // Start processing from the input node
-  processNode(inputNode.id, 100, inputMessage);
+  processNode(inputNode.id, 100 / speedFactor, inputMessage);
   
   // Return a cleanup function to cancel all timers
   return {
