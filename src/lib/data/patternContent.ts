@@ -707,5 +707,150 @@ export const patternContents: PatternContent[] = [
       "Consider different levels of planning granularity based on task complexity"
     ],
     relatedPatterns: ["Orchestrator-Worker", "Reflexion"]
+  },
+  {
+    id: 'computer-using-agent',
+    name: 'Computer Using Agent (CUA)',
+    longDescription: `
+      Computer Using Agents (CUA) represent a specialized agent pattern that enables AI systems to interact with computer 
+      interfaces just as humans do. Unlike traditional agents that might access data or functionality through APIs, CUAs 
+      operate through standard user interfaces - they see screen content, interpret visual elements, and take actions 
+      through simulated keyboard and mouse inputs.
+      
+      This pattern creates a bridge between AI capabilities and existing software applications without requiring special 
+      integration or API access. The CUA observes the screen, understands the interface context (identifying buttons, 
+      text fields, menus, etc.), makes decisions about appropriate actions, and then executes those actions through 
+      simulated inputs.
+      
+      CUAs combine visual understanding, interface navigation, task planning, and execution to accomplish complex 
+      multi-step workflows across different applications and interfaces. This enables automation of processes that 
+      previously required human operators, particularly for legacy systems or software without API access.
+    `,
+    advantages: [
+      "Automates interactions with any visual interface without requiring API access",
+      "Works with legacy systems and software not designed for programmatic interaction",
+      "Can adapt to UI changes more flexibly than brittle UI automation scripts",
+      "Enables end-to-end process automation across multiple different applications",
+      "Reduces need for specialized integration development for each system"
+    ],
+    limitations: [
+      "More computationally intensive than API-based automation",
+      "May struggle with highly dynamic or unusual interfaces",
+      "Typically slower than direct API integration",
+      "Visual recognition challenges with certain interface elements",
+      "Potential for errors in action execution timing"
+    ],
+    realWorldApplications: [
+      "Enterprise process automation across multiple legacy systems",
+      "Customer service workflows requiring navigation of multiple tools",
+      "Training and onboarding assistance for complex software platforms",
+      "Quality assurance testing of user interfaces",
+      "Automating data migration tasks between systems lacking direct integration"
+    ],
+    bestPractices: [
+      "Implement robust visual element recognition with redundant identification strategies",
+      "Design verification steps after critical actions to confirm successful execution",
+      "Include recovery procedures for common error scenarios",
+      "Consider hybrid approaches combining CUA with APIs where available",
+      "Use synchronization mechanisms to handle timing variability in UI responses",
+      "Include logging and monitoring for all interface interactions"
+    ],
+    relatedPatterns: ["Autonomous Workflow", "Plan and Execute", "ReAct Agent"]
+  },
+  {
+    id: 'deep-researcher-agent',
+    name: 'Deep Researcher Agent',
+    longDescription: `
+      The Deep Researcher pattern extends basic RAG capabilities into an advanced research assistant that can conduct 
+      comprehensive investigations on complex topics. Unlike simpler information retrieval systems, Deep Researcher 
+      agents employ strategic research planning, source evaluation, multi-hop exploration, and synthesis of findings 
+      across diverse sources.
+      
+      This pattern starts with decomposing a research question into key sub-questions and planning an investigation 
+      strategy. The agent then iteratively explores information sources, evaluates their relevance and reliability, 
+      extracts critical insights, and adjusts its research direction based on discoveries. The process continues until 
+      sufficient information is gathered to synthesize comprehensive findings.
+      
+      A distinguishing feature of Deep Researchers is their ability to identify knowledge gaps, formulate new questions 
+      based on initial findings, and progressively build a body of knowledge rather than simply retrieving existing 
+      information. This creates a discovery-driven exploration process similar to human research methods.
+    `,
+    advantages: [
+      "Enables in-depth investigation beyond simple question answering",
+      "Discovers connections and insights across diverse information sources",
+      "Adapts research strategy based on intermediate findings",
+      "Identifies knowledge gaps and limitations in available information",
+      "Produces comprehensive and well-synthesized research outputs"
+    ],
+    limitations: [
+      "Significantly higher computational and time costs than basic RAG",
+      "Risk of pursuing unproductive research directions",
+      "Complexity in managing extensive context across research steps",
+      "Quality depends heavily on available information sources",
+      "Challenge of balancing depth vs. breadth in research exploration"
+    ],
+    realWorldApplications: [
+      "Scientific literature review and hypothesis generation",
+      "Competitive market and product analysis research",
+      "Legal case research and precedent analysis",
+      "Academic research assistance across disciplines",
+      "Policy analysis and recommendation development"
+    ],
+    bestPractices: [
+      "Implement explicit research planning with adjustable strategies",
+      "Design source evaluation mechanisms to prioritize reliable information",
+      "Create structured knowledge representation for accumulated findings",
+      "Include progress tracking to avoid circular research patterns",
+      "Implement diverse search strategies for different types of information",
+      "Design effective synthesis methods that preserve source attribution"
+    ],
+    relatedPatterns: ["Agentic RAG", "Plan and Execute", "ReAct Agent"]
+  },
+  {
+    id: 'voice-agent',
+    name: 'Voice Agents',
+    longDescription: `
+      Voice Agents specialize in natural, human-like spoken interactions that go beyond simple command-response patterns. 
+      These agents combine speech recognition, natural language understanding, dialogue management, and speech synthesis 
+      to create conversational experiences that feel fluid and contextually aware.
+      
+      The pattern involves multiple specialized components working together: speech-to-text conversion, intent recognition, 
+      dialogue state tracking, response generation, and text-to-speech synthesis. Voice Agents maintain conversation context 
+      across multiple turns, recognize interruptions, handle speech disfluencies, and adapt to different speaking styles.
+      
+      What distinguishes advanced Voice Agents is their ability to manage conversation flow naturally - including turn-taking, 
+      interruption handling, contextual memory, and conversational repair strategies when misunderstandings occur. They can 
+      also incorporate prosodic elements like tone, emphasis, and timing to create more natural-sounding speech.
+    `,
+    advantages: [
+      "Enables hands-free interaction suitable for various environments",
+      "Creates more natural and accessible user experiences",
+      "Supports multitasking scenarios where visual attention is limited",
+      "Can detect emotional cues and intent from voice characteristics",
+      "Provides accessibility for users with visual impairments or limited mobility"
+    ],
+    limitations: [
+      "Challenges in noisy environments or with speech recognition for accents",
+      "Limited bandwidth for information display compared to visual interfaces",
+      "Privacy concerns in public environments",
+      "Higher cognitive load for users to remember spoken information",
+      "Technical complexity in handling interruptions and overlapping speech"
+    ],
+    realWorldApplications: [
+      "Virtual assistants for smart home and IoT device control",
+      "Hands-free operations in industrial, medical, or automotive contexts",
+      "Accessible interfaces for users with disabilities",
+      "Customer service and support interactions",
+      "Educational applications with conversational learning"
+    ],
+    bestPractices: [
+      "Design explicit confirmation strategies for critical actions",
+      "Implement sophisticated error recovery and disambiguation techniques",
+      "Create natural-sounding speech patterns with appropriate prosody",
+      "Provide multimodal fallbacks when speech interaction is difficult",
+      "Optimize for different acoustic environments with noise handling",
+      "Include personalization capabilities for different user speech patterns"
+    ],
+    relatedPatterns: ["ReAct Agent", "Autonomous Workflow", "Model Context Protocol"]
   }
 ];

@@ -54,8 +54,11 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="steps" className="w-full">
+          <Tabs defaultValue="general" className="w-full">
             <TabsList className="grid w-full grid-cols-7">
+              <TabsTrigger value="general" className="flex items-center gap-2">
+                <ListChecks size={16} /> General Guide
+              </TabsTrigger>
               <TabsTrigger value="steps" className="flex items-center gap-2">
                 <ListChecks size={16} /> Implementation Steps
               </TabsTrigger>
@@ -63,6 +66,9 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                 <Code size={16} /> Complete Code
               </TabsTrigger>
               <TabsTrigger value="visualizer" className="flex items-center gap-2">
+              <TabsTrigger value="interactive" className="flex items-center gap-2">
+                <Play size={16} /> Interactive Example
+              </TabsTrigger>
                 <FileCode size={16} /> Code Visualizer
               </TabsTrigger>
               <TabsTrigger value="debugger" className="flex items-center gap-2">
@@ -74,10 +80,72 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
               <TabsTrigger value="practices" className="flex items-center gap-2">
                 <Check size={16} /> Best Practices
               </TabsTrigger>
-              <TabsTrigger value="interactive" className="flex items-center gap-2">
-                <Play size={16} /> Interactive Example
-              </TabsTrigger>
             </TabsList>
+            
+            <TabsContent value="general" className="py-4">
+              <div className="space-y-4">
+                <div className="p-4 border rounded-lg bg-card">
+                  <h3 className="text-lg font-medium mb-2">About {patternData.name}</h3>
+                  <p className="text-muted-foreground mb-4">{patternData.description}</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Key Use Cases</h4>
+                      <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                        {patternData.useCases.map((useCase, i) => (
+                          <li key={i}>{useCase}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">When To Use</h4>
+                      <p className="text-sm text-muted-foreground">{patternData.whenToUse}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 border rounded-lg bg-muted/20">
+                  <h3 className="text-base font-medium mb-2">Implementation Overview</h3>
+                  <p className="text-sm text-muted-foreground mb-3">This pattern can be implemented using the following components:</p>
+                  
+                  <div className="space-y-2">
+                    {patternData.implementation.map((step, index) => (
+                      <div key={index} className="flex items-start">
+                        <span className="flex items-center justify-center bg-primary/10 text-primary rounded-full w-5 h-5 text-xs font-medium mr-2 mt-0.5">
+                          {index + 1}
+                        </span>
+                        <span className="text-sm">{step}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="text-sm font-medium mb-2">Choose this pattern when:</h4>
+                    <ul className="list-disc pl-5 space-y-1 text-xs text-muted-foreground">
+                      <li>You need {patternData.advantages[0].toLowerCase()}</li>
+                      <li>Your application requires {patternData.advantages[1].toLowerCase()}</li>
+                      <li>You want to {patternData.description.split(' ').slice(0, 5).join(' ').toLowerCase()}...</li>
+                    </ul>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="text-sm font-medium mb-2">Consider alternatives when:</h4>
+                    <ul className="list-disc pl-5 space-y-1 text-xs text-muted-foreground">
+                      <li>You need simpler implementation with fewer components</li>
+                      <li>Direct API calls would be more efficient</li>
+                      <li>You have limited computational resources</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end mt-4">
+                  <Button variant="outline" onClick={() => document.querySelector('[value="steps"]')?.dispatchEvent(new Event('click'))}>
+                    View Implementation Steps →
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
             
             <TabsContent value="steps" className="py-4">
               <Steps 
@@ -225,6 +293,11 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
               </Alert>
             </TabsContent>
             
+            <TabsContent value="interactive" className="py-4">
+              <ReactFlowProvider>
+                <PatternDemo patternData={patternData} />
+              </ReactFlowProvider>
+            </TabsContent>
             <TabsContent value="debugger" className="py-4">
               <div className="flex items-center justify-end mb-2 space-x-2">
                 <span className="text-sm text-muted-foreground mr-2">Language:</span>
