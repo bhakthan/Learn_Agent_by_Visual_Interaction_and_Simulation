@@ -8,9 +8,11 @@ import { Separator } from "@/components/ui/separator"
 import { agentPatterns } from './lib/data/patterns'
 import CodePlaybook from './components/code-playbook/CodePlaybook'
 import { ReactFlowProvider } from 'reactflow'
+import AzureServicesOverview from './components/azure-services/AzureServicesOverview'
+import { Cloud } from '@phosphor-icons/react'
 
 function App() {
-  const [activeView, setActiveView] = useState<'concepts' | 'patterns' | 'playbook'>('concepts')
+  const [activeView, setActiveView] = useState<'concepts' | 'patterns' | 'playbook' | 'services'>('concepts')
   const [selectedPatternId, setSelectedPatternId] = useState(agentPatterns[0].id)
   
   const selectedPattern = agentPatterns.find(p => p.id === selectedPatternId) || agentPatterns[0]
@@ -48,6 +50,9 @@ function App() {
                     <ListItem href="#playbooks" title="Code Playbooks">
                       Step-by-step implementation guides with code examples
                     </ListItem>
+                    <ListItem href="#services" title="Azure AI Services">
+                      Core Azure AI services for agent development
+                    </ListItem>
                   </ul>
                 </NavigationMenuContent>
               </NavigationMenuItem>
@@ -61,6 +66,12 @@ function App() {
                     <ListItem href="https://github.com/Azure/azure-sdk-for-js" title="Azure SDK for JavaScript">
                       GitHub repository for the Azure SDK
                     </ListItem>
+                    <ListItem href="https://learn.microsoft.com/azure/ai-services/openai/" title="Azure OpenAI Service">
+                      Documentation for Azure OpenAI Service
+                    </ListItem>
+                    <ListItem href="https://learn.microsoft.com/azure/ai-studio/" title="Azure AI Studio">
+                      Create, evaluate and deploy AI solutions
+                    </ListItem>
                   </ul>
                 </NavigationMenuContent>
               </NavigationMenuItem>
@@ -72,11 +83,13 @@ function App() {
       <main className="flex-1 container mx-auto px-4 py-6">
         <ReactFlowProvider>
           <Tabs defaultValue="concepts" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsList className="grid w-full grid-cols-4 mb-8">
               <TabsTrigger value="concepts" onClick={() => setActiveView('concepts')}>Core Concepts</TabsTrigger>
               <TabsTrigger value="patterns" onClick={() => setActiveView('patterns')}>Agent Patterns</TabsTrigger>
               <TabsTrigger value="playbook" onClick={() => setActiveView('playbook')}>Code Playbooks</TabsTrigger>
+              <TabsTrigger value="services" onClick={() => setActiveView('services')}>Azure AI Services</TabsTrigger>
             </TabsList>
+            
             <TabsContent value="concepts" className="space-y-6">
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight">Core Concepts</h2>
@@ -85,6 +98,7 @@ function App() {
               <Separator />
               <ConceptsExplorer />
             </TabsContent>
+            
             <TabsContent value="patterns" className="space-y-6">
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight">Agent Patterns</h2>
@@ -93,6 +107,7 @@ function App() {
               <Separator />
               <PatternExplorer />
             </TabsContent>
+            
             <TabsContent value="playbook" className="space-y-6">
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight">Code Playbooks</h2>
@@ -118,6 +133,27 @@ function App() {
                 ))}
               </div>
               <CodePlaybook patternData={selectedPattern} />
+            </TabsContent>
+            
+            <TabsContent value="services" className="space-y-6">
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold tracking-tight">Azure AI Services</h2>
+                <p className="text-muted-foreground">
+                  Core Azure services for building intelligent agents with integration best practices.
+                </p>
+              </div>
+              <Separator />
+              <div className="flex items-center p-4 mb-6 rounded-lg bg-primary/5 border border-primary/30">
+                <Cloud size={24} className="text-primary mr-3" />
+                <div>
+                  <h3 className="font-medium">Azure AI Services for Agent Patterns</h3>
+                  <p className="text-sm text-muted-foreground">
+                    The following Azure services provide essential capabilities for implementing agent patterns.
+                    For pattern-specific integrations, check the Best Practices tab in Code Playbooks.
+                  </p>
+                </div>
+              </div>
+              <AzureServicesOverview />
             </TabsContent>
           </Tabs>
         </ReactFlowProvider>
