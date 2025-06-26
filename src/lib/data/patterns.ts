@@ -263,7 +263,7 @@ const executeCodeAct = async (query: string, maxCycles = 5) => {
       if (code.includes('print(')) {
         const printMatch = code.match(/print\(([^)]+)\)/);
         if (printMatch) {
-          return `Output: ${printMatch[1]}`;
+          return "Output: " + printMatch[1];
         }
       }
       
@@ -291,9 +291,9 @@ const executeCodeAct = async (query: string, maxCycles = 5) => {
         "1. Write Python code to make progress, formatted as:\n" +
         "   Thought: <your reasoning>\n" +
         "   Code:\n" +
-        "   \\`\\`\\`python\n" +
+        "   ```python\n" +
         "   # Your Python code here\n" +
-        "   \\`\\`\\`\n\n" +
+        "   ```\n\n" +
         "2. Or provide the final answer if you've solved the problem:\n" +
         "   Thought: <your reasoning>\n" +
         "   Final Answer: <your answer>";
@@ -310,9 +310,9 @@ const executeCodeAct = async (query: string, maxCycles = 5) => {
         }
       } 
       // Check if the response contains code
-      else if (agentResponse.includes('\\`\\`\\`python')) {
+      else if (agentResponse.includes('```python')) {
         // Extract code block
-        const codeMatch = agentResponse.match(/\`\`\`python\s*([\s\S]*?)\s*\`\`\`/);
+        const codeMatch = agentResponse.match(/```python\s*([\s\S]*?)\s*```/);
         if (codeMatch) {
           const code = codeMatch[1].trim();
           
@@ -891,19 +891,10 @@ const executeModernToolUse = async (query: string) => {
     
     // Step 3: Generate response using tool outputs
     const toolOutputsText = Object.entries(toolResults)
-      .map(([toolName, result]) => `${toolName} result: ${JSON.stringify(result, null, 2)}`)
+      .map(([toolName, result]) => toolName + " result: " + JSON.stringify(result, null, 2))
       .join('\n\n');
     
-    const response = await llm(`
-      Using the following tool results, provide a comprehensive answer to the user's query.
-
-      Query: "${query}"
-
-      Tool Results:
-      ${toolOutputsText}
-      
-      Generate a helpful response that synthesizes the information from these tools.
-    `);
+    const response = await llm("Using the following tool results, provide a comprehensive answer to the user's query.\n\nQuery: \"" + query + "\"\n\nTool Results:\n" + toolOutputsText + "\n\nGenerate a helpful response that synthesizes the information from these tools.");
     
     return {
       status: 'success',
