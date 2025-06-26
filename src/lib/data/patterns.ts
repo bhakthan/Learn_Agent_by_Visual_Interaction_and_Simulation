@@ -2486,5 +2486,696 @@ const parseJSON = (jsonString) => {
       'Implement tools access for subtask execution',
       'Support dependencies between subtasks in planning'
     ]
+  },
+  // New pattern: Computer Using Agent (CUA)
+  {
+    id: 'computer-using-agent',
+    name: 'Computer Using Agent (CUA)',
+    description: 'Agents that can interact with computer interfaces, browser automation, and operating systems to perform tasks on behalf of users.',
+    useCases: ['Desktop Automation', 'Web Navigation and Interaction', 'Multi-application Workflows'],
+    nodes: [
+      {
+        id: 'user',
+        type: 'input',
+        data: { label: 'User', nodeType: 'input' },
+        position: { x: 100, y: 150 }
+      },
+      {
+        id: 'agent',
+        type: 'default',
+        data: { label: 'CUA Agent', nodeType: 'llm' },
+        position: { x: 300, y: 150 }
+      },
+      {
+        id: 'perception',
+        type: 'default',
+        data: { label: 'Perception Module', nodeType: 'tool' },
+        position: { x: 500, y: 100 }
+      },
+      {
+        id: 'planning',
+        type: 'default',
+        data: { label: 'Planning Module', nodeType: 'planner' },
+        position: { x: 500, y: 200 }
+      },
+      {
+        id: 'action',
+        type: 'default',
+        data: { label: 'Action Module', nodeType: 'tool' },
+        position: { x: 700, y: 150 }
+      },
+      {
+        id: 'computer',
+        type: 'default',
+        data: { label: 'Computer System', nodeType: 'tool' },
+        position: { x: 900, y: 150 }
+      },
+      {
+        id: 'result',
+        type: 'output',
+        data: { label: 'Task Result', nodeType: 'output' },
+        position: { x: 500, y: 300 }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: 'user', target: 'agent', animated: true, label: 'Task Request' },
+      { id: 'e2-3', source: 'agent', target: 'perception', animated: true },
+      { id: 'e2-4', source: 'agent', target: 'planning', animated: true },
+      { id: 'e3-5', source: 'perception', target: 'action' },
+      { id: 'e4-5', source: 'planning', target: 'action' },
+      { id: 'e5-6', source: 'action', target: 'computer', animated: true, label: 'Execution' },
+      { id: 'e6-3', source: 'computer', target: 'perception', animated: true, label: 'Screen State' },
+      { id: 'e5-7', source: 'action', target: 'result', animated: true },
+      { id: 'e2-7', source: 'agent', target: 'result', animated: true }
+    ],
+    codeExample: `// Computer Using Agent (CUA) implementation
+const executeComputerUsingAgent = async (taskRequest: string) => {
+  try {
+    console.log("Initializing Computer Using Agent for task:", taskRequest);
+    
+    // Initialize the CUA components
+    const perception = new ScreenPerceptionModule();
+    const planning = new ActionPlanningModule();
+    const action = new ComputerActionModule();
+    
+    let taskComplete = false;
+    let currentState = null;
+    let maxIterations = 15;
+    let iterations = 0;
+    let actionHistory = [];
+    
+    // Initial screen state capture
+    currentState = await perception.captureScreenState();
+    
+    while (!taskComplete && iterations < maxIterations) {
+      iterations++;
+      
+      // Step 1: Analyze current screen state
+      const screenAnalysis = await llm(\`
+        You are a computer-using agent that can see and interact with a computer screen.
+        Analyze the current screen state and identify UI elements:
+        
+        Current screen: \${currentState.description}
+        Task: \${taskRequest}
+        
+        Previous actions: \${actionHistory.length > 0 ? actionHistory.join('\\n') : 'None'}
+        
+        Provide a detailed description of what you see and what elements are relevant to the task.
+      \`);
+      
+      // Step 2: Generate action plan
+      const actionPlan = await planning.generatePlan(taskRequest, currentState, screenAnalysis);
+      
+      // Step 3: Decide on next action
+      const nextAction = await llm(\`
+        Based on the current screen state and your task, determine the next action:
+        
+        Task: \${taskRequest}
+        Current screen state: \${currentState.description}
+        Screen analysis: \${screenAnalysis}
+        Action plan: \${actionPlan}
+        
+        Choose ONE specific action from these options:
+        1. CLICK(element_id)
+        2. TYPE(element_id, "text")
+        3. SCROLL(direction)
+        4. TAB()
+        5. ENTER()
+        6. WAIT()
+        7. COMPLETE()
+        
+        Respond with only the action in the format above.
+      \`);
+      
+      // Parse the chosen action
+      const actionMatch = nextAction.match(/([A-Z]+)\\((.*)\\)/);
+      if (actionMatch) {
+        const actionType = actionMatch[1];
+        const actionParams = actionMatch[2].split(',').map(p => p.trim().replace(/"/g, ''));
+        
+        // Record the action
+        actionHistory.push(\`\${iterations}. \${nextAction}\`);
+        
+        // Check if task is complete
+        if (actionType === 'COMPLETE') {
+          taskComplete = true;
+          continue;
+        }
+        
+        // Step 4: Execute action
+        await action.executeAction(actionType, actionParams);
+        
+        // Step 5: Update perception with new screen state
+        currentState = await perception.captureScreenState();
+      } else {
+        actionHistory.push(\`\${iterations}. Invalid action format: \${nextAction}\`);
+      }
+    }
+    
+    // Final status report
+    const taskSummary = await llm(\`
+      Summarize the task completion process:
+      
+      Task: \${taskRequest}
+      Actions performed:
+      \${actionHistory.join('\\n')}
+      
+      Final screen state: \${currentState.description}
+      
+      Did the task complete successfully? What was the result?
+    \`);
+    
+    return {
+      status: taskComplete ? 'success' : 'incomplete',
+      iterations,
+      actions: actionHistory,
+      summary: taskSummary
+    };
+  } catch (error) {
+    return { status: 'failed', reason: error.message };
+  }
+};
+
+// Simulated modules (would be replaced with actual implementations)
+class ScreenPerceptionModule {
+  async captureScreenState() {
+    // In a real implementation, this would take a screenshot
+    // and analyze it using computer vision
+    return {
+      description: "Simulated screen state with application windows, buttons, and text fields",
+      elements: [
+        { id: "btn-1", type: "button", text: "Submit", bounds: {x: 100, y: 200, width: 80, height: 30} },
+        { id: "input-1", type: "text-field", value: "", bounds: {x: 100, y: 150, width: 200, height: 30} }
+      ]
+    };
+  }
+}
+
+class ActionPlanningModule {
+  async generatePlan(task, screenState, analysis) {
+    // In a real implementation, this would use planning algorithms
+    // to generate a sequence of actions
+    return "1. Identify the main input field\\n2. Enter the required information\\n3. Click the submit button\\n4. Verify the result";
+  }
+}
+
+class ComputerActionModule {
+  async executeAction(actionType, params) {
+    // In a real implementation, this would control mouse, keyboard, etc.
+    console.log(\`Executing \${actionType} with params \${params.join(', ')}\`);
+    // Simulate execution time
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return true;
+  }
+}`,
+    implementation: [
+      'Set up screen perception and analysis using computer vision',
+      'Create UI element detection and recognition capabilities',
+      'Build a planning system for multi-step computer tasks',
+      'Implement mouse and keyboard control mechanisms',
+      'Design prompt engineering for accurate UI interaction',
+      'Create feedback loops between perception and action',
+      'Implement error recovery for failed UI interactions',
+      'Add task verification to confirm successful completion',
+      'Build screen state representation for LLM reasoning'
+    ]
+  },
+  // New pattern: Deep Researcher Agent
+  {
+    id: 'deep-researcher',
+    name: 'Deep Researcher Agent',
+    description: 'An agent specialized in conducting thorough research by exploring multiple sources, synthesizing information, and providing in-depth analysis.',
+    useCases: ['Academic Research', 'Competitive Analysis', 'Literature Review', 'Market Research'],
+    nodes: [
+      {
+        id: 'query',
+        type: 'input',
+        data: { label: 'Research Query', nodeType: 'input' },
+        position: { x: 100, y: 200 }
+      },
+      {
+        id: 'planner',
+        type: 'default',
+        data: { label: 'Research Planner', nodeType: 'planner' },
+        position: { x: 300, y: 200 }
+      },
+      {
+        id: 'explorer',
+        type: 'default',
+        data: { label: 'Source Explorer', nodeType: 'tool' },
+        position: { x: 500, y: 100 }
+      },
+      {
+        id: 'extractor',
+        type: 'default',
+        data: { label: 'Information Extractor', nodeType: 'llm' },
+        position: { x: 500, y: 200 }
+      },
+      {
+        id: 'validator',
+        type: 'default',
+        data: { label: 'Fact Validator', nodeType: 'evaluator' },
+        position: { x: 500, y: 300 }
+      },
+      {
+        id: 'knowledge',
+        type: 'default',
+        data: { label: 'Knowledge Base', nodeType: 'tool' },
+        position: { x: 700, y: 200 }
+      },
+      {
+        id: 'synthesizer',
+        type: 'default',
+        data: { label: 'Research Synthesizer', nodeType: 'llm' },
+        position: { x: 900, y: 200 }
+      },
+      {
+        id: 'output',
+        type: 'output',
+        data: { label: 'Research Report', nodeType: 'output' },
+        position: { x: 1100, y: 200 }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: 'query', target: 'planner', animated: true },
+      { id: 'e2-3', source: 'planner', target: 'explorer', animated: true },
+      { id: 'e2-4', source: 'planner', target: 'extractor', animated: true },
+      { id: 'e2-5', source: 'planner', target: 'validator', animated: true },
+      { id: 'e3-4', source: 'explorer', target: 'extractor', animated: true },
+      { id: 'e4-5', source: 'extractor', target: 'validator' },
+      { id: 'e5-6', source: 'validator', target: 'knowledge', animated: true },
+      { id: 'e6-7', source: 'knowledge', target: 'synthesizer', animated: true },
+      { id: 'e7-8', source: 'synthesizer', target: 'output', animated: true },
+      { id: 'e5-3', source: 'validator', target: 'explorer', label: 'More Sources Needed' },
+      { id: 'e6-4', source: 'knowledge', target: 'extractor', label: 'Knowledge Gap' }
+    ],
+    codeExample: `// Deep Researcher Agent implementation
+const executeDeepResearcher = async (researchQuery: string) => {
+  try {
+    console.log("Initializing Deep Researcher Agent for query:", researchQuery);
+    
+    // Step 1: Research Planning
+    const researchPlan = await llm(\`
+      You are a research planning AI.
+      
+      Research Query: "\${researchQuery}"
+      
+      Create a comprehensive research plan to explore this topic. Include:
+      1. Key aspects to investigate
+      2. Potential information sources
+      3. Research questions to answer
+      4. Types of evidence to look for
+      5. Potential biases to be aware of
+      
+      Format as JSON with these fields.
+    \`, undefined, true);
+    
+    // Parse the research plan
+    const plan = typeof researchPlan === 'string' 
+      ? JSON.parse(researchPlan.match(/\\{[\\s\\S]*\\}/)[0])
+      : researchPlan;
+    
+    // Step 2: Source Exploration
+    console.log("Exploring sources based on research plan...");
+    const sources = await exploreInformationSources(researchQuery, plan.aspects, plan.sources);
+    
+    // Step 3: Information Extraction from each source
+    console.log("Extracting information from sources...");
+    const extractedInfo = await Promise.all(
+      sources.map(source => extractInformation(source, plan.questions))
+    );
+    
+    // Step 4: Fact Validation
+    console.log("Validating extracted information...");
+    const validatedInfo = await validateInformation(extractedInfo, plan.biases);
+    
+    // Check if additional sources are needed
+    if (validatedInfo.needsMoreSources) {
+      console.log("Additional sources needed. Exploring deeper...");
+      const additionalSources = await exploreInformationSources(
+        researchQuery, 
+        [...plan.aspects, ...validatedInfo.additionalAspects],
+        validatedInfo.suggestedSources
+      );
+      
+      const additionalInfo = await Promise.all(
+        additionalSources.map(source => extractInformation(source, validatedInfo.additionalQuestions))
+      );
+      
+      validatedInfo.validatedData = [
+        ...validatedInfo.validatedData,
+        ...(await validateInformation(additionalInfo, plan.biases)).validatedData
+      ];
+    }
+    
+    // Step 5: Build Knowledge Base
+    console.log("Building research knowledge base...");
+    const knowledgeBase = organizeKnowledgeBase(validatedInfo.validatedData);
+    
+    // Step 6: Research Synthesis
+    console.log("Synthesizing research findings...");
+    const synthesis = await llm(\`
+      You are a research synthesis AI. Create a comprehensive research report based on the following:
+      
+      Research Query: "\${researchQuery}"
+      
+      Research Findings:
+      \${JSON.stringify(knowledgeBase, null, 2)}
+      
+      Synthesize these findings into a well-structured research report with:
+      1. Executive summary
+      2. Key findings organized by theme
+      3. Supporting evidence
+      4. Counterpoints and limitations
+      5. Conclusions
+      6. Implications and applications
+      7. Areas for further research
+    \`);
+    
+    return {
+      status: 'success',
+      query: researchQuery,
+      plan: plan,
+      sources: sources.length,
+      knowledgePoints: knowledgeBase.facts.length,
+      report: synthesis
+    };
+  } catch (error) {
+    return { status: 'failed', reason: error.message };
+  }
+};
+
+// Helper functions
+async function exploreInformationSources(query, aspects, suggestedSources) {
+  // Simulate source exploration - in a real implementation, this would
+  // search through databases, web APIs, academic repositories, etc.
+  return aspects.map(aspect => {
+    return {
+      title: \`Source on \${aspect}\`,
+      content: \`Simulated content about \${aspect} related to \${query}\`,
+      relevance: 0.7 + Math.random() * 0.3
+    };
+  });
+}
+
+async function extractInformation(source, questions) {
+  // Simulate information extraction - in a real implementation,
+  // this would use NLP techniques to extract relevant information
+  return {
+    source: source.title,
+    findings: questions.map(q => {
+      return {
+        question: q,
+        answer: \`Simulated answer to "\${q}" based on source \${source.title}\`,
+        confidence: 0.6 + Math.random() * 0.4
+      };
+    })
+  };
+}
+
+async function validateInformation(extractedInfoArray, potentialBiases) {
+  // Simulate fact validation - in a real implementation,
+  // this would cross-reference information across sources
+  const validatedData = extractedInfoArray.flatMap(info => 
+    info.findings.filter(f => f.confidence > 0.7)
+  );
+  
+  // Determine if more sources are needed
+  const coverageGaps = Math.random() > 0.5;
+  
+  return {
+    validatedData,
+    needsMoreSources: coverageGaps,
+    additionalAspects: coverageGaps ? ["Additional aspect 1", "Additional aspect 2"] : [],
+    additionalQuestions: coverageGaps ? ["Additional question 1?", "Additional question 2?"] : [],
+    suggestedSources: coverageGaps ? ["Suggested additional source type 1", "Suggested additional source type 2"] : []
+  };
+}
+
+function organizeKnowledgeBase(validatedData) {
+  // Organize validated information into a structured knowledge base
+  return {
+    facts: validatedData.map((item, index) => ({
+      id: \`fact-\${index + 1}\`,
+      statement: item.answer,
+      source: item.source,
+      confidence: item.confidence
+    })),
+    themes: [
+      "Simulated Theme 1",
+      "Simulated Theme 2",
+      "Simulated Theme 3"
+    ],
+    relationships: [
+      {
+        type: "supports",
+        fact1: "fact-1",
+        fact2: "fact-2"
+      }
+    ]
+  };
+}`,
+    implementation: [
+      'Create a research planning system for topic exploration',
+      'Build source discovery and retrieval mechanisms',
+      'Implement information extraction from diverse content formats',
+      'Design fact validation through cross-referencing and triangulation',
+      'Create a structured knowledge base to organize research findings',
+      'Build a system for detecting knowledge gaps and exploring further',
+      'Implement bias detection and mitigation strategies',
+      'Design research synthesis capabilities with proper citation',
+      'Add research quality metrics and confidence scoring'
+    ]
+  },
+  // New pattern: Voice Agents
+  {
+    id: 'voice-agent',
+    name: 'Voice Agents',
+    description: 'Specialized agents that process speech input, understand natural language, and respond with synthesized speech in a conversational manner.',
+    useCases: ['Voice Assistants', 'Call Center Automation', 'Accessibility Applications', 'In-Car Systems'],
+    nodes: [
+      {
+        id: 'voice',
+        type: 'input',
+        data: { label: 'Voice Input', nodeType: 'input' },
+        position: { x: 100, y: 150 }
+      },
+      {
+        id: 'stt',
+        type: 'default',
+        data: { label: 'Speech-to-Text', nodeType: 'tool' },
+        position: { x: 300, y: 150 }
+      },
+      {
+        id: 'nlu',
+        type: 'default',
+        data: { label: 'NLU', nodeType: 'llm' },
+        position: { x: 500, y: 100 }
+      },
+      {
+        id: 'dialog',
+        type: 'default',
+        data: { label: 'Dialog Manager', nodeType: 'llm' },
+        position: { x: 500, y: 200 }
+      },
+      {
+        id: 'context',
+        type: 'default',
+        data: { label: 'Context Memory', nodeType: 'tool' },
+        position: { x: 700, y: 100 }
+      },
+      {
+        id: 'nlg',
+        type: 'default',
+        data: { label: 'NLG', nodeType: 'llm' },
+        position: { x: 700, y: 200 }
+      },
+      {
+        id: 'tts',
+        type: 'default',
+        data: { label: 'Text-to-Speech', nodeType: 'tool' },
+        position: { x: 900, y: 150 }
+      },
+      {
+        id: 'output',
+        type: 'output',
+        data: { label: 'Voice Output', nodeType: 'output' },
+        position: { x: 1100, y: 150 }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: 'voice', target: 'stt', animated: true },
+      { id: 'e2-3', source: 'stt', target: 'nlu', animated: true },
+      { id: 'e2-4', source: 'stt', target: 'dialog', animated: true },
+      { id: 'e3-5', source: 'nlu', target: 'context', animated: true },
+      { id: 'e4-6', source: 'dialog', target: 'nlg', animated: true },
+      { id: 'e5-4', source: 'context', target: 'dialog', animated: true },
+      { id: 'e5-6', source: 'context', target: 'nlg' },
+      { id: 'e6-7', source: 'nlg', target: 'tts', animated: true },
+      { id: 'e7-8', source: 'tts', target: 'output', animated: true }
+    ],
+    codeExample: `// Voice Agent implementation
+const executeVoiceAgent = async (voiceInput: ArrayBuffer) => { // In real use, this would be audio data
+  try {
+    console.log("Processing voice input...");
+    
+    // Step 1: Speech-to-Text
+    const speechToText = new SpeechToTextService();
+    const transcribedText = await speechToText.transcribe(voiceInput);
+    
+    console.log(\`Transcribed text: "\${transcribedText}"\`);
+    
+    // Step 2: Natural Language Understanding
+    const nluResult = await llm(\`
+      You are a natural language understanding system.
+      Analyze this user utterance:
+      
+      "\${transcribedText}"
+      
+      Extract the following in JSON format:
+      1. intent: The user's primary intent
+      2. entities: Any key entities or parameters
+      3. sentiment: The user's emotional state or sentiment
+      4. confidence: Your confidence level in this interpretation (0-1)
+    \`, undefined, true);
+    
+    // Parse NLU result
+    const nlu = typeof nluResult === 'string'
+      ? JSON.parse(nluResult.match(/\\{[\\s\\S]*\\}/)[0])
+      : nluResult;
+    
+    // Step 3: Context Management
+    const contextManager = new ConversationContextManager();
+    await contextManager.updateContext({
+      userInput: transcribedText,
+      nluResult: nlu,
+      timestamp: new Date().toISOString()
+    });
+    
+    const conversationContext = await contextManager.getContext();
+    
+    // Step 4: Dialog Management
+    const dialogResponse = await llm(\`
+      You are a conversational voice assistant.
+      
+      User's transcribed input: "\${transcribedText}"
+      
+      NLU analysis:
+      - Intent: \${nlu.intent}
+      - Entities: \${JSON.stringify(nlu.entities)}
+      - Sentiment: \${nlu.sentiment}
+      
+      Conversation history:
+      \${conversationContext.history.map(function(entry, index) { 
+        return \`[\${index + 1}] User: \${entry.userInput} → Assistant: \${entry.agentResponse || ''}\`; 
+      }).join('\\n')}
+      
+      Generate a natural, conversational response that:
+      1. Addresses the user's intent
+      2. Is appropriate for voice conversation (concise, clear)
+      3. Maintains appropriate conversational flow
+      4. If action is needed, clearly indicates what action is being taken
+      
+      Response:
+    \`);
+    
+    // Step 5: Natural Language Generation
+    const nlgResponse = await llm(\`
+      You are a natural language generation system for a voice assistant.
+      
+      Raw response: "\${dialogResponse}"
+      
+      User sentiment: \${nlu.sentiment}
+      
+      Refine this response to be:
+      1. Optimized for speech synthesis (proper pauses, emphasis)
+      2. Appropriate length for voice (not too verbose)
+      3. Natural-sounding with proper prosody markers
+      
+      Refined response for voice synthesis:
+    \`);
+    
+    // Update context with agent response
+    await contextManager.updateContext({
+      agentResponse: nlgResponse
+    });
+    
+    // Step 6: Text-to-Speech Synthesis
+    const textToSpeech = new TextToSpeechService();
+    const speechOutput = await textToSpeech.synthesize(nlgResponse);
+    
+    return {
+      status: 'success',
+      transcription: transcribedText,
+      nluAnalysis: nlu,
+      textResponse: nlgResponse,
+      audioResponse: 'base64-encoded-audio-data' // Simulated output (would be actual audio in real implementation)
+    };
+  } catch (error) {
+    return { status: 'failed', reason: error.message };
+  }
+};
+
+// Simulated supporting services
+class SpeechToTextService {
+  async transcribe(audioData) {
+    // In a real implementation, this would call Azure Speech Services API
+    return "Hello, what's the weather forecast for Seattle tomorrow?";
+  }
+}
+
+class ConversationContextManager {
+  context = {
+    history: [],
+    sessionData: {},
+    userPreferences: {}
+  };
+  
+  async updateContext(newData) {
+    // Update conversation history
+    if (newData.userInput || newData.agentResponse) {
+      const lastEntry = this.context.history.length > 0 
+        ? this.context.history[this.context.history.length - 1] 
+        : {};
+      
+      if (newData.userInput) {
+        this.context.history.push({
+          userInput: newData.userInput,
+          nluResult: newData.nluResult,
+          timestamp: newData.timestamp
+        });
+      } else if (newData.agentResponse && this.context.history.length > 0) {
+        this.context.history[this.context.history.length - 1].agentResponse = newData.agentResponse;
+      }
+    }
+    
+    // Keep history size manageable
+    if (this.context.history.length > 10) {
+      this.context.history = this.context.history.slice(-10);
+    }
+  }
+  
+  async getContext() {
+    return this.context;
+  }
+}
+
+class TextToSpeechService {
+  async synthesize(text) {
+    // In a real implementation, this would call Azure Neural Voice API
+    return Buffer.from("simulated-audio-data");
+  }
+}`,
+    implementation: [
+      'Integrate Azure Speech-to-Text for voice recognition',
+      'Build natural language understanding with intent recognition',
+      'Create a context management system for conversation history',
+      'Implement dialog management for conversational flow',
+      'Design natural language generation optimized for speech',
+      'Integrate Azure Neural TTS for high-quality speech synthesis',
+      'Add voice activity detection and endpointing',
+      'Implement interruption handling and barge-in capability',
+      'Design acoustic echo cancellation for device integration'
+    ]
   }
 ];

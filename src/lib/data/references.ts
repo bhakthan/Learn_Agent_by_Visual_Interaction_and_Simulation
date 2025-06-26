@@ -529,6 +529,141 @@ export const references: ReferencesData = {
           }
         ]
       }
+    ],
+    "computer-using-agent": [
+      {
+        id: "documentation",
+        name: "Documentation",
+        references: [
+          {
+            title: "Computer Using Agent (CUA) Overview",
+            url: "https://learn.microsoft.com/azure/ai-services/patterns/cua",
+            description: "Official documentation on Computer Using Agents"
+          },
+          {
+            title: "Browser Automation with AI",
+            url: "https://learn.microsoft.com/azure/ai-studio/how-to/browser-automation",
+            description: "Guide for AI-powered browser automation"
+          }
+        ]
+      },
+      {
+        id: "papers",
+        name: "Research Papers",
+        references: [
+          {
+            title: "Generative Agents: Interactive Simulacra of Human Behavior",
+            url: "https://arxiv.org/abs/2304.03442",
+            description: "Research on generative agents using computers"
+          },
+          {
+            title: "WebGPT: Browser-assisted question-answering",
+            url: "https://openai.com/research/webgpt",
+            description: "Research on browser-based agents"
+          }
+        ]
+      },
+      {
+        id: "samples",
+        name: "Code Samples",
+        references: [
+          {
+            title: "Azure CUA Implementation Examples",
+            url: "https://github.com/Azure-Samples/azure-cua-samples",
+            description: "Sample code for Computer Using Agents"
+          }
+        ]
+      }
+    ],
+    "deep-researcher": [
+      {
+        id: "documentation",
+        name: "Documentation",
+        references: [
+          {
+            title: "Deep Researcher Agent Pattern",
+            url: "https://learn.microsoft.com/azure/ai-services/patterns/researcher",
+            description: "Official documentation on Deep Researcher agents"
+          },
+          {
+            title: "Azure AI for Research",
+            url: "https://learn.microsoft.com/azure/ai-studio/concepts/research-agents",
+            description: "Overview of research capabilities in Azure AI"
+          }
+        ]
+      },
+      {
+        id: "papers",
+        name: "Research Papers",
+        references: [
+          {
+            title: "Large Language Models as Research Agents",
+            url: "https://arxiv.org/abs/2310.05663",
+            description: "Research on using LLMs for deep research tasks"
+          }
+        ]
+      },
+      {
+        id: "samples",
+        name: "Code Samples",
+        references: [
+          {
+            title: "Azure Research Agent Implementations",
+            url: "https://github.com/Azure-Samples/azure-search-openai-demo/tree/main/research",
+            description: "Research agent implementation examples"
+          }
+        ]
+      }
+    ],
+    "voice-agent": [
+      {
+        id: "documentation",
+        name: "Documentation",
+        references: [
+          {
+            title: "Azure AI Voice Agents",
+            url: "https://learn.microsoft.com/azure/ai-services/speech-service/voice-assistants",
+            description: "Official documentation on Voice Agents in Azure"
+          },
+          {
+            title: "Azure Neural Voice",
+            url: "https://learn.microsoft.com/azure/ai-services/speech-service/text-to-speech",
+            description: "Overview of Azure's neural voice capabilities"
+          }
+        ]
+      },
+      {
+        id: "sdk",
+        name: "SDKs & APIs",
+        references: [
+          {
+            title: "Azure Speech SDK",
+            url: "https://learn.microsoft.com/azure/ai-services/speech-service/speech-sdk",
+            description: "SDK for voice integration in applications"
+          },
+          {
+            title: "Speech-to-Text REST API",
+            url: "https://learn.microsoft.com/azure/ai-services/speech-service/rest-speech-to-text",
+            description: "REST API for speech recognition"
+          }
+        ]
+      },
+      {
+        id: "samples",
+        name: "Code Samples",
+        references: [
+          {
+            title: "Voice Assistant Samples",
+            url: "https://github.com/Azure-Samples/cognitive-services-speech-sdk/tree/master/quickstart",
+            description: "Quick start samples for voice assistants"
+          },
+          {
+            title: "Custom Voice Assistant",
+            url: "https://github.com/Azure-Samples/Cognitive-Services-Voice-Assistant",
+            description: "Examples of custom voice assistants built on Azure"
+          }
+        ]
+      }
     ]
   },
   

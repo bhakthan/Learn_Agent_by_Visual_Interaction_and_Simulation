@@ -56,6 +56,9 @@ export function ThemeProvider({
     // Then add the current theme class
     root.classList.add(theme);
     
+    // Set the data-theme attribute which some components might use
+    root.setAttribute('data-theme', theme);
+    
     // Save theme preference
     localStorage.setItem(storageKey, theme);
   }, [theme, storageKey]);

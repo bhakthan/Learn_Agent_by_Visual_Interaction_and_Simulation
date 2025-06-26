@@ -5,6 +5,15 @@
   * {
     @apply border-border
   }
+  
+  /* Ensure smooth transitions between themes */
+  :root {
+    --transition-duration: 0.3s;
+  }
+  
+  body {
+    transition: background-color var(--transition-duration) ease, color var(--transition-duration) ease;
+  }
 }
 
 /* Light Mode */
@@ -129,8 +138,6 @@
 
 body {
   font-family: 'Roboto', sans-serif;
-  color: var(--foreground);
-  background-color: var(--background);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 

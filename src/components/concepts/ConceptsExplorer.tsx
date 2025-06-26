@@ -73,7 +73,7 @@ const ConceptsExplorer = () => {
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline">Learn More</Button>
+              <Button variant="outline" onClick={() => toggleDetails('agents')}>Learn More</Button>
               <Button onClick={() => toggleDetails('agents')} className="flex items-center gap-2">
                 <BookOpen size={18} />
                 {showDetails.agents ? 'Hide Details' : 'Show Detailed Content'}
