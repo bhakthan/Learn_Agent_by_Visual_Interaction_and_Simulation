@@ -165,7 +165,7 @@ class CodeActAgent:
                     "1. Write Python code to make progress, formatted as:\n"
                     "   Thought: <your reasoning>\n"
                     "   Code:\n"
-                    "   ```python\n"
+                    "   ```code\n"
                     "   # Your Python code here\n"
                     "   ```\n\n"
                     "2. Or provide the final answer if you've solved the problem:\n"
@@ -184,9 +184,9 @@ class CodeActAgent:
                         done = True
                 
                 # Check if the response contains code
-                elif "```python" in agent_response:
+                elif "```code" in agent_response:
                     # Extract code block using regex
-                    code_match = re.search(r"```python\\s*([\\s\\S]*?)\\s*```", agent_response)
+                    code_match = re.search(r"```code\\s*([\\s\\S]*?)\\s*```", agent_response)
                     if code_match:
                         code = code_match.group(1).strip()
                         

@@ -175,7 +175,7 @@ const executeReAct = async (query: string, maxCycles = 5) => {
     return { status: 'failed', reason: error.message };
   }
 };`,
-    pythonCodeExample: `# ReAct Agent implementation
+    pythonCodeExample: "# ReAct Agent implementation
 import openai
 import json
 from typing import Dict, List, Any, Optional, Union
@@ -369,8 +369,7 @@ async def main():
       { id: 'e5-2', source: 'environment', target: 'agent', label: 'Observation', animated: true },
       { id: 'e2-6', source: 'agent', target: 'result', animated: true }
     ],
-    codeExample: `// CodeAct Agent implementation
-const executeCodeAct = async (query, maxCycles = 5) => {
+    codeExample: "// CodeAct Agent implementation\nconst executeCodeAct = async (query, maxCycles = 5) => {"
   try {
     let currentCycle = 0;
     let done = false;
@@ -441,9 +440,9 @@ const executeCodeAct = async (query, maxCycles = 5) => {
         }
       } 
       // Check if the response contains code
-      else if (agentResponse.includes('\`\`\`python')) {
+      else if (agentResponse.includes("```code")) {
         // Extract code block
-        const codeMatch = agentResponse.match(/\`\`\`python\\s*([\\s\\S]*?)\\s*\`\`\`/);
+        const codeMatch = agentResponse.match(/```code\s*([\s\S]*?)\s*```/);
         if (codeMatch) {
           const code = codeMatch[1].trim();
           
@@ -709,27 +708,26 @@ const executeSelfReflection = async (query: string, maxRevisions = 3) => {
       { id: 'e2-6', source: 'agent', target: 'generator', animated: true },
       { id: 'e6-7', source: 'generator', target: 'output', animated: true }
     ],
-    codeExample: `// Agentic RAG implementation
-const executeAgenticRAG = async (query: string) => {
+    codeExample: "// Agentic RAG implementation\nconst executeAgenticRAG = async (query) => {"
   try {
     // Simulated vector database and retrieval system
     const vectorDB = {
       search: async (query, topK = 3) => {
-        console.log(\`Searching vector DB for: "\${query}"\`);
+        console.log("Searching vector DB for: " + query);
         // Simulate retrieving relevant chunks
         return [
           {
-            content: \`Relevant information about "\${query}" - Part 1\`,
+            content: "Relevant information about " + query + " - Part 1",
             source: "document1.pdf",
             score: 0.92
           },
           {
-            content: \`Related context for "\${query}" - Part 2\`,
+            content: "Related context for " + query + " - Part 2",
             source: "document2.pdf",
             score: 0.85
           },
           {
-            content: \`Additional information related to "\${query}" - Part 3\`,
+            content: "Additional information related to " + query + " - Part 3",
             source: "document3.pdf",
             score: 0.79
           }
