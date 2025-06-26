@@ -9,6 +9,15 @@ interface StepsProps {
 }
 
 export const Steps = ({ steps, currentStep, setCurrentStep }: StepsProps) => {
+  // Handle empty steps case
+  if (!steps || steps.length === 0) {
+    return (
+      <div className="p-6 border rounded-md text-center">
+        <p className="text-muted-foreground">No implementation steps available for this pattern.</p>
+      </div>
+    );
+  }
+
   const goToNextStep = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1)

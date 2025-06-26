@@ -33,6 +33,8 @@ export interface PatternData {
   codeExample: string
   pythonCodeExample?: string // Made optional as not all patterns have it
   implementation: string[]
+  whenToUse?: string
+  advantages?: string[]
 }
 
 export const agentPatterns: PatternData[] = [

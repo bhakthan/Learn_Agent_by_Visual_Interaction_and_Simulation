@@ -33,9 +33,9 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
   
   const getCodeExample = () => {
     if (language === 'python') {
-      return pythonPatterns[patternData.id] || patternData.pythonCodeExample || "# Python implementation not available for this pattern"
+      return (pythonPatterns[patternData.id] || patternData.pythonCodeExample || "# Python implementation not available for this pattern")
     }
-    return patternData.codeExample
+    return patternData.codeExample || "// TypeScript implementation not available for this pattern"
   }
   
   // Get execution steps for the current pattern and language if available
@@ -92,14 +92,16 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                     <div>
                       <h4 className="text-sm font-medium mb-2">Key Use Cases</h4>
                       <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                        {patternData.useCases.map((useCase, i) => (
+                        {patternData.useCases && patternData.useCases.length > 0 ? patternData.useCases.map((useCase, i) => (
                           <li key={i}>{useCase}</li>
-                        ))}
+                        )) : (
+                          <li>Use case information not available</li>
+                        )}
                       </ul>
                     </div>
                     <div>
                       <h4 className="text-sm font-medium mb-2">When To Use</h4>
-                      <p className="text-sm text-muted-foreground">{patternData.whenToUse}</p>
+                      <p className="text-sm text-muted-foreground">{patternData.whenToUse || 'Information not available'}</p>
                     </div>
                   </div>
                 </div>
@@ -109,14 +111,16 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                   <p className="text-sm text-muted-foreground mb-3">This pattern can be implemented using the following components:</p>
                   
                   <div className="space-y-2">
-                    {patternData.implementation.map((step, index) => (
+                    {patternData.implementation && patternData.implementation.length > 0 ? patternData.implementation.map((step, index) => (
                       <div key={index} className="flex items-start">
                         <span className="flex items-center justify-center bg-primary/10 text-primary rounded-full w-5 h-5 text-xs font-medium mr-2 mt-0.5">
                           {index + 1}
                         </span>
                         <span className="text-sm">{step}</span>
                       </div>
-                    ))}
+                    )) : (
+                      <div className="text-sm text-muted-foreground">Implementation steps not available</div>
+                    )}
                   </div>
                 </div>
                 
@@ -124,8 +128,8 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                   <div className="p-4 border rounded-lg">
                     <h4 className="text-sm font-medium mb-2">Choose this pattern when:</h4>
                     <ul className="list-disc pl-5 space-y-1 text-xs text-muted-foreground">
-                      <li>You need {patternData.advantages[0].toLowerCase()}</li>
-                      <li>Your application requires {patternData.advantages[1].toLowerCase()}</li>
+                      <li>You need {patternData.advantages && patternData.advantages[0] ? patternData.advantages[0].toLowerCase() : 'improved agent capabilities'}</li>
+                      <li>Your application requires {patternData.advantages && patternData.advantages[1] ? patternData.advantages[1].toLowerCase() : 'advanced pattern implementation'}</li>
                       <li>You want to {patternData.description.split(' ').slice(0, 5).join(' ').toLowerCase()}...</li>
                     </ul>
                   </div>
@@ -149,7 +153,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
             
             <TabsContent value="steps" className="py-4">
               <Steps 
-                steps={patternData.implementation} 
+                steps={patternData.implementation || []} 
                 currentStep={currentStep} 
                 setCurrentStep={setCurrentStep} 
               />
