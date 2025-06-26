@@ -291,7 +291,7 @@ const executeCodeAct = async (query: string, maxCycles = 5) => {
         "1. Write Python code to make progress, formatted as:\n" +
         "   Thought: <your reasoning>\n" +
         "   Code:\n" +
-        "   ```python\n" +
+        "   ```code\n" +
         "   # Your Python code here\n" +
         "   ```\n\n" +
         "2. Or provide the final answer if you've solved the problem:\n" +
@@ -310,9 +310,9 @@ const executeCodeAct = async (query: string, maxCycles = 5) => {
         }
       } 
       // Check if the response contains code
-      else if (agentResponse.includes('```python')) {
+      else if (agentResponse.includes('```code')) {
         // Extract code block
-        const codeMatch = agentResponse.match(/```python\s*([\s\S]*?)\s*```/);
+        const codeMatch = agentResponse.match(/```code\s*([\s\S]*?)\s*```/);
         if (codeMatch) {
           const code = codeMatch[1].trim();
           
@@ -679,7 +679,9 @@ const executeAgenticRAG = async (query: string) => {
     // Step 4: Generate a comprehensive response
     console.log("Generating comprehensive response...");
     const responseContext = topChunks
-      .map(chunk => `Source: ${chunk.source} (Score: ${chunk.evaluatedScore.toFixed(2)})\n${chunk.content}`)
+      .map(function(chunk) { 
+        return "Source: " + chunk.source + " (Score: " + chunk.evaluatedScore.toFixed(2) + ")\n" + chunk.content;
+      })
       .join('\n\n');
     
     const response = await llm(\`
@@ -1199,7 +1201,9 @@ const executeAgentToAgent = async (taskInput: string, maxRounds = 3) => {
       work of multiple agents on this task: "\${taskInput}"
       
       Agent contributions:
-      ${resultMessages.map(message => `${message.from}: ${message.content}`).join('\n\n')}
+      ${resultMessages.map(function(message) { 
+        return message.from + ": " + message.content;
+      }).join('\n\n')}
       
       Synthesize these contributions into a cohesive final result.
     \`;
@@ -1580,7 +1584,9 @@ const executeOrchestratorWorker = async (input: string) => {
     // Synthesize the results
     const synthesizedResult = await llm(\`
       Synthesize these results into a coherent response:
-      \${workerResults.map((result, i) => \`Result \${i+1}: \${result}\`).join('\n')}
+      \${workerResults.map(function(result, i) { 
+        return "Result " + (i+1) + ": " + result;
+      }).join('\n')}
     \`);
     
     return {
@@ -1921,7 +1927,9 @@ const executeAutonomousWorkflow = async (input: string, maxSteps = 10) => {
         Current state: \${currentState}
         
         History:
-        ${history.map(h => `- ${h}`).join('\n')}
+        ${history.map(function(h) { 
+          return "- " + h;
+        }).join('\n')}
         
         Available tools:
         - search(query): Search for information
@@ -2237,9 +2245,12 @@ const executePlanAndExecute = async (input: string) => {
           Original task: \${input}
           Current plan: \${plan}
           Completed subtasks and results:
-          ${Object.entries(subtaskResults).map(([id, result]) => 
-            `- Subtask ${id}: ${subtasks.find(s => s.id === id).description}\n  Result: ${result}`
-          ).join('\n')}
+          ${Object.entries(subtaskResults).map(function(entry) {
+            const id = entry[0];
+            const result = entry[1];
+            const subtaskDesc = subtasks.find(function(s) { return s.id === id; }).description;
+            return "- Subtask " + id + ": " + subtaskDesc + "\n  Result: " + result;
+          }).join('\n')}
           
           Create an updated plan with remaining and new subtasks.
           Format your response as JSON:
@@ -2272,9 +2283,12 @@ const executePlanAndExecute = async (input: string) => {
       Plan: \${plan}
       
       Subtasks and results:
-      ${Object.entries(subtaskResults).map(([id, result]) => 
-        `- Subtask ${id}: ${subtasks.find(s => s.id === id).description}\n  Result: ${result}`
-      ).join('\n')}
+      ${Object.entries(subtaskResults).map(function(entry) {
+        const id = entry[0];
+        const result = entry[1];
+        const subtaskDesc = subtasks.find(function(s) { return s.id === id; }).description;
+        return "- Subtask " + id + ": " + subtaskDesc + "\n  Result: " + result;
+      }).join('\n')}
     \`);
     
     return {
