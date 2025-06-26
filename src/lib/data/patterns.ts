@@ -119,7 +119,7 @@ const executeReAct = async (query: string, maxCycles = 5) => {
         Task: \${query}
         
         Previous steps:
-        \${contextHistory.join('\\n')}
+        ${contextHistory.join('\n')}
         
         Think step by step about the problem. Either:
         1. Use a tool to gather more information by responding with:
@@ -145,8 +145,8 @@ const executeReAct = async (query: string, maxCycles = 5) => {
         }
       } else {
         // Extract tool call
-        const actionMatch = reasoningResponse.match(/Action:(.*?)\\n/);
-        const actionInputMatch = reasoningResponse.match(/Action Input:(.*?)(?:\\n|$)/s);
+        const actionMatch = reasoningResponse.match(/Action:(.*?)\n/);
+        const actionInputMatch = reasoningResponse.match(/Action Input:(.*?)(?:\n|$)/s);
         
         if (actionMatch && actionInputMatch) {
           const toolName = actionMatch[1].trim();
@@ -288,7 +288,7 @@ const executeCodeAct = async (query: string, maxCycles = 5) => {
         Task: \${query}
         
         Previous interactions:
-        \${contextHistory.join('\\n\\n')}
+        ${contextHistory.join('\n\n')}
         
         Based on the current state, either:
         
@@ -318,7 +318,7 @@ const executeCodeAct = async (query: string, maxCycles = 5) => {
       // Check if the response contains code
       else if (agentResponse.includes('\`\`\`python')) {
         // Extract code block
-        const codeMatch = agentResponse.match(/\`\`\`python\\n([\\s\\S]*?)\\n\`\`\`/);
+        const codeMatch = agentResponse.match(/```python\n([\s\S]*?)\n```/);
         if (codeMatch) {
           const code = codeMatch[1].trim();
           
@@ -685,8 +685,8 @@ const executeAgenticRAG = async (query: string) => {
     // Step 4: Generate a comprehensive response
     console.log("Generating comprehensive response...");
     const responseContext = topChunks
-      .map(chunk => \`Source: \${chunk.source} (Score: \${chunk.evaluatedScore.toFixed(2)})\\n\${chunk.content}\`)
-      .join('\\n\\n');
+      .map(chunk => `Source: ${chunk.source} (Score: ${chunk.evaluatedScore.toFixed(2)})\n${chunk.content}`)
+      .join('\n\n');
     
     const response = await llm(\`
       You are an AI assistant with access to retrieved information.
@@ -898,18 +898,18 @@ const executeModernToolUse = async (query: string) => {
     // Step 3: Generate response using tool outputs
     const toolOutputsText = Object.entries(toolResults)
       .map(([toolName, result]) => `${toolName} result: ${JSON.stringify(result, null, 2)}`)
-      .join('\\n\\n');
+      .join('\n\n');
     
-    const response = await llm(\`
+    const response = await llm(`
       Using the following tool results, provide a comprehensive answer to the user's query.
       
-      Query: "\${query}"
+      Query: "${query}"
       
       Tool Results:
-      \${toolOutputsText}
+      ${toolOutputsText}
       
       Generate a helpful response that synthesizes the information from these tools.
-    \`);
+    `);
     
     return {
       status: 'success',
@@ -1073,7 +1073,7 @@ const applySecurityFilter = async (data, permissions) => {
 
 const buildContext = async (results, query) => {
   // Combine multiple information sources into unified context
-  return results.join('\\n\\n');
+  return results.join('\n\n');
 };`,
     implementation: [
       'Define standardized request and response formats for context exchanges',
@@ -1214,7 +1214,7 @@ const executeAgentToAgent = async (taskInput: string, maxRounds = 3) => {
       work of multiple agents on this task: "\${taskInput}"
       
       Agent contributions:
-      \${resultMessages.map(message => \`\${message.from}: \${message.content}\`).join('\\n\\n')}
+      ${resultMessages.map(message => `${message.from}: ${message.content}`).join('\n\n')}
       
       Synthesize these contributions into a cohesive final result.
     \`;
@@ -1276,20 +1276,20 @@ const processAgentMessages = async (agentType, messageBus) => {
       \`;
       break;
     case "analysis":
-      agentPrompt = \`
+      agentPrompt = `
         You are an analysis agent. Process this data and provide insights:
-        \${messages.map(message => message.content).join('\\n')}
+        ${messages.map(message => message.content).join('\n')}
         
         Provide your analytical conclusions.
-      \`;
+      `;
       break;
     case "critic":
-      agentPrompt = \`
+      agentPrompt = `
         You are a critic agent. Evaluate these proposals and identify issues:
-        \${messages.map(message => message.content).join('\\n')}
+        ${messages.map(message => message.content).join('\n')}
         
         Provide constructive criticism and suggestions for improvement.
-      \`;
+      `;
       break;
   }
   
@@ -1506,7 +1506,7 @@ const aggregateResults = (results) => {
   // Implementation of result aggregation logic
   // This could be a simple concatenation, a weighted average,
   // or another LLM call to synthesize the results
-  return results.join('\\n\\n');
+  return results.join('\n\n');
 };`,
     implementation: [
       'Import the Azure AI SDK and set up authentication',
@@ -1595,7 +1595,7 @@ const executeOrchestratorWorker = async (input: string) => {
     // Synthesize the results
     const synthesizedResult = await llm(\`
       Synthesize these results into a coherent response:
-      \${workerResults.map((result, i) => \`Result \${i+1}: \${result}\`).join('\\n')}
+      ${workerResults.map((result, i) => `Result ${i+1}: ${result}`).join('\n')}
     \`);
     
     return {
@@ -1612,7 +1612,7 @@ const executeOrchestratorWorker = async (input: string) => {
 const parseSubtasks = (orchestratorOutput) => {
   // Logic to extract subtasks from the orchestrator's output
   // This could involve parsing JSON, splitting by newlines, etc.
-  return orchestratorOutput.split('\\n')
+  return orchestratorOutput.split('\n')
     .filter(line => line.trim().startsWith('- '))
     .map(line => line.replace('- ', '').trim());
 };`,
@@ -1936,7 +1936,7 @@ const executeAutonomousWorkflow = async (input: string, maxSteps = 10) => {
         Current state: \${currentState}
         
         History:
-        \${history.map(h => \`- \${h}\`).join('\\n')}
+        ${history.map(h => `- ${h}`).join('\n')}
         
         Available tools:
         - search(query): Search for information
@@ -2252,9 +2252,9 @@ const executePlanAndExecute = async (input: string) => {
           Original task: \${input}
           Current plan: \${plan}
           Completed subtasks and results:
-          \${Object.entries(subtaskResults).map(([id, result]) => 
-            \`- Subtask \${id}: \${subtasks.find(s => s.id === id).description}\\n  Result: \${result}\`
-          ).join('\\n')}
+          ${Object.entries(subtaskResults).map(([id, result]) => 
+            `- Subtask ${id}: ${subtasks.find(s => s.id === id).description}\n  Result: ${result}`
+          ).join('\n')}
           
           Create an updated plan with remaining and new subtasks.
           Format your response as JSON:
@@ -2287,9 +2287,9 @@ const executePlanAndExecute = async (input: string) => {
       Plan: \${plan}
       
       Subtasks and results:
-      \${Object.entries(subtaskResults).map(([id, result]) => 
-        \`- Subtask \${id}: \${subtasks.find(s => s.id === id).description}\\n  Result: \${result}\`
-      ).join('\\n')}
+      ${Object.entries(subtaskResults).map(([id, result]) => 
+        `- Subtask ${id}: ${subtasks.find(s => s.id === id).description}\n  Result: ${result}`
+      ).join('\n')}
     \`);
     
     return {
