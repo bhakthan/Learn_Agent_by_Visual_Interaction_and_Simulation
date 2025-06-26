@@ -21,6 +21,8 @@ import InteractiveCodeExecution from './InteractiveCodeExecution'
 import { getCodeExecutionExample } from '@/lib/data/codeExamples'
 import { getAlgorithmVisualization } from '@/lib/utils/algorithmVisualization'
 import { getDebugExample } from '@/lib/utils/codeDebugExamples'
+import { useSidebarCollapse } from '@/hooks/use-sidebar-collapse'
+import { cn } from '@/lib/utils'
 
 interface CodePlaybookProps {
   patternData: PatternData
@@ -30,6 +32,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
   const [currentStep, setCurrentStep] = useState(0)
   const [language, setLanguage] = useState<'python' | 'typescript'>('python')
   const [visualizationMode, setVisualizationMode] = useState<'static' | 'interactive'>('static')
+  const { isCollapsed } = useSidebarCollapse();
   
   const getCodeExample = () => {
     if (language === 'python') {
@@ -70,8 +73,8 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
   );
   
   return (
-    <div className="space-y-6">
-      <Card>
+    <div className="space-y-6 w-full">
+      <Card className={cn("w-full", isCollapsed && "md:max-w-none")}>
         <CardHeader className="p-4 sm:p-6">
           <CardTitle>{patternData.name} Implementation</CardTitle>
           <CardDescription>
@@ -153,8 +156,8 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                   <div className="p-4 border rounded-lg">
                     <h4 className="text-sm font-medium mb-2">Choose this pattern when:</h4>
                     <ul className="list-disc pl-5 space-y-1 text-xs text-muted-foreground">
-                      <li>You need {patternData.advantages && patternData.advantages[0] ? patternData.advantages[0].toLowerCase() : 'improved agent capabilities'}</li>
-                      <li>Your application requires {patternData.advantages && patternData.advantages[1] ? patternData.advantages[1].toLowerCase() : 'advanced pattern implementation'}</li>
+                      <li>You need {patternData.advantages && patternData.advantages.length > 0 ? patternData.advantages[0].toLowerCase() : 'improved agent capabilities'}</li>
+                      <li>Your application requires {patternData.advantages && patternData.advantages.length > 1 ? patternData.advantages[1].toLowerCase() : 'advanced pattern implementation'}</li>
                       <li>You want to {patternData.description.split(' ').slice(0, 5).join(' ').toLowerCase()}...</li>
                     </ul>
                   </div>

@@ -41,6 +41,20 @@ export function useSidebarCollapse(storageKey = 'sidebar-collapsed-state') {
     return () => window.removeEventListener('resize', checkWidth);
   }, [storageKey]);
 
+  // Add keyboard shortcut for toggling sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Toggle sidebar with slash key
+      if (e.key === '/' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        toggleSidebar();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Toggle sidebar visibility
   const toggleSidebar = () => {
     setIsCollapsed(prev => !prev);

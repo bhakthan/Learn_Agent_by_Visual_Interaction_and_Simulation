@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { agentPatterns } from '@/lib/data/patterns';
-import { BookmarkSimple, CaretRight, GraduationCap, Lightbulb, MagnifyingGlass, Robot, X } from '@phosphor-icons/react';
+import { BookmarkSimple, CaretRight, GraduationCap, Keyboard, Lightbulb, MagnifyingGlass, Robot, X } from '@phosphor-icons/react';
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -48,7 +48,7 @@ export function PatternSidebar({ activePatternId, onPatternSelect }: PatternSide
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // If "/" is pressed, focus the search input
-      if (e.key === '/' && !isCollapsed) {
+      if (e.key === '/' && !isCollapsed && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
         const searchInput = document.querySelector('.pattern-search-input') as HTMLInputElement;
         if (searchInput) searchInput.focus();
@@ -101,7 +101,12 @@ export function PatternSidebar({ activePatternId, onPatternSelect }: PatternSide
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right" className="bg-primary text-primary-foreground">
-              <p>Show pattern navigation</p>
+              <div className="flex items-center gap-1">
+                <p>Show pattern navigation</p>
+                <kbd className="px-1.5 py-0.5 text-xs rounded bg-primary-foreground/20 font-mono text-xs ml-1">
+                  <span className="text-xs">/</span>
+                </kbd>
+              </div>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -141,7 +146,7 @@ export function PatternSidebar({ activePatternId, onPatternSelect }: PatternSide
             <div className="relative">
               <div className="relative">
                 <input 
-                  placeholder="Search patterns... (Press '/' to focus)"
+                  placeholder="Search patterns..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pattern-search-input w-full py-1 px-3 pl-8 pr-8 text-sm rounded-md border border-input bg-background ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -157,9 +162,18 @@ export function PatternSidebar({ activePatternId, onPatternSelect }: PatternSide
                     <X size={14} />
                   </Button>
                 )}
-                <kbd className="absolute right-2 bottom-[-18px] hidden text-[10px] font-mono text-muted-foreground pointer-events-none md:inline-block">
-                  Press / to search
-                </kbd>
+                <div className="absolute right-0 bottom-[-24px] flex items-center gap-1 text-muted-foreground">
+                  <Keyboard size={12} />
+                  <kbd className="text-[10px] font-mono px-1 rounded bg-muted">
+                    /
+                  </kbd>
+                  <span className="text-[10px]">to search</span>
+                  <span className="mx-1 text-[10px]">·</span>
+                  <kbd className="text-[10px] font-mono px-1 rounded bg-muted">
+                    Ctrl+/
+                  </kbd>
+                  <span className="text-[10px]">toggle</span>
+                </div>
               </div>
             </div>
           </div>
