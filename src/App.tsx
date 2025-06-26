@@ -9,10 +9,11 @@ import { agentPatterns } from './lib/data/patterns'
 import CodePlaybook from './components/code-playbook/CodePlaybook'
 import { ReactFlowProvider } from 'reactflow'
 import AzureServicesOverview from './components/azure-services/AzureServicesOverview'
-import { Cloud } from '@phosphor-icons/react'
+import CommunityHub from './components/community/CommunityHub'
+import { Cloud, Users } from '@phosphor-icons/react'
 
 function App() {
-  const [activeView, setActiveView] = useState<'concepts' | 'patterns' | 'playbook' | 'services'>('concepts')
+  const [activeView, setActiveView] = useState<'concepts' | 'patterns' | 'playbook' | 'services' | 'community'>('concepts')
   const [selectedPatternId, setSelectedPatternId] = useState(agentPatterns[0].id)
   
   const selectedPattern = agentPatterns.find(p => p.id === selectedPatternId) || agentPatterns[0]
@@ -53,6 +54,9 @@ function App() {
                     <ListItem href="#services" title="Azure AI Services">
                       Core Azure AI services for agent development
                     </ListItem>
+                    <ListItem href="#community" title="Community Hub">
+                      Share and discover community agent implementations
+                    </ListItem>
                   </ul>
                 </NavigationMenuContent>
               </NavigationMenuItem>
@@ -83,11 +87,12 @@ function App() {
       <main className="flex-1 container mx-auto px-4 py-6">
         <ReactFlowProvider>
           <Tabs defaultValue="concepts" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsList className="grid w-full grid-cols-5 mb-8">
               <TabsTrigger value="concepts" onClick={() => setActiveView('concepts')}>Core Concepts</TabsTrigger>
               <TabsTrigger value="patterns" onClick={() => setActiveView('patterns')}>Agent Patterns</TabsTrigger>
               <TabsTrigger value="playbook" onClick={() => setActiveView('playbook')}>Code Playbooks</TabsTrigger>
               <TabsTrigger value="services" onClick={() => setActiveView('services')}>Azure AI Services</TabsTrigger>
+              <TabsTrigger value="community" onClick={() => setActiveView('community')}>Community Hub</TabsTrigger>
             </TabsList>
             
             <TabsContent value="concepts" className="space-y-6">
@@ -154,6 +159,27 @@ function App() {
                 </div>
               </div>
               <AzureServicesOverview />
+            </TabsContent>
+            
+            <TabsContent value="community" className="space-y-6">
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold tracking-tight">Community Hub</h2>
+                <p className="text-muted-foreground">
+                  Share and discover custom Azure AI agent patterns contributed by the community.
+                </p>
+              </div>
+              <Separator />
+              <div className="flex items-center p-4 mb-6 rounded-lg bg-accent/10 border border-accent/20">
+                <Users size={24} className="text-accent mr-3" />
+                <div>
+                  <h3 className="font-medium">Collaborative Learning</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Learn from others' implementations, share your own innovative agent patterns, and collaborate 
+                    to build a stronger Azure AI agent community.
+                  </p>
+                </div>
+              </div>
+              <CommunityHub />
             </TabsContent>
           </Tabs>
         </ReactFlowProvider>

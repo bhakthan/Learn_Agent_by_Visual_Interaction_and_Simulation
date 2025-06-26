@@ -2,21 +2,22 @@
 
 ## Core Purpose & Success
 - **Mission Statement**: To provide an interactive, educational platform for exploring Azure AI agent patterns, concepts, and implementation best practices with integration of Azure AI services.
-- **Success Indicators**: Comprehensive coverage of agent patterns, clear implementation guidance through code examples, and effective integration of Azure AI services best practices.
+- **Success Indicators**: Comprehensive coverage of agent patterns, clear implementation guidance through code examples, effective integration of Azure AI services best practices, and active community sharing of implementations.
 - **Experience Qualities**: Informative, Interactive, Professional
 
 ## Project Classification & Approach
-- **Complexity Level**: Content Showcase with Interactive Features
-- **Primary User Activity**: Consuming (educational content) and Interacting (with visualizations)
+- **Complexity Level**: Content Showcase with Interactive Features and Community Collaboration
+- **Primary User Activity**: Consuming (educational content), Interacting (with visualizations), and Creating (community contributions)
 
 ## Thought Process for Feature Selection
-- **Core Problem Analysis**: Developers need to understand how to implement various agent patterns using Azure AI services effectively.
-- **User Context**: Users will likely be developers seeking to learn about agent architectures and implementation patterns in Azure.
-- **Critical Path**: Browse patterns → Understand architecture → Explore code examples → Learn Azure service integration → Apply knowledge
+- **Core Problem Analysis**: Developers need to understand how to implement various agent patterns using Azure AI services effectively and benefit from others' experiences.
+- **User Context**: Users will likely be developers seeking to learn about agent architectures and implementation patterns in Azure, as well as share their own implementations.
+- **Critical Path**: Browse patterns → Understand architecture → Explore code examples → Learn Azure service integration → Apply knowledge → Share custom implementations
 - **Key Moments**:
   1. Visual exploration of agent pattern architectures
   2. Code examples for implementation reference
   3. Azure AI services integration best practices discovery
+  4. Community pattern sharing and discovery
 
 ## Essential Features
 1. **Agent Pattern Explorer**
@@ -34,12 +35,17 @@
    - Purpose: Show how to leverage Azure services effectively for each pattern
    - Success criteria: Clear mapping between patterns and services with actionable implementation advice
 
+4. **Community Hub**
+   - Functionality: Platform for users to share, discover, and discuss custom agent pattern implementations
+   - Purpose: Foster community learning and innovation around Azure AI agent patterns
+   - Success criteria: Active sharing of implementations, constructive discussions, and discovery of novel approaches
+
 ## Design Direction
 
 ### Visual Tone & Identity
 - **Emotional Response**: Professional confidence, technical clarity, and inspiration
-- **Design Personality**: Modern, technical yet approachable, professional
-- **Visual Metaphors**: Network diagrams, code blocks, cloud architecture
+- **Design Personality**: Modern, technical yet approachable, professional, collaborative
+- **Visual Metaphors**: Network diagrams, code blocks, cloud architecture, community forum
 - **Simplicity Spectrum**: Balanced - clean interface with rich visualizations
 
 ### Color Strategy
@@ -84,11 +90,12 @@
 - **Contrast Goal**: WCAG AA compliance for all text elements
 
 ## Implementation Considerations
-- **Scalability Needs**: Design to accommodate additional agent patterns and Azure services
+- **Scalability Needs**: Design to accommodate additional agent patterns, Azure services, and community contributions
 - **Testing Focus**: Verify code examples work correctly and match visual representations
-- **Critical Questions**: How to keep content updated with Azure's evolving services?
+- **Critical Questions**: How to moderate community contributions effectively while maintaining quality?
 
 ## Reflection
-- This approach uniquely combines visual learning with practical implementation guidance
+- This approach uniquely combines visual learning with practical implementation guidance and community knowledge sharing
 - The integration of Azure AI services with each pattern provides context-specific guidance that's often missing from general documentation
 - Adding interactive elements to aid understanding makes this platform more valuable than static documentation
+- Community contribution features foster organic growth of knowledge and innovative pattern implementations
