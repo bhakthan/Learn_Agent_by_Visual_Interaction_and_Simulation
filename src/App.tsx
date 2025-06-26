@@ -130,8 +130,8 @@ function App() {
                 <p className="text-muted-foreground">Step-by-step implementation guides with code examples for each pattern.</p>
               </div>
               <Separator />
-              <div className="flex">
-                <div className="hidden md:block w-[250px]">
+              <div className="flex relative">
+                <div className="hidden md:block">
                   <PatternSidebar 
                     activePatternId={selectedPatternId} 
                     onPatternSelect={setSelectedPatternId}

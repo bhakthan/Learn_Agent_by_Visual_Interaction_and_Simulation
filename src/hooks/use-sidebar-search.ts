@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { agentPatterns } from '@/lib/data/patterns';
 
 interface PatternData {
@@ -18,11 +18,15 @@ export function useSidebarSearch(items: PatternData[] = agentPatterns) {
     if (!searchQuery.trim()) return categories;
     
     const filtered: Record<string, PatternData[]> = {};
+    const searchTerms = searchQuery.toLowerCase().split(' ').filter(term => term.length > 0);
     
     Object.entries(categories).forEach(([category, patterns]) => {
       const matchedPatterns = patterns.filter(pattern => 
-        pattern.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        pattern.description.toLowerCase().includes(searchQuery.toLowerCase())
+        // Check if ALL search terms are found in either name or description
+        searchTerms.every(term => 
+          pattern.name.toLowerCase().includes(term) ||
+          pattern.description.toLowerCase().includes(term)
+        )
       );
       
       if (matchedPatterns.length > 0) {
@@ -34,7 +38,7 @@ export function useSidebarSearch(items: PatternData[] = agentPatterns) {
   }, [categories, searchQuery]);
   
   // Group items by category
-  const groupByCategory = () => {
+  const groupByCategory = useCallback(() => {
     const categorized: Record<string, PatternData[]> = {};
     
     items.forEach(item => {
@@ -45,8 +49,30 @@ export function useSidebarSearch(items: PatternData[] = agentPatterns) {
       categorized[category].push(item);
     });
     
+    // Sort each category's patterns alphabetically
+    Object.keys(categorized).forEach(category => {
+      categorized[category].sort((a, b) => a.name.localeCompare(b.name));
+    });
+    
     setCategories(categorized);
-  };
+  }, [items]);
+
+  // Highlight matching text in search results
+  const highlightText = useCallback((text: string, query: string) => {
+    if (!query.trim()) return text;
+    
+    const searchTerms = query.toLowerCase().split(' ').filter(term => term.length > 0);
+    if (searchTerms.length === 0) return text;
+    
+    // Simple implementation - this doesn't handle overlapping matches correctly
+    let highlightedText = text;
+    searchTerms.forEach(term => {
+      const regex = new RegExp(`(${term})`, 'gi');
+      highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+    });
+    
+    return highlightedText;
+  }, []);
   
   return {
     searchQuery,
@@ -54,5 +80,6 @@ export function useSidebarSearch(items: PatternData[] = agentPatterns) {
     filteredCategories,
     groupByCategory,
     categories,
+    highlightText,
   };
 }

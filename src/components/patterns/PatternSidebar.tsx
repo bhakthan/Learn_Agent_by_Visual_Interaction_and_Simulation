@@ -15,11 +15,18 @@ import {
 } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { agentPatterns } from '@/lib/data/patterns';
-import { BookmarkSimple, GraduationCap, Lightbulb, MagnifyingGlass, Robot, X } from '@phosphor-icons/react';
+import { BookmarkSimple, CaretRight, GraduationCap, Lightbulb, MagnifyingGlass, Robot, X } from '@phosphor-icons/react';
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSidebarSearch } from '@/hooks/use-sidebar-search';
+import { useSidebarCollapse } from '@/hooks/use-sidebar-collapse';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PatternSidebarProps {
   activePatternId: string;
@@ -35,6 +42,28 @@ export function PatternSidebar({ activePatternId, onPatternSelect }: PatternSide
     categories
   } = useSidebarSearch(agentPatterns);
   
+  const { isCollapsed, toggleSidebar } = useSidebarCollapse();
+  
+  // Add keyboard shortcut for search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // If "/" is pressed, focus the search input
+      if (e.key === '/' && !isCollapsed) {
+        e.preventDefault();
+        const searchInput = document.querySelector('.pattern-search-input') as HTMLInputElement;
+        if (searchInput) searchInput.focus();
+      }
+      
+      // If "Escape" is pressed while the sidebar is open, collapse it
+      if (e.key === 'Escape' && !isCollapsed) {
+        toggleSidebar();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCollapsed, toggleSidebar]);
+
   // Group patterns by category on component mount
   useEffect(() => {
     groupByCategory();
@@ -54,109 +83,138 @@ export function PatternSidebar({ activePatternId, onPatternSelect }: PatternSide
     }
   };
 
-  // Component for collapsed sidebar with expand button
-  const CollapsedSidebar = () => {
-    const { toggleSidebar } = useSidebar();
-    
+  // Component for collapsed sidebar button
+  const CollapsedSidebarButton = () => {
     return (
       <div className="fixed top-[50%] -translate-y-1/2 left-0 z-20">
-        <Button 
-          variant="outline" 
-          size="sm"
-          className="rounded-r-full rounded-l-none shadow-md animate-pulse transition-all duration-300 hover:translate-x-1 hover:animate-none"
-          onClick={toggleSidebar}
-        >
-          <MagnifyingGlass size={18} className="mr-1" />
-          <span className="text-xs">Patterns</span>
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="rounded-r-full rounded-l-none shadow-md hover:shadow-lg sidebar-transition hover:translate-x-1 hover:bg-primary hover:text-primary-foreground group"
+                onClick={toggleSidebar}
+              >
+                <CaretRight size={16} className="mr-1 group-hover:animate-pulse" />
+                <span className="text-xs">Patterns</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="bg-primary text-primary-foreground">
+              <p>Show pattern navigation</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     );
   };
 
   return (
-    <SidebarProvider>
-      <div className="flex h-full w-full">
-        <CollapsedSidebar />
-        <Sidebar 
-          side="left" 
-          variant="floating" 
-          className="border-r border-border transition-transform duration-300 ease-in-out"
-          collapsible="offcanvas"
-        >
-          <SidebarHeader className="flex flex-col gap-2">
+    <div className="relative h-full">
+      {isCollapsed && <CollapsedSidebarButton />}
+      
+      <div 
+        className={cn(
+          "h-full border-r border-border bg-background shadow-sm sidebar-transition",
+          isCollapsed 
+            ? "-translate-x-full opacity-0" 
+            : "translate-x-0 opacity-100"
+        )}
+        style={{ width: '250px' }}
+      >
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <div className="p-3 flex flex-col gap-2 border-b border-border">
             <div className="flex justify-between items-center">
               <h3 className="font-semibold text-sm">Agent Patterns</h3>
-              <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-transform duration-200 hover:rotate-90" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 rounded-full hover:bg-muted transition-transform duration-200 hover:rotate-90"
+                onClick={toggleSidebar}
+                aria-label="Close sidebar"
+              >
+                <X size={16} />
+              </Button>
             </div>
             
             <div className="relative">
-              <SidebarInput 
-                placeholder="Search patterns..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-8 transition-all duration-200"
-              />
-              <MagnifyingGlass size={16} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              {searchQuery && (
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                  onClick={() => setSearchQuery('')}
-                >
-                  <X size={14} />
-                </Button>
-              )}
-            </div>
-          </SidebarHeader>
-          <Separator className="mb-2" />
-          <SidebarContent>
-            <ScrollArea className="h-[calc(100vh-200px)]">
-              {Object.entries(filteredCategories).length > 0 ? (
-                Object.entries(filteredCategories).map(([categoryName, patterns]) => (
-                  <SidebarGroup key={categoryName}>
-                    <SidebarGroupLabel className="flex items-center gap-2">
-                      {getCategoryIcon(categoryName)}
-                      <span>{categoryName}</span>
-                    </SidebarGroupLabel>
-                    <SidebarMenu>
-                      {patterns.map(pattern => (
-                        <SidebarMenuItem key={pattern.id}>
-                          <SidebarMenuButton
-                            onClick={() => onPatternSelect(pattern.id)}
-                            isActive={activePatternId === pattern.id}
-                            tooltip={pattern.description}
-                            className={cn(
-                              "transition-all duration-200",
-                              activePatternId === pattern.id 
-                                ? "bg-primary/10 hover:bg-primary/20" 
-                                : "hover:bg-muted"
-                            )}
-                          >
-                            <span>{pattern.name}</span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      ))}
-                    </SidebarMenu>
-                  </SidebarGroup>
-                ))
-              ) : (
-                <div className="px-4 py-8 text-center text-muted-foreground">
-                  <p>No patterns found</p>
+              <div className="relative">
+                <input 
+                  placeholder="Search patterns... (Press '/' to focus)"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pattern-search-input w-full py-1 px-3 pl-8 pr-8 text-sm rounded-md border border-input bg-background ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+                <MagnifyingGlass size={16} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                {searchQuery && (
                   <Button 
                     variant="ghost" 
-                    size="sm" 
-                    className="mt-2"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
                     onClick={() => setSearchQuery('')}
                   >
-                    Clear search
+                    <X size={14} />
                   </Button>
+                )}
+                <kbd className="absolute right-2 bottom-[-18px] hidden text-[10px] font-mono text-muted-foreground pointer-events-none md:inline-block">
+                  Press / to search
+                </kbd>
+              </div>
+            </div>
+          </div>
+          
+          {/* Pattern List */}
+          <ScrollArea className="flex-1 p-2">
+            {Object.entries(filteredCategories).length > 0 ? (
+              Object.entries(filteredCategories).map(([categoryName, patterns]) => (
+                <div key={categoryName} className="mb-4">
+                  <div className="flex items-center gap-2 px-2 py-1 text-sm font-medium text-muted-foreground">
+                    {getCategoryIcon(categoryName)}
+                    <span>{categoryName}</span>
+                  </div>
+                  <div className="mt-1 space-y-1">
+                    {patterns.map(pattern => (
+                      <TooltipProvider key={pattern.id}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div 
+                              className={cn(
+                                "px-2 py-1.5 rounded-md cursor-pointer transition-colors text-sm",
+                                activePatternId === pattern.id 
+                                  ? "bg-primary/10 text-primary border-l-2 border-primary" 
+                                  : "hover:bg-muted"
+                              )}
+                              onClick={() => onPatternSelect(pattern.id)}
+                            >
+                              <span>{pattern.name}</span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="max-w-xs text-sm">
+                            {pattern.description}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ))}
+                  </div>
                 </div>
-              )}
-            </ScrollArea>
-          </SidebarContent>
-        </Sidebar>
+              ))
+            ) : (
+              <div className="px-4 py-8 text-center text-muted-foreground">
+                <p>No patterns found</p>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="mt-2"
+                  onClick={() => setSearchQuery('')}
+                >
+                  Clear search
+                </Button>
+              </div>
+            )}
+          </ScrollArea>
+        </div>
       </div>
-    </SidebarProvider>
+    </div>
   );
 }

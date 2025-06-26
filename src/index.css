@@ -19,16 +19,18 @@
   }
   
   /* Add smoother sidebar transitions */
-  [data-slot="sidebar-container"] {
+  .sidebar-transition {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
   
-  [data-sidebar="trigger"] svg {
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Enhance tooltip animations */
+  [role="tooltip"] {
+    transition: opacity 0.2s ease, transform 0.2s ease !important;
   }
   
-  [data-sidebar="trigger"]:hover svg {
-    transform: rotate(-90deg);
+  /* Smooth button hover effects */
+  button:hover {
+    transition: all 0.2s ease !important;
   }
 }
 

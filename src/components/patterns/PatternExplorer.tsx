@@ -64,9 +64,9 @@ const PatternExplorer = () => {
       </div>
       
       {viewMode === 'single' ? (
-        <div className="flex">
+        <div className="flex relative">
           {/* Sidebar */}
-          <div className="hidden md:block w-[250px]">
+          <div className="hidden md:block">
             <PatternSidebar 
               activePatternId={selectedPattern.id} 
               onPatternSelect={handlePatternSelect}
