@@ -31,6 +31,7 @@ export interface PatternData {
   edges: PatternEdge[]
   useCases: string[]
   codeExample: string
+  pythonCodeExample?: string // Made optional as not all patterns have it
   implementation: string[]
 }
 
@@ -119,7 +120,7 @@ const executeReAct = async (query: string, maxCycles = 5) => {
         Task: \${query}
         
         Previous steps:
-        ${contextHistory.join('\n')}
+        \${contextHistory.join('\\n')}
         
         Think step by step about the problem. Either:
         1. Use a tool to gather more information by responding with:
@@ -145,8 +146,8 @@ const executeReAct = async (query: string, maxCycles = 5) => {
         }
       } else {
         // Extract tool call
-        const actionMatch = reasoningResponse.match(/Action:(.*?)\n/);
-        const actionInputMatch = reasoningResponse.match(/Action Input:(.*?)(?:\n|$)/s);
+        const actionMatch = reasoningResponse.match(/Action:(.*?)\\n/);
+        const actionInputMatch = reasoningResponse.match(/Action Input:(.*?)(?:\\n|$)/s);
         
         if (actionMatch && actionInputMatch) {
           const toolName = actionMatch[1].trim();
@@ -175,7 +176,7 @@ const executeReAct = async (query: string, maxCycles = 5) => {
     return { status: 'failed', reason: error.message };
   }
 };`,
-    pythonCodeExample: "# ReAct Agent implementation
+    pythonCodeExample: `# ReAct Agent implementation
 import openai
 import json
 from typing import Dict, List, Any, Optional, Union
@@ -306,6 +307,7 @@ async def main():
 # Run the example
 # import asyncio
 # asyncio.run(main())
+`,
     implementation: [
       'Import necessary libraries and set up environment',
       'Define available tools that the agent can use (search, calculate, etc.)',
@@ -369,7 +371,8 @@ async def main():
       { id: 'e5-2', source: 'environment', target: 'agent', label: 'Observation', animated: true },
       { id: 'e2-6', source: 'agent', target: 'result', animated: true }
     ],
-    codeExample: "// CodeAct Agent implementation\nconst executeCodeAct = async (query, maxCycles = 5) => {"
+    codeExample: `// CodeAct Agent implementation
+const executeCodeAct = async (query, maxCycles = 5) => {
   try {
     let currentCycle = 0;
     let done = false;
@@ -440,9 +443,9 @@ async def main():
         }
       } 
       // Check if the response contains code
-      else if (agentResponse.includes("```code")) {
+      else if (agentResponse.includes("\`\`\`code")) {
         // Extract code block
-        const codeMatch = agentResponse.match(/```code\s*([\s\S]*?)\s*```/);
+        const codeMatch = agentResponse.match(/\`\`\`code\\s*([\\s\\S]*?)\\s*\`\`\`/);
         if (codeMatch) {
           const code = codeMatch[1].trim();
           
@@ -590,8 +593,8 @@ const executeSelfReflection = async (query: string, maxRevisions = 3) => {
       \`);
       
       // Parse the reflection results
-      const scoreMatch = reflection.match(/Score:\s*(\d+)/i);
-      const needsRevisionMatch = reflection.match(/Needs Revision:\s*(Yes|No)/i);
+      const scoreMatch = reflection.match(/Score:\\s*(\\d+)/i);
+      const needsRevisionMatch = reflection.match(/Needs Revision:\\s*(Yes|No)/i);
       
       const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
       const needsRevision = needsRevisionMatch 
@@ -708,7 +711,8 @@ const executeSelfReflection = async (query: string, maxRevisions = 3) => {
       { id: 'e2-6', source: 'agent', target: 'generator', animated: true },
       { id: 'e6-7', source: 'generator', target: 'output', animated: true }
     ],
-    codeExample: "// Agentic RAG implementation\nconst executeAgenticRAG = async (query) => {"
+    codeExample: `// Agentic RAG implementation
+const executeAgenticRAG = async (query) => {
   try {
     // Simulated vector database and retrieval system
     const vectorDB = {
@@ -766,7 +770,7 @@ const executeSelfReflection = async (query: string, maxRevisions = 3) => {
     
     // Parse the query analysis
     const analysisObj = typeof queryAnalysis === 'string' 
-      ? JSON.parse(queryAnalysis.match(/\{[\s\S]*\}/)[0])
+      ? JSON.parse(queryAnalysis.match(/\\{[\\s\\S]*\\}/)[0])
       : queryAnalysis;
     
     // Step 2: Retrieve relevant information
@@ -809,9 +813,9 @@ const executeSelfReflection = async (query: string, maxRevisions = 3) => {
     console.log("Generating comprehensive response...");
     const responseContext = topChunks
       .map(function(chunk) { 
-        return "Source: " + chunk.source + " (Score: " + chunk.evaluatedScore.toFixed(2) + ")\n" + chunk.content;
+        return "Source: " + chunk.source + " (Score: " + chunk.evaluatedScore.toFixed(2) + ")\\n" + chunk.content;
       })
-      .join('\n\n');
+      .join('\\n\\n');
     
     const response = await llm(\`
       You are an AI assistant with access to retrieved information.
@@ -996,7 +1000,7 @@ const executeModernToolUse = async (query: string) => {
     
     // Parse tool requirements
     const toolRequirements = typeof queryAnalysis === 'string'
-      ? JSON.parse(queryAnalysis.match(/\{[\s\S]*\}/)[0])
+      ? JSON.parse(queryAnalysis.match(/\\{[\\s\\S]*\\}/)[0])
       : queryAnalysis;
     
     // Step 2: Execute tool requests through MCP
@@ -1027,16 +1031,16 @@ const executeModernToolUse = async (query: string) => {
         const result = entry[1];
         return toolName + " result: " + JSON.stringify(result, null, 2);
       })
-      .join('\n\n');
+      .join('\\n\\n');
     
-    const response = await llm(`Using the following tool results, provide a comprehensive answer to the user's query.
+    const response = await llm(\`Using the following tool results, provide a comprehensive answer to the user's query.
 
-Query: "${query}"
+Query: "\${query}"
 
 Tool Results:
-${toolOutputsText}
+\${toolOutputsText}
 
-Generate a helpful response that synthesizes the information from these tools.`);
+Generate a helpful response that synthesizes the information from these tools.\`);
     
     return {
       status: 'success',
@@ -1200,7 +1204,7 @@ const applySecurityFilter = async (data, permissions) => {
 
 const buildContext = async (results, query) => {
   // Combine multiple information sources into unified context
-  return results.join('\n\n');
+  return results.join('\\n\\n');
 };`,
     implementation: [
       'Define standardized request and response formats for context exchanges',
@@ -1341,9 +1345,9 @@ const executeAgentToAgent = async (taskInput: string, maxRounds = 3) => {
       work of multiple agents on this task: "\${taskInput}"
       
       Agent contributions:
-      ${resultMessages.map(function(message) { 
+      \${resultMessages.map(function(message) { 
         return message.from + ": " + message.content;
-      }).join('\n\n')}
+      }).join('\\n\\n')}
       
       Synthesize these contributions into a cohesive final result.
     \`;
@@ -1438,7 +1442,7 @@ const parseTasks = (coordinatorOutput) => {
   try {
     if (typeof coordinatorOutput === 'string') {
       // Extract JSON from string if needed
-      const match = coordinatorOutput.match(/\{[\s\S]*\}/);
+      const match = coordinatorOutput.match(/\\{[\\s\\S]*\\}/);
       const json = match ? JSON.parse(match[0]) : { subtasks: [] };
       return json.subtasks || [];
     }
@@ -1608,7 +1612,35 @@ const executePromptChain = async (input: string) => {
       { id: 'e4-5', source: 'llm3', target: 'aggregator' },
       { id: 'e5-6', source: 'aggregator', target: 'output', animated: true }
     ],
-    codeExample: "// Parallelization implementation\nconst executeParallelLLMCalls = async (input) => {\n  try {\n    // Execute multiple LLM calls in parallel\n    const [result1, result2, result3] = await Promise.all([\n      llm(\"Process this input perspective 1: \" + input),\n      llm(\"Process this input perspective 2: \" + input),\n      llm(\"Process this input perspective 3: \" + input)\n    ]);\n    \n    // Aggregate results\n    const aggregatedResult = aggregateResults([result1, result2, result3]);\n    \n    return {\n      status: 'success',\n      individual: [result1, result2, result3],\n      aggregated: aggregatedResult\n    };\n  } catch (error) {\n    return { status: 'failed', reason: error.message };\n  }\n};\n\nconst aggregateResults = (results) => {\n  // Implementation of result aggregation logic\n  // This could be a simple concatenation, a weighted average,\n  // or another LLM call to synthesize the results\n  return results.join('\\n\\n');\n};",
+    codeExample: `// Parallelization implementation
+const executeParallelLLMCalls = async (input) => {
+  try {
+    // Execute multiple LLM calls in parallel
+    const [result1, result2, result3] = await Promise.all([
+      llm("Process this input perspective 1: " + input),
+      llm("Process this input perspective 2: " + input),
+      llm("Process this input perspective 3: " + input)
+    ]);
+    
+    // Aggregate results
+    const aggregatedResult = aggregateResults([result1, result2, result3]);
+    
+    return {
+      status: 'success',
+      individual: [result1, result2, result3],
+      aggregated: aggregatedResult
+    };
+  } catch (error) {
+    return { status: 'failed', reason: error.message };
+  }
+};
+
+const aggregateResults = (results) => {
+  // Implementation of result aggregation logic
+  // This could be a simple concatenation, a weighted average,
+  // or another LLM call to synthesize the results
+  return results.join('\\n\\n');
+};`,
     implementation: [
       'Import the Azure AI SDK and set up authentication',
       'Define a function that takes an input parameter',
@@ -1698,7 +1730,7 @@ const executeOrchestratorWorker = async (input: string) => {
       Synthesize these results into a coherent response:
       \${workerResults.map(function(result, i) { 
         return "Result " + (i+1) + ": " + result;
-      }).join('\n')}
+      }).join('\\n')}
     \`);
     
     return {
@@ -1715,7 +1747,7 @@ const executeOrchestratorWorker = async (input: string) => {
 const parseSubtasks = (orchestratorOutput) => {
   // Logic to extract subtasks from the orchestrator's output
   // This could involve parsing JSON, splitting by newlines, etc.
-  return orchestratorOutput.split('\n')
+  return orchestratorOutput.split('\\n')
     .filter(line => line.trim().startsWith('- '))
     .map(line => line.replace('- ', '').trim());
 };`,
@@ -1816,11 +1848,11 @@ const executeEvaluatorOptimizer = async (input: string, maxAttempts = 3) => {
 
 const parseEvaluation = (evaluation) => {
   // Extract score (assuming format like "Score: 8/10")
-  const scoreMatch = evaluation.match(/Score:?\s*(\d+)(?:\/10)?/i);
+  const scoreMatch = evaluation.match(/Score:?\\s*(\\d+)(?:\\/10)?/i);
   const score = scoreMatch ? parseInt(scoreMatch[1], 10) : 0;
   
   // Extract feedback (everything after "Feedback:" or similar)
-  const feedbackMatch = evaluation.match(/Feedback:\s*(.+)$/is);
+  const feedbackMatch = evaluation.match(/Feedback:\\s*(.+)$/is);
   const feedback = feedbackMatch ? feedbackMatch[1].trim() : '';
   
   return { score, feedback };
@@ -1916,7 +1948,7 @@ const executeRouting = async (input: string) => {
     \`);
     
     // Clean and parse the routing result
-    const category = parseInt(routingResult.trim().match(/\d+/)?.[0] || '0', 10);
+    const category = parseInt(routingResult.trim().match(/\\d+/)?.[0] || '0', 10);
     
     // Route to the appropriate specialist
     let specialistResponse;
@@ -2039,9 +2071,9 @@ const executeAutonomousWorkflow = async (input: string, maxSteps = 10) => {
         Current state: \${currentState}
         
         History:
-        ${history.map(function(h) { 
+        \${history.map(function(h) { 
           return "- " + h;
-        }).join('\n')}
+        }).join('\\n')}
         
         Available tools:
         - search(query): Search for information
@@ -2087,7 +2119,7 @@ const executeAutonomousWorkflow = async (input: string, maxSteps = 10) => {
 const parseAgentDecision = (response) => {
   try {
     // Extract JSON from response
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    const jsonMatch = response.match(/\\{[\\s\\S]*\\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
       // Ensure all required properties exist
@@ -2223,7 +2255,7 @@ const executeReflexion = async (input: string, maxIterations = 3) => {
         Respond with just the number.
       \`);
       
-      const improvementScore = parseInt(differenceCheck.match(/\d+/)?.[0] || '0', 10);
+      const improvementScore = parseInt(differenceCheck.match(/\\d+/)?.[0] || '0', 10);
       
       // If improvement is minimal, break the loop
       if (improvementScore < 3 && iterations > 1) {
@@ -2357,12 +2389,12 @@ const executePlanAndExecute = async (input: string) => {
           Original task: \${input}
           Current plan: \${plan}
           Completed subtasks and results:
-          ${Object.entries(subtaskResults).map(function(entry) {
+          \${Object.entries(subtaskResults).map(function(entry) {
             const id = entry[0];
             const result = entry[1];
             const subtaskDesc = subtasks.find(function(s) { return s.id === id; }).description;
-            return "- Subtask " + id + ": " + subtaskDesc + "\n  Result: " + result;
-          }).join('\n')}
+            return "- Subtask " + id + ": " + subtaskDesc + "\\n  Result: " + result;
+          }).join('\\n')}
           
           Create an updated plan with remaining and new subtasks.
           Format your response as JSON:
@@ -2395,12 +2427,12 @@ const executePlanAndExecute = async (input: string) => {
       Plan: \${plan}
       
       Subtasks and results:
-      ${Object.entries(subtaskResults).map(function(entry) {
+      \${Object.entries(subtaskResults).map(function(entry) {
         const id = entry[0];
         const result = entry[1];
         const subtaskDesc = subtasks.find(function(s) { return s.id === id; }).description;
-        return "- Subtask " + id + ": " + subtaskDesc + "\n  Result: " + result;
-      }).join('\n')}
+        return "- Subtask " + id + ": " + subtaskDesc + "\\n  Result: " + result;
+      }).join('\\n')}
     \`);
     
     return {
@@ -2429,7 +2461,7 @@ const checkIfReplanNeeded = async (plan, subtasks, results) => {
 const parseJSON = (jsonString) => {
   try {
     // Extract JSON from response
-    const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
+    const jsonMatch = jsonString.match(/\\{[\\s\\S]*\\}/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     }
