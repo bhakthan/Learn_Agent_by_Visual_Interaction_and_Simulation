@@ -47,6 +47,12 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
   // Get interactive execution blocks if available
   const interactiveExecution = getCodeExecutionExample(patternData.id, language)
   
+  // Get algorithm visualization steps if available
+  const algorithmSteps = getAlgorithmVisualization(patternData.id)
+  
+  // Get debug example if available
+  const debugExample = getDebugExample(patternData.id)
+  
   // Language selector component for reuse
   const LanguageSelector = () => (
     <div className="flex items-center mb-2 space-x-2 justify-between sm:justify-end">
@@ -112,11 +118,14 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
             
             <TabsContent value="general" className="py-4">
               <div className="space-y-4">
-                <div className="p-4 border rounded-lg bg-card">
+                <div className={cn(
+                  "p-4 border rounded-lg bg-card w-full transition-all duration-300",
+                  isCollapsed ? "max-w-full" : "max-w-full"
+                )}>
                   <h3 className="text-lg font-medium mb-2">About {patternData.name}</h3>
                   <p className="text-muted-foreground mb-4">{patternData.description}</p>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 w-full">
                     <div>
                       <h4 className="text-sm font-medium mb-2">Key Use Cases</h4>
                       <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
@@ -134,7 +143,10 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                   </div>
                 </div>
                 
-                <div className="p-4 border rounded-lg bg-muted/20">
+                <div className={cn(
+                  "p-4 border rounded-lg bg-muted/20 w-full transition-all duration-300",
+                  isCollapsed ? "max-w-full" : "max-w-full"
+                )}>
                   <h3 className="text-base font-medium mb-2">Implementation Overview</h3>
                   <p className="text-sm text-muted-foreground mb-3">This pattern can be implemented using the following components:</p>
                   
@@ -152,8 +164,11 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 border rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                  <div className={cn(
+                    "p-4 border rounded-lg transition-all duration-300",
+                    isCollapsed ? "w-full" : "w-full"
+                  )}>
                     <h4 className="text-sm font-medium mb-2">Choose this pattern when:</h4>
                     <ul className="list-disc pl-5 space-y-1 text-xs text-muted-foreground">
                       <li>You need {patternData.advantages && patternData.advantages.length > 0 ? patternData.advantages[0].toLowerCase() : 'improved agent capabilities'}</li>
@@ -161,7 +176,10 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                       <li>You want to {patternData.description.split(' ').slice(0, 5).join(' ').toLowerCase()}...</li>
                     </ul>
                   </div>
-                  <div className="p-4 border rounded-lg">
+                  <div className={cn(
+                    "p-4 border rounded-lg transition-all duration-300", 
+                    isCollapsed ? "w-full" : "w-full"
+                  )}>
                     <h4 className="text-sm font-medium mb-2">Consider alternatives when:</h4>
                     <ul className="list-disc pl-5 space-y-1 text-xs text-muted-foreground">
                       <li>You need simpler implementation with fewer components</li>

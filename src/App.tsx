@@ -131,12 +131,13 @@ function App() {
               </div>
               <Separator />
               <div className="flex relative">
-                <div className="hidden md:block">
-                  <PatternSidebar 
-                    activePatternId={selectedPatternId} 
-                    onPatternSelect={setSelectedPatternId}
-                  />
-                </div>
+                {/* Floating sidebar - visible on all screen sizes */}
+                <PatternSidebar 
+                  activePatternId={selectedPatternId} 
+                  onPatternSelect={setSelectedPatternId}
+                />
+                
+                {/* Mobile pattern selector */}
                 <div className="md:hidden grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 w-full">
                   {agentPatterns.map((pattern) => (
                     <div
@@ -155,9 +156,10 @@ function App() {
                     </div>
                   ))}
                 </div>
-                <div className="flex-1 md:ml-4">
+                
+                {/* Main content area that takes full width */}
+                <div className="flex-1 w-full max-w-full transition-all duration-300 ease-in-out">
                   <CodePlaybook patternData={selectedPattern} />
-                </div>
               </div>
             </TabsContent>
             

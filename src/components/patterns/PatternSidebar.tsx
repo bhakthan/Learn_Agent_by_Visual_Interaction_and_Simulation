@@ -83,10 +83,9 @@ export function PatternSidebar({ activePatternId, onPatternSelect }: PatternSide
     }
   };
 
-  // Component for collapsed sidebar button
   const CollapsedSidebarButton = () => {
     return (
-      <div className="fixed top-[50%] -translate-y-1/2 left-0 z-20">
+      <div className="fixed top-[50%] -translate-y-1/2 left-0 z-40">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -120,7 +119,7 @@ export function PatternSidebar({ activePatternId, onPatternSelect }: PatternSide
       
       <div 
         className={cn(
-          "h-full border-r border-border bg-background shadow-sm sidebar-transition",
+          "h-full border-r border-border bg-background shadow-md sidebar-transition fixed z-30",
           isCollapsed 
             ? "-translate-x-full opacity-0" 
             : "translate-x-0 opacity-100"
