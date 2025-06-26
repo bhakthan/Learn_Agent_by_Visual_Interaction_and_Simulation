@@ -40,6 +40,16 @@
    - Purpose: Foster community learning and innovation around Azure AI agent patterns
    - Success criteria: Active sharing of implementations, constructive discussions, and discovery of novel approaches
 
+5. **References Section**
+   - Functionality: Curated list of reference materials for each concept and pattern with ability to add custom references
+   - Purpose: Provide additional learning resources and documentation links for deeper exploration
+   - Success criteria: Comprehensive set of references that are up-to-date and relevant
+
+6. **Theme Switching**
+   - Functionality: Toggle between light and dark modes
+   - Purpose: Accommodate user preferences and reduce eye strain in different lighting conditions
+   - Success criteria: Seamless theme transition with appropriate contrast in both modes
+
 ## Design Direction
 
 ### Visual Tone & Identity
@@ -53,13 +63,20 @@
 - **Primary Color**: Blue/purple (oklch(0.65 0.2 250)) - representing Azure's core color palette
 - **Secondary Colors**: Teal blue (oklch(0.65 0.18 200)) for supporting elements
 - **Accent Color**: Amber/gold (oklch(0.85 0.15 85)) for highlighting important elements
+- **Dark Mode**: Implemented with inverted color scheme and appropriate contrast levels
 - **Color Psychology**: Blue conveys trust and reliability; gold accents convey value and excellence
 - **Color Accessibility**: High contrast between text and background across all components
 - **Foreground/Background Pairings**: 
-  - Background/foreground: oklch(0.98 0.005 240)/oklch(0.2 0.02 240)
-  - Card/card-foreground: oklch(0.95 0.01 240)/oklch(0.2 0.02 240)
-  - Primary/primary-foreground: oklch(0.65 0.2 250)/oklch(0.98 0.005 240)
-  - Secondary/secondary-foreground: oklch(0.65 0.18 200)/oklch(0.98 0.005 240)
+  - Light Mode:
+    - Background/foreground: oklch(0.98 0.005 240)/oklch(0.2 0.02 240)
+    - Card/card-foreground: oklch(0.95 0.01 240)/oklch(0.2 0.02 240)
+    - Primary/primary-foreground: oklch(0.65 0.2 250)/oklch(0.98 0.005 240)
+    - Secondary/secondary-foreground: oklch(0.65 0.18 200)/oklch(0.98 0.005 240)
+  - Dark Mode:
+    - Background/foreground: oklch(0.15 0.02 240)/oklch(0.9 0.02 240)
+    - Card/card-foreground: oklch(0.2 0.02 240)/oklch(0.9 0.02 240)
+    - Primary/primary-foreground: oklch(0.7 0.2 250)/oklch(0.1 0.02 240)
+    - Secondary/secondary-foreground: oklch(0.7 0.18 200)/oklch(0.1 0.02 240)
 
 ### Typography System
 - **Font Pairing Strategy**: Professional sans-serif for headings (Inter) paired with clean, readable font for body text (Roboto)

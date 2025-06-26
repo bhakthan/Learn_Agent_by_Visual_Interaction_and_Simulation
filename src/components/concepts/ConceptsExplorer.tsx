@@ -6,7 +6,8 @@ import { Separator } from "@/components/ui/separator"
 import A2ADemo from "../interactive-demos/A2ADemo"
 import MCPDemo from "../interactive-demos/MCPDemo"
 import ConceptDetails from "./ConceptDetails"
-import { BookOpen } from "@phosphor-icons/react"
+import { BookOpen, BookmarkSimple } from "@phosphor-icons/react"
+import ReferenceSection from "../references/ReferenceSection"
 
 const ConceptsExplorer = () => {
   const [showDetails, setShowDetails] = useState({
@@ -81,6 +82,9 @@ const ConceptsExplorer = () => {
           </Card>
           
           {showDetails.agents && <ConceptDetails conceptId="agents" />}
+          
+          {/* References section for Agents */}
+          <ReferenceSection type="concept" itemId="agents" />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
@@ -203,6 +207,9 @@ const ConceptsExplorer = () => {
           
           {showDetails.a2a && <ConceptDetails conceptId="a2a" />}
           
+          {/* References section for A2A */}
+          <ReferenceSection type="concept" itemId="a2a" />
+          
           <Separator className="my-6" />
           
           <h2 className="text-2xl font-semibold tracking-tight mb-4">Interactive A2A Demonstration</h2>
@@ -264,6 +271,9 @@ const ConceptsExplorer = () => {
           </Card>
           
           {showDetails.mcp && <ConceptDetails conceptId="mcp" />}
+          
+          {/* References section for MCP */}
+          <ReferenceSection type="concept" itemId="mcp" />
           
           <Separator className="my-6" />
           

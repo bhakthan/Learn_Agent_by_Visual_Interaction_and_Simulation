@@ -11,6 +11,8 @@ import { ReactFlowProvider } from 'reactflow'
 import AzureServicesOverview from './components/azure-services/AzureServicesOverview'
 import CommunityHub from './components/community/CommunityHub'
 import { Cloud, Users } from '@phosphor-icons/react'
+import { ThemeProvider } from './components/theme/ThemeProvider'
+import { ThemeToggle } from './components/theme/ThemeToggle'
 
 function App() {
   const [activeView, setActiveView] = useState<'concepts' | 'patterns' | 'playbook' | 'services' | 'community'>('concepts')
@@ -19,12 +21,15 @@ function App() {
   const selectedPattern = agentPatterns.find(p => p.id === selectedPatternId) || agentPatterns[0]
   
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <ThemeProvider>
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-primary">Azure AI Agents Visualization</h1>
           
-          <NavigationMenu>
+          <div className="flex items-center space-x-4">
+            <ThemeToggle />
+            <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="bg-transparent">Explore</NavigationMenuTrigger>
@@ -81,6 +86,7 @@ function App() {
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
+          </div>
         </div>
       </header>
       
@@ -191,6 +197,7 @@ function App() {
         </div>
       </footer>
     </div>
+    </ThemeProvider>
   )
 }
 

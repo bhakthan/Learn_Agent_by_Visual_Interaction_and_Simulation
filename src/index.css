@@ -7,6 +7,65 @@
   }
 }
 
+/* Light Mode */
+.light {
+  /* Base colors */
+  --background: oklch(0.98 0.005 240);
+  --foreground: oklch(0.2 0.02 240);
+
+  --card: oklch(0.95 0.01 240);
+  --card-foreground: oklch(0.2 0.02 240);
+  --popover: oklch(0.95 0.01 240);
+  --popover-foreground: oklch(0.2 0.02 240);
+
+  /* Action colors */
+  --primary: oklch(0.65 0.2 250);
+  --primary-foreground: oklch(0.98 0.005 240);
+  --secondary: oklch(0.65 0.18 200);
+  --secondary-foreground: oklch(0.98 0.005 240);
+  --accent: oklch(0.85 0.15 85);
+  --accent-foreground: oklch(0.2 0.02 240);
+  --destructive: oklch(0.65 0.3 25);
+  --destructive-foreground: oklch(0.98 0.005 240);
+
+  /* Supporting UI colors */
+  --muted: oklch(0.9 0.02 240);
+  --muted-foreground: oklch(0.4 0.02 240);
+  --border: oklch(0.85 0.02 240);
+  --input: oklch(0.85 0.02 240);
+  --ring: oklch(0.65 0.2 250);
+}
+
+/* Dark Mode */
+.dark {
+  /* Base colors */
+  --background: oklch(0.15 0.02 240);
+  --foreground: oklch(0.9 0.02 240);
+
+  --card: oklch(0.2 0.02 240);
+  --card-foreground: oklch(0.9 0.02 240);
+  --popover: oklch(0.2 0.02 240);
+  --popover-foreground: oklch(0.9 0.02 240);
+
+  /* Action colors */
+  --primary: oklch(0.7 0.2 250);
+  --primary-foreground: oklch(0.1 0.02 240);
+  --secondary: oklch(0.7 0.18 200);
+  --secondary-foreground: oklch(0.1 0.02 240);
+  --accent: oklch(0.85 0.15 85);
+  --accent-foreground: oklch(0.1 0.02 240);
+  --destructive: oklch(0.7 0.3 25);
+  --destructive-foreground: oklch(0.1 0.02 240);
+
+  /* Supporting UI colors */
+  --muted: oklch(0.25 0.02 240);
+  --muted-foreground: oklch(0.7 0.02 240);
+  --border: oklch(0.3 0.02 240);
+  --input: oklch(0.3 0.02 240);
+  --ring: oklch(0.7 0.2 250);
+}
+
+/* Default to light mode */
 :root {
   /* Base colors */
   --background: oklch(0.98 0.005 240);
@@ -72,6 +131,7 @@ body {
   font-family: 'Roboto', sans-serif;
   color: var(--foreground);
   background-color: var(--background);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 h1, h2, h3, h4, h5, h6, 

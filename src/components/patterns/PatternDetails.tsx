@@ -5,9 +5,10 @@ import { PatternData } from '@/lib/data/patterns';
 import { patternContents } from '@/lib/data/patternContent';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ListCheck, Info, Code, Workflow, PuzzlePiece, ArrowsOut, ArrowsIn } from "@phosphor-icons/react";
+import { ListCheck, Info, Code, Workflow, PuzzlePiece, ArrowsOut, ArrowsIn, BookmarkSimple } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import ReferenceSection from "../references/ReferenceSection";
 
 interface PatternDetailsProps {
   pattern: PatternData;
@@ -134,6 +135,9 @@ const PatternDetails: React.FC<PatternDetailsProps> = ({ pattern }) => {
             </AccordionContent>
           </AccordionItem>
         </Accordion>
+
+        {/* References section for this pattern */}
+        <ReferenceSection type="pattern" itemId={pattern.id} />
       </CardContent>
     </Card>
   );
