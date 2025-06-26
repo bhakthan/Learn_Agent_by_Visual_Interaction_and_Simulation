@@ -124,7 +124,7 @@ const messageTemplates = {
   llm: (text: string) => `Processing with AI: "${text}"`,
   router: () => "Routing decision being made...",
   aggregator: () => "Combining results from multiple sources...",
-  tool: (tool: string) => `Using tool: ${tool || 'External API'}`,
+  tool: (toolName: string = 'External API') => `Using tool: ${toolName}`,
   output: (text: string) => `Final result: "${text}"`,
   error: () => "Error occurred during processing",
   planner: () => "Creating execution plan...",
@@ -221,7 +221,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     });
   }, [setNodes]);
   
-  const simulatePatternFlow = useCallback(() => {
+  const startSimulation = useCallback(() => {
     resetVisualization();
     setIsAnimating(true);
     
@@ -299,7 +299,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
             </Button>
             <Button 
               size="sm"
-              onClick={simulatePatternFlow}
+              onClick={startSimulation}
               disabled={isAnimating}
             >
               {isAnimating ? (
