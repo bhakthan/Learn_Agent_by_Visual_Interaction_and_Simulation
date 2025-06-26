@@ -22,6 +22,25 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
+// Function to synchronize theme across all HTML elements that need it
+const syncTheme = (theme: Theme) => {
+  const root = window.document.documentElement;
+  const body = window.document.body;
+  
+  // Remove all theme classes
+  root.classList.remove("light", "dark");
+  body.classList.remove("light", "dark");
+  
+  // Add the new theme class
+  root.classList.add(theme);
+  body.classList.add(theme);
+  
+  // Set data attributes for component libraries that use them
+  root.setAttribute('data-theme', theme);
+  root.setAttribute('data-appearance', theme);
+  body.setAttribute('data-theme', theme);
+};
+
 export function ThemeProvider({
   children,
   defaultTheme = "light",
@@ -30,38 +49,35 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
     () => {
+      if (typeof window === 'undefined') return defaultTheme;
+      
       // Check for saved theme preference
-      if (typeof window !== 'undefined') {
-        const savedTheme = localStorage.getItem(storageKey) as Theme;
-        
-        if (savedTheme) {
-          return savedTheme;
-        }
-        
-        // Check for system preference
-        const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        return systemPrefersDark ? "dark" : defaultTheme;
+      const savedTheme = localStorage.getItem(storageKey) as Theme;
+      if (savedTheme && (savedTheme === "light" || savedTheme === "dark")) {
+        return savedTheme;
       }
       
-      return defaultTheme;
+      // Check for system preference
+      const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      return systemPrefersDark ? "dark" : defaultTheme;
     }
   );
 
+  // Apply theme on initial render and theme changes
   useEffect(() => {
-    const root = window.document.documentElement;
-    
-    // First remove both classes to ensure clean state
-    root.classList.remove("light", "dark");
-    
-    // Then add the current theme class
-    root.classList.add(theme);
-    
-    // Set the data-theme attribute which some components might use
-    root.setAttribute('data-theme', theme);
-    
-    // Save theme preference
+    syncTheme(theme);
     localStorage.setItem(storageKey, theme);
+    console.log(`Theme set to: ${theme}`);
   }, [theme, storageKey]);
+
+  // Initialize theme on mount
+  useEffect(() => {
+    const initialTheme = localStorage.getItem(storageKey) as Theme || 
+                        (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : defaultTheme);
+    
+    syncTheme(initialTheme);
+    setTheme(initialTheme);
+  }, []);
 
   // Listen for system theme changes
   useEffect(() => {
@@ -70,23 +86,28 @@ export function ThemeProvider({
     const handleChange = (e: MediaQueryListEvent) => {
       // Only update if no manual preference was set
       if (!localStorage.getItem(storageKey)) {
-        setTheme(e.matches ? "dark" : "light");
+        const newTheme = e.matches ? "dark" : "light";
+        setTheme(newTheme);
+        syncTheme(newTheme);
       }
     };
     
-    // Listener for system theme changes
     mediaQuery.addEventListener("change", handleChange);
-    
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, [storageKey]);
 
   const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    syncTheme(newTheme);
   };
 
   const value = {
     theme,
-    setTheme,
+    setTheme: (newTheme: Theme) => {
+      setTheme(newTheme);
+      syncTheme(newTheme);
+    },
     toggleTheme,
   };
 

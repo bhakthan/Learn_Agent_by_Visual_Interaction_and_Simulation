@@ -13,6 +13,12 @@ export function ThemeToggle() {
     setMounted(true);
   }, []);
   
+  // Handler with extra console logging for debugging
+  const handleToggleTheme = () => {
+    console.log(`Toggling theme from ${theme} to ${theme === "light" ? "dark" : "light"}`);
+    toggleTheme();
+  };
+  
   if (!mounted) {
     return <div className="w-9 h-9" />; // Placeholder with same dimensions
   }
@@ -24,7 +30,7 @@ export function ThemeToggle() {
           <Button
             variant="outline"
             size="icon"
-            onClick={toggleTheme}
+            onClick={handleToggleTheme}
             className={`rounded-full h-9 w-9 transition-all duration-300 ${
               theme === "light" 
               ? "border-primary/20 bg-background" 
@@ -37,7 +43,9 @@ export function ThemeToggle() {
             ) : (
               <Sun size={18} weight="fill" className="text-primary transition-all duration-300" />
             )}
-            <span className="sr-only">Toggle theme</span>
+            <span className="sr-only">
+              {theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+            </span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>

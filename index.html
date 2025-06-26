@@ -9,6 +9,34 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <link href="/src/main.css" rel="stylesheet" />
+    <script>
+        // Initialize theme to prevent flash of wrong theme
+        (function() {
+            const storageKey = 'azure-ai-viz-theme';
+            const defaultTheme = 'light';
+            
+            function getThemePreference() {
+                const savedTheme = localStorage.getItem(storageKey);
+                if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+                    return savedTheme;
+                }
+                
+                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                return systemPrefersDark ? 'dark' : defaultTheme;
+            }
+            
+            const theme = getThemePreference();
+            document.documentElement.classList.add(theme);
+            document.documentElement.setAttribute('data-theme', theme);
+            document.documentElement.setAttribute('data-appearance', theme);
+            
+            // Also add to body when it loads
+            window.addEventListener('DOMContentLoaded', () => {
+                document.body.classList.add(theme);
+                document.body.setAttribute('data-theme', theme);
+            });
+        })();
+    </script>
 </head>
 
 <body>

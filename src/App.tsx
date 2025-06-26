@@ -25,8 +25,8 @@ function App() {
   
   return (
     <ThemeProvider defaultTheme="light" storageKey="azure-ai-viz-theme">
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <header className="border-b border-border">
+      <div className="min-h-screen bg-background text-foreground flex flex-col transition-colors duration-300">
+      <header className="border-b border-border transition-colors duration-300">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-primary">Azure AI Agents Visualization</h1>
           
@@ -213,7 +213,7 @@ function App() {
         </ReactFlowProvider>
       </main>
       
-      <footer className="border-t border-border py-6 bg-muted">
+      <footer className="border-t border-border py-6 bg-muted transition-colors duration-300">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
           <p>Azure AI Agents Visualization Platform</p>
         </div>
