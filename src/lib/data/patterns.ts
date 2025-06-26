@@ -369,103 +369,7 @@ async def main():
       { id: 'e5-2', source: 'environment', target: 'agent', label: 'Observation', animated: true },
       { id: 'e2-6', source: 'agent', target: 'result', animated: true }
     ],
-    codeExample: `// CodeAct Agent implementation
-const executeCodeAct = async (query: string, maxCycles = 5) => {
-  try {
-    let currentCycle = 0;
-    let done = false;
-    let contextHistory = [];
-    let finalResult = '';
-
-    // Simulate Python code execution environment
-    const executeCode = async (code) => {
-      console.log("Executing Python code (simulated):");
-      console.log(code);
-      
-      // This is a simulation - in a real implementation, this would execute the Python code
-      // and return the results. For this example, we'll return a simulated result.
-      
-      if (code.includes('import')) {
-        if (code.includes('numpy') || code.includes('pandas')) {
-          return "Library imported successfully.";
-        }
-      }
-      
-      if (code.includes('print(')) {
-        const printMatch = code.match(/print\(([^)]+)\)/);
-        if (printMatch) {
-          return "Output: " + printMatch[1];
-        }
-      }
-      
-      if (code.includes('def ')) {
-        return "Function defined successfully.";
-      }
-      
-      // Default simulated response
-      return "Code executed. Result: [simulated output based on the provided code]";
-    };
-
-    // Add the initial query to context
-    contextHistory.push(\`User query: \${query}\`);
-
-    while (!done && currentCycle < maxCycles) {
-      currentCycle++;
-      
-      // Generate agent response
-      const agentPrompt = 
-        "You are a CodeAct agent that solves problems by writing and executing Python code.\n\n" +
-        "Task: " + query + "\n\n" +
-        "Previous interactions:\n" + 
-        contextHistory.join('\n\n') + "\n\n" +
-        "Based on the current state, either:\n\n" +
-        "1. Write Python code to make progress, formatted as:\n" +
-        "   Thought: <your reasoning>\n" +
-        "   Code:\n" +
-        "   ```python\n" +
-        "   # Your Python code here\n" +
-        "   ```\n\n" +
-        "2. Or provide the final answer if you've solved the problem:\n" +
-        "   Thought: <your reasoning>\n" +
-        "   Final Answer: <your answer>";
-      
-      const agentResponse = await llm(agentPrompt);
-      contextHistory.push("Agent: " + agentResponse);
-      
-      // Check if the response contains a final answer
-      if (agentResponse.includes('Final Answer:')) {
-        const answerMatch = agentResponse.match(/Final Answer:(.*?)$/s);
-        if (answerMatch) {
-          finalResult = answerMatch[1].trim();
-          done = true;
-        }
-      } 
-      // Check if the response contains code
-      else if (agentResponse.includes('\`\`\`python')) {
-        // Extract code block
-        const codeMatch = agentResponse.match(/\`\`\`python\s*([\s\S]*?)\s*\`\`\`/);
-        if (codeMatch) {
-          const code = codeMatch[1].trim();
-          
-          // Execute the code (simulated)
-          const executionResult = await executeCode(code);
-          
-          // Add the observation to the history
-          contextHistory.push("Observation: " + executionResult);
-        }
-      }
-    }
-    
-    return {
-      status: done ? 'success' : 'max_cycles_reached',
-      cycles: currentCycle,
-      result: finalResult || 'No final result reached.',
-      history: contextHistory
-    };
-  } catch (error) {
-    return { status: 'failed', reason: error.message };
-  }
-};`,
+    codeExample: "// CodeAct Agent implementation\nconst executeCodeAct = async (query, maxCycles = 5) => {\n  try {\n    let currentCycle = 0;\n    let done = false;\n    let contextHistory = [];\n    let finalResult = '';\n\n    // Simulate Python code execution environment\n    const executeCode = async (code) => {\n      console.log(\"Executing Python code (simulated):\");\n      console.log(code);\n      \n      // This is a simulation - in a real implementation, this would execute Python code\n      // and return the results. For this example, we'll return a simulated result.\n      \n      if (code.includes('import')) {\n        if (code.includes('numpy') || code.includes('pandas')) {\n          return \"Library imported successfully.\";\n        }\n      }\n      \n      if (code.includes('print(')) {\n        const printMatch = code.match(/print\\(([^)]+)\\)/);\n        if (printMatch) {\n          return \"Output: \" + printMatch[1];\n        }\n      }\n      \n      if (code.includes('def ')) {\n        return \"Function defined successfully.\";\n      }\n      \n      // Default simulated response\n      return \"Code executed. Result: [simulated output based on the provided code]\";\n    };\n\n    // Add the initial query to context\n    contextHistory.push(\"User query: \" + query);\n\n    while (!done && currentCycle < maxCycles) {\n      currentCycle++;\n      \n      // Generate agent response\n      const agentPrompt = \n        \"You are a CodeAct agent that solves problems by writing and executing Python code.\\n\\n\" +\n        \"Task: \" + query + \"\\n\\n\" +\n        \"Previous interactions:\\n\" + \n        contextHistory.join('\\n\\n') + \"\\n\\n\" +\n        \"Based on the current state, either:\\n\\n\" +\n        \"1. Write Python code to make progress, formatted as:\\n\" +\n        \"   Thought: <your reasoning>\\n\" +\n        \"   Code:\\n\" +\n        \"   ```python\\n\" +\n        \"   # Your Python code here\\n\" +\n        \"   ```\\n\\n\" +\n        \"2. Or provide the final answer if you've solved the problem:\\n\" +\n        \"   Thought: <your reasoning>\\n\" +\n        \"   Final Answer: <your answer>\";\n      \n      const agentResponse = await llm(agentPrompt);\n      contextHistory.push(\"Agent: \" + agentResponse);\n      \n      // Check if the response contains a final answer\n      if (agentResponse.includes('Final Answer:')) {\n        const answerMatch = agentResponse.match(/Final Answer:(.*?)$/s);\n        if (answerMatch) {\n          finalResult = answerMatch[1].trim();\n          done = true;\n        }\n      } \n      // Check if the response contains code\n      else if (agentResponse.includes('```python')) {\n        // Extract code block\n        const codeMatch = agentResponse.match(/```python\\s*([\\s\\S]*?)\\s*```/);\n        if (codeMatch) {\n          const code = codeMatch[1].trim();\n          \n          // Execute the code (simulated)\n          const executionResult = await executeCode(code);\n          \n          // Add the observation to the history\n          contextHistory.push(\"Observation: \" + executionResult);\n        }\n      }\n    }\n    \n    return {\n      status: done ? 'success' : 'max_cycles_reached',\n      cycles: currentCycle,\n      result: finalResult || 'No final result reached.',\n      history: contextHistory\n    };\n  } catch (error) {\n    return { status: 'failed', reason: error.message };\n  }\n};",
     implementation: [
       'Set up a secure Python code execution environment',
       'Create an agent interface that can generate Python code',
@@ -1006,7 +910,7 @@ const executeModernToolUse = async (query: string) => {
     
     // Process each required tool
     for (const tool of (toolRequirements.tools || [])) {
-      console.log(\`Processing tool request for: \${tool.name}\`);
+      console.log("Processing tool request for: " + tool.name);
       
       // Create MCP-compliant tool request
       const mcpRequest = {
@@ -1599,35 +1503,7 @@ const executePromptChain = async (input: string) => {
       { id: 'e4-5', source: 'llm3', target: 'aggregator' },
       { id: 'e5-6', source: 'aggregator', target: 'output', animated: true }
     ],
-    codeExample: `// Parallelization implementation
-const executeParallelLLMCalls = async (input: string) => {
-  try {
-    // Execute multiple LLM calls in parallel
-    const [result1, result2, result3] = await Promise.all([
-      llm(\`Process this input perspective 1: \${input}\`),
-      llm(\`Process this input perspective 2: \${input}\`),
-      llm(\`Process this input perspective 3: \${input}\`)
-    ]);
-    
-    // Aggregate results
-    const aggregatedResult = aggregateResults([result1, result2, result3]);
-    
-    return {
-      status: 'success',
-      individual: [result1, result2, result3],
-      aggregated: aggregatedResult
-    };
-  } catch (error) {
-    return { status: 'failed', reason: error.message };
-  }
-};
-
-const aggregateResults = (results) => {
-  // Implementation of result aggregation logic
-  // This could be a simple concatenation, a weighted average,
-  // or another LLM call to synthesize the results
-  return results.join('\n\n');
-};`,
+    codeExample: "// Parallelization implementation\nconst executeParallelLLMCalls = async (input) => {\n  try {\n    // Execute multiple LLM calls in parallel\n    const [result1, result2, result3] = await Promise.all([\n      llm(\"Process this input perspective 1: \" + input),\n      llm(\"Process this input perspective 2: \" + input),\n      llm(\"Process this input perspective 3: \" + input)\n    ]);\n    \n    // Aggregate results\n    const aggregatedResult = aggregateResults([result1, result2, result3]);\n    \n    return {\n      status: 'success',\n      individual: [result1, result2, result3],\n      aggregated: aggregatedResult\n    };\n  } catch (error) {\n    return { status: 'failed', reason: error.message };\n  }\n};\n\nconst aggregateResults = (results) => {\n  // Implementation of result aggregation logic\n  // This could be a simple concatenation, a weighted average,\n  // or another LLM call to synthesize the results\n  return results.join('\\n\\n');\n};",
     implementation: [
       'Import the Azure AI SDK and set up authentication',
       'Define a function that takes an input parameter',
