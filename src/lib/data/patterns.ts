@@ -897,7 +897,7 @@ const executeModernToolUse = async (query: string) => {
     
     // Step 3: Generate response using tool outputs
     const toolOutputsText = Object.entries(toolResults)
-      .map(([tool, result]) => \`${tool} result: \${JSON.stringify(result, null, 2)}\`)
+      .map(([toolName, result]) => \`${toolName} result: \${JSON.stringify(result, null, 2)}\`)
       .join('\\n\\n');
     
     const response = await llm(\`
