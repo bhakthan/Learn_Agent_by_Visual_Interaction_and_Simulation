@@ -166,7 +166,7 @@ export const algorithmVisualizations: Record<string, AlgorithmVisualization> = {
         name: 'Final Reflection',
         description: 'Validate final solution and check completeness',
         data: {
-          final_reflection: 'I've verified the code logic is correct: sum = 55, average = 55/10 = 5.5'
+          final_reflection: 'I have verified the code logic is correct: sum = 55, average = 55/10 = 5.5'
         }
       }
     ]
