@@ -27,6 +27,7 @@ export interface PatternData {
   id: string
   name: string
   description: string
+  category?: string
   nodes: PatternNode[]
   edges: PatternEdge[]
   useCases: string[]
@@ -42,6 +43,7 @@ export const agentPatterns: PatternData[] = [
     id: 'react-agent',
     name: 'ReAct Agent',
     description: 'A reasoning and acting framework where an agent alternates between reasoning (using LLMs) and acting (using tools like Google or email).',
+    category: 'Core',
     useCases: ['Multi-Step Problem Solving', 'Research Tasks', 'Information Gathering'],
     nodes: [
       {
@@ -325,6 +327,7 @@ async def main():
     id: 'codeact-agent',
     name: 'CodeAct Agent',
     description: 'Allows agents to autonomously execute Python code instead of using JSON, enabling them to handle complex tasks more efficiently.',
+    category: 'Core',
     useCases: ['Complex Computational Tasks', 'Data Analysis', 'Algorithmic Problem Solving'],
     nodes: [
       {
@@ -485,6 +488,7 @@ const executeCodeAct = async (query, maxCycles = 5) => {
     id: 'self-reflection',
     name: 'Self-Reflection',
     description: 'An agent that self-evaluates its outputs, using feedback to identify errors, and iteratively improves via learning or critiques.',
+    category: 'Advanced',
     useCases: ['Content Generation', 'Decision Making', 'Problem Solving'],
     nodes: [
       {
@@ -659,6 +663,7 @@ const executeSelfReflection = async (query: string, maxRevisions = 3) => {
     id: 'agentic-rag',
     name: 'Agentic RAG',
     description: 'AI agents retrieving and evaluating relevant data to generate context-aware and well-reasoned output using memory and tools.',
+    category: 'Advanced',
     useCases: ['Enterprise Knowledge Management', 'Research Analysis', 'Expert Systems'],
     nodes: [
       {
@@ -1070,6 +1075,7 @@ Generate a helpful response that synthesizes the information from these tools.\`
     id: 'model-context-protocol',
     name: 'Model Context Protocol (MCP)',
     description: 'A standardized communication framework between models and context systems that ensures efficient information exchange.',
+    category: 'Core',
     useCases: ['Enterprise Knowledge Management', 'Secure Data Access Patterns', 'Context-Aware Systems'],
     nodes: [
       {
@@ -1223,6 +1229,7 @@ const buildContext = async (results, query) => {
     id: 'agent-to-agent',
     name: 'Agent to Agent (A2A)',
     description: 'A communication framework where AI agents collaborate by exchanging structured messages to solve complex problems.',
+    category: 'Core',
     useCases: ['Multi-agent Systems', 'Collaborative Task Solving', 'Expert Networks'],
     nodes: [
       {
@@ -1874,6 +1881,7 @@ const parseEvaluation = (evaluation) => {
     id: 'routing',
     name: 'Routing',
     description: 'It classifies an input and directs it to a specialized followup task. This workflow allows for separation of concerns.',
+    category: 'Core',
     useCases: ['Customer Support Agents', 'MAD (Multi-Agent Debate)'],
     nodes: [
       {
@@ -2494,6 +2502,7 @@ const parseJSON = (jsonString) => {
     id: 'computer-using-agent',
     name: 'Computer Using Agent (CUA)',
     description: 'Agents that can interact with computer interfaces, browser automation, and operating systems to perform tasks on behalf of users.',
+    category: 'Specialized',
     useCases: ['Desktop Automation', 'Web Navigation and Interaction', 'Multi-application Workflows'],
     nodes: [
       {
@@ -2707,6 +2716,7 @@ class ComputerActionModule {
     id: 'deep-researcher',
     name: 'Deep Researcher Agent',
     description: 'An agent specialized in conducting thorough research by exploring multiple sources, synthesizing information, and providing in-depth analysis.',
+    category: 'Specialized',
     useCases: ['Academic Research', 'Competitive Analysis', 'Literature Review', 'Market Research'],
     nodes: [
       {
@@ -2954,6 +2964,7 @@ function organizeKnowledgeBase(validatedData) {
     id: 'voice-agent',
     name: 'Voice Agents',
     description: 'Specialized agents that process speech input, understand natural language, and respond with synthesized speech in a conversational manner.',
+    category: 'Specialized',
     useCases: ['Voice Assistants', 'Call Center Automation', 'Accessibility Applications', 'In-Car Systems'],
     nodes: [
       {

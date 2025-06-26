@@ -6,12 +6,13 @@ import CodePlaybook from '@/components/code-playbook/CodePlaybook'
 import PatternDetails from './PatternDetails'
 import MultiPatternVisualizer from './MultiPatternVisualizer'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ReactFlowProvider } from 'reactflow'
 import { ChartLine, Code, Info, Swap } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Toggle } from '@/components/ui/toggle'
+import { PatternSidebar } from './PatternSidebar'
 
 const PatternExplorer = () => {
   const [selectedPattern, setSelectedPattern] = useState(agentPatterns[0])
@@ -26,13 +27,20 @@ const PatternExplorer = () => {
     }
   }, []);
   
+  const handlePatternSelect = (patternId: string) => {
+    const pattern = agentPatterns.find(p => p.id === patternId);
+    if (pattern) {
+      setSelectedPattern(pattern);
+    }
+  };
+  
   const toggleViewMode = () => {
     setViewMode(current => current === 'single' ? 'compare' : 'single');
   };
   
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Agent Patterns</h2>
         <div className="flex items-center gap-2">
           <Toggle
@@ -56,29 +64,34 @@ const PatternExplorer = () => {
       </div>
       
       {viewMode === 'single' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle>Agent Patterns</CardTitle>
-              <CardDescription>Select a pattern to explore</CardDescription>
+        <div className="flex">
+          {/* Sidebar */}
+          <div className="hidden md:block">
+            <PatternSidebar 
+              activePatternId={selectedPattern.id} 
+              onPatternSelect={handlePatternSelect}
+            />
+          </div>
+          
+          {/* Mobile Pattern Selector */}
+          <Card className="md:hidden mb-4 w-full">
+            <CardHeader className="py-3">
+              <h3 className="text-sm font-medium">Select Pattern</h3>
             </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[500px] pr-4">
+            <CardContent className="py-2">
+              <ScrollArea className="h-[150px]">
                 <div className="space-y-2">
                   {agentPatterns.map((pattern) => (
                     <div
                       key={pattern.id}
-                      className={`p-3 rounded-md cursor-pointer transition-colors ${
+                      className={`p-2 rounded-md cursor-pointer transition-colors ${
                         selectedPattern.id === pattern.id
                           ? 'bg-primary/10 border-l-2 border-primary'
                           : 'hover:bg-muted'
                       }`}
                       onClick={() => setSelectedPattern(pattern)}
                     >
-                      <h3 className="font-medium">{pattern.name}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                        {pattern.description}
-                      </p>
+                      <h3 className="text-sm font-medium">{pattern.name}</h3>
                     </div>
                   ))}
                 </div>
@@ -86,7 +99,8 @@ const PatternExplorer = () => {
             </CardContent>
           </Card>
           
-          <div className="lg:col-span-2 space-y-6">
+          {/* Main Content Area */}
+          <div className="flex-1">
             <Tabs defaultValue="visualization" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="visualization" className="flex items-center gap-2">

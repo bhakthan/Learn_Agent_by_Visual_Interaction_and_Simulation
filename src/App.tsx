@@ -4,6 +4,7 @@ import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMe
 import { cn } from "@/lib/utils"
 import ConceptsExplorer from './components/concepts/ConceptsExplorer'
 import PatternExplorer from './components/patterns/PatternExplorer'
+import { PatternSidebar } from './components/patterns/PatternSidebar'
 import { Separator } from "@/components/ui/separator"
 import { agentPatterns } from './lib/data/patterns'
 import CodePlaybook from './components/code-playbook/CodePlaybook'
@@ -129,25 +130,35 @@ function App() {
                 <p className="text-muted-foreground">Step-by-step implementation guides with code examples for each pattern.</p>
               </div>
               <Separator />
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-                {agentPatterns.map((pattern) => (
-                  <div
-                    key={pattern.id}
-                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                      selectedPatternId === pattern.id
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                    onClick={() => setSelectedPatternId(pattern.id)}
-                  >
-                    <h3 className="font-medium">{pattern.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                      {pattern.description}
-                    </p>
-                  </div>
-                ))}
+              <div className="flex">
+                <div className="hidden md:block">
+                  <PatternSidebar 
+                    activePatternId={selectedPatternId} 
+                    onPatternSelect={setSelectedPatternId}
+                  />
+                </div>
+                <div className="md:hidden grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 w-full">
+                  {agentPatterns.map((pattern) => (
+                    <div
+                      key={pattern.id}
+                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                        selectedPatternId === pattern.id
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                      onClick={() => setSelectedPatternId(pattern.id)}
+                    >
+                      <h3 className="font-medium">{pattern.name}</h3>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                        {pattern.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex-1">
+                  <CodePlaybook patternData={selectedPattern} />
+                </div>
               </div>
-              <CodePlaybook patternData={selectedPattern} />
             </TabsContent>
             
             <TabsContent value="services" className="space-y-6">
