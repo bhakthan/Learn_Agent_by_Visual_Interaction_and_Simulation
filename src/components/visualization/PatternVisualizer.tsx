@@ -153,7 +153,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
   const [isAnimating, setIsAnimating] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
   const [animationState, setAnimationState] = useState<AnimationState>({
-    speed: 'normal',
+    speed: 'normal', // Already set to normal by default
     mode: 'auto',
     isPaused: false,
     step: 0
@@ -199,13 +199,13 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     setIsAnimating(false);
     setDataFlows([]); // Clear all data flows
     
-    // Reset animation state
-    setAnimationState({
-      speed: 'normal',
-      mode: 'auto',
+    // Reset animation state but keep the current speed selection
+    setAnimationState(current => ({
+      speed: current.speed, // Keep current speed
+      mode: current.mode,   // Keep current mode
       isPaused: false,
       step: 0
-    });
+    }));
     
     // Clear step queue
     stepQueueRef.current = [];
@@ -319,16 +319,17 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     const handleAddStep = (stepFn: () => void) => {
       if (animationState.mode === 'step-by-step') {
         stepQueueRef.current.push(stepFn);
+        return null; // Return null for step-by-step mode as timeouts are not used
       } else {
         // In auto mode, execute based on speed factor
-        const timeoutId = setTimeout(() => {
-          if (!animationState.isPaused) {
+        if (!animationState.isPaused) {
+          const timeoutId = setTimeout(() => {
             stepFn();
-          }
-        }, 100 / speedFactor);
-        return timeoutId;
+          }, 100 / speedFactor);
+          return timeoutId;
+        }
+        return null;
       }
-      return null;
     };
     
     // Start the simulation using our utility
@@ -396,7 +397,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
             <Button 
               size="sm"
               onClick={isAnimating ? togglePauseSimulation : startSimulation}
-              disabled={isAnimating && animationState.mode === 'step-by-step'}
+              disabled={isAnimating && animationState.mode === 'step-by-step' && stepQueueRef.current.length === 0}
               className={animationState.isPaused ? "bg-yellow-500 hover:bg-yellow-600" : ""}
             >
               {isAnimating ? (
@@ -422,16 +423,14 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
                     variant={animationState.mode === 'auto' ? "default" : "outline"}
                     className="h-8"
                     onClick={() => changeAnimationMode('auto')}
-                    disabled={isAnimating && !animationState.isPaused && animationState.mode !== 'auto'}
                   >
                     Auto
                   </Button>
                   <Button 
                     size="sm" 
                     variant={animationState.mode === 'step-by-step' ? "default" : "outline"}
-                    className="h-8"
+                    className={`h-8 ${animationState.mode === 'step-by-step' ? "ring-2 ring-primary" : ""}`}
                     onClick={() => changeAnimationMode('step-by-step')}
-                    disabled={isAnimating && !animationState.isPaused && animationState.mode !== 'step-by-step'}
                   >
                     Step by Step
                   </Button>
@@ -441,7 +440,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
               {animationState.mode === 'step-by-step' && (
                 <Button 
                   size="sm" 
-                  variant="outline"
+                  variant="default"
                   className="h-8"
                   onClick={executeNextStep}
                   disabled={!isAnimating || stepQueueRef.current.length === 0}
@@ -478,7 +477,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
                 <Badge variant={animationState.speed === 'slow' ? 'default' : 'outline'} onClick={() => changeAnimationSpeed('slow')} className="cursor-pointer">
                   Slow
                 </Badge>
-                <Badge variant={animationState.speed === 'normal' ? 'default' : 'outline'} onClick={() => changeAnimationSpeed('normal')} className="cursor-pointer">
+                <Badge variant={animationState.speed === 'normal' ? 'default' : 'outline'} onClick={() => changeAnimationSpeed('normal')} className="cursor-pointer font-medium border-2 border-primary">
                   Normal
                 </Badge>
                 <Badge variant={animationState.speed === 'fast' ? 'default' : 'outline'} onClick={() => changeAnimationSpeed('fast')} className="cursor-pointer">
