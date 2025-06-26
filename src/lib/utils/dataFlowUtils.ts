@@ -259,10 +259,9 @@ export const simulatePatternFlow = (
           else if (Math.random() > 0.95) flowType = 'error'; // 5% chance of error
           
           // Set the toolName if this is a tool node (fixes the toolName undefined error)
-          if (nodeType === 'tool') {
-            const toolName = currentNode.data.label || 'External API';
-            messageContext = toolName;
-          }
+          const localMessageContext = nodeType === 'tool' 
+            ? (currentNode.data.label || 'External API')
+            : messageContext;
           
           const newFlow = {
             id: flowId,
@@ -290,7 +289,7 @@ export const simulatePatternFlow = (
           // Process the target node after flow completion + targetDelay
           const targetTimer = setTimeout(() => {
             activeFlows.delete(flowId);
-            processNode(edge.target, 100, flowContent);
+            processNode(edge.target, 100, localMessageContext);
           }, targetDelay);
           
           timers.push(targetTimer);

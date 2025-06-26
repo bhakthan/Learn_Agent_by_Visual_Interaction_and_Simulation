@@ -897,19 +897,19 @@ const executeModernToolUse = async (query: string) => {
     
     // Step 3: Generate response using tool outputs
     const toolOutputsText = Object.entries(toolResults)
-      .map(([toolName, result]) => `${toolName} result: ${JSON.stringify(result, null, 2)}`)
+      .map(([toolName, result]) => \`\${toolName} result: \${JSON.stringify(result, null, 2)}\`)
       .join('\n\n');
     
-    const response = await llm(`
+    const response = await llm(\`
       Using the following tool results, provide a comprehensive answer to the user's query.
       
-      Query: "${query}"
+      Query: "\${query}"
       
       Tool Results:
-      ${toolOutputsText}
+      \${toolOutputsText}
       
       Generate a helpful response that synthesizes the information from these tools.
-    `);
+    \`);
     
     return {
       status: 'success',
@@ -1276,20 +1276,20 @@ const processAgentMessages = async (agentType, messageBus) => {
       \`;
       break;
     case "analysis":
-      agentPrompt = `
+      agentPrompt = \`
         You are an analysis agent. Process this data and provide insights:
-        ${messages.map(message => message.content).join('\n')}
+        \${messages.map(message => message.content).join('\\n')}
         
         Provide your analytical conclusions.
-      `;
+      \`;
       break;
     case "critic":
-      agentPrompt = `
+      agentPrompt = \`
         You are a critic agent. Evaluate these proposals and identify issues:
-        ${messages.map(message => message.content).join('\n')}
+        \${messages.map(message => message.content).join('\\n')}
         
         Provide constructive criticism and suggestions for improvement.
-      `;
+      \`;
       break;
   }
   
