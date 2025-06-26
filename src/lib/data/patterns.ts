@@ -1958,12 +1958,13 @@ const executeAutonomousWorkflow = async (input: string, maxSteps = 10) => {
       if (decision.action === 'finish') {
         isDone = true;
         currentState = decision.input; // Final answer
-      } else if (tools[decision.action]) {
+      } else if (decision.action && tools[decision.action]) {
         const toolResult = await tools[decision.action](decision.input);
         currentState = toolResult;
         history.push(\`Tool (\${decision.action}): \${toolResult}\`);
       } else {
-        history.push(\`Error: Unknown action "\${decision.action}"\`);
+        const actionName = decision.action || 'undefined';
+        history.push(\`Error: Unknown action "\${actionName}"\`);
       }
     }
     
@@ -1983,7 +1984,13 @@ const parseAgentDecision = (response) => {
     // Extract JSON from response
     const jsonMatch = response.match(/\\{[\\s\\S]*\\}/);
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+      const parsed = JSON.parse(jsonMatch[0]);
+      // Ensure all required properties exist
+      return {
+        thought: parsed.thought || "No thought provided",
+        action: parsed.action || "finish",
+        input: parsed.input || ""
+      };
     }
   } catch (error) {
     console.error('Failed to parse agent decision:', error);
