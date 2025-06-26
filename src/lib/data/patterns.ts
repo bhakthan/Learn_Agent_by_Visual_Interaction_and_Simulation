@@ -261,9 +261,9 @@ const executeCodeAct = async (query: string, maxCycles = 5) => {
       }
       
       if (code.includes('print(')) {
-        const printMatch = code.match(/print\\(([^)]+)\\)/);
+        const printMatch = code.match(/print\(([^)]+)\)/);
         if (printMatch) {
-          return \`Output: \${printMatch[1]}\`;
+          return `Output: ${printMatch[1]}`;
         }
       }
       
@@ -295,9 +295,9 @@ const executeCodeAct = async (query: string, maxCycles = 5) => {
         1. Write Python code to make progress, formatted as:
            Thought: <your reasoning>
            Code:
-           \`\`\`python
+           \\\`\\\`\\\`python
            # Your Python code here
-           \`\`\`
+           \\\`\\\`\\\`
            
         2. Or provide the final answer if you've solved the problem:
            Thought: <your reasoning>
@@ -316,9 +316,9 @@ const executeCodeAct = async (query: string, maxCycles = 5) => {
         }
       } 
       // Check if the response contains code
-      else if (agentResponse.includes('\`\`\`python')) {
+      else if (agentResponse.includes('```python')) {
         // Extract code block
-        const codeMatch = agentResponse.match(/\`\`\`python\s*([\s\S]*?)\s*\`\`\`/);
+        const codeMatch = agentResponse.match(/```python\s*([\s\S]*?)\s*```/);
         if (codeMatch) {
           const code = codeMatch[1].trim();
           
@@ -466,8 +466,8 @@ const executeSelfReflection = async (query: string, maxRevisions = 3) => {
       \`);
       
       // Parse the reflection results
-      const scoreMatch = reflection.match(/Score:\\s*(\\d+)/i);
-      const needsRevisionMatch = reflection.match(/Needs Revision:\\s*(Yes|No)/i);
+      const scoreMatch = reflection.match(/Score:\s*(\d+)/i);
+      const needsRevisionMatch = reflection.match(/Needs Revision:\s*(Yes|No)/i);
       
       const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
       const needsRevision = needsRevisionMatch 
@@ -643,7 +643,7 @@ const executeAgenticRAG = async (query: string) => {
     
     // Parse the query analysis
     const analysisObj = typeof queryAnalysis === 'string' 
-      ? JSON.parse(queryAnalysis.match(/\\{[\\s\\S]*\\}/)[0])
+      ? JSON.parse(queryAnalysis.match(/\{[\s\S]*\}/)[0])
       : queryAnalysis;
     
     // Step 2: Retrieve relevant information
@@ -871,7 +871,7 @@ const executeModernToolUse = async (query: string) => {
     
     // Parse tool requirements
     const toolRequirements = typeof queryAnalysis === 'string'
-      ? JSON.parse(queryAnalysis.match(/\\{[\\s\\S]*\\}/)[0])
+      ? JSON.parse(queryAnalysis.match(/\{[\s\S]*\}/)[0])
       : queryAnalysis;
     
     // Step 2: Execute tool requests through MCP
@@ -897,7 +897,7 @@ const executeModernToolUse = async (query: string) => {
     
     // Step 3: Generate response using tool outputs
     const toolOutputsText = Object.entries(toolResults)
-      .map(([toolName, result]) => \`\${toolName} result: \${JSON.stringify(result, null, 2)}\`)
+      .map(([toolName, result]) => `${toolName} result: ${JSON.stringify(result, null, 2)}`)
       .join('\n\n');
     
     const response = await llm(\`
@@ -1309,7 +1309,7 @@ const parseTasks = (coordinatorOutput) => {
   try {
     if (typeof coordinatorOutput === 'string') {
       // Extract JSON from string if needed
-      const match = coordinatorOutput.match(/\\{[\\s\\S]*\\}/);
+      const match = coordinatorOutput.match(/\{[\s\S]*\}/);
       const json = match ? JSON.parse(match[0]) : { subtasks: [] };
       return json.subtasks || [];
     }
@@ -1713,7 +1713,7 @@ const executeEvaluatorOptimizer = async (input: string, maxAttempts = 3) => {
 
 const parseEvaluation = (evaluation) => {
   // Extract score (assuming format like "Score: 8/10")
-  const scoreMatch = evaluation.match(/Score:?\\s*(\\d+)(?:\\/10)?/i);
+  const scoreMatch = evaluation.match(/Score:?\s*(\d+)(?:\/10)?/i);
   const score = scoreMatch ? parseInt(scoreMatch[1], 10) : 0;
   
   // Extract feedback (everything after "Feedback:" or similar)
@@ -1813,7 +1813,7 @@ const executeRouting = async (input: string) => {
     \`);
     
     // Clean and parse the routing result
-    const category = parseInt(routingResult.trim().match(/\\d+/)?.[0] || '0', 10);
+    const category = parseInt(routingResult.trim().match(/\d+/)?.[0] || '0', 10);
     
     // Route to the appropriate specialist
     let specialistResponse;
@@ -1982,7 +1982,7 @@ const executeAutonomousWorkflow = async (input: string, maxSteps = 10) => {
 const parseAgentDecision = (response) => {
   try {
     // Extract JSON from response
-    const jsonMatch = response.match(/\\{[\\s\\S]*\\}/);
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
       // Ensure all required properties exist
@@ -2118,7 +2118,7 @@ const executeReflexion = async (input: string, maxIterations = 3) => {
         Respond with just the number.
       \`);
       
-      const improvementScore = parseInt(differenceCheck.match(/\\d+/)?.[0] || '0', 10);
+      const improvementScore = parseInt(differenceCheck.match(/\d+/)?.[0] || '0', 10);
       
       // If improvement is minimal, break the loop
       if (improvementScore < 3 && iterations > 1) {
@@ -2318,7 +2318,7 @@ const checkIfReplanNeeded = async (plan, subtasks, results) => {
 const parseJSON = (jsonString) => {
   try {
     // Extract JSON from response
-    const jsonMatch = jsonString.match(/\\{[\\s\\S]*\\}/);
+    const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     }
