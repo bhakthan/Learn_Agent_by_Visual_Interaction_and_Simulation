@@ -173,6 +173,11 @@ export const generateFlowContent = (
     }
   };
   
+  // Special case handling for tool nodes to guarantee toolName is defined
+  if (sourceType === 'tool' && !context) {
+    context = 'External API';
+  }
+  
   // Get template options for this node type pair
   const sourceTemplates = templates[sourceType] || templates.default;
   const targetOptions = sourceTemplates[targetType] || sourceTemplates.default;
@@ -253,12 +258,17 @@ export const simulatePatternFlow = (
           else if (nodeType === 'tool' || nodeType === 'aggregator') flowType = 'data';
           else if (Math.random() > 0.95) flowType = 'error'; // 5% chance of error
           
+          // Set the toolName if this is a tool node (fixes the toolName undefined error)
+          if (nodeType === 'tool' && currentNode.data.label) {
+            messageContext = currentNode.data.label;
+          }
+          
           const newFlow = {
             id: flowId,
             edgeId: edge.id,
             source: edge.source,
             target: edge.target,
-            content: flowContent,
+            content: flowContent || "Processing data...", // Ensure content is never undefined
             timestamp: Date.now(),
             type: flowType,
             progress: 0,
