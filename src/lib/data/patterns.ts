@@ -295,14 +295,14 @@ const executeCodeAct = async (query: string, maxCycles = 5) => {
         1. Write Python code to make progress, formatted as:
            Thought: <your reasoning>
            Code:
-           \`\`\`python
+           ```python
            # Your Python code here
-           \`\`\`
+           ```
            
         2. Or provide the final answer if you've solved the problem:
            Thought: <your reasoning>
            Final Answer: <your answer>
-      \`;
+      `;
       
       const agentResponse = await llm(agentPrompt);
       contextHistory.push(\`Agent: \${agentResponse}\`);
@@ -316,9 +316,9 @@ const executeCodeAct = async (query: string, maxCycles = 5) => {
         }
       } 
       // Check if the response contains code
-      else if (agentResponse.includes('\`\`\`python')) {
+      else if (agentResponse.includes('```python')) {
         // Extract code block
-        const codeMatch = agentResponse.match(/```python\n([\s\S]*?)\n```/);
+        const codeMatch = agentResponse.match(/```python\s*([\s\S]*?)\s*```/);
         if (codeMatch) {
           const code = codeMatch[1].trim();
           
@@ -858,16 +858,16 @@ const executeModernToolUse = async (query: string) => {
     };
     
     // Step 1: Analyze the query to determine required tools
-    const queryAnalysis = await llm(\`
+    const queryAnalysis = await llm(`
       Analyze this user query to determine which tools might help answer it:
-      "\${query}"
+      "${query}"
       
       Available tools:
       - kagi_search: Performs web search using Kagi
       - aws: Interacts with AWS services
       
       Respond with a JSON object listing the tools needed and why.
-    \`, undefined, true);
+    `, undefined, true);
     
     // Parse tool requirements
     const toolRequirements = typeof queryAnalysis === 'string'
@@ -897,19 +897,19 @@ const executeModernToolUse = async (query: string) => {
     
     // Step 3: Generate response using tool outputs
     const toolOutputsText = Object.entries(toolResults)
-      .map(([toolName, result]) => \`\${toolName} result: \${JSON.stringify(result, null, 2)}\`)
+      .map(([toolName, result]) => `${toolName} result: ${JSON.stringify(result, null, 2)}`)
       .join('\n\n');
     
-    const response = await llm(\`
+    const response = await llm(`
       Using the following tool results, provide a comprehensive answer to the user's query.
       
-      Query: "\${query}"
+      Query: "${query}"
       
       Tool Results:
-      \${toolOutputsText}
+      ${toolOutputsText}
       
       Generate a helpful response that synthesizes the information from these tools.
-    \`);
+    `);
     
     return {
       status: 'success',
