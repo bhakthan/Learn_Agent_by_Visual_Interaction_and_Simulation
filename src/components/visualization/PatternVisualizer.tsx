@@ -14,7 +14,8 @@ import ReactFlow, {
   useReactFlow,
   getNodesBounds,
   ReactFlowInstance,
-  ReactFlowProvider
+  ReactFlowProvider,
+  MarkerType
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { PatternData } from '@/lib/data/patterns'
@@ -23,7 +24,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
-import { Play, Stop, ArrowsCounterClockwise, Info, FastForward, Pause, StepForward, Rewind } from '@phosphor-icons/react'
+import { Play, Stop, ArrowsCounterClockwise, Info, FastForward, Pause, StepForward, Rewind, QuestionCircle } from '@phosphor-icons/react'
 import { createDataFlow, simulatePatternFlow } from '@/lib/utils/dataFlowUtils'
 import DataFlowVisualizer from './DataFlowVisualizer'
 
@@ -42,6 +43,7 @@ interface DataFlow {
   type: 'message' | 'data' | 'response' | 'error';
   progress: number;
   label?: string;
+  complete?: boolean;
 }
 
 // Animation control state

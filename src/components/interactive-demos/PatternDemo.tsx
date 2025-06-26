@@ -18,7 +18,8 @@ import ReactFlow, {
   useEdgesState,
   Background,
   MiniMap,
-  Controls
+  Controls,
+  MarkerType
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import DataFlowVisualizer from '../visualization/DataFlowVisualizer'
@@ -60,6 +61,7 @@ interface DataFlowMessage {
   timestamp: number;
   type: 'message' | 'data' | 'response' | 'error';
   progress: number;
+  complete?: boolean;
 }
 
 // Custom node component for the demo
@@ -451,7 +453,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
                 maxZoom={1.5}
                 defaultEdgeOptions={{
                   style: { strokeWidth: 2 },
-                  markerEnd: { type: 'arrow' }
+                  markerEnd: { type: MarkerType.Arrow }
                 }}
               >
                 <Background />

@@ -3,6 +3,7 @@ import { Edge } from 'reactflow';
 import { motion } from 'framer-motion';
 import { getDataFlowAnimationStyle, getNodeDataFlowParams } from '@/lib/utils/dataFlowUtils';
 
+// Updated the interface with all required properties
 interface DataFlow {
   id: string;
   edgeId: string;
@@ -13,6 +14,7 @@ interface DataFlow {
   type: 'message' | 'data' | 'response' | 'error';
   progress: number;
   label?: string;
+  complete?: boolean;
 }
 
 interface DataFlowVisualizerProps {
