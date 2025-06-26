@@ -363,7 +363,7 @@ const codeActAgent = async (query: string, maxIter = 3) => {
     const codePrompt = \`
       You are a coding assistant. Write code to solve:
       \${query}
-      ${iterations > 1 ? 'Previous attempts: ' + context.join('\\n') : ''}
+      \${iterations > 1 ? 'Previous attempts: ' + context.join('\\n') : ''}
       Write a complete solution as code.
     \`;
     
