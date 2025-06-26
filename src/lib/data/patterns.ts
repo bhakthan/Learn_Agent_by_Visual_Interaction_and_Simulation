@@ -97,7 +97,7 @@ const executeReAct = async (query: string, maxCycles = 5) => {
       },
       calculate: (expression) => {
         try {
-          return \`Calculation result: \${eval(expression)}\`;
+          return "Calculation result: " + eval(expression);
         } catch (error) {
           return \`Error in calculation: \${error.message}\`;
         }
@@ -263,7 +263,7 @@ const executeCodeAct = async (query: string, maxCycles = 5) => {
       if (code.includes('print(')) {
         const printMatch = code.match(/print\(([^)]+)\)/);
         if (printMatch) {
-          return `Output: ${printMatch[1]}`;
+          return "Output: " + printMatch[1];
         }
       }
       
@@ -282,30 +282,24 @@ const executeCodeAct = async (query: string, maxCycles = 5) => {
       currentCycle++;
       
       // Generate agent response
-      const agentPrompt = \`
-        You are a CodeAct agent that solves problems by writing and executing Python code.
-        
-        Task: \${query}
-        
-        Previous interactions:
-        ${contextHistory.join('\n\n')}
-        
-        Based on the current state, either:
-        
-        1. Write Python code to make progress, formatted as:
-           Thought: <your reasoning>
-           Code:
-           \\\`\\\`\\\`python
-           # Your Python code here
-           \\\`\\\`\\\`
-           
-        2. Or provide the final answer if you've solved the problem:
-           Thought: <your reasoning>
-           Final Answer: <your answer>
-      `;
+      const agentPrompt = 
+        "You are a CodeAct agent that solves problems by writing and executing Python code.\n\n" +
+        "Task: " + query + "\n\n" +
+        "Previous interactions:\n" + 
+        contextHistory.join('\n\n') + "\n\n" +
+        "Based on the current state, either:\n\n" +
+        "1. Write Python code to make progress, formatted as:\n" +
+        "   Thought: <your reasoning>\n" +
+        "   Code:\n" +
+        "   ```python\n" +
+        "   # Your Python code here\n" +
+        "   ```\n\n" +
+        "2. Or provide the final answer if you've solved the problem:\n" +
+        "   Thought: <your reasoning>\n" +
+        "   Final Answer: <your answer>";
       
       const agentResponse = await llm(agentPrompt);
-      contextHistory.push(\`Agent: \${agentResponse}\`);
+      contextHistory.push("Agent: " + agentResponse);
       
       // Check if the response contains a final answer
       if (agentResponse.includes('Final Answer:')) {
@@ -326,7 +320,7 @@ const executeCodeAct = async (query: string, maxCycles = 5) => {
           const executionResult = await executeCode(code);
           
           // Add the observation to the history
-          contextHistory.push(\`Observation: \${executionResult}\`);
+          contextHistory.push("Observation: " + executionResult);
         }
       }
     }
@@ -897,19 +891,16 @@ const executeModernToolUse = async (query: string) => {
     
     // Step 3: Generate response using tool outputs
     const toolOutputsText = Object.entries(toolResults)
-      .map(([toolName, result]) => `${toolName} result: ${JSON.stringify(result, null, 2)}`)
+      .map(([toolName, result]) => toolName + " result: " + JSON.stringify(result, null, 2))
       .join('\n\n');
     
-    const response = await llm(\`
-      Using the following tool results, provide a comprehensive answer to the user's query.
+    const response = await llm(
+      "Using the following tool results, provide a comprehensive answer to the user's query.\n\n" +
+      "Query: \"" + query + "\"\n\n" +
+      "Tool Results:\n" + toolOutputsText +
       
-      Query: "\${query}"
-      
-      Tool Results:
-      \${toolOutputsText}
-      
-      Generate a helpful response that synthesizes the information from these tools.
-    \`);
+      "\nGenerate a helpful response that synthesizes the information from these tools."
+    );
     
     return {
       status: 'success',
@@ -1917,7 +1908,7 @@ const executeAutonomousWorkflow = async (input: string, maxSteps = 10) => {
       },
       calculate: (expression) => {
         try {
-          return \`Result: \${eval(expression)}\`;
+          return "Result: " + eval(expression);
         } catch (err) {
           return \`Error calculating "\${expression}": \${err.message}\`;
         }
@@ -2306,7 +2297,7 @@ const executePlanAndExecute = async (input: string) => {
 
 const executeSubtask = async (subtaskDescription) => {
   // Execute a single subtask using appropriate agent and tools
-  return await llm(\`Execute this specific task: \${subtaskDescription}\`);
+  return await llm("Execute this specific task: " + subtaskDescription);
 };
 
 const checkIfReplanNeeded = async (plan, subtasks, results) => {
