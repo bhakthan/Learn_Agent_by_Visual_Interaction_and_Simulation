@@ -17,6 +17,19 @@
                 border-color var(--transition-duration) ease,
                 box-shadow var(--transition-duration) ease;
   }
+  
+  /* Add smoother sidebar transitions */
+  [data-slot="sidebar-container"] {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  
+  [data-sidebar="trigger"] svg {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  [data-sidebar="trigger"]:hover svg {
+    transform: rotate(-90deg);
+  }
 }
 
 /* Light Mode */

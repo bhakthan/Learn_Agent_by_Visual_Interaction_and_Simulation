@@ -131,7 +131,7 @@ function App() {
               </div>
               <Separator />
               <div className="flex">
-                <div className="hidden md:block">
+                <div className="hidden md:block w-[250px]">
                   <PatternSidebar 
                     activePatternId={selectedPatternId} 
                     onPatternSelect={setSelectedPatternId}
@@ -155,7 +155,7 @@ function App() {
                     </div>
                   ))}
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 md:ml-4">
                   <CodePlaybook patternData={selectedPattern} />
                 </div>
               </div>

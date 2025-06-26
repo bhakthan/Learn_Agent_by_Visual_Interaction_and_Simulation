@@ -66,7 +66,7 @@ const PatternExplorer = () => {
       {viewMode === 'single' ? (
         <div className="flex">
           {/* Sidebar */}
-          <div className="hidden md:block">
+          <div className="hidden md:block w-[250px]">
             <PatternSidebar 
               activePatternId={selectedPattern.id} 
               onPatternSelect={handlePatternSelect}
@@ -100,7 +100,7 @@ const PatternExplorer = () => {
           </Card>
           
           {/* Main Content Area */}
-          <div className="flex-1">
+          <div className="flex-1 md:ml-4">
             <Tabs defaultValue="visualization" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="visualization" className="flex items-center gap-2">
