@@ -64,6 +64,7 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
   const [showDetails, setShowDetails] = useState(false)
   const [showControls, setShowControls] = useState(false)
   const [activeTab, setActiveTab] = useState<string>('visualization')
+  const [queryInput, setQueryInput] = useState<string>("Tell me about agent patterns")
   const [animationState, setAnimationState] = useState<AnimationState>({
     speed: 'normal',
     mode: 'auto',
@@ -279,7 +280,7 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
       handleNodeStatus,
       handleEdgeStatus,
       handleDataFlow,
-      "Tell me about agent patterns",
+      queryInput,
       handleAddStep,
       animationState.mode === 'auto' ? speedFactor : undefined
     );

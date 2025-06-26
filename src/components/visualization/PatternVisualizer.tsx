@@ -152,6 +152,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
   const [dataFlows, setDataFlows] = useState<DataFlow[]>([])
   const [isAnimating, setIsAnimating] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
+  const [queryInput, setQueryInput] = useState<string>("Tell me about agent patterns")
   const [animationState, setAnimationState] = useState<AnimationState>({
     speed: 'normal', // Already set to normal by default
     mode: 'auto',
@@ -339,7 +340,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       handleNodeStatus,
       handleEdgeStatus,
       handleDataFlow,
-      "Tell me about agent patterns",
+      queryInput,
       handleAddStep,
       animationState.mode === 'auto' ? speedFactor : undefined
     );

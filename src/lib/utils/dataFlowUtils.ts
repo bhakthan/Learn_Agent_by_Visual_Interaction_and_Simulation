@@ -257,7 +257,7 @@ export const simulatePatternFlow = (
   onNodeStatus: (nodeId: string, status: string | null) => void,
   onEdgeStatus: (edgeId: string, animated: boolean) => void,
   onDataFlow: (flow: any) => void,
-  inputMessage: string = "What's the weather forecast?",
+  inputMessage: string = "Sample query", // Default value provided
   queueStepFn?: (stepFn: () => void) => NodeJS.Timeout | null,
   speedFactor: number = 1
 ) => {
