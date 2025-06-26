@@ -29,14 +29,34 @@ export function ThemeProvider({
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
+    () => {
+      // Check for saved theme preference
+      if (typeof window !== 'undefined') {
+        const savedTheme = localStorage.getItem(storageKey) as Theme;
+        
+        if (savedTheme) {
+          return savedTheme;
+        }
+        
+        // Check for system preference
+        const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        return systemPrefersDark ? "dark" : defaultTheme;
+      }
+      
+      return defaultTheme;
+    }
   );
 
   useEffect(() => {
     const root = window.document.documentElement;
     
+    // First remove both classes to ensure clean state
     root.classList.remove("light", "dark");
+    
+    // Then add the current theme class
     root.classList.add(theme);
+    
+    // Save theme preference
     localStorage.setItem(storageKey, theme);
   }, [theme, storageKey]);
 

@@ -7,9 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
   Cloud, Database, ShieldCheck, Lightning, Calculator, 
-  Robot, Translate, Search, FileText, MagnifyingGlass 
+  Robot, Translate, Search, FileText, MagnifyingGlass,
+  BookmarkSimple
 } from "@phosphor-icons/react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ReferenceLinks } from '../references/ReferenceLinks';
+import ReferenceSection from '../references/ReferenceSection';
 
 const AzureServicesOverview = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,8 +38,10 @@ const AzureServicesOverview = () => {
       case 'azure-openai':
         return <Cloud size={24} />;
       case 'azure-cognitive-search':
+      case 'azure-ai-search':
         return <Search size={24} />;
       case 'azure-content-safety':
+      case 'azure-ai-content-safety':
         return <ShieldCheck size={24} />;
       case 'azure-ai-inference':
         return <Lightning size={24} />;
@@ -48,6 +53,9 @@ const AzureServicesOverview = () => {
         return <Translate size={24} />;
       case 'azure-document-intelligence':
         return <FileText size={24} />;
+      case 'azure-ai-foundry':
+      case 'azure-ai-studio':
+        return <Cloud size={24} />;
       default:
         return <Cloud size={24} />;
     }
@@ -154,7 +162,16 @@ const AzureServicesOverview = () => {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="border-t pt-4 flex justify-end">
+              <CardFooter className="border-t pt-4 flex justify-between">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="flex items-center gap-1 text-primary"
+                  onClick={() => window.open(service.documentation, '_blank')}
+                >
+                  <BookmarkSimple size={16} />
+                  Resources
+                </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -189,6 +206,7 @@ const AzureServicesOverview = () => {
                         <TabsTrigger value="capabilities">Capabilities</TabsTrigger>
                         <TabsTrigger value="useCases">Use Cases</TabsTrigger>
                         <TabsTrigger value="bestPractices">Best Practices</TabsTrigger>
+                        <TabsTrigger value="references">References</TabsTrigger>
                       </TabsList>
                       
                       <TabsContent value="capabilities" className="space-y-4">
@@ -222,6 +240,10 @@ const AzureServicesOverview = () => {
                             ))}
                           </ul>
                         </div>
+                      </TabsContent>
+
+                      <TabsContent value="references" className="space-y-4">
+                        <ReferenceLinks section="azureServices" itemId={service.id} />
                       </TabsContent>
                     </Tabs>
                     

@@ -13,6 +13,7 @@ import CommunityHub from './components/community/CommunityHub'
 import { Cloud, Users } from '@phosphor-icons/react'
 import { ThemeProvider } from './components/theme/ThemeProvider'
 import { ThemeToggle } from './components/theme/ThemeToggle'
+import { ThemeTester } from './components/theme/ThemeTester'
 
 function App() {
   const [activeView, setActiveView] = useState<'concepts' | 'patterns' | 'playbook' | 'services' | 'community'>('concepts')
@@ -21,7 +22,7 @@ function App() {
   const selectedPattern = agentPatterns.find(p => p.id === selectedPatternId) || agentPatterns[0]
   
   return (
-    <ThemeProvider>
+    <ThemeProvider defaultTheme="light" storageKey="azure-ai-viz-theme">
       <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -165,6 +166,9 @@ function App() {
                 </div>
               </div>
               <AzureServicesOverview />
+              <div className="mt-8">
+                <ThemeTester />
+              </div>
             </TabsContent>
             
             <TabsContent value="community" className="space-y-6">

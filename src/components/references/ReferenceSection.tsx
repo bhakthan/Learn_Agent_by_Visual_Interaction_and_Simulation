@@ -1,22 +1,29 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { references, ReferenceCategory, ReferenceItem } from '@/lib/data/references';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { BookmarkSimple, Link, Plus } from '@phosphor-icons/react';
+import { BookmarkSimple, Link, Plus, ExternalLink } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { useKV } from '@github/spark/hooks';
+import { Badge } from '@/components/ui/badge';
 
 interface ReferenceSectionProps {
-  type: 'concept' | 'pattern';
+  type: 'concept' | 'pattern' | 'azureService';
   itemId: string;
 }
 
 const ReferenceSection: React.FC<ReferenceSectionProps> = ({ type, itemId }) => {
   // Get references for this type & id
-  const referenceData = type === 'concept' 
-    ? references.concepts[itemId] 
-    : references.patterns[itemId];
+  let referenceData;
+  
+  if (type === 'concept') {
+    referenceData = references.concepts[itemId];
+  } else if (type === 'pattern') {
+    referenceData = references.patterns[itemId];
+  } else if (type === 'azureService') {
+    referenceData = references.azureServices[itemId];
+  }
   
   // Store custom user references
   const storageKey = `${type}-${itemId}-references`;
@@ -157,22 +164,36 @@ const ReferenceSection: React.FC<ReferenceSectionProps> = ({ type, itemId }) => 
           <BookmarkSimple size={24} className="text-primary" />
           References
         </CardTitle>
-        <CardDescription>Helpful resources related to this {type}</CardDescription>
+        <CardDescription>
+          Helpful resources related to this {type}
+          {allCategories.length > 0 && (
+            <Badge variant="outline" className="ml-2 bg-accent/10">
+              {allCategories.reduce((acc, category) => acc + category.references.length, 0)} links
+            </Badge>
+          )}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[300px] pr-4">
           <Accordion type="multiple" className="w-full">
             {allCategories.map((category) => (
               <AccordionItem key={category.id} value={category.id}>
-                <AccordionTrigger>{category.name}</AccordionTrigger>
+                <AccordionTrigger className="hover:text-primary">
+                  <span className="flex items-center gap-2">
+                    {category.name} 
+                    <Badge variant="outline" className="ml-2">
+                      {category.references.length}
+                    </Badge>
+                  </span>
+                </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4">
                     {category.references.map((reference, index) => (
                       <div
                         key={`${reference.title}-${index}`}
-                        className="flex items-start gap-3 p-3 rounded-md border border-border hover:bg-muted/50"
+                        className="flex items-start gap-3 p-3 rounded-md border border-border hover:bg-accent/5 transition-colors"
                       >
-                        <Link size={20} className="text-primary mt-1" />
+                        <ExternalLink size={20} className="text-primary mt-1" />
                         <div className="flex-1">
                           <a
                             href={reference.url}
@@ -187,6 +208,7 @@ const ReferenceSection: React.FC<ReferenceSectionProps> = ({ type, itemId }) => 
                               {reference.description}
                             </p>
                           )}
+                          <p className="text-xs text-muted-foreground mt-1 truncate">{reference.url}</p>
                         </div>
                         {category.id === 'custom' && (
                           <Button
