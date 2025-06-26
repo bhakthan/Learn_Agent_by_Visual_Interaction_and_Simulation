@@ -181,7 +181,8 @@ export const generateFlowContent = (
   const template = targetOptions[Math.floor(Math.random() * targetOptions.length)];
   
   // Replace context placeholder if available
-  return context ? template.replace('{context}', truncateFlowContent(context, 15)) : template;
+  const safeContext = context || '';
+  return template.replace(/{context}/g, truncateFlowContent(safeContext, 15));
 };
 
 /**

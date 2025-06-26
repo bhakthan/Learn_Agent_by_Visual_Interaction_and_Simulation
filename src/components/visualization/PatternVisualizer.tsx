@@ -120,12 +120,12 @@ const nodeTypes: NodeTypes = {
 }
 
 const messageTemplates = {
-  input: (text: string) => `User input: "${text}"`,
-  llm: (text: string) => `Processing with AI: "${text}"`,
+  input: (text: string = '') => `User input: "${text}"`,
+  llm: (text: string = '') => `Processing with AI: "${text}"`,
   router: () => "Routing decision being made...",
   aggregator: () => "Combining results from multiple sources...",
-  tool: (toolName: string = 'External API') => `Using tool: ${toolName}`,
-  output: (text: string) => `Final result: "${text}"`,
+  tool: (toolName: string = 'External API') => `Using tool: ${toolName || 'External API'}`,
+  output: (text: string = '') => `Final result: "${text}"`,
   error: () => "Error occurred during processing",
   planner: () => "Creating execution plan...",
   executor: () => "Executing tasks...",
