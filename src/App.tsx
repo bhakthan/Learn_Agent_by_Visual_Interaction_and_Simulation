@@ -160,6 +160,7 @@ function App() {
                 {/* Main content area that takes full width */}
                 <div className="flex-1 w-full max-w-full transition-all duration-300 ease-in-out">
                   <CodePlaybook patternData={selectedPattern} />
+                </div>
               </div>
             </TabsContent>
             
