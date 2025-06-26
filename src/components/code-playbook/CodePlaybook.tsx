@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -33,6 +33,16 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
   const [language, setLanguage] = useState<'python' | 'typescript'>('python')
   const [visualizationMode, setVisualizationMode] = useState<'static' | 'interactive'>('static')
   const { isCollapsed } = useSidebarCollapse();
+  
+  // Listen to sidebar state changes to trigger resize/layout adjustments
+  useEffect(() => {
+    // Adding a small delay to ensure layout updates after transition completes
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [isCollapsed]);
   
   const getCodeExample = () => {
     if (language === 'python') {
@@ -165,28 +175,26 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                  <div className={cn(
-                    "p-4 border rounded-lg transition-all duration-300",
-                    isCollapsed ? "w-full" : "w-full"
-                  )}>
-                    <h4 className="text-sm font-medium mb-2">Choose this pattern when:</h4>
-                    <ul className="list-disc pl-5 space-y-1 text-xs text-muted-foreground">
-                      <li>You need {patternData.advantages && patternData.advantages.length > 0 ? patternData.advantages[0].toLowerCase() : 'improved agent capabilities'}</li>
-                      <li>Your application requires {patternData.advantages && patternData.advantages.length > 1 ? patternData.advantages[1].toLowerCase() : 'advanced pattern implementation'}</li>
-                      <li>You want to {patternData.description.split(' ').slice(0, 5).join(' ').toLowerCase()}...</li>
-                    </ul>
-                  </div>
-                  <div className={cn(
-                    "p-4 border rounded-lg transition-all duration-300", 
-                    isCollapsed ? "w-full" : "w-full"
-                  )}>
-                    <h4 className="text-sm font-medium mb-2">Consider alternatives when:</h4>
-                    <ul className="list-disc pl-5 space-y-1 text-xs text-muted-foreground">
-                      <li>You need simpler implementation with fewer components</li>
-                      <li>Direct API calls would be more efficient</li>
-                      <li>You have limited computational resources</li>
-                    </ul>
-                  </div>
+                  <Card className="transition-all duration-300 h-full">
+                    <CardContent className="p-4">
+                      <h4 className="text-sm font-medium mb-2">Choose this pattern when:</h4>
+                      <ul className="list-disc pl-5 space-y-1 text-xs text-muted-foreground">
+                        <li>You need {patternData.advantages && patternData.advantages.length > 0 ? patternData.advantages[0].toLowerCase() : 'improved agent capabilities'}</li>
+                        <li>Your application requires {patternData.advantages && patternData.advantages.length > 1 ? patternData.advantages[1].toLowerCase() : 'advanced pattern implementation'}</li>
+                        <li>You want to {patternData.description.split(' ').slice(0, 5).join(' ').toLowerCase()}...</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                  <Card className="transition-all duration-300 h-full">
+                    <CardContent className="p-4">
+                      <h4 className="text-sm font-medium mb-2">Consider alternatives when:</h4>
+                      <ul className="list-disc pl-5 space-y-1 text-xs text-muted-foreground">
+                        <li>You need simpler implementation with fewer components</li>
+                        <li>Direct API calls would be more efficient</li>
+                        <li>You have limited computational resources</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
                 </div>
                 
                 <div className="flex justify-end mt-4">

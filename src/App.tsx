@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import ConceptsExplorer from './components/concepts/ConceptsExplorer'
 import PatternExplorer from './components/patterns/PatternExplorer'
 import { PatternSidebar } from './components/patterns/PatternSidebar'
+import { SidebarAwareContent } from './components/patterns/SidebarAwareContent'
 import { Separator } from "@/components/ui/separator"
 import { agentPatterns } from './lib/data/patterns'
 import CodePlaybook from './components/code-playbook/CodePlaybook'
@@ -157,10 +158,10 @@ function App() {
                   ))}
                 </div>
                 
-                {/* Main content area that takes full width */}
-                <div className="flex-1 w-full max-w-full pl-[260px] transition-all duration-300 ease-in-out">
+                {/* Main content area with responsive width */}
+                <SidebarAwareContent>
                   <CodePlaybook patternData={selectedPattern} />
-                </div>
+                </SidebarAwareContent>
               </div>
             </TabsContent>
             

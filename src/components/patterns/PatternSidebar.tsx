@@ -94,6 +94,8 @@ export function PatternSidebar({ activePatternId, onPatternSelect }: PatternSide
                 size="sm"
                 className="rounded-r-full rounded-l-none shadow-md hover:shadow-lg sidebar-transition hover:translate-x-1 hover:bg-primary hover:text-primary-foreground group"
                 onClick={toggleSidebar}
+                aria-label="Show patterns sidebar"
+                className="bg-primary/5 hover:bg-primary hover:text-primary-foreground group"
               >
                 <CaretRight size={16} className="mr-1 group-hover:animate-pulse" />
                 <span className="text-xs">Patterns</span>
@@ -121,7 +123,7 @@ export function PatternSidebar({ activePatternId, onPatternSelect }: PatternSide
         className={cn(
           "border-r border-border bg-background shadow-md sidebar-transition fixed z-30 top-[142px] bottom-[80px] overflow-hidden",
           isCollapsed 
-            ? "-translate-x-full opacity-0" 
+            ? "-translate-x-full opacity-0 pointer-events-none" 
             : "translate-x-0 opacity-100"
         )}
         style={{ width: '250px', height: 'calc(100vh - 222px)' }}

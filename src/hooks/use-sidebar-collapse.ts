@@ -5,10 +5,10 @@ export function useSidebarCollapse(storageKey = 'sidebar-collapsed-state') {
     // Try to get the state from localStorage on initial render
     if (typeof window !== 'undefined') {
       const savedState = localStorage.getItem(storageKey);
-      // Default to collapsed for first-time visitors
-      return savedState === null ? true : savedState === 'collapsed';
+      // Default to expanded unless explicitly set to collapsed
+      return savedState === 'collapsed';
     }
-    return true; // Default to collapsed
+    return false; // Default to expanded
   });
   
   const [isMobile, setIsMobile] = useState(false);
