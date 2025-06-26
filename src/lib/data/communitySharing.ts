@@ -74,7 +74,7 @@ Let's solve this step by step.\`;
     observation = await executeAction(action);
     
     // Update prompt with history
-    currentPrompt = \`${query}
+    currentPrompt = \`\${query}
 Previous steps:
 \${formatHistory(history)}
 Observation: \${observation}
