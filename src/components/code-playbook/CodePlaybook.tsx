@@ -299,6 +299,12 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
             </TabsContent>
             
             <TabsContent value="practices" className="py-4">
+              <div className="mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Review best practices for implementing the {patternData.name} pattern, including general guidelines 
+                  and specific Azure AI service integrations.
+                </p>
+              </div>
               <BestPractices patternId={patternData.id} />
             </TabsContent>
             

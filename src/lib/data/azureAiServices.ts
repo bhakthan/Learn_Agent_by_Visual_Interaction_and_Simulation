@@ -627,5 +627,50 @@ export const azureServicePatternMappings: AzureServicePatternMapping[] = [
       "Create visibility into plan progress and bottlenecks",
       "Implement fallbacks when planned steps fail"
     ]
+  },
+  // Add mappings for any additional patterns or services that might be missing
+  {
+    patternId: "plan-and-execute",
+    serviceId: "azure-ai-foundry",
+    integration: "Model lifecycle management for planning models",
+    bestPractices: [
+      "Implement CI/CD pipelines for deploying updated planner models",
+      "Use version control for planning templates and configurations",
+      "Establish monitoring dashboards for planning performance metrics",
+      "Document planning model limitations and intended use cases"
+    ]
+  },
+  {
+    patternId: "autonomous-workflow",
+    serviceId: "azure-ai-foundry",
+    integration: "End-to-end autonomous agent development and deployment",
+    bestPractices: [
+      "Set up CI/CD pipelines for agent deployment across environments",
+      "Create staging environments for testing autonomous behaviors safely",
+      "Implement feature flags for controlling autonomous capabilities",
+      "Document agent capabilities, limitations, and safety measures"
+    ]
+  },
+  {
+    patternId: "react-agent",
+    serviceId: "azure-cognitive-search",
+    integration: "Knowledge retrieval for tool-assisted reasoning",
+    bestPractices: [
+      "Provide access to domain knowledge through search tools",
+      "Use vector search for semantic understanding of tool requirements",
+      "Implement hybrid retrieval for tool documentation and examples",
+      "Create specialized indexes for different tool categories"
+    ]
+  },
+  {
+    patternId: "codeact-agent",
+    serviceId: "azure-ai-foundry",
+    integration: "Code generation model development and deployment",
+    bestPractices: [
+      "Implement separate development and production environments for code agents",
+      "Use version control for code examples and test cases",
+      "Set up monitoring for code generation quality metrics",
+      "Document code pattern libraries and implementation guidelines"
+    ]
   }
 ];

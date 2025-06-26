@@ -35,7 +35,7 @@ const BestPractices: React.FC<BestPracticesProps> = ({ patternId }) => {
             <InfoCircle size={20} className="text-primary" />
             Implementation Best Practices
           </div>
-          <Tabs value={practiceType} onValueChange={(v) => setPracticeType(v as 'general' | 'azure')} className="w-full sm:w-auto">
+          <Tabs defaultValue="general" value={practiceType} onValueChange={(v) => setPracticeType(v as 'general' | 'azure')} className="w-full sm:w-auto">
             <TabsList className="h-8 w-full grid grid-cols-2 sm:w-auto sm:flex">
               <TabsTrigger value="general" className="text-xs px-3 py-1 h-7">General</TabsTrigger>
               <TabsTrigger value="azure" className="text-xs px-3 py-1 h-7">Azure AI Services</TabsTrigger>
@@ -44,95 +44,109 @@ const BestPractices: React.FC<BestPracticesProps> = ({ patternId }) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-6">
-        <TabsContent value="general" className="mt-0 space-y-4">
-          <Accordion type="multiple" className="w-full">
-            {generalPractices.map((practice, index) => (
-              <AccordionItem key={index} value={`practice-${index}`}>
-                <AccordionTrigger className="hover:text-primary">
-                  <div className="flex items-center gap-2">
-                    {practice.icon}
-                    <span>{practice.title}</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-4">
-                  <p className="text-foreground/80">{practice.description}</p>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {practice.tags.map((tag, i) => (
-                      <Badge key={i} variant="outline" className="bg-muted/50">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </TabsContent>
-        
-        <TabsContent value="azure" className="mt-0 space-y-4">
-          {serviceMappings.length > 0 ? (
-            serviceMappings.map((mapping, idx) => {
-              const service = azureAIServices.find(s => s.id === mapping.serviceId);
-              if (!service) return null;
-              
-              return (
-                <Card key={idx} className="border border-border shadow-sm overflow-hidden">
-                  <CardHeader className="bg-muted/30 py-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      {getServiceIcon(service.id)}
-                      <span>{service.name}</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 space-y-3">
-                    <div className="text-sm text-muted-foreground">
-                      <strong>Integration:</strong> {mapping.integration}
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Best Practices:</h4>
-                      <ul className="list-disc pl-5 space-y-1 text-sm">
-                        {mapping.bestPractices.map((practice, i) => (
-                          <li key={i} className="text-foreground/90">{practice}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    
-                    <div className="pt-2 flex flex-col sm:flex-row sm:justify-between gap-2">
-                      <div className="flex flex-wrap gap-2 mb-2 sm:mb-0">
-                        {service.capabilities.slice(0, 2).map((capability, i) => (
-                          <Badge key={i} variant="outline" className="bg-primary/5 text-xs">
-                            {capability}
-                          </Badge>
-                        ))}
-                        {service.capabilities.length > 2 && (
-                          <Badge variant="outline" className="bg-muted/20 text-xs">
-                            +{service.capabilities.length - 2} more
-                          </Badge>
-                        )}
+        {practiceType === 'general' && (
+          <div className="mt-0 space-y-4">
+            {generalPractices.length > 0 ? (
+              <Accordion type="multiple" className="w-full">
+                {generalPractices.map((practice, index) => (
+                  <AccordionItem key={index} value={`practice-${index}`}>
+                    <AccordionTrigger className="hover:text-primary">
+                      <div className="flex items-center gap-2">
+                        {practice.icon}
+                        <span>{practice.title}</span>
                       </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-xs w-full sm:w-auto" 
-                        onClick={() => window.open(service.documentation, '_blank')}
-                      >
-                        Documentation
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })
-          ) : (
-            <div className="text-center p-6 border border-dashed rounded-lg">
-              <Cloud size={32} className="mx-auto text-muted-foreground mb-2" />
-              <h3 className="text-lg font-medium">No Azure Service Mappings</h3>
-              <p className="text-muted-foreground mt-2">
-                No specific Azure AI service integrations defined for this pattern.
-              </p>
-            </div>
-          )}
-        </TabsContent>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-4">
+                      <p className="text-foreground/80">{practice.description}</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {practice.tags.map((tag, i) => (
+                          <Badge key={i} variant="outline" className="bg-muted/50">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <div className="text-center p-6 border border-dashed rounded-lg">
+                <InfoCircle size={32} className="mx-auto text-muted-foreground mb-2" />
+                <h3 className="text-lg font-medium">No Best Practices</h3>
+                <p className="text-muted-foreground mt-2">
+                  General best practices are not defined for this pattern.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {practiceType === 'azure' && (
+          <div className="mt-0 space-y-4">
+            {serviceMappings.length > 0 ? (
+              serviceMappings.map((mapping, idx) => {
+                const service = azureAIServices.find(s => s.id === mapping.serviceId);
+                if (!service) return null;
+                
+                return (
+                  <Card key={idx} className="border border-border shadow-sm overflow-hidden">
+                    <CardHeader className="bg-muted/30 py-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        {getServiceIcon(service.id)}
+                        <span>{service.name}</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 space-y-3">
+                      <div className="text-sm text-muted-foreground">
+                        <strong>Integration:</strong> {mapping.integration}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium">Best Practices:</h4>
+                        <ul className="list-disc pl-5 space-y-1 text-sm">
+                          {mapping.bestPractices.map((practice, i) => (
+                            <li key={i} className="text-foreground/90">{practice}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      <div className="pt-2 flex flex-col sm:flex-row sm:justify-between gap-2">
+                        <div className="flex flex-wrap gap-2 mb-2 sm:mb-0">
+                          {service.capabilities.slice(0, 2).map((capability, i) => (
+                            <Badge key={i} variant="outline" className="bg-primary/5 text-xs">
+                              {capability}
+                            </Badge>
+                          ))}
+                          {service.capabilities.length > 2 && (
+                            <Badge variant="outline" className="bg-muted/20 text-xs">
+                              +{service.capabilities.length - 2} more
+                            </Badge>
+                          )}
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-xs w-full sm:w-auto" 
+                          onClick={() => window.open(service.documentation, '_blank')}
+                        >
+                          Documentation
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            ) : (
+              <div className="text-center p-6 border border-dashed rounded-lg">
+                <Cloud size={32} className="mx-auto text-muted-foreground mb-2" />
+                <h3 className="text-lg font-medium">No Azure Service Mappings</h3>
+                <p className="text-muted-foreground mt-2">
+                  No specific Azure AI service integrations defined for this pattern.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -357,6 +371,120 @@ function getGeneralBestPracticesForPattern(patternId: string): PracticeItem[] {
           "executing flawed plans.",
         icon: <Warning size={18} className="text-destructive" />,
         tags: ["validation", "efficiency", "quality-control"]
+      }
+    ],
+    "react-agent": [
+      {
+        title: "Tool Selection Strategy",
+        description: 
+          "Design clear criteria for how the ReAct agent selects appropriate tools. Provide explicit examples of " +
+          "reasoning that leads to correct tool selection in your prompts. Consider implementing validation steps " +
+          "before tool execution to prevent misuse.",
+        icon: <InfoCircle size={18} className="text-primary" />,
+        tags: ["tools", "reasoning", "decision-making"]
+      },
+      {
+        title: "Observation Processing",
+        description: 
+          "Structure how your ReAct agent processes and incorporates tool outputs. Format observations for easy " +
+          "parsing, and provide guidance on how to interpret different types of observations. Include strategies " +
+          "for handling unexpected observation formats.",
+        icon: <CaretDoubleRight size={18} className="text-secondary" />,
+        tags: ["observation", "tools", "reasoning"]
+      }
+    ],
+    "codeact-agent": [
+      {
+        title: "Code Execution Environment",
+        description: 
+          "Create a secure, isolated environment for executing generated code. Implement resource limits, timeouts, " +
+          "and access controls. Consider using container-based isolation for stronger security guarantees.",
+        icon: <Warning size={18} className="text-destructive" />,
+        tags: ["security", "execution", "isolation"]
+      },
+      {
+        title: "Code Quality Standards",
+        description: 
+          "Define explicit quality standards for generated code. Consider implementing automated linting and style " +
+          "checking before execution. Structure your prompts to encourage well-documented, maintainable code generation.",
+        icon: <Code size={18} className="text-primary" />,
+        tags: ["quality", "standards", "maintainability"]
+      }
+    ],
+    "self-reflection": [
+      {
+        title: "Structured Self-Assessment Template",
+        description: 
+          "Provide a structured template for the agent's self-assessment process. Include explicit dimensions to " +
+          "evaluate such as accuracy, coherence, and completeness. This structured approach makes reflection more " +
+          "effective and actionable.",
+        icon: <InfoCircle size={18} className="text-primary" />,
+        tags: ["structure", "assessment", "quality"]
+      },
+      {
+        title: "Iterative Refinement Process",
+        description: 
+          "Establish clear mechanisms for incorporating self-reflection insights into subsequent responses. Define how " +
+          "many reflection iterations to perform and design stopping criteria based on quality improvement metrics.",
+        icon: <CaretDoubleRight size={18} className="text-secondary" />,
+        tags: ["iteration", "improvement", "refinement"]
+      }
+    ],
+    "agentic-rag": [
+      {
+        title: "Query Optimization",
+        description: 
+          "Develop techniques for query rewriting and decomposition to improve retrieval quality. Consider implementing " +
+          "multiple retrieval strategies in parallel and aggregating results. Capture and utilize user feedback to improve " +
+          "retrieval strategies over time.",
+        icon: <CaretDoubleRight size={18} className="text-secondary" />,
+        tags: ["retrieval", "optimization", "query-processing"]
+      },
+      {
+        title: "Knowledge Synthesis",
+        description: 
+          "Implement effective techniques for synthesizing information from multiple retrieved documents. Design prompts " +
+          "that encourage proper attribution and citation. Include mechanisms to identify and resolve contradictions " +
+          "between sources.",
+        icon: <InfoCircle size={18} className="text-primary" />,
+        tags: ["synthesis", "knowledge", "integration"]
+      }
+    ],
+    "model-context-protocol": [
+      {
+        title: "Context Schema Design",
+        description: 
+          "Create well-structured context schemas that balance completeness with token efficiency. Consider hierarchical " +
+          "context structures with different levels of detail. Define clear protocols for context updating and maintenance.",
+        icon: <Code size={18} className="text-primary" />,
+        tags: ["schema", "structure", "efficiency"]
+      },
+      {
+        title: "Context Routing",
+        description: 
+          "Implement intelligent context routing based on query classification. Design filters for context relevance " +
+          "and prioritization. Consider implementing context caching strategies for frequently accessed information.",
+        icon: <CaretDoubleRight size={18} className="text-secondary" />,
+        tags: ["routing", "relevance", "optimization"]
+      }
+    ],
+    "agent-to-agent": [
+      {
+        title: "Communication Protocol Design",
+        description: 
+          "Define clear, structured communication protocols between agents. Specify message formats, required fields, " +
+          "and validation rules. Consider implementing schema validation for all inter-agent messages.",
+        icon: <Code size={18} className="text-primary" />,
+        tags: ["protocol", "communication", "standards"]
+      },
+      {
+        title: "Coordination Mechanisms",
+        description: 
+          "Design effective coordination strategies for multi-agent systems. Implement clear role definitions and " +
+          "responsibility boundaries. Consider both hierarchical and peer-to-peer coordination models based on your " +
+          "specific use case.",
+        icon: <InfoCircle size={18} className="text-primary" />,
+        tags: ["coordination", "roles", "organization"]
       }
     ]
   };
