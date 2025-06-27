@@ -229,7 +229,7 @@ const azureServicesBestPractices: AzureServiceInfo[] = [
     description: 'AI service for detecting harmful content across text and images to maintain safety and compliance.',
     tips: [
       'Implement pre-moderation for AI-generated content before display',
-      'Set appropriate threshold levels based on your application\'s audience',
+      "Set appropriate threshold levels based on your application's audience",
       'Create feedback loops to improve detection over time',
       'Implement blocklists for domain-specific problematic content',
       'Deploy content safety in multiple stages of the agent workflow'

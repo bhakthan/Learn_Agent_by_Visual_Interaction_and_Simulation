@@ -41,7 +41,7 @@ const azureServiceDetails: ServiceDetails[] = [
     id: 'azure-openai',
     name: 'Azure OpenAI Service',
     icon: <Cloud size={24} className="text-primary" />,
-    description: "Azure OpenAI provides access to OpenAI's powerful language models including GPT-4, GPT-3.5-Turbo, and Embeddings models with Azure's security and compliance capabilities.",
+    description: 'Azure OpenAI provides access to OpenAI\'s powerful language models including GPT-4, GPT-3.5-Turbo, and Embeddings models with Azure\'s security and compliance capabilities.',
     keyFeatures: [
       'Access to advanced GPT-4, GPT-3.5-Turbo, and future models',
       'Text embeddings generation for vector search and similarity features',
@@ -479,7 +479,7 @@ async function setupPatternDeploymentPipeline() {
       type: "github",
       repository: "your-org/agent-patterns",
       branch: "main",
-      directory: `patterns/\${patternId}`
+      directory: "patterns/${patternId}"
     },
     deployment: {
       environments,
