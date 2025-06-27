@@ -69,7 +69,7 @@ export interface DataFlow {
   target: string;
   content: string;
   timestamp: number;
-  type: 'message' | 'data' | 'response' | 'error';
+  type: 'message' | 'data' | 'response' | 'error' | 'query' | 'tool_call' | 'observation' | 'reflection' | 'plan';
   progress: number;
   label?: string;
   complete?: boolean;
@@ -112,6 +112,7 @@ export const createDataFlow = (
     complete: false
   };
 };
+
 export const getSpeedMultiplier = (speed: 'slow' | 'normal' | 'fast'): number => {
   switch (speed) {
     case 'slow': return 0.5;
@@ -234,7 +235,7 @@ export const resetDataFlow = (): DataFlowState => {
  * Get animation style parameters based on message type
  */
 export const getDataFlowAnimationStyle = (
-  type?: 'query' | 'response' | 'tool_call' | 'observation' | 'reflection' | 'plan',
+  type?: 'query' | 'response' | 'tool_call' | 'observation' | 'reflection' | 'plan' | 'message' | 'data' | 'error',
   params?: { color: string; pulseSpeed: number }
 ) => {
   // Default values
