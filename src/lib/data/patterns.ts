@@ -45,6 +45,7 @@ export const agentPatterns: PatternData[] = [
     description: 'A reasoning and acting framework where an agent alternates between reasoning (using LLMs) and acting (using tools like Google or email).',
     category: 'Core',
     useCases: ['Multi-Step Problem Solving', 'Research Tasks', 'Information Gathering'],
+    whenToUse: 'Use the ReAct pattern when your task requires the agent to gather external information and reason about it iteratively. It's ideal for complex inquiries that need multiple tool interactions, such as research questions, multi-step problem-solving, or scenarios where an agent needs to evaluate its actions and adjust its approach based on new information.',
     nodes: [
       {
         id: 'input',
@@ -329,6 +330,7 @@ async def main():
     description: 'Allows agents to autonomously execute Python code instead of using JSON, enabling them to handle complex tasks more efficiently.',
     category: 'Core',
     useCases: ['Complex Computational Tasks', 'Data Analysis', 'Algorithmic Problem Solving'],
+    whenToUse: 'Select the CodeAct pattern when your tasks involve complex computations, data manipulation, or algorithmic problem solving that would benefit from actual code execution. It's particularly valuable for data science workflows, mathematical computations, and situations where the agent needs to process structured data dynamically rather than relying on pre-defined API calls.',
     nodes: [
       {
         id: 'user',
@@ -490,6 +492,7 @@ const executeCodeAct = async (query, maxCycles = 5) => {
     description: 'An agent that self-evaluates its outputs, using feedback to identify errors, and iteratively improves via learning or critiques.',
     category: 'Advanced',
     useCases: ['Content Generation', 'Decision Making', 'Problem Solving'],
+    whenToUse: 'Implement Self-Reflection when output quality and accuracy are critical, especially for high-stakes content generation or complex reasoning tasks. This pattern is particularly valuable when generating content that requires factual accuracy, logical consistency, and comprehensive coverage of a topic, as it enables the agent to identify and correct its own errors through iterative improvement.',
     nodes: [
       {
         id: 'user',
@@ -665,6 +668,7 @@ const executeSelfReflection = async (query: string, maxRevisions = 3) => {
     description: 'AI agents retrieving and evaluating relevant data to generate context-aware and well-reasoned output using memory and tools.',
     category: 'Advanced',
     useCases: ['Enterprise Knowledge Management', 'Research Analysis', 'Expert Systems'],
+    whenToUse: 'Use Agentic RAG when you need to ground AI responses in specific knowledge bases or documents with high accuracy and relevance. This pattern is ideal for enterprise applications requiring access to proprietary information, expert systems that need domain-specific knowledge, or any context where responses must be based on authoritative sources rather than the LLM's pre-trained knowledge.',
     nodes: [
       {
         id: 'user',
@@ -864,6 +868,7 @@ const executeAgenticRAG = async (query) => {
     name: 'Modern Tool Use',
     description: 'Enables agents to leverage tools like Kagi Search, AWS and others using MCP for enhanced functionality with minimal code execution.',
     useCases: ['API Integration', 'Multi-modal Tasks', 'Data Processing'],
+    whenToUse: 'Apply Modern Tool Use when your agent needs secure and standardized access to external APIs and services without requiring direct code execution. This pattern is particularly beneficial for production environments where security and reliability are paramount, or when integrating with a diverse set of external tools through a consistent interface.',
     nodes: [
       {
         id: 'query',
@@ -1077,6 +1082,7 @@ Generate a helpful response that synthesizes the information from these tools.\`
     description: 'A standardized communication framework between models and context systems that ensures efficient information exchange.',
     category: 'Core',
     useCases: ['Enterprise Knowledge Management', 'Secure Data Access Patterns', 'Context-Aware Systems'],
+    whenToUse: 'Implement MCP when building enterprise-grade AI systems that require standardized, secure access to contextual information across various sources. This pattern is essential for applications handling sensitive data, requiring fine-grained access controls, or needing to integrate multiple knowledge sources while maintaining security boundaries and efficient context delivery.',
     nodes: [
       {
         id: 'input',
@@ -1231,6 +1237,7 @@ const buildContext = async (results, query) => {
     description: 'A communication framework where AI agents collaborate by exchanging structured messages to solve complex problems.',
     category: 'Core',
     useCases: ['Multi-agent Systems', 'Collaborative Task Solving', 'Expert Networks'],
+    whenToUse: 'Use Agent to Agent (A2A) when tackling problems that benefit from specialized expertise across multiple domains or require parallelized problem-solving. This approach is ideal for complex tasks where breaking work into specialized roles improves overall quality, such as projects requiring research, analysis, critique, and synthesis working together in a coordinated manner.',
     nodes: [
       {
         id: 'input',
@@ -1481,6 +1488,7 @@ const parseTasks = (coordinatorOutput) => {
     name: 'Prompt Chaining',
     description: 'It decomposes a task into steps, where each LLM call processes the output of the previous one.',
     useCases: ['Chatbot Applications', 'Tool using AI Agents'],
+    whenToUse: 'Employ Prompt Chaining when a complex task naturally breaks down into sequential subtasks where each step depends on the previous one's output. This pattern works well for structured workflows like data transformation, step-by-step reasoning, or content refinement processes where the output of each stage serves as input to the next step in a clear linear progression.',
     nodes: [
       {
         id: 'input',
@@ -1574,6 +1582,7 @@ const executePromptChain = async (input: string) => {
     name: 'Parallelization',
     description: 'Parallelization in LLMs involves sectioning tasks or running them multiple times for aggregated outputs.',
     useCases: ['Implementing guardrails', 'Automating Evals'],
+    whenToUse: 'Choose Parallelization when multiple perspectives on the same task can improve output quality, reliability, or creativity. This pattern is particularly valuable for evaluation scenarios, detecting biases, implementing guardrails for safety, or situations where aggregating multiple independent approaches leads to more robust, balanced, or comprehensive results.',
     nodes: [
       {
         id: 'input',
@@ -1666,6 +1675,7 @@ const aggregateResults = (results) => {
     name: 'Orchestrator-Worker',
     description: 'A central LLM dynamically breaks down tasks, delegates them to worker LLMs to synthesize results.',
     useCases: ['Agentic RAG', 'Coding Agents'],
+    whenToUse: 'Implement the Orchestrator-Worker pattern for complex tasks that benefit from centralized coordination but require specialized processing of subtasks. This architecture is ideal when you need to maintain a coherent strategy across multiple specialized operations, such as in complex coding tasks, document analysis projects, or situations requiring consistent oversight with distributed execution.',
     nodes: [
       {
         id: 'input',
@@ -1776,6 +1786,7 @@ const parseSubtasks = (orchestratorOutput) => {
     name: 'Evaluator-Optimizer',
     description: 'Here one LLM call generates a output while another provides evaluation and feedback in a loop.',
     useCases: ['Data Science Agents', 'Real-Time data monitoring'],
+    whenToUse: 'Use the Evaluator-Optimizer pattern when content quality must meet specific, objective criteria before being finalized. This approach works well for applications requiring rigorous quality control, such as content that must adhere to style guides, meet factual accuracy standards, or satisfy complex constraints that can be evaluated systematically through an objective review process.',
     nodes: [
       {
         id: 'input',
@@ -1883,6 +1894,7 @@ const parseEvaluation = (evaluation) => {
     description: 'It classifies an input and directs it to a specialized followup task. This workflow allows for separation of concerns.',
     category: 'Core',
     useCases: ['Customer Support Agents', 'MAD (Multi-Agent Debate)'],
+    whenToUse: 'Deploy the Routing pattern when building systems that handle diverse query types requiring different expertise or processing approaches. This pattern excels in applications like customer support where inquiries span technical, billing, and general questions, or in content management systems where different content types require specialized handling by the most appropriate agent or workflow.',
     nodes: [
       {
         id: 'input',
@@ -2014,6 +2026,7 @@ const executeRouting = async (input: string) => {
     name: 'Autonomous Workflow',
     description: 'Agents are typically implemented as an LLM performing actions based on environmental feedback in a loop.',
     useCases: ['Autonomous Embodied Agents', 'Computer Using Agents (CUA)'],
+    whenToUse: 'Implement Autonomous Workflow when creating agents that need to interact repeatedly with their environment to accomplish goals, making decisions based on continuous feedback. This pattern is ideal for scenarios requiring adaptive decision-making in changing environments, such as virtual assistants that navigate interfaces, data exploration tools that adjust their approach based on findings, or agents that need to learn from their actions.',
     nodes: [
       {
         id: 'input',
@@ -2167,6 +2180,7 @@ const parseAgentDecision = (response) => {
     name: 'Reflexion',
     description: 'It is an architecture designed to learn through verbal feedback and self-reflection.',
     useCases: ['Complex KPI Monitoring', 'Full-Stack App building agent'],
+    whenToUse: 'Choose Reflexion when building systems that need to iteratively improve through introspection about their reasoning process rather than just their outputs. This pattern is especially valuable for complex problem-solving that benefits from metacognitive analysis, such as debugging code, developing strategic plans, or analyzing decision-making processes where understanding the "why" behind conclusions is as important as the conclusions themselves.',
     nodes: [
       {
         id: 'input',
@@ -2301,6 +2315,7 @@ const executeReflexion = async (input: string, maxIterations = 3) => {
     name: 'Plan and Execute',
     description: 'An agent generates subtasks, specialized agents solve them, and results are sent back to the planner.',
     useCases: ['Business Process Automation', 'Data Pipeline Orchestration'],
+    whenToUse: 'Apply Plan and Execute when working on complex tasks requiring strategic planning followed by systematic execution with the ability to adapt the plan as new information emerges. This pattern is particularly effective for project-like tasks with multiple interdependent steps, business process automation, or any scenario requiring a thoughtful, structured approach with the flexibility to adjust course based on intermediate results.',
     nodes: [
       {
         id: 'input',
@@ -2504,6 +2519,7 @@ const parseJSON = (jsonString) => {
     description: 'Agents that can interact with computer interfaces, browser automation, and operating systems to perform tasks on behalf of users.',
     category: 'Specialized',
     useCases: ['Desktop Automation', 'Web Navigation and Interaction', 'Multi-application Workflows'],
+    whenToUse: 'Deploy Computer Using Agents when you need to automate tasks that typically require human interaction with graphical interfaces, websites, or operating systems. This pattern is ideal for automating repetitive workflows across multiple applications, interacting with legacy systems lacking APIs, or creating assistants that can demonstrate procedures visually by manipulating actual software interfaces rather than just providing instructions.',
     nodes: [
       {
         id: 'user',
@@ -2718,6 +2734,7 @@ class ComputerActionModule {
     description: 'An agent specialized in conducting thorough research by exploring multiple sources, synthesizing information, and providing in-depth analysis.',
     category: 'Specialized',
     useCases: ['Academic Research', 'Competitive Analysis', 'Literature Review', 'Market Research'],
+    whenToUse: 'Use Deep Researcher Agents when projects require comprehensive information gathering, fact-checking across multiple sources, and synthesis of findings into coherent analysis. This pattern is particularly valuable for academic research, competitive intelligence, literature reviews, or any task where the thoroughness of investigation, balanced consideration of multiple perspectives, and proper citation of sources are essential to producing trustworthy results.',
     nodes: [
       {
         id: 'query',
@@ -2966,6 +2983,7 @@ function organizeKnowledgeBase(validatedData) {
     description: 'Specialized agents that process speech input, understand natural language, and respond with synthesized speech in a conversational manner.',
     category: 'Specialized',
     useCases: ['Voice Assistants', 'Call Center Automation', 'Accessibility Applications', 'In-Car Systems'],
+    whenToUse: 'Implement Voice Agents when building applications requiring hands-free interaction, accessibility for users with visual or motor impairments, or natural conversation through speech. This pattern is essential for voice assistants, call center automation, in-vehicle applications, or any context where typing is impractical and the interaction benefits from the nuance, tone, and accessibility that voice communication provides.',
     nodes: [
       {
         id: 'voice',
