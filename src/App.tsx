@@ -1,45 +1,38 @@
-import { useState } from 'react'
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu"
-import { cn } from "@/lib/utils"
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { Outlet, Route, Routes } from 'react-router-dom'
 import { ThemeProvider } from './components/theme/ThemeProvider'
 import { ThemeToggle } from './components/theme/ThemeToggle'
-import { Code, Lightbulb, Function, Database, Robot, Sliders, Graph, Plugs, ShieldCheck } from '@phosphor-icons/react'
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu"
+import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
-import { categories } from './lib/data/categories'
-import { examples, getExamplesByCategory } from './lib/data/examples'
-import { Badge } from '@/components/ui/badge'
-import CodeExample from './components/CodeExample'
+import { Code, Books, PuzzlePiece, Plugs, StackSimple, Brain, Robot, Article, Users, GithubLogo } from '@phosphor-icons/react'
+import PatternExplorer from './components/patterns/PatternExplorer'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import ConceptsExplorer from './components/concepts/ConceptsExplorer'
+import AzureServicesOverview from './components/azure-services/AzureServicesOverview'
+import CommunitySharing from './components/community/CommunitySharing'
+import ReferencesSection from './components/references/ReferencesSection'
 
 function App() {
-  const [activeCategory, setActiveCategory] = useState(categories[0].id);
-  const [selectedExample, setSelectedExample] = useState(examples[0]);
+  const [mounted, setMounted] = useState(false)
   
-  const categoryExamples = getExamplesByCategory(activeCategory);
-  
-  function getCategoryIcon(iconName: string) {
-    switch (iconName) {
-      case 'Lightbulb': return <Lightbulb weight="duotone" />;
-      case 'Function': return <Function weight="duotone" />;
-      case 'Database': return <Database weight="duotone" />;
-      case 'Sliders': return <Sliders weight="duotone" />;
-      case 'Robot': return <Robot weight="duotone" />;
-      case 'Graph': return <Graph weight="duotone" />;
-      case 'Plugs': return <Plugs weight="duotone" />;
-      case 'ShieldCheck': return <ShieldCheck weight="duotone" />;
-      default: return <Code weight="duotone" />;
-    }
+  // Fix hydration issues
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return null
   }
-  
+
   return (
-    <ThemeProvider defaultTheme="light" storageKey="openai-cookbook-theme">
+    <ThemeProvider defaultTheme="light" storageKey="azure-ai-agent-theme">
       <div className="min-h-screen bg-background text-foreground flex flex-col">
         <header className="border-b border-border sticky top-0 z-10 bg-background">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Code size={28} weight="duotone" className="text-primary" />
-              <h1 className="text-2xl font-bold">OpenAI Cookbook</h1>
+              <Brain size={28} weight="duotone" className="text-primary" />
+              <h1 className="text-2xl font-bold">Azure AI Agent Visualization</h1>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -53,128 +46,89 @@ function App() {
                     <NavigationMenuTrigger className="bg-transparent">Resources</NavigationMenuTrigger>
                     <NavigationMenuContent>
                       <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2">
-                        <ListItem href="https://platform.openai.com/docs/introduction" title="OpenAI Documentation">
-                          Official OpenAI API documentation
+                        <ListItem href="https://agentcommunicationprotocol.dev/" title="Agent Communication Protocol">
+                          Open protocol for agent interoperability
                         </ListItem>
-                        <ListItem href="https://platform.openai.com/playground" title="OpenAI Playground">
-                          Test and iterate on API calls interactively
+                        <ListItem href="https://modelcontextprotocol.io/" title="Model Context Protocol">
+                          Protocol for efficient AI model interaction
                         </ListItem>
-                        <ListItem href="https://github.com/openai/openai-node" title="OpenAI Node SDK">
-                          GitHub repository for the Node.js library
+                        <ListItem href="https://cookbook.openai.com/" title="OpenAI Cookbook">
+                          Code examples and guides for OpenAI APIs
                         </ListItem>
-                        <ListItem href="https://github.com/openai/openai-cookbook" title="OpenAI Cookbook">
-                          Official cookbook with code examples
+                        <ListItem href="https://learn.microsoft.com/azure/ai-services/" title="Azure AI Services">
+                          Documentation for Azure AI Services
                         </ListItem>
-                        <ListItem href="https://platform.openai.com/tokenizer" title="Tokenizer">
-                          Understanding how text is split into tokens
+                        <ListItem href="https://learn.microsoft.com/azure/machine-learning/" title="Azure AI Platform">
+                          Microsoft's comprehensive AI platform
                         </ListItem>
                       </ul>
                     </NavigationMenuContent>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
                     <a
-                      href="https://github.com/openai/openai-cookbook"
+                      href="https://github.com/bhakthan/azure-ai-agent-visua"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
                     >
-                      GitHub Repo
+                      <GithubLogo className="mr-1" size={16} /> GitHub Repo
                     </a>
                   </NavigationMenuItem>
                 </NavigationMenuList>
               </NavigationMenu>
             </div>
           </div>
+
+          {/* Navigation tabs */}
+          <div className="container mx-auto px-4 pb-1">
+            <ScrollArea className="w-full" orientation="horizontal">
+              <div className="flex space-x-1">
+                <TabLink to="/" icon={<Brain size={16} weight="duotone" />} label="Core Concepts" />
+                <TabLink to="/patterns" icon={<PuzzlePiece size={16} weight="duotone" />} label="Agent Patterns" />
+                <TabLink to="/azure-services" icon={<StackSimple size={16} weight="duotone" />} label="Azure Services" />
+                <TabLink to="/references" icon={<Books size={16} weight="duotone" />} label="References" />
+                <TabLink to="/community" icon={<Users size={16} weight="duotone" />} label="Community" />
+              </div>
+            </ScrollArea>
+          </div>
         </header>
         
         <main className="flex-1 container mx-auto px-4 py-6">
-          <div className="space-y-2 mb-8">
-            <h2 className="text-3xl font-bold tracking-tight">OpenAI API Examples</h2>
-            <p className="text-muted-foreground">Practical code examples and patterns for building with OpenAI's APIs</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {/* Sidebar with categories */}
-            <div className="md:col-span-1">
-              <h3 className="text-lg font-medium mb-4">Categories</h3>
-              <div className="space-y-2">
-                {categories.map((category) => (
-                  <Button
-                    key={category.id}
-                    variant={activeCategory === category.id ? "default" : "outline"}
-                    className={`w-full justify-start gap-2 ${activeCategory === category.id ? "" : "bg-card hover:bg-card/80"}`}
-                    onClick={() => setActiveCategory(category.id)}
-                  >
-                    <span className="flex-shrink-0">
-                      {getCategoryIcon(category.icon)}
-                    </span>
-                    <span className="truncate text-left">{category.name}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
-            
-            {/* Main content area */}
-            <div className="md:col-span-3 space-y-6">
-              {/* Category description */}
-              <div className="border rounded-lg p-4 bg-card">
-                <h3 className="text-xl font-medium flex items-center gap-2">
-                  {getCategoryIcon(categories.find(c => c.id === activeCategory)?.icon || 'Code')}
-                  {categories.find(c => c.id === activeCategory)?.name}
-                </h3>
-                <p className="text-muted-foreground mt-2">
-                  {categories.find(c => c.id === activeCategory)?.description}
-                </p>
-              </div>
-              
-              {/* Examples list */}
-              <ScrollArea className="h-60 rounded-md border">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-                  {categoryExamples.length > 0 ? (
-                    categoryExamples.map((example) => (
-                      <Card 
-                        key={example.id} 
-                        className={`cursor-pointer transition-colors hover:border-primary/50 ${selectedExample.id === example.id ? 'border-primary' : ''}`}
-                        onClick={() => setSelectedExample(example)}
-                      >
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-lg">{example.title}</CardTitle>
-                          <CardDescription className="line-clamp-2">{example.description}</CardDescription>
-                        </CardHeader>
-                        <CardFooter className="pt-2 flex justify-between">
-                          <Badge variant={example.difficulty === 'beginner' ? 'outline' : example.difficulty === 'intermediate' ? 'secondary' : 'default'}>
-                            {example.difficulty}
-                          </Badge>
-                          <div className="flex gap-1">
-                            {example.tags.slice(0, 2).map(tag => (
-                              <Badge key={tag} variant="outline" className="bg-muted">{tag}</Badge>
-                            ))}
-                            {example.tags.length > 2 && <Badge variant="outline" className="bg-muted">+{example.tags.length - 2}</Badge>}
-                          </div>
-                        </CardFooter>
-                      </Card>
-                    ))
-                  ) : (
-                    <div className="col-span-2 text-center p-8 border rounded-lg border-dashed">
-                      <p>No examples available for this category yet</p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-              
-              {/* Selected example details */}
-              <CodeExample example={selectedExample} />
-            </div>
-          </div>
+          <Routes>
+            <Route path="/" element={<ConceptsExplorer />} />
+            <Route path="/patterns" element={<PatternExplorer />} />
+            <Route path="/azure-services" element={<AzureServicesOverview />} />
+            <Route path="/references" element={<ReferencesSection />} />
+            <Route path="/community" element={<CommunitySharing />} />
+          </Routes>
+          <Outlet />
         </main>
         
         <footer className="border-t border-border py-6 bg-muted transition-colors duration-300">
           <div className="container mx-auto px-4 text-center text-muted-foreground">
-            <p>OpenAI Cookbook - Interactive code examples for the OpenAI API</p>
+            <p>Azure AI Agent Visualization - Interactive learning resource for AI agent patterns and concepts</p>
           </div>
         </footer>
       </div>
     </ThemeProvider>
+  )
+}
+
+function TabLink({ to, icon, label }: { to: string, icon: React.ReactNode, label: string }) {
+  const isActive = window.location.pathname === to;
+  
+  return (
+    <Button
+      asChild
+      variant={isActive ? "default" : "ghost"}
+      size="sm"
+      className="h-9"
+    >
+      <a href={to} className="flex items-center gap-1">
+        {icon}
+        <span>{label}</span>
+      </a>
+    </Button>
   );
 }
 

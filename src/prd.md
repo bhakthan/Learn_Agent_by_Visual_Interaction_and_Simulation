@@ -1,65 +1,65 @@
-# OpenAI Cookbook - Planning Guide
+# Azure AI Agent Visualization - Planning Guide
 
 ## Core Purpose & Success
-- **Mission Statement**: Provide a practical, interactive guide that helps developers effectively use OpenAI APIs through curated examples, tutorials, and best practices.
-- **Success Indicators**: Users can quickly find relevant examples, adapt them for their use cases, and implement OpenAI capabilities in their applications with minimal friction.
-- **Experience Qualities**: Intuitive, educational, practical.
+- **Mission Statement**: Create an interactive, educational platform that visualizes Azure AI agents, agent patterns, and implementation approaches to help developers understand these concepts and build effective AI agent systems.
+- **Success Indicators**: Users can easily comprehend complex agent patterns, follow step-by-step implementation guides, and apply these concepts in their own Azure AI projects.
+- **Experience Qualities**: Educational, interactive, comprehensive.
 
 ## Project Classification & Approach
 - **Complexity Level**: Light Application (multiple features with basic state)
-- **Primary User Activity**: Learning and Consuming, with elements of Acting (trying examples)
+- **Primary User Activity**: Learning and exploring, with interactive visualizations and code examples
 
 ## Thought Process for Feature Selection
-- **Core Problem Analysis**: Developers face challenges understanding the practical applications of OpenAI API capabilities and implementing them efficiently.
-- **User Context**: Users will engage with this site when planning to integrate OpenAI features, troubleshooting existing implementations, or exploring possibilities.
-- **Critical Path**: Browse categories > Select example > Review code and explanation > Copy/adapt code for their project
+- **Core Problem Analysis**: AI agents and agent patterns are abstract concepts that can be difficult to understand without proper visualization and practical examples.
+- **User Context**: Users will engage with this site when learning about AI agents, planning agent architectures, or implementing agent patterns in Azure.
+- **Critical Path**: Browse patterns > View visualizations > Access implementation details > Apply knowledge
 - **Key Moments**: 
-  1. Finding the relevant example that matches the user's use case
-  2. Understanding the code implementation through clear explanations
-  3. Testing variations of the examples with different parameters
+  1. Interacting with visualizations to see agents in action
+  2. Understanding data flows between agent components
+  3. Following step-by-step implementation guides
 
 ## Essential Features
-1. **Category-Based Example Organization**
-   - What: Organize examples by use case categories (Prompt engineering, Function calling, RAG, etc.)
-   - Why: Makes it easy for users to find relevant examples based on their needs
-   - Success: Users can quickly navigate to examples that solve their specific problems
+1. **Interactive Agent Pattern Visualizations**
+   - What: Visual representations of agent patterns with interactive data flow simulations
+   - Why: Makes abstract architectural patterns tangible and understandable
+   - Success: Users can clearly understand how agents process information and make decisions
 
-2. **Interactive Code Examples**
-   - What: Viewable, copyable code snippets with explanations
-   - Why: Helps users understand implementation details and easily adapt them
-   - Success: Users can transfer code to their projects with minimal modification
+2. **Core Agent Concepts Education**
+   - What: Explanatory content about fundamental AI agent concepts
+   - Why: Builds foundation for understanding more complex patterns
+   - Success: Users develop coherent mental model of agent capabilities
 
-3. **Parameter Playground**
-   - What: Interface to modify example parameters and see results
-   - Why: Demonstrates how different settings affect outputs
-   - Success: Users gain practical understanding of parameter impacts
+3. **Implementation Playbooks**
+   - What: Step-by-step guides for implementing agent patterns in Azure
+   - Why: Bridges gap between theory and practical application
+   - Success: Users can apply patterns in their own projects
 
-4. **Implementation Guides**
-   - What: Step-by-step tutorials for common integration patterns
-   - Why: Provides structured learning path for complex implementations
-   - Success: Users can follow guides to implement complete solutions
+4. **Azure Service Integration Resources**
+   - What: Specific guidance on incorporating Azure AI services
+   - Why: Connects patterns to available cloud resources
+   - Success: Users understand which Azure services support which patterns
 
 ## Design Direction
 
 ### Visual Tone & Identity
-- **Emotional Response**: Confidence, clarity, discovery
-- **Design Personality**: Clean, professional, and approachable with a modern tech aesthetic
-- **Visual Metaphors**: Code blocks, AI connections, cookbook/recipe metaphors
-- **Simplicity Spectrum**: Balanced interface - clean and minimal but with rich content presentation
+- **Emotional Response**: Clarity, confidence, discovery
+- **Design Personality**: Clean, professional, and technical with a modern tech aesthetic
+- **Visual Metaphors**: Nodes and connections, workflows, blueprints
+- **Simplicity Spectrum**: Balanced interface - clean organization with rich interactive elements
 
 ### Color Strategy
-- **Color Scheme Type**: Monochromatic with accent colors
-- **Primary Color**: Deep teal blue (#1a7f64) - professional, trustworthy, and aligned with a technical audience
-- **Secondary Colors**: Neutral grays for structure and organization
-- **Accent Color**: Brighter teal (#10a37f) for CTAs and important elements
-- **Color Psychology**: Blues and teals convey reliability and technical expertise, creating trust
+- **Color Scheme Type**: Azure-inspired color palette with accent colors
+- **Primary Color**: Azure blue (#0078D4) - representing Azure platform and conveying trust and intelligence
+- **Secondary Colors**: Cool grays and neutrals for structure
+- **Accent Color**: Vibrant teal (#00B7C3) for highlighting important elements and interactions
+- **Color Psychology**: Blues convey trust and technical confidence, teals add energy and engagement
 - **Color Accessibility**: High contrast ratios between text and backgrounds (minimum 4.5:1)
 - **Foreground/Background Pairings**:
   - Background/foreground: #ffffff/#2d333a (7.36:1)
   - Card/card-foreground: #f9fafb/#2d333a (7.05:1)
-  - Primary/primary-foreground: #10a37f/#ffffff (4.52:1)
+  - Primary/primary-foreground: #0078D4/#ffffff (4.68:1)
   - Secondary/secondary-foreground: #f3f4f6/#2d333a (6.74:1)
-  - Accent/accent-foreground: #10a37f/#ffffff (4.52:1)
+  - Accent/accent-foreground: #00B7C3/#ffffff (4.61:1)
   - Muted/muted-foreground: #f3f4f6/#71767f (3.67:1 - large text only)
 
 ### Typography System
@@ -72,46 +72,46 @@
 - **Legibility Check**: All fonts are highly legible at various sizes and weights
 
 ### Visual Hierarchy & Layout
-- **Attention Direction**: Category tiles > Example list > Code block > Configuration panel
+- **Attention Direction**: Pattern selection > Visualization canvas > Implementation details
 - **White Space Philosophy**: Generous space between sections, with tighter spacing within related groups
 - **Grid System**: 12-column grid with responsive breakpoints
 - **Responsive Approach**: Desktop-first with adaptations for tablet and mobile
-- **Content Density**: Medium density for examples list, lower density for code and explanation sections
+- **Content Density**: Medium density for pattern selection, lower density for visualization areas
 
 ### Animations
-- **Purposeful Meaning**: Subtle transitions between sections to maintain context
-- **Hierarchy of Movement**: Most important elements animate first
-- **Contextual Appropriateness**: Animations limited to navigation changes and state transitions
+- **Purposeful Meaning**: Animated data flows to illustrate agent processing patterns
+- **Hierarchy of Movement**: Agent components animate based on processing sequence
+- **Contextual Appropriateness**: Animations used primarily for pattern demonstrations and state transitions
 
 ### UI Elements & Component Selection
-- **Component Usage**: Cards for examples, tabs for category navigation, code blocks with syntax highlighting
-- **Component Customization**: Custom code block styling with copy button and language indicator
+- **Component Usage**: Cards for pattern selection, interactive diagrams for visualizations, tabs for information categories
+- **Component Customization**: Custom node styling for agent components, animated edges for data flows
 - **Component States**: Clear hover, active, and focus states for interactive elements
-- **Icon Selection**: Phosphor icons for UI elements, with code-related and AI-specific icon set
-- **Component Hierarchy**: Primary navigation, category filters, example cards, code blocks
+- **Icon Selection**: Phosphor icons for UI elements, with agent-specific and AI-related icons
+- **Component Hierarchy**: Navigation, pattern selection, visualization canvas, detail panels
 - **Spacing System**: Consistent 4px-based spacing scale
-- **Mobile Adaptation**: Stack layout, collapsible sections, and prioritized content
+- **Mobile Adaptation**: Simplified visualizations, collapsible panels, and prioritized content
 
 ### Visual Consistency Framework
 - **Design System Approach**: Component-based design with reusable elements
 - **Style Guide Elements**: Colors, typography, spacing, component styles
 - **Visual Rhythm**: Consistent spacing and alignment throughout interface
-- **Brand Alignment**: Subtle references to OpenAI's visual identity
+- **Brand Alignment**: Subtle references to Azure's visual identity
 
 ### Accessibility & Readability
 - **Contrast Goal**: WCAG AA compliance for all text and essential UI elements
 
 ## Edge Cases & Problem Scenarios
-- **Potential Obstacles**: Complex examples may be difficult to present in limited space
-- **Edge Case Handling**: Provide expandable sections for detailed explanations
-- **Technical Constraints**: API request limitations, code execution environment constraints
+- **Potential Obstacles**: Complex agent patterns may be difficult to visualize clearly
+- **Edge Case Handling**: Provide zoom controls and clear labeling for complex visualizations
+- **Technical Constraints**: Animation performance on large pattern graphs
 
 ## Implementation Considerations
-- **Scalability Needs**: Structure should support easy addition of new examples
-- **Testing Focus**: Verify code examples work as described
-- **Critical Questions**: How to keep examples updated with API changes?
+- **Scalability Needs**: Structure should support addition of new agent patterns
+- **Testing Focus**: Verify visualizations accurately represent agent behavior
+- **Critical Questions**: How to keep content updated with Azure AI service changes?
 
 ## Reflection
-- Using a cookbook metaphor provides a familiar mental model that aligns with how developers learn and apply new techniques
-- We're assuming users have basic familiarity with APIs and JavaScript/TypeScript
-- Exceptional elements would include live API integration for direct testing within the application
+- The interactive visualization approach creates a more intuitive understanding of agent patterns than static diagrams alone
+- We're assuming users have basic familiarity with AI concepts and Azure services
+- Exceptional elements would include real-time simulation of agent interactions with editable parameters
