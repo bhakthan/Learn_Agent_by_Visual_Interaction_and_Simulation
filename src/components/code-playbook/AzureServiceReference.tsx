@@ -603,7 +603,7 @@ async function setupPatternDeploymentPipeline() {
       type: "github",
       repository: "your-org/agent-patterns",
       branch: "main",
-      directory: "patterns/agent-pattern"
+      directory: `patterns/${patternId}`
     },
     deployment: {
       environments,

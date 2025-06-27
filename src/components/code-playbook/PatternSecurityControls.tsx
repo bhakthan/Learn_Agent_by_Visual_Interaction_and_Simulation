@@ -159,7 +159,7 @@ const patternSecurityConfigurations: PatternSecurityConfig[] = [
       {
         category: 'Access Control',
         practices: [
-          'Implement least privilege principles for each agent capabilities',
+          'Implement least privilege principles for each agent\'s capabilities',
           'Use Azure RBAC to control access to shared resources',
           'Regularly audit agent permissions and access patterns',
           'Implement just-in-time access for critical capabilities'

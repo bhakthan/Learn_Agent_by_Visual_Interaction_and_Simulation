@@ -165,7 +165,7 @@ async function evaluateAndOptimize(initialContent: string, query: string, maxIte
     
     // If quality is sufficient, break the loop
     if (overallScore > 0.85) {
-      console.log("Quality threshold met after " + iterations + " iterations");
+      console.log(`Quality threshold met after ${iterations} iterations`);
       break;
     }
     
