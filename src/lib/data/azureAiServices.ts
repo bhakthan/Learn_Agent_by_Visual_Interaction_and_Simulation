@@ -118,7 +118,7 @@ export const azureAIServices: AzureAIService[] = [
       "Use caching for frequently requested inference results",
       "Implement fallbacks for inference failures"
     ],
-    documentation: "https://learn.microsoft.com/azure/machine-learning/concept-inference"
+    documentation: "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview"
   },
   {
     id: "azure-ai-agent-service",

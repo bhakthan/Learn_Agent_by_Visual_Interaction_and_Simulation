@@ -330,7 +330,7 @@ async function validateOutput(llmOutput: string) {
       'Inference monitoring and logging capabilities',
       'Multi-model deployment management'
     ],
-    apiReference: 'https://learn.microsoft.com/azure/machine-learning/reference-inferencing-sdk',
+    apiReference: 'https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview',
     samples: [
       {
         title: 'Optimized Inference Pipeline',

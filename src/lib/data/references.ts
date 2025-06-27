@@ -860,7 +860,12 @@ export const references: ReferencesData = {
         name: "Documentation",
         references: [
           {
-            title: "Azure AI Inference Documentation",
+            title: "Azure AI Inference SDK Documentation",
+            url: "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-inference-readme?view=azure-python-preview",
+            description: "Official SDK documentation for Azure AI Inference"
+          },
+          {
+            title: "Azure AI Inference Guide",
             url: "https://learn.microsoft.com/azure/ai-services/openai/how-to/inference",
             description: "Guide to inference optimization in Azure AI"
           }
