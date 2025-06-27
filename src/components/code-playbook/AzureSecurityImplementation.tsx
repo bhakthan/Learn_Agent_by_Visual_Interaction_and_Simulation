@@ -115,7 +115,8 @@ async function verifyAgentMessage(signedMessage: SignedAgentMessage) {
   }
   
   // Get the key reference by version
-  const keyWithVersion = \`${keyName}/${security.keyId}\`;
+  const agentKeyName = "agent-auth-key"; // Fixed key name used for agent authentication
+  const keyWithVersion = \`${agentKeyName}/${security.keyId}\`;
   const key = await keyClient.getKey(keyWithVersion);
   
   // Create cryptography client
