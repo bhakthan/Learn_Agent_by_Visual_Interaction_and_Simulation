@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Check, Code, Play, ListChecks, FileCode, FlowArrow, Graph, Bug } from "@phosphor-icons/react"
+import { Check, Code, Play, ListChecks, FileCode, FlowArrow, Graph, Bug, ShieldCheck } from "@phosphor-icons/react"
 import { Steps } from './Steps'
 import { PatternData } from '@/lib/data/patterns'
 import PatternDemo from '../interactive-demos/PatternDemo'
 import { ReactFlowProvider } from 'reactflow'
 import BestPractices from './BestPractices'
+import PatternSecurityControls from './PatternSecurityControls'
 import SyntaxHighlighter from 'react-syntax-highlighter'
 import { nightOwl } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 import { Button } from '@/components/ui/button'
@@ -120,6 +121,9 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
               </TabsTrigger>
               <TabsTrigger value="algorithm" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
                 <Graph size={16} /> <span className="hidden sm:inline">Algorithm Steps</span><span className="sm:hidden">Algorithm</span>
+              </TabsTrigger>
+              <TabsTrigger value="security" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
+                <ShieldCheck size={16} /> <span className="hidden sm:inline">Security Controls</span><span className="sm:hidden">Security</span>
               </TabsTrigger>
               <TabsTrigger value="practices" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
                 <Check size={16} /> <span className="hidden sm:inline">Best Practices</span><span className="sm:hidden">Practices</span>
@@ -306,6 +310,16 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                 </p>
               </div>
               <BestPractices patternId={patternData.id} patternName={patternData.name} />
+            </TabsContent>
+            
+            <TabsContent value="security" className="py-4">
+              <div className="mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Implement these security controls to protect your {patternData.name} pattern implementation against potential threats,
+                  following Azure security best practices and Microsoft's Secure Future Initiative guidelines.
+                </p>
+              </div>
+              <PatternSecurityControls patternId={patternData.id} patternName={patternData.name} />
             </TabsContent>
             
             <TabsContent value="algorithm" className="py-4">

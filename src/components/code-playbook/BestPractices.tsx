@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import AzureIntegrationGuide from "./AzureIntegrationGuide";
 import AzureServicesBestPractices from "./AzureServicesBestPractices";
 import AzureServiceReference from "./AzureServiceReference";
+import AzureSecurityImplementation from "./AzureSecurityImplementation";
 import { Separator } from "@/components/ui/separator";
 
 interface BestPracticesProps {
@@ -149,10 +150,11 @@ const BestPractices: React.FC<BestPracticesProps> = ({ patternId, patternName })
                 </p>
               </div>
               
-              <Tabs value={azureView} onValueChange={(v) => setAzureView(v as 'overview' | 'detailed' | 'reference')} className="w-full">
-                <TabsList className="w-full grid grid-cols-3">
+              <Tabs value={azureView} onValueChange={(v) => setAzureView(v as 'overview' | 'detailed' | 'reference' | 'security')} className="w-full">
+                <TabsList className="w-full grid grid-cols-4">
                   <TabsTrigger value="overview">Service Overview</TabsTrigger>
                   <TabsTrigger value="detailed">Implementation Guide</TabsTrigger>
+                  <TabsTrigger value="security">Security Implementation</TabsTrigger>
                   <TabsTrigger value="reference">Service Reference</TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -160,6 +162,7 @@ const BestPractices: React.FC<BestPracticesProps> = ({ patternId, patternName })
               <div className="mt-4">
                 {azureView === 'overview' && <AzureIntegrationGuide patternId={patternId} patternName={patternName} />}
                 {azureView === 'detailed' && <AzureServicesBestPractices patternId={patternId} patternName={patternName} />}
+                {azureView === 'security' && <AzureSecurityImplementation patternId={patternId} patternName={patternName} />}
                 {azureView === 'reference' && <AzureServiceReference patternId={patternId} patternName={patternName} />}
               </div>
               
