@@ -119,22 +119,7 @@ const executeReAct = async (query: string, maxCycles = 5) => {
       // Step 1: Reasoning phase
       console.log("Cycle " + currentCycle + ": Reasoning...");
       
-      const reasoningPrompt = `You are a ReAct agent that solves problems through cycles of reasoning and action.
-
-Task: ${query}
-
-Previous steps:
-${contextHistory.join('\n')}
-
-Think step by step about the problem. Either:
-1. Use a tool to gather more information by responding with:
-   Thought: <your reasoning>
-   Action: <tool_name>
-   Action Input: <tool input>
-   
-2. Or provide the final answer if you have enough information:
-   Thought: <your reasoning>
-   Final Answer: <your answer>`;
+      const reasoningPrompt = "You are a ReAct agent that solves problems through cycles of reasoning and action.\n\nTask: " + query + "\n\nPrevious steps:\n" + contextHistory.join('\n') + "\n\nThink step by step about the problem. Either:\n1. Use a tool to gather more information by responding with:\n   Thought: <your reasoning>\n   Action: <tool_name>\n   Action Input: <tool input>\n   \n2. Or provide the final answer if you have enough information:\n   Thought: <your reasoning>\n   Final Answer: <your answer>";
       
       const reasoningResponse = await llm(reasoningPrompt);
       contextHistory.push(reasoningResponse);
