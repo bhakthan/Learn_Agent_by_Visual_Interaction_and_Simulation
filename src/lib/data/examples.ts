@@ -9,6 +9,13 @@ export interface Example {
   explanation: string;
 }
 
+// Mock environment variables for browser environment
+const mockEnv = {
+  OPENAI_API_KEY: "your-openai-api-key",
+  SUPABASE_URL: "https://your-supabase-url.supabase.co",
+  SUPABASE_KEY: "your-supabase-key"
+};
+
 export const examples: Example[] = [
   {
     id: "chat-completion-basic",
@@ -20,7 +27,7 @@ export const examples: Example[] = [
     code: `import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: mockEnv.OPENAI_API_KEY
 });
 
 async function createChatCompletion() {
@@ -48,7 +55,7 @@ createChatCompletion();`,
     code: `import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: mockEnv.OPENAI_API_KEY
 });
 
 // Mock weather API for the example
@@ -155,12 +162,12 @@ runConversation().then(console.log)
 import { createClient } from '@supabase/supabase-js';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: mockEnv.OPENAI_API_KEY
 });
 
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
+  mockEnv.SUPABASE_URL,
+  mockEnv.SUPABASE_KEY
 );
 
 async function queryDocuments(query) {
@@ -230,7 +237,7 @@ answerWithRAG("What are the key features of OpenAI's GPT-4?")
     code: `import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: mockEnv.OPENAI_API_KEY
 });
 
 async function createResearchAssistant() {
@@ -308,7 +315,7 @@ createResearchAssistant()
 import { similarity } from 'ml-distance';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: mockEnv.OPENAI_API_KEY
 });
 
 // Sample document collection

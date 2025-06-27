@@ -7,6 +7,19 @@ import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Cloud, TerminalWindow, Lightning, Lock, Cpu, Globe, Code, ArrowSquareOut } from '@phosphor-icons/react';
 
+// Mock environment variables for browser environment
+const mockEnv = {
+  AZURE_OPENAI_ENDPOINT: "https://your-openai-resource.openai.azure.com/",
+  AZURE_OPENAI_API_KEY: "your-api-key",
+  AZURE_OPENAI_DEPLOYMENT_NAME: "gpt-4",
+  AZURE_OPENAI_EMBEDDING_DEPLOYMENT: "text-embedding-ada-002",
+  AZURE_SEARCH_ENDPOINT: "https://your-search.search.windows.net",
+  AZURE_SEARCH_INDEX_NAME: "your-index-name",
+  AZURE_SEARCH_API_KEY: "your-search-api-key",
+  AZURE_CONTENT_SAFETY_ENDPOINT: "https://your-content-safety.cognitiveservices.azure.com/",
+  AZURE_CONTENT_SAFETY_KEY: "your-content-safety-key"
+};
+
 interface AzureServiceReferenceProps {
   pattern: string;
 }
@@ -34,9 +47,9 @@ const AzureServiceReference: React.FC<AzureServiceReferenceProps> = ({ pattern }
           code: `import { OpenAIClient, AzureKeyCredential } from "@azure/openai";
 
 // Initialize Azure OpenAI client
-const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
-const azureApiKey = process.env.AZURE_OPENAI_API_KEY;
-const deploymentName = process.env.AZURE_OPENAI_DEPLOYMENT_NAME;
+const endpoint = mockEnv.AZURE_OPENAI_ENDPOINT;
+const azureApiKey = mockEnv.AZURE_OPENAI_API_KEY;
+const deploymentName = mockEnv.AZURE_OPENAI_DEPLOYMENT_NAME;
 
 const client = new OpenAIClient(
   endpoint, 
@@ -118,21 +131,21 @@ import { OpenAIClient } from "@azure/openai";
 
 // Initialize clients
 const searchClient = new SearchClient(
-  process.env.AZURE_SEARCH_ENDPOINT,
-  process.env.AZURE_SEARCH_INDEX_NAME,
-  new AzureKeyCredential(process.env.AZURE_SEARCH_API_KEY)
+  mockEnv.AZURE_SEARCH_ENDPOINT,
+  mockEnv.AZURE_SEARCH_INDEX_NAME,
+  new AzureKeyCredential(mockEnv.AZURE_SEARCH_API_KEY)
 );
 
 const openaiClient = new OpenAIClient(
-  process.env.AZURE_OPENAI_ENDPOINT,
-  new AzureKeyCredential(process.env.AZURE_OPENAI_API_KEY)
+  mockEnv.AZURE_OPENAI_ENDPOINT,
+  new AzureKeyCredential(mockEnv.AZURE_OPENAI_API_KEY)
 );
 
 // Function to perform vector search
 async function vectorSearch(query, topK = 5) {
   // Generate embeddings for the query
   const embeddingResult = await openaiClient.getEmbeddings(
-    process.env.AZURE_OPENAI_EMBEDDING_DEPLOYMENT,
+    mockEnv.AZURE_OPENAI_EMBEDDING_DEPLOYMENT,
     [query]
   );
   
@@ -174,8 +187,8 @@ async function vectorSearch(query, topK = 5) {
 
 // Initialize Content Safety client
 const contentSafetyClient = new ContentSafetyClient(
-  process.env.AZURE_CONTENT_SAFETY_ENDPOINT,
-  new AzureKeyCredential(process.env.AZURE_CONTENT_SAFETY_KEY)
+  mockEnv.AZURE_CONTENT_SAFETY_ENDPOINT,
+  new AzureKeyCredential(mockEnv.AZURE_CONTENT_SAFETY_KEY)
 );
 
 // Function to check text safety

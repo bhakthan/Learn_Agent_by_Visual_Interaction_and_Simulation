@@ -9,8 +9,7 @@ import "@github/spark/spark"
 // Use HashRouter for GitHub Pages and environments without server-side routing support
 // If the URL contains '?hash=true' or environment variable suggests GitHub Pages
 const useHash = window.location.search.includes('hash=true') || 
-                window.location.hostname.includes('github.io') || 
-                process.env.USE_HASH_ROUTER === 'true';
+                window.location.hostname.includes('github.io');
 
 const Router = useHash ? HashRouter : BrowserRouter;
 

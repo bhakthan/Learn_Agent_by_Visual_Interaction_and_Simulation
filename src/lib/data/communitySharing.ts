@@ -1,5 +1,11 @@
 import { PatternType } from "./patterns";
 
+// Mock environment variables for browser environment
+const mockEnv = {
+  CONTENT_SAFETY_KEY: "your-content-safety-key",
+  SEARCH_API_KEY: "your-search-api-key"
+};
+
 export interface CommunityPattern {
   id: string;
   title: string;
@@ -28,7 +34,7 @@ export const communityPatterns: CommunityPattern[] = [
 const enhancedReAct = async (query, maxSteps = 5) => {
   const contentSafetyClient = new ContentSafetyClient(
     "https://your-content-safety.cognitiveservices.azure.com",
-    new AzureKeyCredential(process.env.CONTENT_SAFETY_KEY)
+    new AzureKeyCredential(mockEnv.CONTENT_SAFETY_KEY)
   );
   
   let steps = 0;
@@ -120,7 +126,7 @@ const orchestrateWithKnowledge = async (mainTask, workers) => {
   const searchClient = new SearchClient(
     "https://your-search-service.search.windows.net",
     "your-index-name",
-    new AzureKeyCredential(process.env.SEARCH_API_KEY)
+    new AzureKeyCredential(mockEnv.SEARCH_API_KEY)
   );
 
   // First, search for relevant knowledge

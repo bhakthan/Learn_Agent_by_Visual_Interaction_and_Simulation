@@ -17,6 +17,18 @@ import {
   HardDrives
 } from '@phosphor-icons/react';
 
+// Mock environment variables for browser environment
+const mockEnv = {
+  KEY_VAULT_URL: "https://your-keyvault.vault.azure.net/",
+  STORAGE_ACCOUNT: "yourstorageaccount",
+  TENANT_ID: "your-tenant-id",
+  CLIENT_ID: "your-client-id",
+  AZURE_OPENAI_ENDPOINT: "https://your-openai-resource.openai.azure.com/",
+  AZURE_OPENAI_API_KEY: "your-api-key",
+  AZURE_OPENAI_DEPLOYMENT_NAME: "gpt-4",
+  APPINSIGHTS_CONNECTION_STRING: "InstrumentationKey=your-instrumentation-key"
+};
+
 interface PatternSecurityControlsProps {
   pattern: string;
 }
@@ -42,7 +54,7 @@ const credential = new DefaultAzureCredential();
 
 // Securely retrieve API keys and credentials
 async function getSecureCredentials() {
-  const keyVaultUrl = process.env.KEY_VAULT_URL;
+  const keyVaultUrl = mockEnv.KEY_VAULT_URL;
   const keyClient = new SecretClient(keyVaultUrl, credential);
   
   // Get the API key by version for audit trail
@@ -99,7 +111,7 @@ async function storeAgentData(agentId, data, classification) {
     // Use managed identity for storage access
     const credential = new DefaultAzureCredential();
     const blobServiceClient = new BlobServiceClient(
-      \`https://\${process.env.STORAGE_ACCOUNT}.blob.core.windows.net\`,
+      \`https://\${mockEnv.STORAGE_ACCOUNT}.blob.core.windows.net\`,
       credential
     );
     
@@ -140,7 +152,7 @@ async function storeAgentData(agentId, data, classification) {
 // Helper function to encrypt data using Azure Key Vault
 async function encryptSensitiveData(data) {
   const credential = new DefaultAzureCredential();
-  const keyVaultUrl = process.env.KEY_VAULT_URL;
+  const keyVaultUrl = mockEnv.KEY_VAULT_URL;
   const keyClient = new KeyClient(keyVaultUrl, credential);
   const key = await keyClient.getKey("data-encryption-key");
   
@@ -172,7 +184,7 @@ import jwksClient from "jwks-rsa";
 
 // Best practice: Robust token validation
 const client = jwksClient({
-  jwksUri: \`https://login.microsoftonline.com/\${process.env.TENANT_ID}/discovery/v2.0/keys\`
+  jwksUri: \`https://login.microsoftonline.com/\${mockEnv.TENANT_ID}/discovery/v2.0/keys\`
 });
 
 // Function to validate AAD JWT tokens
@@ -199,8 +211,8 @@ async function validateAgentAuthToken(token) {
         token,
         getKey,
         {
-          audience: process.env.CLIENT_ID,
-          issuer: \`https://login.microsoftonline.com/\${process.env.TENANT_ID}/v2.0\`
+          audience: mockEnv.CLIENT_ID,
+          issuer: \`https://login.microsoftonline.com/\${mockEnv.TENANT_ID}/v2.0\`
         },
         (err, decoded) => {
           if (err) reject(err);
@@ -222,7 +234,7 @@ async function getSecureClient() {
     
     // Create clients for various Azure services
     const openAiClient = new OpenAIClient(
-      process.env.AZURE_OPENAI_ENDPOINT,
+      mockEnv.AZURE_OPENAI_ENDPOINT,
       credential
     );
     
@@ -252,7 +264,7 @@ import { v4 as uuidv4 } from "uuid";
 
 // Best practice: Comprehensive activity logging
 const telemetryClient = new TelemetryClient({
-  connectionString: process.env.APPINSIGHTS_CONNECTION_STRING
+  connectionString: mockEnv.APPINSIGHTS_CONNECTION_STRING
 });
 
 // Structured logging for agent activity 
@@ -393,12 +405,12 @@ async function secureAgentQuery(userInput, context = {}) {
     
     // Make the API call with proper message structure
     const openAiClient = new OpenAIClient(
-      process.env.AZURE_OPENAI_ENDPOINT,
-      new AzureKeyCredential(process.env.AZURE_OPENAI_API_KEY)
+      mockEnv.AZURE_OPENAI_ENDPOINT,
+      new AzureKeyCredential(mockEnv.AZURE_OPENAI_API_KEY)
     );
     
     const result = await openAiClient.getChatCompletions(
-      process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
+      mockEnv.AZURE_OPENAI_DEPLOYMENT_NAME,
       messages
     );
     

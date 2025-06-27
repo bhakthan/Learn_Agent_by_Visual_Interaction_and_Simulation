@@ -20,6 +20,27 @@ import {
   ClockClockwise
 } from '@phosphor-icons/react';
 
+// Mock environment variables for browser environment
+const mockEnv = {
+  AZURE_OPENAI_ENDPOINT: "https://your-openai-resource.openai.azure.com/",
+  AZURE_OPENAI_API_KEY: "your-api-key",
+  AZURE_CONTENT_SAFETY_ENDPOINT: "https://your-content-safety.cognitiveservices.azure.com/",
+  AZURE_CONTENT_SAFETY_KEY: "your-content-safety-key",
+  AZURE_SEARCH_ENDPOINT: "https://your-search.search.windows.net",
+  AZURE_SEARCH_INDEX_NAME: "your-index-name",
+  AZURE_SEARCH_API_KEY: "your-search-api-key",
+  AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME: "text-embedding-ada-002",
+  STORAGE_ACCOUNT_NAME: "yourstorageaccount",
+  AGENT_VERSION: "1.0.0",
+  REDIS_CONNECTION_STRING: "redis://localhost:6379",
+  AZURE_OPENAI_DEPLOYMENT_NAME: "gpt-4",
+  APPINSIGHTS_CONNECTION_STRING: "InstrumentationKey=your-instrumentation-key",
+  TENANT_ID: "your-tenant-id",
+  CLIENT_ID: "your-client-id",
+  CLIENT_SECRET: "your-client-secret",
+  KEYVAULT_URL: "https://your-keyvault.vault.azure.net/"
+};
+
 interface AzureServicesBestPracticesProps {
   pattern: string;
 }
@@ -47,14 +68,14 @@ const credential = new DefaultAzureCredential();
 
 // Fallback to API key if needed
 const getClient = () => {
-  const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
+  const endpoint = mockEnv.AZURE_OPENAI_ENDPOINT;
   
   try {
     // Try managed identity first
     return new OpenAIClient(endpoint, credential);
   } catch (err) {
     // Fallback to API key
-    const apiKey = process.env.AZURE_OPENAI_API_KEY;
+    const apiKey = mockEnv.AZURE_OPENAI_API_KEY;
     return new OpenAIClient(endpoint, new AzureKeyCredential(apiKey));
   }
 };
@@ -91,8 +112,8 @@ You must always:
 
 // Initialize the content safety client
 const contentSafetyClient = new ContentSafetyClient(
-  process.env.AZURE_CONTENT_SAFETY_ENDPOINT,
-  new AzureKeyCredential(process.env.AZURE_CONTENT_SAFETY_KEY)
+  mockEnv.AZURE_CONTENT_SAFETY_ENDPOINT,
+  new AzureKeyCredential(mockEnv.AZURE_CONTENT_SAFETY_KEY)
 );
 
 // Function to moderate AI-generated content
@@ -161,14 +182,14 @@ import { OpenAIClient } from "@azure/openai";
 
 // Initialize search client
 const searchClient = new SearchClient(
-  process.env.AZURE_SEARCH_ENDPOINT,
-  process.env.AZURE_SEARCH_INDEX_NAME,
-  new AzureKeyCredential(process.env.AZURE_SEARCH_API_KEY)
+  mockEnv.AZURE_SEARCH_ENDPOINT,
+  mockEnv.AZURE_SEARCH_INDEX_NAME,
+  new AzureKeyCredential(mockEnv.AZURE_SEARCH_API_KEY)
 );
 
 const openaiClient = new OpenAIClient(
-  process.env.AZURE_OPENAI_ENDPOINT,
-  new AzureKeyCredential(process.env.AZURE_OPENAI_API_KEY)
+  mockEnv.AZURE_OPENAI_ENDPOINT,
+  new AzureKeyCredential(mockEnv.AZURE_OPENAI_API_KEY)
 );
 
 // Best Practice: Implement hybrid search with filtering
@@ -176,7 +197,7 @@ async function retrieveRelevantContext(query, filters = {}) {
   try {
     // Generate embeddings for vector search
     const embeddingResponse = await openaiClient.getEmbeddings(
-      process.env.AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME,
+      mockEnv.AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME,
       [query]
     );
     
@@ -327,7 +348,7 @@ const credential = new DefaultAzureCredential();
 
 // Create blob service client using managed identity
 const blobServiceClient = new BlobServiceClient(
-  \`https://\${process.env.STORAGE_ACCOUNT_NAME}.blob.core.windows.net\`,
+  \`https://\${mockEnv.STORAGE_ACCOUNT_NAME}.blob.core.windows.net\`,
   credential
 );
 
@@ -351,7 +372,7 @@ async function storeConversationData(conversationId, userData, agentResponses) {
       userQueries: userData.queries,
       agentResponses: agentResponses,
       metadata: {
-        agentVersion: process.env.AGENT_VERSION,
+        agentVersion: mockEnv.AGENT_VERSION,
         patternType: "${pattern}"
       }
     };
@@ -417,13 +438,13 @@ import { RedisClient } from "@azure/redis-client";
 
 // Initialize clients
 const openaiClient = new OpenAIClient(
-  process.env.AZURE_OPENAI_ENDPOINT,
-  new AzureKeyCredential(process.env.AZURE_OPENAI_API_KEY)
+  mockEnv.AZURE_OPENAI_ENDPOINT,
+  new AzureKeyCredential(mockEnv.AZURE_OPENAI_API_KEY)
 );
 
 // Initialize Redis cache for query results
 const redisClient = new RedisClient({
-  url: process.env.REDIS_CONNECTION_STRING
+  url: mockEnv.REDIS_CONNECTION_STRING
 });
 
 // Best Practice: Optimize with response caching and streaming
@@ -449,7 +470,7 @@ async function optimizedAgentQuery(query, options = {}) {
     // Use streaming for better user experience
     if (options.streaming) {
       const stream = await openaiClient.streamChatCompletions(
-        process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
+        mockEnv.AZURE_OPENAI_DEPLOYMENT_NAME,
         [
           { role: "system", content: agentSystemMessage },
           { role: "user", content: query }
@@ -462,7 +483,7 @@ async function optimizedAgentQuery(query, options = {}) {
     
     // Standard request
     const response = await openaiClient.getChatCompletions(
-      process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
+      mockEnv.AZURE_OPENAI_DEPLOYMENT_NAME,
       [
         { role: "system", content: agentSystemMessage },
         { role: "user", content: query }
@@ -528,13 +549,13 @@ import { OpenAIClient, AzureKeyCredential } from "@azure/openai";
 
 // Initialize Application Insights
 const telemetryClient = new TelemetryClient({
-  connectionString: process.env.APPINSIGHTS_CONNECTION_STRING
+  connectionString: mockEnv.APPINSIGHTS_CONNECTION_STRING
 });
 
 // Initialize Azure OpenAI client
 const openaiClient = new OpenAIClient(
-  process.env.AZURE_OPENAI_ENDPOINT,
-  new AzureKeyCredential(process.env.AZURE_OPENAI_API_KEY)
+  mockEnv.AZURE_OPENAI_ENDPOINT,
+  new AzureKeyCredential(mockEnv.AZURE_OPENAI_API_KEY)
 );
 
 // Best Practice: Comprehensive agent telemetry
@@ -567,7 +588,7 @@ async function agentWithTelemetry(query, userId) {
       
       // Get response from OpenAI
       const response = await openaiClient.getChatCompletions(
-        process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
+        mockEnv.AZURE_OPENAI_DEPLOYMENT_NAME,
         [
           { role: "system", content: agentSystemPrompt },
           { role: "user", content: query }
@@ -589,7 +610,7 @@ async function agentWithTelemetry(query, userId) {
         success: true,
         properties: {
           requestId: requestId,
-          model: process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
+          model: mockEnv.AZURE_OPENAI_DEPLOYMENT_NAME,
           promptTokens: response.usage.promptTokens,
           completionTokens: response.usage.completionTokens,
           totalTokens: tokenUsage
@@ -607,7 +628,7 @@ async function agentWithTelemetry(query, userId) {
         properties: {
           requestId: requestId,
           error: error.message,
-          model: process.env.AZURE_OPENAI_DEPLOYMENT_NAME
+          model: mockEnv.AZURE_OPENAI_DEPLOYMENT_NAME
         }
       });
       throw error;
@@ -619,7 +640,7 @@ async function agentWithTelemetry(query, userId) {
       average: latency,
       properties: {
         requestId: requestId,
-        model: process.env.AZURE_OPENAI_DEPLOYMENT_NAME
+        model: mockEnv.AZURE_OPENAI_DEPLOYMENT_NAME
       }
     });
 
@@ -628,7 +649,7 @@ async function agentWithTelemetry(query, userId) {
       average: tokenUsage,
       properties: {
         requestId: requestId,
-        model: process.env.AZURE_OPENAI_DEPLOYMENT_NAME
+        model: mockEnv.AZURE_OPENAI_DEPLOYMENT_NAME
       }
     });
     
@@ -712,12 +733,12 @@ async function getSecureClient() {
   try {
     // Set up Key Vault access
     const credential = new ClientSecretCredential(
-      process.env.TENANT_ID,
-      process.env.CLIENT_ID,
-      process.env.CLIENT_SECRET
+      mockEnv.TENANT_ID,
+      mockEnv.CLIENT_ID,
+      mockEnv.CLIENT_SECRET
     );
     
-    const keyVaultUrl = process.env.KEYVAULT_URL;
+    const keyVaultUrl = mockEnv.KEYVAULT_URL;
     const keyClient = new SecretClient(keyVaultUrl, credential);
     
     // Retrieve secrets securely
