@@ -165,7 +165,7 @@ async function evaluateAndOptimize(initialContent: string, query: string, maxIte
     
     // If quality is sufficient, break the loop
     if (overallScore > 0.85) {
-      console.log(\`Quality threshold met after \${iterations} iterations\`);
+      console.log(`Quality threshold met after ${iterations} iterations`);
       break;
     }
     
@@ -609,7 +609,7 @@ const azureServicesBestPractices: AzureServiceInfo[] = [
     name: 'Azure OpenAI Service',
     icon: <Cloud size={18} className="text-primary" />,
     category: 'foundation',
-    description: 'Provides REST API access to OpenAI powerful language models with Azure security and compliance features.',
+    description: 'Provides REST API access to OpenAI\'s powerful language models with Azure security and compliance features.',
     tips: [
       'Configure system messages to define agent behavior constraints and roles',
       'Use separate model deployments for different agent functions (reasoning vs. generation)',
