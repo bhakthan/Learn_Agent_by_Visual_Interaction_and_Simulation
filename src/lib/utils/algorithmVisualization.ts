@@ -291,7 +291,7 @@ export function getAlgorithmVisualization(patternId: string): AlgorithmVisualiza
   // Return the visualization if it exists for this pattern ID
   const visualization = algorithmVisualizations[patternId];
   if (!visualization) {
-    console.log(`No algorithm visualization found for pattern: ${patternId}`);
+    console.log("No algorithm visualization found for pattern: " + patternId);
     return null; // Return null instead of undefined
   }
   return visualization;

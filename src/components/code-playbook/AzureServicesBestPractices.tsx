@@ -609,7 +609,7 @@ const azureServicesBestPractices: AzureServiceInfo[] = [
     name: 'Azure OpenAI Service',
     icon: <Cloud size={18} className="text-primary" />,
     category: 'foundation',
-    description: 'Provides REST API access to OpenAI\\\'s powerful language models with Azure security and compliance features.',
+    description: 'Provides REST API access to OpenAI powerful language models with Azure security and compliance features.',
     tips: [
       'Configure system messages to define agent behavior constraints and roles',
       'Use separate model deployments for different agent functions (reasoning vs. generation)',
@@ -642,7 +642,7 @@ const azureServicesBestPractices: AzureServiceInfo[] = [
     description: 'AI service for detecting harmful content across text and images to maintain safety and compliance.',
     tips: [
       'Implement pre-moderation for AI-generated content before display',
-      'Set appropriate threshold levels based on your application\'s audience',
+      'Set appropriate threshold levels based on your application audience',
       'Create feedback loops to improve detection over time',
       'Implement blocklists for domain-specific problematic content',
       'Deploy content safety in multiple stages of the agent workflow'

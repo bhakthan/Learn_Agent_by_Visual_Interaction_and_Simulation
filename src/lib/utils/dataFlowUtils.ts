@@ -92,7 +92,7 @@ export const getDataFlowAnimationStyle = (
  */
 export const truncateFlowContent = (content: string, maxLength: number = 30): string => {
   if (content.length <= maxLength) return content;
-  return `${content.substring(0, maxLength)}...`;
+  return content.substring(0, maxLength) + '...';
 };
 
 /**

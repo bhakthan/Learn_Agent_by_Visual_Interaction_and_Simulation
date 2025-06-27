@@ -412,7 +412,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
   // Calculate execution time for a step
   const getExecutionTime = (step: StepState) => {
     if (step.startTime && step.endTime) {
-      return `${((step.endTime - step.startTime) / 1000).toFixed(1)}s`;
+      return ((step.endTime - step.startTime) / 1000).toFixed(1) + 's';
     }
     return '';
   };

@@ -431,9 +431,9 @@ const executeCodeAct = async (query, maxCycles = 5) => {
         "1. Write Python code to make progress, formatted as:\\n" +
         "   Thought: <your reasoning>\\n" +
         "   Code:\\n" +
-        "   ````\\n" +
+        "   ```\\n" +
         "   # Your Python code here\\n" +
-        "   ````\\n\\n" +
+        "   ```\\n\\n" +
         "2. Or provide the final answer if you've solved the problem:\\n" +
         "   Thought: <your reasoning>\\n" +
         "   Final Answer: <your answer>";
@@ -450,9 +450,9 @@ const executeCodeAct = async (query, maxCycles = 5) => {
         }
       } 
       // Check if the response contains code
-      else if (agentResponse.includes("````")) {
+      else if (agentResponse.includes("```")) {
         // Extract code block
-        const codeMatch = agentResponse.match(/````\s*([\s\S]*?)\s*````/);
+        const codeMatch = agentResponse.match(/```\s*([\s\S]*?)\s*```/);
         if (codeMatch) {
           const code = codeMatch[1].trim();
           
