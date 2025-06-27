@@ -434,6 +434,130 @@ async function evaluateAgentPattern(patternImplementation: any, testCases: any[]
     detailedResults: results.perCaseResults
   };
 }`
+      },
+      {
+        title: 'Model Comparison Evaluation',
+        language: 'typescript',
+        description: 'Compare performance between model versions',
+        code: `import { EvaluationClient } from "@azure/ai-evaluation";
+
+// Compare different model versions on the same tasks
+async function compareModelVersions(baselineModel: string, candidateModel: string, evaluationDataset: any[]) {
+  const evaluationClient = new EvaluationClient({
+    endpoint: "https://your-evaluation-endpoint.azure.com",
+    credential: new AzureKeyCredential(process.env.EVALUATION_API_KEY || "")
+  });
+  
+  // Configure comparison parameters
+  const comparisonConfig = {
+    metrics: [
+      "accuracy", 
+      "faithfulness", 
+      "toxicity", 
+      "coherence", 
+      "relevance"
+    ],
+    evaluators: {
+      accuracy: {
+        type: "gpt-4-based",
+        model: "gpt-4",
+        prompt_template: "Evaluate the accuracy of the response compared to ground truth."
+      },
+      toxicity: {
+        type: "content-safety",
+        threshold: 0.7
+      }
+    }
+  };
+  
+  // Run comparative evaluation
+  const results = await evaluationClient.compareModels({
+    baselineModel: {
+      id: baselineModel,
+      deployment: "azure-openai",
+      parameters: { temperature: 0.0, max_tokens: 500 }
+    },
+    candidateModel: {
+      id: candidateModel,
+      deployment: "azure-openai",
+      parameters: { temperature: 0.0, max_tokens: 500 }
+    },
+    dataset: evaluationDataset,
+    config: comparisonConfig
+  });
+  
+  // Analyze win rates and statistical significance
+  return {
+    winRates: results.winRates, // How often candidate beat baseline
+    metricDeltas: results.metricDeltas, // Average improvement per metric
+    significanceTests: results.significanceTests, // Statistical significance of differences
+    recommendations: results.recommendations, // Automatic recommendations
+    perQueryResults: results.perQueryResults // Detailed per-query comparisons
+  };
+}`
+      },
+      {
+        title: 'RAG Evaluation Pipeline',
+        language: 'python',
+        description: 'Comprehensive evaluation of RAG systems',
+        code: `from azure.ai.evaluation.retrieval import RetrievalEvaluator
+from azure.ai.evaluation.qa import QuestionAnsweringEvaluator
+from azure.ai.evaluation import EvaluationPipeline
+
+# Create evaluators for each part of RAG system
+def create_rag_evaluation_pipeline():
+    # Retrieval evaluation
+    retrieval_evaluator = RetrievalEvaluator(
+        metrics=["precision_at_k", "recall_at_k", "ndcg", "map"],
+        parameters={"k": [1, 3, 5, 10]}
+    )
+    
+    # Question answering evaluation
+    qa_evaluator = QuestionAnsweringEvaluator(
+        metrics=["answer_relevance", "faithfulness", "context_utilization", "correctness"],
+        reference_model="gpt-4-turbo",
+        parameters={
+            "prompt_template": "Evaluate the answer based on the provided context."
+        }
+    )
+    
+    # Create complete RAG evaluation pipeline
+    pipeline = EvaluationPipeline(
+        name="comprehensive-rag-evaluation",
+        evaluators={
+            "retrieval": retrieval_evaluator,
+            "qa": qa_evaluator
+        },
+        pipeline_metrics=["end_to_end_accuracy", "latency"]
+    )
+    
+    return pipeline
+
+# Run evaluation against test dataset
+def evaluate_rag_system(rag_system, test_dataset):
+    pipeline = create_rag_evaluation_pipeline()
+    
+    # Run evaluation
+    results = pipeline.evaluate(
+        system=rag_system,
+        dataset=test_dataset
+    )
+    
+    # Generate evaluation report
+    report = pipeline.generate_report(
+        results=results,
+        format="html",
+        include_visualizations=True
+    )
+    
+    # Retrieve recommendations for improvement
+    recommendations = pipeline.generate_recommendations(results)
+    
+    return {
+        "results": results,
+        "report": report,
+        "recommendations": recommendations
+    }`
       }
     ]
   },

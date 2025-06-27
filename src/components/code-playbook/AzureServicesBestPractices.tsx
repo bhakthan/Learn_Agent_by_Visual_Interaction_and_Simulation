@@ -35,6 +35,156 @@ interface AzureServiceImplementation {
 // Sample data for Azure services best practices with implementation steps
 const azureServiceImplementations: AzureServiceImplementation[] = [
   {
+    serviceId: 'azure-ai-evaluation',
+    patternId: 'evaluator-optimizer',
+    steps: [
+      {
+        title: '1. Set Up Evaluation Pipeline',
+        description: 'Create a comprehensive evaluation pipeline for agent outputs',
+        code: `import { EvaluationClient, EvaluationPipeline } from "@azure/ai-evaluation";
+
+// Configure the evaluation client
+const evaluationClient = new EvaluationClient({
+  endpoint: "https://your-evaluation-endpoint.azure.com",
+  credential: new AzureKeyCredential(process.env.EVALUATION_API_KEY || "")
+});
+
+// Create an evaluation pipeline for the evaluator-optimizer pattern
+async function createEvaluationPipeline() {
+  const pipeline = new EvaluationPipeline({
+    name: "agent-output-evaluation",
+    stages: [
+      {
+        name: "factuality",
+        evaluator: {
+          type: "llm-based",
+          model: "gpt-4",
+          prompt_template: "Evaluate if the following text is factually accurate based on known information."
+        }
+      },
+      {
+        name: "relevance",
+        evaluator: {
+          type: "llm-based",
+          model: "gpt-4",
+          prompt_template: "On a scale of 1-10, rate how relevant this response is to the query."
+        }
+      },
+      {
+        name: "safety",
+        evaluator: {
+          type: "content-safety",
+          categories: ["hate", "violence", "selfHarm", "sexual"]
+        }
+      },
+      {
+        name: "quality",
+        evaluator: {
+          type: "custom",
+          evaluate: async (input) => {
+            // Custom evaluation logic here
+            return { score: 0.85, reason: "Good quality response with minor improvements needed" };
+          }
+        }
+      }
+    ]
+  });
+  
+  return pipeline;
+}`,
+        language: 'typescript'
+      },
+      {
+        title: '2. Implement Optimizer with Feedback Loop',
+        description: 'Create an optimizer that improves content based on evaluation feedback',
+        code: `// Optimize content based on evaluation feedback
+async function optimizeContent(content: string, query: string, evaluationResults: any) {
+  // Create system message that incorporates evaluation feedback
+  const systemMessage = \`You are a content optimizer. Your task is to improve content based on evaluation feedback.
+The content needs improvement in these areas:
+\${evaluationResults.factuality.score < 0.7 ? '- Factual accuracy: ' + evaluationResults.factuality.feedback : ''}
+\${evaluationResults.relevance.score < 0.7 ? '- Relevance to query: ' + evaluationResults.relevance.feedback : ''}
+\${evaluationResults.quality.score < 0.7 ? '- Overall quality: ' + evaluationResults.quality.feedback : ''}
+
+Original query: \${query}
+\`;
+
+  // Request improved content
+  const result = await client.getChatCompletions(
+    "gpt-4",
+    [
+      { role: "system", content: systemMessage },
+      { role: "user", content: content }
+    ],
+    { temperature: 0.7 }
+  );
+  
+  return result.choices[0].message?.content || content;
+}`,
+        language: 'typescript'
+      },
+      {
+        title: '3. Create Evaluation-Optimization Loop',
+        description: 'Implement the full evaluator-optimizer cycle',
+        code: `// Full implementation of evaluator-optimizer pattern
+async function evaluateAndOptimize(initialContent: string, query: string, maxIterations = 3) {
+  const pipeline = await createEvaluationPipeline();
+  let currentContent = initialContent;
+  let iterations = 0;
+  let evaluationResults;
+  let improvementHistory = [];
+  
+  while (iterations < maxIterations) {
+    iterations++;
+    
+    // Evaluate current content
+    evaluationResults = await pipeline.evaluate({
+      content: currentContent,
+      query: query,
+      context: { iteration: iterations }
+    });
+    
+    // Record results in history
+    improvementHistory.push({
+      iteration: iterations,
+      content: currentContent,
+      scores: {
+        factuality: evaluationResults.factuality.score,
+        relevance: evaluationResults.relevance.score,
+        safety: evaluationResults.safety.score,
+        quality: evaluationResults.quality.score
+      }
+    });
+    
+    // Check if quality thresholds have been met
+    const overallScore = (
+      evaluationResults.factuality.score +
+      evaluationResults.relevance.score +
+      evaluationResults.quality.score
+    ) / 3;
+    
+    // If quality is sufficient, break the loop
+    if (overallScore > 0.85) {
+      console.log(\`Quality threshold met after \${iterations} iterations\`);
+      break;
+    }
+    
+    // Optimize the content based on evaluation feedback
+    currentContent = await optimizeContent(currentContent, query, evaluationResults);
+  }
+  
+  return {
+    finalContent: currentContent,
+    iterations: iterations,
+    evaluationResults: evaluationResults,
+    improvementHistory: improvementHistory
+  };
+}`,
+        language: 'typescript'
+      }
+    ]
+  },
+  {
     serviceId: 'azure-openai',
     patternId: 'agent-to-agent',
     steps: [
@@ -78,6 +228,146 @@ const client = new AzureOpenAIClient(
     ]
   },
   {
+    serviceId: 'azure-ai-evaluation',
+    patternId: 'reflexion',
+    steps: [
+      {
+        title: '1. Configure Evaluation Framework',
+        description: 'Set up a self-reflection evaluation framework',
+        language: 'python',
+        code: `from azure.ai.evaluation.reflexion import ReflexionEvaluator
+from azure.ai.evaluation import EvaluationSuite
+
+# Create evaluator for the Reflexion pattern
+def setup_reflexion_evaluator():
+    # Define reflection evaluation criteria
+    reflection_criteria = [
+        {
+            "name": "error_identification",
+            "description": "How well the agent identifies errors in its reasoning"
+        },
+        {
+            "name": "learning_from_feedback",
+            "description": "How effectively the agent incorporates feedback"
+        },
+        {
+            "name": "improvement_over_iterations",
+            "description": "Whether successive iterations show measurable improvement"
+        }
+    ]
+    
+    # Create reflexion-specific evaluator
+    reflexion_evaluator = ReflexionEvaluator(
+        criteria=reflection_criteria,
+        reference_model="gpt-4-turbo",
+        num_iterations_to_analyze=3
+    )
+    
+    # Create evaluation suite with multiple evaluators
+    evaluation_suite = EvaluationSuite(
+        name="reflexion-evaluation-suite",
+        evaluators=[
+            reflexion_evaluator,
+            # Can include additional evaluators here
+        ]
+    )
+    
+    return evaluation_suite`
+      },
+      {
+        title: '2. Implement Comparative Analysis',
+        description: 'Compare performance with and without reflective capabilities',
+        language: 'python',
+        code: `from azure.ai.evaluation import ComparativeAnalysis
+
+# Compare agent performance with and without reflection capabilities
+def compare_reflection_impact(baseline_agent, reflexion_agent, test_cases):
+    # Configure comparative analysis
+    comparison = ComparativeAnalysis(
+        name="reflection-impact-analysis",
+        metrics=[
+            "accuracy",
+            "reasoning_quality", 
+            "error_recovery"
+        ]
+    )
+    
+    # Run both agents on the same test cases
+    results = comparison.evaluate(
+        systems={
+            "baseline": baseline_agent,
+            "with_reflection": reflexion_agent
+        },
+        test_cases=test_cases
+    )
+    
+    # Generate detailed report
+    report = comparison.generate_report(
+        results=results,
+        include_visualizations=True
+    )
+    
+    # Extract key insights
+    improvements = results.get_improvement_statistics(
+        baseline="baseline", 
+        candidate="with_reflection"
+    )
+    
+    return {
+        "results": results,
+        "report": report,
+        "improvements": improvements
+    }`
+      },
+      {
+        title: '3. Track Learning Curves',
+        description: 'Measure agent improvement over multiple reflection cycles',
+        language: 'typescript',
+        code: `import { LearningCurveAnalyzer } from "@azure/ai-evaluation";
+
+// Track agent improvement over multiple reflection cycles
+async function analyzeLearningCurve(reflectionSessions, metrics = ["accuracy", "reasoning_depth"]) {
+  const analyzer = new LearningCurveAnalyzer({
+    metrics: metrics,
+    significanceThreshold: 0.05
+  });
+  
+  // Add reflection sessions to analysis
+  for (const session of reflectionSessions) {
+    analyzer.addDataPoint({
+      iteration: session.iteration,
+      metrics: {
+        accuracy: session.evaluationResults.accuracy,
+        reasoning_depth: session.evaluationResults.reasoning_depth
+      },
+      metadata: {
+        task: session.task,
+        duration: session.duration
+      }
+    });
+  }
+  
+  // Generate learning curve analysis
+  const analysis = await analyzer.analyze();
+  
+  return {
+    // Learning rate: how quickly the agent is improving
+    learningRate: analysis.learningRate,
+    
+    // Plateaus: iterations where improvement slowed
+    plateaus: analysis.plateaus,
+    
+    // Projected performance: prediction of future performance
+    projectedPerformance: analysis.projectedPerformance,
+    
+    // Statistical significance of improvements
+    significantImprovements: analysis.significantChanges.filter(c => c.direction === "positive")
+  };
+}`
+      }
+    ]
+  },
+  {
     serviceId: 'azure-openai',
     patternId: 'reflexion',
     steps: [
@@ -114,6 +404,129 @@ Please provide a detailed assessment using the following structure:
 5. Improvements: Specific suggestions for improvement
 \`;`,
         language: 'typescript'
+      }
+    ]
+  },
+  {
+    serviceId: 'azure-ai-evaluation',
+    patternId: 'agentic-rag',
+    steps: [
+      {
+        title: '1. RAG Quality Evaluation',
+        description: 'Evaluate the quality of the retrieval and generation components',
+        language: 'python',
+        code: `from azure.ai.evaluation.rag import RAGEvaluator
+
+# Set up RAG evaluation for agentic RAG patterns
+def evaluate_agentic_rag_system(rag_system, test_queries, ground_truth):
+    # Initialize evaluator
+    rag_evaluator = RAGEvaluator(
+        metrics=[
+            "retrieval_precision",
+            "retrieval_recall",
+            "answer_relevance",
+            "answer_faithfulness",
+            "answer_completeness"
+        ]
+    )
+    
+    # Run evaluation
+    results = rag_evaluator.evaluate(
+        system=rag_system,
+        queries=test_queries,
+        ground_truth=ground_truth,
+        include_retrieval_analysis=True
+    )
+    
+    # Generate insights report
+    insights = rag_evaluator.generate_insights(results)
+    
+    return {
+        "overall_scores": results.get_aggregate_scores(),
+        "per_query_scores": results.get_per_query_scores(),
+        "retrieval_analysis": results.get_retrieval_analysis(),
+        "improvement_suggestions": insights.get_improvement_suggestions(),
+        "failure_modes": insights.get_failure_modes()
+    }`
+      },
+      {
+        title: '2. Hallucination Detection',
+        description: 'Identify and measure hallucinations in RAG responses',
+        language: 'typescript',
+        code: `import { HallucinationDetector } from "@azure/ai-evaluation";
+
+// Detect hallucinations in RAG system outputs
+async function detectHallucinations(responses, retrievedDocuments) {
+  const detector = new HallucinationDetector({
+    reference_model: "gpt-4",
+    strict_mode: true
+  });
+  
+  const results = await detector.analyze({
+    responses: responses,
+    context: retrievedDocuments,
+    detection_types: [
+      "contradiction",  // Claims that contradict provided context
+      "fabrication",    // Made-up information not in context
+      "extrapolation"   // Excessive inference beyond what context supports
+    ]
+  });
+  
+  // Get hallucination statistics
+  const stats = {
+    hallucination_rate: results.hallucination_rate,
+    by_type: results.hallucinations_by_type,
+    severity: results.severity_distribution
+  };
+  
+  // Get problematic responses
+  const problematic = results.responses
+    .filter(r => r.has_hallucination)
+    .map(r => ({
+      response_id: r.id,
+      hallucination_spans: r.hallucination_spans,
+      severity: r.severity
+    }));
+  
+  return {
+    statistics: stats,
+    problematic_responses: problematic,
+    suggested_improvements: results.improvement_suggestions
+  };
+}`
+      },
+      {
+        title: '3. Query-Document Relevance Assessment',
+        description: 'Evaluate the relevance of retrieved documents to the query',
+        language: 'typescript',
+        code: `import { RelevanceEvaluator } from "@azure/ai-evaluation";
+
+// Evaluate relevance between queries and retrieved documents
+async function evaluateQueryDocumentRelevance(queries, retrievedDocuments) {
+  const evaluator = new RelevanceEvaluator({
+    model: "text-embedding-ada-002",
+    metrics: ["cosine_similarity", "semantic_relevance"]
+  });
+  
+  // Run relevance evaluation across all query-document pairs
+  const results = await evaluator.evaluateRelevance(queries, retrievedDocuments);
+  
+  // Analyze distribution of relevance scores
+  const relevanceAnalysis = await evaluator.analyzeRelevanceDistribution(results);
+  
+  // Generate ideal document examples for low-scoring queries
+  const improvementExamples = await evaluator.generateIdealDocuments(
+    queries.filter(q => results.getQueryAverage(q.id) < 0.7)
+  );
+  
+  return {
+    overall_relevance: results.getAverageScore(),
+    query_document_scores: results.getDetailedScores(),
+    score_distribution: relevanceAnalysis.distribution,
+    weak_queries: relevanceAnalysis.low_performing_queries,
+    improvement_examples: improvementExamples
+  };
+}`
       }
     ]
   },
@@ -247,9 +660,10 @@ const azureServicesBestPractices: AzureServiceInfo[] = [
       'Implement evaluation for edge cases and adversarial inputs',
       'Set up regular automated evaluation runs for continuous quality assessment',
       'Track evaluation metrics over time to identify regressions',
-      'Include diverse evaluation criteria beyond accuracy (safety, fairness, etc.)'
+      'Include diverse evaluation criteria beyond accuracy (safety, fairness, etc.)',
+      'Use comparative evaluations to measure improvements between model versions'
     ],
-    documentation: 'https://learn.microsoft.com/azure/ai-services/content-safety/'
+    documentation: 'https://learn.microsoft.com/en-us/python/api/overview/azure/ai-evaluation-readme?view=azure-python'
   },
   {
     id: 'azure-ai-inference',

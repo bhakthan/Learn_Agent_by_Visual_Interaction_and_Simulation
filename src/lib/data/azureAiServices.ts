@@ -73,13 +73,15 @@ export const azureAIServices: AzureAIService[] = [
       "Benchmarking against reference models",
       "Safety and alignment testing",
       "Performance and accuracy metrics",
-      "Human feedback integration"
+      "Human feedback integration",
+      "Comparative evaluations between model versions"
     ],
     useCases: [
       "Model quality assurance",
       "Comparative model analysis",
       "Regression testing for model updates",
-      "Safety and alignment verification"
+      "Safety and alignment verification",
+      "Agent behavior validation"
     ],
     bestPractices: [
       "Create comprehensive test suites covering expected agent behaviors",
@@ -89,7 +91,7 @@ export const azureAIServices: AzureAIService[] = [
       "Include diverse evaluation criteria beyond accuracy (safety, fairness, etc.)",
       "Combine automated evaluation with human review for critical systems"
     ],
-    documentation: "https://learn.microsoft.com/azure/ai-services/content-safety/"
+    documentation: "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-evaluation-readme?view=azure-python"
   },
   {
     id: "azure-ai-inference",
