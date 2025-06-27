@@ -159,13 +159,13 @@ const executeReAct = async (query: string, maxCycles = 5) => {
           const toolInput = actionInputMatch[1].trim();
           
           // Step 2: Action phase - call the appropriate tool
-          console.log(\`Cycle \${currentCycle}: Taking action with tool "\\\${toolName}"...\`);
+          console.log(`Cycle ${currentCycle}: Taking action with tool "${toolName}"...`);
           
           if (tools[toolName]) {
             const toolResult = await tools[toolName](toolInput);
             contextHistory.push(\`Observation: \${toolResult}\`);
           } else {
-            contextHistory.push(\`Observation: Error - Tool "\\\${toolName}" not found.\`);
+            contextHistory.push(`Observation: Error - Tool "${toolName}" not found.`);
           }
         }
       }
@@ -431,9 +431,9 @@ const executeCodeAct = async (query, maxCycles = 5) => {
         "1. Write Python code to make progress, formatted as:\\n" +
         "   Thought: <your reasoning>\\n" +
         "   Code:\\n" +
-        "   ```\\n" +
+        "   " + "```" + "\\n" +
         "   # Your Python code here\\n" +
-        "   ```\\n\\n" +
+        "   " + "```" + "\\n\\n" +
         "2. Or provide the final answer if you've solved the problem:\\n" +
         "   Thought: <your reasoning>\\n" +
         "   Final Answer: <your answer>";
@@ -753,13 +753,13 @@ const executeAgenticRAG = async (query) => {
     // Additional tools available to the agent
     const tools = {
       webSearch: async (subQuery) => {
-        return \`Web search results for "\\\${subQuery}": [simulated web results]\`;
+        return `Web search results for "${subQuery}": [simulated web results]`;
       },
       calculateRelevance: (chunk, query) => {
         // Simulate scoring relevance between a chunk and the query
         return { 
           score: 0.7 + Math.random() * 0.3,
-          reasoning: \`This chunk addresses key aspects of "\\\${query}"\`
+          reasoning: `This chunk addresses key aspects of "${query}"`
         };
       }
     };
@@ -994,7 +994,7 @@ const executeModernToolUse = async (query: string) => {
             toolRequest.parameters.params
           );
         default:
-          return { status: 'error', reason: \`Unknown tool: \${toolRequest.tool}\` };
+          return { status: 'error', reason: `Unknown tool: ${toolRequest.tool}` };
       }
     };
     
@@ -1355,7 +1355,7 @@ const executeAgentToAgent = async (taskInput: string, maxRounds = 3) => {
       
       Agent contributions:
       \${resultMessages.map(function(message) { 
-        return \`\\\${message.from}: \\\${message.content}\`;
+        return `${message.from}: ${message.content}`;
       }).join('\\n\\n')}
       
       Synthesize these contributions into a cohesive final result.
@@ -2064,13 +2064,13 @@ const executeAutonomousWorkflow = async (input: string, maxSteps = 10) => {
     // Track available environment tools
     const tools = {
       search: async (query) => {
-        return \`Results for "\\\${query}": [simulated search results]\`;
+        return `Results for "${query}": [simulated search results]`;
       },
       calculate: (expression) => {
         try {
-          return \`Result: \${eval(expression)}\`;
+          return `Result: ${eval(expression)}`;
         } catch (err) {
-          return \`Error calculating "\\\${expression}": \${err.message}\`;
+          return `Error calculating "${expression}": ${err.message}`;
         }
       },
       // Add more tools as needed
@@ -2117,7 +2117,7 @@ const executeAutonomousWorkflow = async (input: string, maxSteps = 10) => {
         history.push(\`Tool (\${decision.action}): \${toolResult}\`);
       } else {
         const actionName = decision.action || 'undefined';
-        history.push(\`Error: Unknown action "\\\${actionName}"\`);
+        history.push(`Error: Unknown action "${actionName}"`);
       }
     }
     
@@ -2908,7 +2908,7 @@ async function extractInformation(source, questions) {
     findings: questions.map(q => {
       return {
         question: q,
-        answer: \`Simulated answer to "\\\${q}" based on source \${source.title}\`,
+        answer: `Simulated answer to "${q}" based on source ${source.title}`,
         confidence: 0.6 + Math.random() * 0.4
       };
     })
@@ -3091,7 +3091,7 @@ const executeVoiceAgent = async (voiceInput: ArrayBuffer) => { // In real use, t
       
       Conversation history:
       \${conversationContext.history.map(function(entry, index) { 
-        return \`[\\\${index + 1}] User: \\\${entry.userInput} → Assistant: \\\${entry.agentResponse || ''}\`; 
+        return `[${index + 1}] User: ${entry.userInput} → Assistant: ${entry.agentResponse || ''}`; 
       }).join('\\n')}
       
       Generate a natural, conversational response that:
