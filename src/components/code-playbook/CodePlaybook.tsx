@@ -91,7 +91,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
   
   return (
     <div className="space-y-6 w-full">
-      <Card className={cn("w-full", isCollapsed && "md:max-w-none")}>
+      <Card className="w-full transition-all duration-300">
         <CardHeader className="p-4 sm:p-6">
           <CardTitle>{patternData.name} Implementation</CardTitle>
           <CardDescription>
@@ -100,42 +100,41 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="flex w-full flex-wrap gap-2">
-              <TabsTrigger value="general" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
-                <ListChecks size={16} /> <span className="hidden sm:inline">General Guide</span><span className="sm:hidden">Guide</span>
+            <div className="overflow-x-auto pb-2">
+              <TabsList className="flex w-full flex-nowrap gap-1 text-xs">
+                <TabsTrigger value="general" className="flex items-center gap-1 h-8 px-2 py-1">
+                  <ListChecks size={14} /> <span className="hidden sm:inline">General Guide</span><span className="sm:hidden">Guide</span>
+                </TabsTrigger>
+              <TabsTrigger value="steps" className="flex items-center gap-1 h-8 px-2 py-1">
+                <ListChecks size={14} /> <span className="hidden sm:inline">Implementation Steps</span><span className="sm:hidden">Steps</span>
               </TabsTrigger>
-              <TabsTrigger value="steps" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
-                <ListChecks size={16} /> <span className="hidden sm:inline">Implementation Steps</span><span className="sm:hidden">Steps</span>
+              <TabsTrigger value="code" className="flex items-center gap-1 h-8 px-2 py-1">
+                <Code size={14} /> <span className="hidden sm:inline">Complete Code</span><span className="sm:hidden">Code</span>
               </TabsTrigger>
-              <TabsTrigger value="code" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
-                <Code size={16} /> <span className="hidden sm:inline">Complete Code</span><span className="sm:hidden">Code</span>
+              <TabsTrigger value="visualizer" className="flex items-center gap-1 h-8 px-2 py-1">
+                <FileCode size={14} /> <span className="hidden sm:inline">Code Visualizer</span><span className="sm:hidden">Visualizer</span>
               </TabsTrigger>
-              <TabsTrigger value="visualizer" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
-                <FileCode size={16} /> <span className="hidden sm:inline">Code Visualizer</span><span className="sm:hidden">Visualizer</span>
+              <TabsTrigger value="interactive" className="flex items-center gap-1 h-8 px-2 py-1">
+                <Play size={14} /> <span className="hidden sm:inline">Interactive Example</span><span className="sm:hidden">Example</span>
               </TabsTrigger>
-              <TabsTrigger value="interactive" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
-                <Play size={16} /> <span className="hidden sm:inline">Interactive Example</span><span className="sm:hidden">Example</span>
+              <TabsTrigger value="debugger" className="flex items-center gap-1 h-8 px-2 py-1">
+                <Bug size={14} /> <span className="hidden sm:inline">Debugger</span><span className="sm:hidden">Debug</span>
               </TabsTrigger>
-              <TabsTrigger value="debugger" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
-                <Bug size={16} /> <span className="hidden sm:inline">Debugger</span><span className="sm:hidden">Debug</span>
+              <TabsTrigger value="algorithm" className="flex items-center gap-1 h-8 px-2 py-1">
+                <Graph size={14} /> <span className="hidden sm:inline">Algorithm Steps</span><span className="sm:hidden">Algorithm</span>
               </TabsTrigger>
-              <TabsTrigger value="algorithm" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
-                <Graph size={16} /> <span className="hidden sm:inline">Algorithm Steps</span><span className="sm:hidden">Algorithm</span>
+              <TabsTrigger value="security" className="flex items-center gap-1 h-8 px-2 py-1">
+                <ShieldCheck size={14} /> <span className="hidden sm:inline">Security Controls</span><span className="sm:hidden">Security</span>
               </TabsTrigger>
-              <TabsTrigger value="security" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
-                <ShieldCheck size={16} /> <span className="hidden sm:inline">Security Controls</span><span className="sm:hidden">Security</span>
-              </TabsTrigger>
-              <TabsTrigger value="practices" className="flex items-center gap-1 min-w-[80px] sm:min-w-0">
-                <Check size={16} /> <span className="hidden sm:inline">Best Practices</span><span className="sm:hidden">Practices</span>
+              <TabsTrigger value="practices" className="flex items-center gap-1 h-8 px-2 py-1">
+                <Check size={14} /> <span className="hidden sm:inline">Best Practices</span><span className="sm:hidden">Practices</span>
               </TabsTrigger>
             </TabsList>
+            </div>
             
             <TabsContent value="general" className="py-4">
               <div className="space-y-4">
-                <div className={cn(
-                  "p-4 border rounded-lg bg-card w-full transition-all duration-300",
-                  isCollapsed ? "max-w-full" : "max-w-full"
-                )}>
+                <div className="p-4 border rounded-lg bg-card w-full transition-all duration-300">
                   <h3 className="text-lg font-medium mb-2">About {patternData.name}</h3>
                   <p className="text-muted-foreground mb-4">{patternData.description}</p>
                   
@@ -157,10 +156,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                   </div>
                 </div>
                 
-                <div className={cn(
-                  "p-4 border rounded-lg bg-muted/20 w-full transition-all duration-300",
-                  isCollapsed ? "max-w-full" : "max-w-full"
-                )}>
+                <div className="p-4 border rounded-lg bg-muted/20 w-full transition-all duration-300">
                   <h3 className="text-base font-medium mb-2">Implementation Overview</h3>
                   <p className="text-sm text-muted-foreground mb-3">This pattern can be implemented using the following components:</p>
                   
@@ -179,7 +175,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                  <Card className="transition-all duration-300 h-full">
+                  <Card className="h-full">
                     <CardContent className="p-4">
                       <h4 className="text-sm font-medium mb-2">Choose this pattern when:</h4>
                       <ul className="list-disc pl-5 space-y-1 text-xs text-muted-foreground">
@@ -189,7 +185,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                       </ul>
                     </CardContent>
                   </Card>
-                  <Card className="transition-all duration-300 h-full">
+                  <Card className="h-full">
                     <CardContent className="p-4">
                       <h4 className="text-sm font-medium mb-2">Consider alternatives when:</h4>
                       <ul className="list-disc pl-5 space-y-1 text-xs text-muted-foreground">
