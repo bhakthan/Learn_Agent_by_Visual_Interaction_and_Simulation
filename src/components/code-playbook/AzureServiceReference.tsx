@@ -41,7 +41,7 @@ const azureServiceDetails: ServiceDetails[] = [
     id: 'azure-openai',
     name: 'Azure OpenAI Service',
     icon: <Cloud size={24} className="text-primary" />,
-    description: 'Azure OpenAI provides access to OpenAI\'s powerful language models including GPT-4, GPT-3.5-Turbo, and Embeddings models with Azure\'s security and compliance capabilities.',
+    description: "Azure OpenAI provides access to OpenAI's powerful language models including GPT-4, GPT-3.5-Turbo, and Embeddings models with Azure's security and compliance capabilities.",
     keyFeatures: [
       'Access to advanced GPT-4, GPT-3.5-Turbo, and future models',
       'Text embeddings generation for vector search and similarity features',
@@ -91,17 +91,15 @@ async function getCompletion(prompt: string) {
         language: 'typescript',
         description: 'Configuring an agent with system message',
         code: `// Define an agent with role-specific system message
-const agentSystemMessage = `You are an Azure AI agent specialized in this pattern.
-Your capabilities include:
-1. Understanding user requests related to this pattern
-2. Explaining how the pattern works
-3. Suggesting implementation approaches
-
-Guidelines:
-- Provide concise, accurate information
-- When unsure, acknowledge limitations
-- Focus on practical implementation advice
-`;
+const agentSystemMessage = "You are an Azure AI agent specialized in this pattern.\n" +
+"Your capabilities include:\n" +
+"1. Understanding user requests related to this pattern\n" +
+"2. Explaining how the pattern works\n" +
+"3. Suggesting implementation approaches\n\n" +
+"Guidelines:\n" +
+"- Provide concise, accurate information\n" +
+"- When unsure, acknowledge limitations\n" +
+"- Focus on practical implementation advice";
 
 // Use the system message in an agent interaction
 async function getAgentResponse(userQuery: string) {
@@ -536,10 +534,10 @@ async function deployPatternAgent() {
   
   // Define agent configuration using the pattern
   const agentConfig = {
-    name: `\${patternId}-agent`,
-    description: `An agent implementing the pattern`,
+    name: patternId + "-agent",
+    description: "An agent implementing the " + patternId + " pattern",
     pattern: {
-      type: "${patternId}",
+      type: patternId,
       configuration: {
         // Pattern-specific configuration
         // These values would be customized based on the pattern requirements
@@ -591,7 +589,11 @@ interface AzureServiceReferenceProps {
   serviceId?: string;
 }
 
-const AzureServiceReference: React.FC<AzureServiceReferenceProps> = ({ patternId, patternName, serviceId }) => {
+const AzureServiceReference: React.FC<AzureServiceReferenceProps> = ({ 
+  patternId = 'default-pattern', 
+  patternName = 'Default Pattern', 
+  serviceId 
+}) => {
   const [selectedServiceId, setSelectedServiceId] = useState<string>(serviceId || 'azure-openai');
   const [activeTab, setActiveTab] = useState<'overview' | 'samples'>('overview');
   
@@ -697,7 +699,7 @@ const AzureServiceReference: React.FC<AzureServiceReferenceProps> = ({ patternId
                   
                   <div className="relative">
                     <pre className="bg-zinc-950 text-zinc-50 p-4 rounded text-sm overflow-x-auto">
-                      <code>{sample.code.replace(/\${patternId}/g, patternId).replace(/\${patternName}/g, patternName)}</code>
+                      <code>{sample.code}</code>
                     </pre>
                     <div className="absolute top-3 right-3 flex gap-1">
                       <span className="bg-zinc-800 text-zinc-200 px-2 py-1 rounded text-xs">
@@ -705,9 +707,7 @@ const AzureServiceReference: React.FC<AzureServiceReferenceProps> = ({ patternId
                       </span>
                       <button 
                         className="bg-primary text-primary-foreground px-2 py-1 rounded text-xs"
-                        onClick={() => navigator.clipboard.writeText(
-                          sample.code.replace(/\${patternId}/g, patternId).replace(/\${patternName}/g, patternName)
-                        )}
+                        onClick={() => navigator.clipboard.writeText(sample.code)}
                       >
                         Copy
                       </button>
