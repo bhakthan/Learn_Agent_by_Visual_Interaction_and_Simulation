@@ -422,7 +422,7 @@ function checkForPromptInjection(input) {
   }
   
   // Check for delimiter confusion
-  if (/```system|<system>|<instructions>|user:|system:/i.test(input)) {
+  if (/system|<system>|<instructions>|user:|system:/i.test(input)) {
     securityFlags.push({
       type: "delimiter_confusion",
       severity: "medium"

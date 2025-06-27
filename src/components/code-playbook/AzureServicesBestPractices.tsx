@@ -62,7 +62,7 @@ const getClient = () => {
 const client = getClient();
 
 // Best Practice: Consistent system messages for agent patterns
-const agentSystemPrompt = \`You are an Azure AI agent implementing the ${pattern} pattern.
+const agentSystemPrompt = "You are an Azure AI agent implementing the " + pattern + " pattern.
 Your capabilities include:
 1. Analyzing user requests related to this domain
 2. Following a structured reasoning process
@@ -73,7 +73,7 @@ You must always:
 - Stay within the scope of your defined tools
 - Notify users when a request is beyond your capabilities
 - Avoid generating harmful or misleading information
-\`;`
+";`
     },
     {
       name: 'Content Safety',

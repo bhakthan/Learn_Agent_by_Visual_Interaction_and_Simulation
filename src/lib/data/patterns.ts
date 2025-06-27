@@ -94,22 +94,22 @@ const executeReAct = async (query: string, maxCycles = 5) => {
     let finalAnswer = '';
 
     // Add initial query to context
-    contextHistory.push(`User query: ${query}`);
+    contextHistory.push("User query: " + query);
 
     // Available tools
     const tools = {
       search: async (query) => {
-        return `Search results for "${query}": [simulated search results]`;
+        return "Search results for \"" + query + "\": [simulated search results]";
       },
       calculate: (expression) => {
         try {
-          return `Calculation result: ${eval(expression)}`;
+          return "Calculation result: " + eval(expression);
         } catch (error) {
-          return `Error in calculation: ${error.message}`;
+          return "Error in calculation: " + error.message;
         }
       },
       lookup: (entity) => {
-        return `Information about ${entity}: [simulated encyclopedia entry]`;
+        return "Information about " + entity + ": [simulated encyclopedia entry]";
       }
     };
 
@@ -117,7 +117,7 @@ const executeReAct = async (query: string, maxCycles = 5) => {
       currentCycle++;
       
       // Step 1: Reasoning phase
-      console.log(`Cycle ${currentCycle}: Reasoning...`);
+      console.log("Cycle " + currentCycle + ": Reasoning...");
       
       const reasoningPrompt = `You are a ReAct agent that solves problems through cycles of reasoning and action.
 
@@ -157,13 +157,13 @@ Think step by step about the problem. Either:
           const toolInput = actionInputMatch[1].trim();
           
           // Step 2: Action phase - call the appropriate tool
-          console.log(`Cycle ${currentCycle}: Taking action with tool "${toolName}"...`);
+          console.log("Cycle " + currentCycle + ": Taking action with tool \"" + toolName + "\"...");
           
           if (tools[toolName]) {
             const toolResult = await tools[toolName](toolInput);
-            contextHistory.push(`Observation: ${toolResult}`);
+            contextHistory.push("Observation: " + toolResult);
           } else {
-            contextHistory.push(`Observation: Error - Tool "${toolName}" not found.`);
+            contextHistory.push("Observation: Error - Tool \"" + toolName + "\" not found.");
           }
         }
       }
@@ -386,7 +386,7 @@ const executeCodeAct = async (query, maxCycles = 5) => {
 
     // Simulate Python code execution environment
     const executeCode = async (code) => {
-      console.log(`Executing Python code (simulated):`);
+      console.log("Executing Python code (simulated):");
       console.log(code);
       
       // This is a simulation - in a real implementation, this would execute Python code
@@ -394,55 +394,50 @@ const executeCodeAct = async (query, maxCycles = 5) => {
       
       if (code.includes('import')) {
         if (code.includes('numpy') || code.includes('pandas')) {
-          return `Library imported successfully.`;
+          return "Library imported successfully.";
         }
       }
       
       if (code.includes('print(')) {
         const printMatch = code.match(/print\(([^)]+)\)/);
         if (printMatch) {
-          return `Output: ${printMatch[1]}`;
+          return "Output: " + printMatch[1];
         }
       }
       
       if (code.includes('def ')) {
-        return `Function defined successfully.`;
+        return "Function defined successfully.";
       }
       
       // Default simulated response
-      return `Code executed. Result: [simulated output based on the provided code]`;
+      return "Code executed. Result: [simulated output based on the provided code]";
     };
 
     // Add the initial query to context
-    contextHistory.push(`User query: ${query}`);
+    contextHistory.push("User query: " + query);
 
     while (!done && currentCycle < maxCycles) {
       currentCycle++;
       
       // Generate agent response
-      const agentPrompt = `
-        You are a CodeAct agent that solves problems by writing and executing Python code.
-
-Task: ${query}
-
-Previous interactions:
-${contextHistory.join('\n\n')}
-
-Based on the current state, either:
-
-1. Write Python code to make progress, formatted as:
-   Thought: <your reasoning>
-   Code:
-   \`\`\`
-   # Your Python code here
-   \`\`\`
-
-2. Or provide the final answer if you've solved the problem:
-   Thought: <your reasoning>
-   Final Answer: <your answer>`;
+      const agentPrompt = 
+        "You are a CodeAct agent that solves problems by writing and executing Python code.\n\n" +
+        "Task: " + query + "\n\n" +
+        "Previous interactions:\n" + 
+        contextHistory.join('\n\n') + "\n\n" +
+        "Based on the current state, either:\n\n" +
+        "1. Write Python code to make progress, formatted as:\n" +
+        "   Thought: <your reasoning>\n" +
+        "   Code:\n" +
+        "   ```\n" +
+        "   # Your Python code here\n" +
+        "   ```\n\n" +
+        "2. Or provide the final answer if you've solved the problem:\n" +
+        "   Thought: <your reasoning>\n" +
+        "   Final Answer: <your answer>";
       
       const agentResponse = await llm(agentPrompt);
-      contextHistory.push(`Agent: ${agentResponse}`);
+      contextHistory.push("Agent: " + agentResponse);
       
       // Check if the response contains a final answer
       if (agentResponse.includes('Final Answer:')) {
@@ -463,7 +458,7 @@ Based on the current state, either:
           const executionResult = await executeCode(code);
           
           // Add the observation to the history
-          contextHistory.push(`Observation: ${executionResult}`);
+          contextHistory.push("Observation: " + executionResult);
         }
       }
     }

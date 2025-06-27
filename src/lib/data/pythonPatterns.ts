@@ -167,9 +167,9 @@ class CodeActAgent:
                 1. Write Python code to make progress, formatted as:
                    Thought: <your reasoning>
                    Code:
-                   ```
+                   ``
                    # Your Python code here
-                   ```
+                   ``
                 
                 2. Or provide the final answer if you've solved the problem:
                    Thought: <your reasoning>
@@ -187,9 +187,9 @@ class CodeActAgent:
                         done = True
                 
                 # Check if the response contains code
-                elif "```" in agent_response:
+                elif "``" in agent_response:
                     # Extract code block
-                    match = re.search(r"```(?:python)?\\s*([\\s\\S]*?)\\s*```", agent_response)
+                    match = re.search(r"``(?:python)?\\s*([\\s\\S]*?)\\s*``", agent_response)
                     if match:
                         code = match.group(1).strip()
                         
