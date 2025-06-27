@@ -1,889 +1,853 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Cloud, Stack, Lightning, Database, LineSegments, ShieldCheck, Article, Cpu } from '@phosphor-icons/react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-
-// Define types for services
-type ServiceCategory = 'foundation' | 'knowledge' | 'safety' | 'evaluation' | 'inference' | 'platform' | 'agent';
-
-interface AzureServiceInfo {
-  id: string;
-  name: string;
-  icon: React.ReactNode;
-  description: string;
-  category: ServiceCategory;
-  tips: string[];
-  documentation: string;
-}
-
-interface ServiceImplementationStep {
-  title: string;
-  description: string;
-  code?: string;
-  language?: 'typescript' | 'python';
-}
-
-interface AzureServiceImplementation {
-  serviceId: string;
-  patternId: string;
-  steps: ServiceImplementationStep[];
-}
-
-// Sample data for Azure services best practices with implementation steps
-const azureServiceImplementations: AzureServiceImplementation[] = [
-  {
-    serviceId: 'azure-ai-evaluation',
-    patternId: 'evaluator-optimizer',
-    steps: [
-      {
-        title: '1. Set Up Evaluation Pipeline',
-        description: 'Create a comprehensive evaluation pipeline for agent outputs',
-        code: `import { EvaluationClient, EvaluationPipeline } from "@azure/ai-evaluation";
-
-// Configure the evaluation client
-const evaluationClient = new EvaluationClient({
-  endpoint: "https://your-evaluation-endpoint.azure.com",
-  credential: new AzureKeyCredential(process.env.EVALUATION_API_KEY || "")
-});
-
-// Create an evaluation pipeline for the evaluator-optimizer pattern
-async function createEvaluationPipeline() {
-  const pipeline = new EvaluationPipeline({
-    name: "agent-output-evaluation",
-    stages: [
-      {
-        name: "factuality",
-        evaluator: {
-          type: "llm-based",
-          model: "gpt-4",
-          prompt_template: "Evaluate if the following text is factually accurate based on known information."
-        }
-      },
-      {
-        name: "relevance",
-        evaluator: {
-          type: "llm-based",
-          model: "gpt-4",
-          prompt_template: "On a scale of 1-10, rate how relevant this response is to the query."
-        }
-      },
-      {
-        name: "safety",
-        evaluator: {
-          type: "content-safety",
-          categories: ["hate", "violence", "selfHarm", "sexual"]
-        }
-      },
-      {
-        name: "quality",
-        evaluator: {
-          type: "custom",
-          evaluate: async (input) => {
-            // Custom evaluation logic here
-            return { score: 0.85, reason: "Good quality response with minor improvements needed" };
-          }
-        }
-      }
-    ]
-  });
-  
-  return pipeline;
-}`,
-        language: 'typescript'
-      },
-      {
-        title: '2. Implement Optimizer with Feedback Loop',
-        description: 'Create an optimizer that improves content based on evaluation feedback',
-        code: `// Optimize content based on evaluation feedback
-async function optimizeContent(content: string, query: string, evaluationResults: any) {
-  // Create system message that incorporates evaluation feedback
-  const systemMessage = \`You are a content optimizer. Your task is to improve content based on evaluation feedback.
-The content needs improvement in these areas:
-\${evaluationResults.factuality.score < 0.7 ? '- Factual accuracy: ' + evaluationResults.factuality.feedback : ''}
-\${evaluationResults.relevance.score < 0.7 ? '- Relevance to query: ' + evaluationResults.relevance.feedback : ''}
-\${evaluationResults.quality.score < 0.7 ? '- Overall quality: ' + evaluationResults.quality.feedback : ''}
-
-Original query: \${query}
-\`;
-
-  // Request improved content
-  const result = await client.getChatCompletions(
-    "gpt-4",
-    [
-      { role: "system", content: systemMessage },
-      { role: "user", content: content }
-    ],
-    { temperature: 0.7 }
-  );
-  
-  return result.choices[0].message?.content || content;
-}`,
-        language: 'typescript'
-      },
-      {
-        title: '3. Create Evaluation-Optimization Loop',
-        description: 'Implement the full evaluator-optimizer cycle',
-        code: `// Full implementation of evaluator-optimizer pattern
-async function evaluateAndOptimize(initialContent: string, query: string, maxIterations = 3) {
-  const pipeline = await createEvaluationPipeline();
-  let currentContent = initialContent;
-  let iterations = 0;
-  let evaluationResults;
-  let improvementHistory = [];
-  
-  while (iterations < maxIterations) {
-    iterations++;
-    
-    // Evaluate current content
-    evaluationResults = await pipeline.evaluate({
-      content: currentContent,
-      query: query,
-      context: { iteration: iterations }
-    });
-    
-    // Record results in history
-    improvementHistory.push({
-      iteration: iterations,
-      content: currentContent,
-      scores: {
-        factuality: evaluationResults.factuality.score,
-        relevance: evaluationResults.relevance.score,
-        safety: evaluationResults.safety.score,
-        quality: evaluationResults.quality.score
-      }
-    });
-    
-    // Check if quality thresholds have been met
-    const overallScore = (
-      evaluationResults.factuality.score +
-      evaluationResults.relevance.score +
-      evaluationResults.quality.score
-    ) / 3;
-    
-    // If quality is sufficient, break the loop
-    if (overallScore > 0.85) {
-      console.log("Quality threshold met after " + iterations + " iterations");
-      break;
-    }
-    
-    // Optimize the content based on evaluation feedback
-    currentContent = await optimizeContent(currentContent, query, evaluationResults);
-  }
-  
-  return {
-    finalContent: currentContent,
-    iterations: iterations,
-    evaluationResults: evaluationResults,
-    improvementHistory: improvementHistory
-  };
-}`,
-        language: 'typescript'
-      }
-    ]
-  },
-  {
-    serviceId: 'azure-openai',
-    patternId: 'agent-to-agent',
-    steps: [
-      {
-        title: '1. Create Agent Interface',
-        description: 'Define a common interface for agent communication',
-        code: `interface Agent {
-  id: string;
-  name: string;
-  capabilities: string[];
-  process: (message: Message) => Promise<Message>;
-  canHandle: (task: Task) => Promise<boolean>;
-}`,
-        language: 'typescript'
-      },
-      {
-        title: '2. Set Up Azure OpenAI Client',
-        description: 'Configure Azure OpenAI client with authentication',
-        code: `import { AzureOpenAIClient } from "@azure/openai";
-
-const client = new AzureOpenAIClient(
-  "https://your-resource-name.openai.azure.com",
-  { key: process.env.AZURE_OPENAI_KEY }
-);`,
-        language: 'typescript'
-      },
-      {
-        title: '3. Implement Agent Communication Protocol',
-        description: 'Define message format for agent-to-agent communication',
-        code: `interface Message {
-  id: string;
-  fromAgent: string;
-  toAgent: string;
-  content: string;
-  timestamp: Date;
-  type: 'request' | 'response' | 'error';
-  context?: Record<string, any>;
-}`,
-        language: 'typescript'
-      }
-    ]
-  },
-  {
-    serviceId: 'azure-ai-evaluation',
-    patternId: 'reflexion',
-    steps: [
-      {
-        title: '1. Configure Evaluation Framework',
-        description: 'Set up a self-reflection evaluation framework',
-        language: 'python',
-        code: `from azure.ai.evaluation.reflexion import ReflexionEvaluator
-from azure.ai.evaluation import EvaluationSuite
-
-# Create evaluator for the Reflexion pattern
-def setup_reflexion_evaluator():
-    # Define reflection evaluation criteria
-    reflection_criteria = [
-        {
-            "name": "error_identification",
-            "description": "How well the agent identifies errors in its reasoning"
-        },
-        {
-            "name": "learning_from_feedback",
-            "description": "How effectively the agent incorporates feedback"
-        },
-        {
-            "name": "improvement_over_iterations",
-            "description": "Whether successive iterations show measurable improvement"
-        }
-    ]
-    
-    # Create reflexion-specific evaluator
-    reflexion_evaluator = ReflexionEvaluator(
-        criteria=reflection_criteria,
-        reference_model="gpt-4-turbo",
-        num_iterations_to_analyze=3
-    )
-    
-    # Create evaluation suite with multiple evaluators
-    evaluation_suite = EvaluationSuite(
-        name="reflexion-evaluation-suite",
-        evaluators=[
-            reflexion_evaluator,
-            # Can include additional evaluators here
-        ]
-    )
-    
-    return evaluation_suite`
-      },
-      {
-        title: '2. Implement Comparative Analysis',
-        description: 'Compare performance with and without reflective capabilities',
-        language: 'python',
-        code: `from azure.ai.evaluation import ComparativeAnalysis
-
-# Compare agent performance with and without reflection capabilities
-def compare_reflection_impact(baseline_agent, reflexion_agent, test_cases):
-    # Configure comparative analysis
-    comparison = ComparativeAnalysis(
-        name="reflection-impact-analysis",
-        metrics=[
-            "accuracy",
-            "reasoning_quality", 
-            "error_recovery"
-        ]
-    )
-    
-    # Run both agents on the same test cases
-    results = comparison.evaluate(
-        systems={
-            "baseline": baseline_agent,
-            "with_reflection": reflexion_agent
-        },
-        test_cases=test_cases
-    )
-    
-    # Generate detailed report
-    report = comparison.generate_report(
-        results=results,
-        include_visualizations=True
-    )
-    
-    # Extract key insights
-    improvements = results.get_improvement_statistics(
-        baseline="baseline", 
-        candidate="with_reflection"
-    )
-    
-    return {
-        "results": results,
-        "report": report,
-        "improvements": improvements
-    }`
-      },
-      {
-        title: '3. Track Learning Curves',
-        description: 'Measure agent improvement over multiple reflection cycles',
-        language: 'typescript',
-        code: `import { LearningCurveAnalyzer } from "@azure/ai-evaluation";
-
-// Track agent improvement over multiple reflection cycles
-async function analyzeLearningCurve(reflectionSessions, metrics = ["accuracy", "reasoning_depth"]) {
-  const analyzer = new LearningCurveAnalyzer({
-    metrics: metrics,
-    significanceThreshold: 0.05
-  });
-  
-  // Add reflection sessions to analysis
-  for (const session of reflectionSessions) {
-    analyzer.addDataPoint({
-      iteration: session.iteration,
-      metrics: {
-        accuracy: session.evaluationResults.accuracy,
-        reasoning_depth: session.evaluationResults.reasoning_depth
-      },
-      metadata: {
-        task: session.task,
-        duration: session.duration
-      }
-    });
-  }
-  
-  // Generate learning curve analysis
-  const analysis = await analyzer.analyze();
-  
-  return {
-    // Learning rate: how quickly the agent is improving
-    learningRate: analysis.learningRate,
-    
-    // Plateaus: iterations where improvement slowed
-    plateaus: analysis.plateaus,
-    
-    // Projected performance: prediction of future performance
-    projectedPerformance: analysis.projectedPerformance,
-    
-    // Statistical significance of improvements
-    significantImprovements: analysis.significantChanges.filter(c => c.direction === "positive")
-  };
-}`
-      }
-    ]
-  },
-  {
-    serviceId: 'azure-openai',
-    patternId: 'reflexion',
-    steps: [
-      {
-        title: '1. Configure Separate Model Instances',
-        description: 'Set up separate model deployments for action and reflection',
-        code: `// Action model - can use higher temperature for generation
-const actionModel = new AzureOpenAIClient(
-  "https://your-resource-name.openai.azure.com/deployments/action-model",
-  { key: process.env.AZURE_OPENAI_KEY }
-);
-
-// Reflection model - use lower temperature for critical evaluation
-const reflectionModel = new AzureOpenAIClient(
-  "https://your-resource-name.openai.azure.com/deployments/reflection-model",
-  { key: process.env.AZURE_OPENAI_KEY }
-);`,
-        language: 'typescript'
-      },
-      {
-        title: '2. Define Reflection Template',
-        description: 'Create a structured template for self-reflection',
-        code: `const reflectionTemplate = \`
-Evaluate the following solution:
-
-SOLUTION:
-\${solution}
-
-Please provide a detailed assessment using the following structure:
-1. Correctness: Is the solution technically correct?
-2. Completeness: Does it address all aspects of the problem?
-3. Efficiency: Could the solution be more efficient?
-4. Clarity: Is the solution clear and easy to understand?
-5. Improvements: Specific suggestions for improvement
-\`;`,
-        language: 'typescript'
-      }
-    ]
-  },
-  {
-    serviceId: 'azure-ai-evaluation',
-    patternId: 'agentic-rag',
-    steps: [
-      {
-        title: '1. RAG Quality Evaluation',
-        description: 'Evaluate the quality of the retrieval and generation components',
-        language: 'python',
-        code: `from azure.ai.evaluation.rag import RAGEvaluator
-
-# Set up RAG evaluation for agentic RAG patterns
-def evaluate_agentic_rag_system(rag_system, test_queries, ground_truth):
-    # Initialize evaluator
-    rag_evaluator = RAGEvaluator(
-        metrics=[
-            "retrieval_precision",
-            "retrieval_recall",
-            "answer_relevance",
-            "answer_faithfulness",
-            "answer_completeness"
-        ]
-    )
-    
-    # Run evaluation
-    results = rag_evaluator.evaluate(
-        system=rag_system,
-        queries=test_queries,
-        ground_truth=ground_truth,
-        include_retrieval_analysis=True
-    )
-    
-    # Generate insights report
-    insights = rag_evaluator.generate_insights(results)
-    
-    return {
-        "overall_scores": results.get_aggregate_scores(),
-        "per_query_scores": results.get_per_query_scores(),
-        "retrieval_analysis": results.get_retrieval_analysis(),
-        "improvement_suggestions": insights.get_improvement_suggestions(),
-        "failure_modes": insights.get_failure_modes()
-    }`
-      },
-      {
-        title: '2. Hallucination Detection',
-        description: 'Identify and measure hallucinations in RAG responses',
-        language: 'typescript',
-        code: `import { HallucinationDetector } from "@azure/ai-evaluation";
-
-// Detect hallucinations in RAG system outputs
-async function detectHallucinations(responses, retrievedDocuments) {
-  const detector = new HallucinationDetector({
-    reference_model: "gpt-4",
-    strict_mode: true
-  });
-  
-  const results = await detector.analyze({
-    responses: responses,
-    context: retrievedDocuments,
-    detection_types: [
-      "contradiction",  // Claims that contradict provided context
-      "fabrication",    // Made-up information not in context
-      "extrapolation"   // Excessive inference beyond what context supports
-    ]
-  });
-  
-  // Get hallucination statistics
-  const stats = {
-    hallucination_rate: results.hallucination_rate,
-    by_type: results.hallucinations_by_type,
-    severity: results.severity_distribution
-  };
-  
-  // Get problematic responses
-  const problematic = results.responses
-    .filter(r => r.has_hallucination)
-    .map(r => ({
-      response_id: r.id,
-      hallucination_spans: r.hallucination_spans,
-      severity: r.severity
-    }));
-  
-  return {
-    statistics: stats,
-    problematic_responses: problematic,
-    suggested_improvements: results.improvement_suggestions
-  };
-}`
-      },
-      {
-        title: '3. Query-Document Relevance Assessment',
-        description: 'Evaluate the relevance of retrieved documents to the query',
-        language: 'typescript',
-        code: `import { RelevanceEvaluator } from "@azure/ai-evaluation";
-
-// Evaluate relevance between queries and retrieved documents
-async function evaluateQueryDocumentRelevance(queries, retrievedDocuments) {
-  const evaluator = new RelevanceEvaluator({
-    model: "text-embedding-ada-002",
-    metrics: ["cosine_similarity", "semantic_relevance"]
-  });
-  
-  // Run relevance evaluation across all query-document pairs
-  const results = await evaluator.evaluateRelevance(queries, retrievedDocuments);
-  
-  // Analyze distribution of relevance scores
-  const relevanceAnalysis = await evaluator.analyzeRelevanceDistribution(results);
-  
-  // Generate ideal document examples for low-scoring queries
-  const improvementExamples = await evaluator.generateIdealDocuments(
-    queries.filter(q => results.getQueryAverage(q.id) < 0.7)
-  );
-  
-  return {
-    overall_relevance: results.getAverageScore(),
-    query_document_scores: results.getDetailedScores(),
-    score_distribution: relevanceAnalysis.distribution,
-    weak_queries: relevanceAnalysis.low_performing_queries,
-    improvement_examples: improvementExamples
-  };
-}`
-      }
-    ]
-  },
-  {
-    serviceId: 'azure-ai-search',
-    patternId: 'agentic-rag',
-    steps: [
-      {
-        title: '1. Configure Azure AI Search',
-        description: 'Set up vector search in Azure AI Search',
-        code: `import { SearchClient, AzureKeyCredential } from "@azure/search-documents";
-
-// Configure search client with vector capabilities
-const searchClient = new SearchClient(
-  "https://your-service.search.windows.net",
-  "your-index-name",
-  new AzureKeyCredential(process.env.AZURE_SEARCH_KEY),
-  {
-    apiVersion: "2023-10-01-Preview" // Use preview API for vector search
-  }
-);`,
-        language: 'typescript'
-      },
-      {
-        title: '2. Implement Query Rewriting',
-        description: 'Enhance retrieval with query rewriting techniques',
-        code: `async function enhanceQuery(userQuery: string): Promise<string> {
-  // Use Azure OpenAI to enhance the original query
-  const systemMessage = "You are a search query enhancement assistant. Your job is to rewrite user queries to improve search results. Expand abbreviations, add synonyms, and clarify ambiguous terms.";
-  
-  const prompt = \`Original query: "\${userQuery}"
-Please rewrite this search query to improve search results.\`;
-
-  const response = await client.getChatCompletions(
-    "your-gpt4-deployment",
-    [
-      { role: "system", content: systemMessage },
-      { role: "user", content: prompt }
-    ],
-    { temperature: 0.3 }
-  );
-  
-  return response.choices[0].message.content || userQuery;
-}`,
-        language: 'typescript'
-      },
-      {
-        title: '3. Implement Hybrid Search',
-        description: 'Combine vector and keyword search for optimal retrieval',
-        code: `async function hybridSearch(query: string, filters?: any) {
-  const enhancedQuery = await enhanceQuery(query);
-  
-  // Generate embeddings for the query
-  const embeddings = await getEmbeddings(enhancedQuery);
-  
-  // Perform hybrid search
-  const searchResults = await searchClient.search(enhancedQuery, {
-    vectorSearchOptions: {
-      vector: embeddings,
-      fields: ["contentVector"],
-      kind: "hybrid"
-    },
-    select: ["id", "content", "title", "source"],
-    filter: filters,
-    top: 5
-  });
-  
-  return searchResults;
-}`,
-        language: 'typescript'
-      }
-    ]
-  }
-];
-
-// Define Azure services with implementation tips
-const azureServicesBestPractices: AzureServiceInfo[] = [
-  {
-    id: 'azure-openai',
-    name: 'Azure OpenAI Service',
-    icon: <Cloud size={18} className="text-primary" />,
-    category: 'foundation',
-    description: 'Provides REST API access to OpenAI\'s powerful language models with Azure security and compliance features.',
-    tips: [
-      'Configure system messages to define agent behavior constraints and roles',
-      'Use separate model deployments for different agent functions (reasoning vs. generation)',
-      'Implement token usage tracking and rate limiting for cost management',
-      'Cache responses for identical or similar queries to reduce costs',
-      'Set appropriate temperature values based on task requirements (lower for factual tasks, higher for creative ones)'
-    ],
-    documentation: 'https://learn.microsoft.com/en-us/azure/ai-services/openai/'
-  },
-  {
-    id: 'azure-ai-search',
-    name: 'Azure AI Search',
-    icon: <Database size={18} className="text-secondary" />,
-    category: 'knowledge',
-    description: 'AI-powered cloud search service with built-in retrieval capabilities for knowledge-intensive applications.',
-    tips: [
-      'Design optimal chunking strategies for your document corpus',
-      'Implement hybrid search combining vector and keyword approaches',
-      'Use filters to narrow search scope for more relevant results',
-      'Configure proper relevance tuning based on content types',
-      'Implement feedback loops to improve search quality over time'
-    ],
-    documentation: 'https://learn.microsoft.com/en-us/azure/search/'
-  },
-  {
-    id: 'azure-content-safety',
-    name: 'Azure Content Safety',
-    icon: <ShieldCheck size={18} className="text-destructive" />,
-    category: 'safety',
-    description: 'AI service for detecting harmful content across text and images to maintain safety and compliance.',
-    tips: [
-      'Implement pre-moderation for AI-generated content before display',
-      'Set appropriate threshold levels based on your application audience',
-      'Create feedback loops to improve detection over time',
-      'Implement blocklists for domain-specific problematic content',
-      'Deploy content safety in multiple stages of the agent workflow'
-    ],
-    documentation: 'https://learn.microsoft.com/en-us/azure/ai-services/content-safety/'
-  },
-  {
-    id: 'azure-ai-evaluation',
-    name: 'Azure AI Evaluation SDK',
-    icon: <LineSegments size={18} className="text-secondary" />,
-    category: 'evaluation',
-    description: 'Tools for systematic evaluation and benchmarking of AI models to ensure quality, safety, and alignment.',
-    tips: [
-      'Create comprehensive test suites covering expected agent behaviors',
-      'Implement evaluation for edge cases and adversarial inputs',
-      'Set up regular automated evaluation runs for continuous quality assessment',
-      'Track evaluation metrics over time to identify regressions',
-      'Include diverse evaluation criteria beyond accuracy (safety, fairness, etc.)',
-      'Use comparative evaluations to measure improvements between model versions'
-    ],
-    documentation: 'https://learn.microsoft.com/en-us/python/api/overview/azure/ai-evaluation-readme?view=azure-python'
-  },
-  {
-    id: 'azure-ai-inference',
-    name: 'Azure AI Inference SDK',
-    icon: <Lightning size={18} className="text-accent" />,
-    category: 'inference',
-    description: 'Optimizes the deployment and execution of AI models for efficient inference in production environments.',
-    tips: [
-      'Implement request batching to improve throughput where appropriate',
-      'Configure autoscaling based on demand patterns',
-      'Set appropriate timeouts and retry policies for inference requests',
-      'Optimize model size for deployment constraints (distillation, quantization)',
-      'Use caching for frequently requested inference results'
-    ],
-    documentation: 'https://learn.microsoft.com/en-us/azure/machine-learning/concept-inference'
-  },
-  {
-    id: 'azure-ai-foundry',
-    name: 'Azure AI Foundry',
-    icon: <Stack size={18} className="text-primary" />,
-    category: 'platform',
-    description: 'Collection of tools and services for building, deploying, and managing AI models on Azure.',
-    tips: [
-      'Set up proper CI/CD pipelines for model deployment',
-      'Implement staged deployment (dev, test, prod) for AI models',
-      'Use version control for prompts and model configurations',
-      'Establish monitoring dashboards for model performance',
-      'Implement testing frameworks for AI behaviors'
-    ],
-    documentation: 'https://learn.microsoft.com/en-us/azure/ai-studio/'
-  },
-  {
-    id: 'azure-ai-agent-service',
-    name: 'Azure AI Agent Service',
-    icon: <Cpu size={18} className="text-accent" />,
-    category: 'agent',
-    description: 'Managed service for deploying, monitoring, and scaling intelligent agents built on Azure AI services.',
-    tips: [
-      'Define clear boundaries for agent capabilities and limitations',
-      'Implement comprehensive logging of agent actions and decisions',
-      'Design agents with graceful degradation paths when services are unavailable',
-      'Create agent testing suites that verify behavior across scenarios',
-      'Implement usage throttling and cost control mechanisms'
-    ],
-    documentation: 'https://learn.microsoft.com/en-us/azure/ai-services/'
-  }
-];
+import React from 'react';
+import { TabsContent } from '@/components/ui/tabs';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { 
+  Cloud, 
+  Lightning, 
+  MagnifyingGlass, 
+  Warning,
+  Lock,
+  Database,
+  Gauge,
+  ClockClockwise
+} from '@phosphor-icons/react';
 
 interface AzureServicesBestPracticesProps {
-  patternId: string;
-  patternName: string;
+  pattern: string;
 }
 
-const AzureServicesBestPractices: React.FC<AzureServicesBestPracticesProps> = ({ patternId, patternName }) => {
-  const [selectedServiceId, setSelectedServiceId] = useState<string | null>("azure-openai");
+const AzureServicesBestPractices: React.FC<AzureServicesBestPracticesProps> = ({ pattern }) => {
+  const practices = [
+    {
+      name: 'Azure OpenAI Integration',
+      icon: <Cloud size={18} className="text-primary" />,
+      category: 'foundation',
+      description: 'Provides REST API access to OpenAI\'s powerful language models with Azure security and compliance features.',
+      tips: [
+        'Configure system messages to define agent behavior constraints and roles',
+        'Use Azure RBAC for access management of AI resources',
+        'Apply Azure Key Vault for secure credential management',
+        'Leverage managed identity for authentication where available',
+        'Implement request/response logging for later analysis'
+      ],
+      code: `// Setup Azure OpenAI with proper authentication
+import { OpenAIClient, AzureKeyCredential } from "@azure/openai";
+import { DefaultAzureCredential } from "@azure/identity";
+
+// Best Practice: Use managed identity where possible
+const credential = new DefaultAzureCredential();
+
+// Fallback to API key if needed
+const getClient = () => {
+  const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
   
-  // Get implementation steps for the current pattern and selected service
-  const implementationSteps = azureServiceImplementations.find(
-    impl => impl.serviceId === selectedServiceId && impl.patternId === patternId
-  )?.steps || [];
+  try {
+    // Try managed identity first
+    return new OpenAIClient(endpoint, credential);
+  } catch (err) {
+    // Fallback to API key
+    const apiKey = process.env.AZURE_OPENAI_API_KEY;
+    return new OpenAIClient(endpoint, new AzureKeyCredential(apiKey));
+  }
+};
+
+const client = getClient();
+
+// Best Practice: Consistent system messages for agent patterns
+const agentSystemPrompt = \`You are an Azure AI agent implementing the ${pattern} pattern.
+Your capabilities include:
+1. Analyzing user requests related to this domain
+2. Following a structured reasoning process
+3. Using available tools appropriately
+4. Providing clear explanations of your process
+
+You must always:
+- Stay within the scope of your defined tools
+- Notify users when a request is beyond your capabilities
+- Avoid generating harmful or misleading information
+\`;`
+    },
+    {
+      name: 'Content Safety',
+      icon: <Warning size={18} className="text-primary" />,
+      category: 'safety',
+      description: 'Implements guardrails for agent-generated content to ensure appropriateness and safety.',
+      tips: [
+        'Implement pre-moderation for AI-generated content before display',
+        'Set appropriate threshold levels based on your application\'s audience',
+        'Create feedback loops to improve detection over time',
+        'Implement blocklists for domain-specific problematic content',
+        'Use moderation in both directions - for user input and AI responses'
+      ],
+      code: `import { ContentSafetyClient, AzureKeyCredential } from "@azure/ai-content-safety";
+
+// Initialize the content safety client
+const contentSafetyClient = new ContentSafetyClient(
+  process.env.AZURE_CONTENT_SAFETY_ENDPOINT,
+  new AzureKeyCredential(process.env.AZURE_CONTENT_SAFETY_KEY)
+);
+
+// Function to moderate AI-generated content
+async function moderateContent(text) {
+  try {
+    const result = await contentSafetyClient.analyzeText({
+      text: text,
+      categories: ["Hate", "SelfHarm", "Sexual", "Violence"],
+      blocklistNames: ["custom-blocklist"] // Your custom blocklist if configured
+    });
+    
+    // Check if any category exceeds the threshold (4 = medium severity)
+    const hasPotentialHarm = result.categoriesAnalysis.some(
+      category => category.severity >= 4
+    );
+    
+    // Check for blocklist matches
+    const hasBlocklistMatch = result.blocklistsMatch && 
+      result.blocklistsMatch.length > 0;
+      
+    return {
+      safe: !hasPotentialHarm && !hasBlocklistMatch,
+      analysis: result.categoriesAnalysis,
+      blocklistMatches: result.blocklistsMatch
+    };
+  } catch (error) {
+    console.error("Content moderation failed:", error);
+    return { safe: false, error: error.message };
+  }
+}
+
+// Integrate with agent response pipeline
+async function getModeratedAgentResponse(userQuery) {
+  // Check user input first
+  const userInputSafety = await moderateContent(userQuery);
+  if (!userInputSafety.safe) {
+    return "I'm unable to respond to that request due to content guidelines.";
+  }
   
-  const selectedService = azureServicesBestPractices.find(s => s.id === selectedServiceId);
+  // Generate agent response
+  const agentResponse = await generateAgentResponse(userQuery);
   
+  // Check agent response before returning
+  const responseSafety = await moderateContent(agentResponse);
+  if (!responseSafety.safe) {
+    return "I've generated a response, but it may not comply with content guidelines. Please try with a different query.";
+  }
+  
+  return agentResponse;
+}`
+    },
+    {
+      name: 'Vector Search',
+      icon: <MagnifyingGlass size={18} className="text-primary" />,
+      category: 'retrieval',
+      description: 'Optimizes retrieval augmented generation through semantic understanding of content.',
+      tips: [
+        'Create domain-specific embedding models for better semantic matching',
+        'Implement hybrid retrieval that combines vector and keywords',
+        'Filter search results by metadata before retrieval',
+        'Add re-ranking step after initial vector search',
+        'Perform chunking optimization appropriate for your content'
+      ],
+      code: `import { SearchClient, AzureKeyCredential, VectorizedQuery } from "@azure/search-documents";
+import { OpenAIClient } from "@azure/openai";
+
+// Initialize search client
+const searchClient = new SearchClient(
+  process.env.AZURE_SEARCH_ENDPOINT,
+  process.env.AZURE_SEARCH_INDEX_NAME,
+  new AzureKeyCredential(process.env.AZURE_SEARCH_API_KEY)
+);
+
+const openaiClient = new OpenAIClient(
+  process.env.AZURE_OPENAI_ENDPOINT,
+  new AzureKeyCredential(process.env.AZURE_OPENAI_API_KEY)
+);
+
+// Best Practice: Implement hybrid search with filtering
+async function retrieveRelevantContext(query, filters = {}) {
+  try {
+    // Generate embeddings for vector search
+    const embeddingResponse = await openaiClient.getEmbeddings(
+      process.env.AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME,
+      [query]
+    );
+    
+    const queryEmbedding = embeddingResponse.data[0].embedding;
+    
+    // Build filter expression based on provided filters
+    let filterExpression = "";
+    if (filters.category) {
+      filterExpression += \`category eq '\${filters.category}'\`;
+    }
+    
+    if (filters.dateRange) {
+      const dateFilter = \`timestamp ge \${filters.dateRange.start} and timestamp le \${filters.dateRange.end}\`;
+      filterExpression += filterExpression ? \` and \${dateFilter}\` : dateFilter;
+    }
+    
+    // Hybrid search combining vector, keyword, and filters
+    const searchResults = await searchClient.search(query, {
+      vectorQueries: [
+        {
+          kind: "vector",
+          vector: queryEmbedding,
+          fields: ["contentVector"],
+          k: 50  // Get more candidates for re-ranking
+        }
+      ],
+      select: ["id", "title", "content", "category", "source"],
+      filter: filterExpression || undefined,
+      top: 50
+    });
+    
+    // Convert to array for processing
+    const results = [];
+    for await (const result of searchResults.results) {
+      results.push(result.document);
+    }
+    
+    // Best Practice: Re-rank results with additional criteria
+    const rerankedResults = await rerank(results, query);
+    
+    return rerankedResults.slice(0, 5); // Return top 5 after re-ranking
+  } catch (error) {
+    console.error("Search failed:", error);
+    return [];
+  }
+}
+
+// Re-ranking function (simplified)
+async function rerank(results, query) {
+  // Simplified implementation - in production use a proper re-ranker
+  return results.sort((a, b) => {
+    // Combine factors: relevance score, recency, source authority, etc.
+    return b.searchScore - a.searchScore;
+  });
+}`
+    },
+    {
+      name: 'Model Evaluation',
+      icon: <Gauge size={18} className="text-primary" />,
+      category: 'quality',
+      description: 'Implements systematic evaluation of agent behaviors to ensure quality and continuous improvement.',
+      tips: [
+        'Design comprehensive evaluation test sets for your use case',
+        'Evaluate multiple aspects beyond just accuracy (safety, tone, etc.)',
+        'Implement automatic evaluation with Azure AI Evaluation Services',
+        'Combine automated and human evaluations in your pipeline',
+        'Track model quality over time to catch regressions'
+      ],
+      code: `from azure.ai.evaluation import EvaluationPipeline, LLMEvaluator
+import pandas as pd
+import json
+
+# Function that runs the agent
+def run_agent(query):
+    # Your agent implementation here
+    pass
+
+# Create evaluator using Azure OpenAI
+evaluator = LLMEvaluator(
+    endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
+    deployment_name="gpt-4", # Using stronger model for evaluation
+    api_key=os.environ["AZURE_OPENAI_API_KEY"]
+)
+
+# Best Practice: Define multiple evaluation criteria
+evaluation_criteria = [
+    "Relevance: Does the response directly address the user's question?",
+    "Accuracy: Is the information provided factually correct?",
+    "Completeness: Does the response cover all aspects of the question?",
+    "Safety: Does the response avoid potentially harmful content?",
+    "Reasoning: Does the agent demonstrate clear reasoning steps?",
+]
+
+# Create evaluation pipeline
+pipeline = EvaluationPipeline(evaluator=evaluator)
+
+# Load test cases from file
+with open("test_cases.json", "r") as f:
+    test_cases = json.load(f)
+
+# Run evaluation
+eval_results = pipeline.evaluate(
+    test_cases=test_cases,
+    agent_fn=run_agent,
+    criteria=evaluation_criteria,
+    scoring_method="likert_scale",
+    scale_max=5
+)
+
+# Best Practice: Detailed analysis of results
+def analyze_results(results):
+    # Overall scores
+    print(f"Overall mean score: {results.mean_score:.2f}/5.0")
+    
+    # Per-criterion analysis
+    for criterion in evaluation_criteria:
+        name = criterion.split(":")[0]
+        score = results.criterion_scores[name]
+        print(f"{name}: {score:.2f}/5.0")
+    
+    # Identify weak areas
+    weak_areas = [c for c, s in results.criterion_scores.items() if s < 4.0]
+    if weak_areas:
+        print(f"Areas needing improvement: {', '.join(weak_areas)}")
+    
+    # Save detailed results for further analysis
+    pd.DataFrame(results.individual_scores).to_csv("evaluation_results.csv")
+
+analyze_results(eval_results)`
+    },
+    {
+      name: 'Data Storage',
+      icon: <Database size={18} className="text-primary" />,
+      category: 'security',
+      description: 'Securely manages data used by and generated from AI agents with proper compliance controls.',
+      tips: [
+        'Use Azure Storage with encryption at rest and in transit',
+        'Implement data retention policies aligned with requirements',
+        'Set up storage analytics to monitor access patterns',
+        'Apply RBAC for granular access control to stored data',
+        'Consider Azure Synapse for large-scale analytics on agent data'
+      ],
+      code: `import { BlobServiceClient, StorageSharedKeyCredential } from "@azure/storage-blob";
+import { DefaultAzureCredential } from "@azure/identity";
+
+// Best Practice: Use managed identities for authentication
+const credential = new DefaultAzureCredential();
+
+// Create blob service client using managed identity
+const blobServiceClient = new BlobServiceClient(
+  \`https://\${process.env.STORAGE_ACCOUNT_NAME}.blob.core.windows.net\`,
+  credential
+);
+
+// Store agent conversational data securely
+async function storeConversationData(conversationId, userData, agentResponses) {
+  try {
+    // Get container client (create if not exists)
+    const containerClient = blobServiceClient.getContainerClient("agent-conversations");
+    await containerClient.createIfNotExists();
+    
+    // Separate PII from conversational data
+    const piiData = {
+      userId: userData.userId,
+      userEmail: userData.userEmail,
+      // Other PII fields
+    };
+    
+    const conversationData = {
+      id: conversationId,
+      timestamp: new Date().toISOString(),
+      userQueries: userData.queries,
+      agentResponses: agentResponses,
+      metadata: {
+        agentVersion: process.env.AGENT_VERSION,
+        patternType: "${pattern}"
+      }
+    };
+    
+    // Store conversation data - with retention policy metadata
+    const conversationBlob = containerClient.getBlockBlobClient(
+      \`conversations/\${conversationId}.json\`
+    );
+    
+    await conversationBlob.upload(
+      JSON.stringify(conversationData),
+      JSON.stringify(conversationData).length,
+      {
+        metadata: {
+          retentionCategory: "conversation",
+          retentionDays: "90"
+        }
+      }
+    );
+    
+    // Store PII data in separate container with stricter controls
+    // (in production consider using Azure Key Vault for sensitive data)
+    const piiContainer = blobServiceClient.getContainerClient("user-data");
+    await piiContainer.createIfNotExists();
+    
+    const piiBlob = piiContainer.getBlockBlobClient(
+      \`users/\${userData.userId}.json\`
+    );
+    
+    await piiBlob.upload(
+      JSON.stringify(piiData),
+      JSON.stringify(piiData).length,
+      {
+        metadata: {
+          dataCategory: "pii",
+          retentionDays: "30",
+          encrypted: "true"
+        }
+      }
+    );
+    
+    return true;
+  } catch (error) {
+    console.error("Failed to store conversation data:", error);
+    return false;
+  }
+}`
+    },
+    {
+      name: 'Performance Optimization',
+      icon: <Gauge size={18} className="text-primary" />,
+      category: 'performance',
+      description: 'Techniques for improving throughput, latency, and cost-effectiveness of AI agent systems.',
+      tips: [
+        'Implement caching for common queries and responses',
+        'Use streaming responses for better perceived latency',
+        'Set up model deployment scaling rules appropriate to your traffic',
+        'Consider Azure Cache for Redis to store context and session data',
+        'Optimize prompt construction to reduce token usage'
+      ],
+      code: `import { OpenAIClient, AzureKeyCredential } from "@azure/openai";
+import { RedisClient } from "@azure/redis-client";
+
+// Initialize clients
+const openaiClient = new OpenAIClient(
+  process.env.AZURE_OPENAI_ENDPOINT,
+  new AzureKeyCredential(process.env.AZURE_OPENAI_API_KEY)
+);
+
+// Initialize Redis cache for query results
+const redisClient = new RedisClient({
+  url: process.env.REDIS_CONNECTION_STRING
+});
+
+// Best Practice: Optimize with response caching and streaming
+async function optimizedAgentQuery(query, options = {}) {
+  try {
+    // Generate cache key based on query and options
+    const cacheKey = \`query:\${hashString(query)}:options:\${hashString(JSON.stringify(options))}\`;
+    
+    // Check cache first
+    const cachedResponse = await redisClient.get(cacheKey);
+    if (cachedResponse && !options.skipCache) {
+      console.log("Cache hit for query");
+      return JSON.parse(cachedResponse);
+    }
+    
+    // Best Practice: Use TokenSize estimator to optimize prompts
+    const estimatedTokens = estimateTokenSize(query);
+    if (estimatedTokens > 1000) {
+      // Apply prompt optimization for large inputs
+      query = optimizePrompt(query);
+    }
+    
+    // Use streaming for better user experience
+    if (options.streaming) {
+      const stream = await openaiClient.streamChatCompletions(
+        process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
+        [
+          { role: "system", content: agentSystemMessage },
+          { role: "user", content: query }
+        ]
+      );
+      
+      // Return stream for client processing
+      return { stream };
+    }
+    
+    // Standard request
+    const response = await openaiClient.getChatCompletions(
+      process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
+      [
+        { role: "system", content: agentSystemMessage },
+        { role: "user", content: query }
+      ],
+      {
+        temperature: options.temperature || 0.7,
+        maxTokens: options.maxTokens || 800
+      }
+    );
+    
+    const result = {
+      content: response.choices[0].message.content,
+      tokenUsage: response.usage
+    };
+    
+    // Cache the response (expire after 1 hour)
+    await redisClient.set(cacheKey, JSON.stringify(result), { ex: 3600 });
+    
+    return result;
+  } catch (error) {
+    console.error("Query failed:", error);
+    throw error;
+  }
+}
+
+// Helper function to create hash for cache keys
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash &= hash; // Convert to 32bit integer
+  }
+  return hash.toString(16);
+}
+
+// Best Practice: Implement efficient token usage
+function estimateTokenSize(text) {
+  // Rough estimate: 1 token ≈ 4 chars for English text
+  return Math.ceil(text.length / 4);
+}
+
+// Optimize prompt to reduce token usage
+function optimizePrompt(text) {
+  // Implement your prompt optimization logic
+  // e.g., summarize, extract key points, etc.
+  return text;
+}`
+    },
+    {
+      name: 'Observability',
+      icon: <ClockClockwise size={18} className="text-primary" />,
+      category: 'monitoring',
+      description: 'End-to-end monitoring and tracing of AI agent systems for visibility and diagnostics.',
+      tips: [
+        'Implement Application Insights for end-to-end monitoring',
+        'Create custom metrics for agent-specific KPIs',
+        'Set up alerts for anomalies in response patterns',
+        'Use distributed tracing across your agent components',
+        'Monitor token usage for cost management'
+      ],
+      code: `import { TelemetryClient } from "@microsoft/applicationinsights-web";
+import { OpenAIClient, AzureKeyCredential } from "@azure/openai";
+
+// Initialize Application Insights
+const telemetryClient = new TelemetryClient({
+  connectionString: process.env.APPINSIGHTS_CONNECTION_STRING
+});
+
+// Initialize Azure OpenAI client
+const openaiClient = new OpenAIClient(
+  process.env.AZURE_OPENAI_ENDPOINT,
+  new AzureKeyCredential(process.env.AZURE_OPENAI_API_KEY)
+);
+
+// Best Practice: Comprehensive agent telemetry
+async function agentWithTelemetry(query, userId) {
+  // Start tracking request
+  const requestStartTime = Date.now();
+  const requestId = generateRequestId();
+  
+  try {
+    // Track incoming request
+    telemetryClient.trackEvent({
+      name: "AgentQuery",
+      properties: {
+        requestId: requestId,
+        userId: userId,
+        queryLength: query.length,
+        timestamp: new Date().toISOString(),
+        pattern: "${pattern}"
+      }
+    });
+
+    // Process with OpenAI
+    let tokenUsage = 0;
+    let latency = 0;
+    let result;
+    
+    try {
+      // Start OpenAI performance tracking
+      const llmStartTime = Date.now();
+      
+      // Get response from OpenAI
+      const response = await openaiClient.getChatCompletions(
+        process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
+        [
+          { role: "system", content: agentSystemPrompt },
+          { role: "user", content: query }
+        ]
+      );
+      
+      // Calculate LLM metrics
+      latency = Date.now() - llmStartTime;
+      tokenUsage = response.usage.totalTokens;
+      result = response.choices[0].message.content;
+      
+      // Track LLM operation success
+      telemetryClient.trackDependency({
+        target: "AzureOpenAI",
+        name: "ChatCompletion",
+        data: "getChatCompletions",
+        duration: latency,
+        resultCode: 200,
+        success: true,
+        properties: {
+          requestId: requestId,
+          model: process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
+          promptTokens: response.usage.promptTokens,
+          completionTokens: response.usage.completionTokens,
+          totalTokens: tokenUsage
+        }
+      });
+    } catch (error) {
+      // Track LLM operation failure
+      telemetryClient.trackDependency({
+        target: "AzureOpenAI",
+        name: "ChatCompletion",
+        data: "getChatCompletions",
+        duration: Date.now() - llmStartTime,
+        resultCode: error.statusCode || 500,
+        success: false,
+        properties: {
+          requestId: requestId,
+          error: error.message,
+          model: process.env.AZURE_OPENAI_DEPLOYMENT_NAME
+        }
+      });
+      throw error;
+    }
+    
+    // Track custom metrics
+    telemetryClient.trackMetric({
+      name: "LLMLatency",
+      average: latency,
+      properties: {
+        requestId: requestId,
+        model: process.env.AZURE_OPENAI_DEPLOYMENT_NAME
+      }
+    });
+
+    telemetryClient.trackMetric({
+      name: "TokenUsage",
+      average: tokenUsage,
+      properties: {
+        requestId: requestId,
+        model: process.env.AZURE_OPENAI_DEPLOYMENT_NAME
+      }
+    });
+    
+    // Track success completion
+    const totalDuration = Date.now() - requestStartTime;
+    telemetryClient.trackRequest({
+      name: "AgentQuery",
+      url: "InternalAgentService",
+      duration: totalDuration,
+      resultCode: 200,
+      success: true,
+      properties: {
+        requestId: requestId,
+        responseTime: totalDuration,
+        tokenUsage: tokenUsage,
+        pattern: "${pattern}",
+        userSatisfaction: "Unknown" // To be updated later with feedback
+      }
+    });
+    
+    return {
+      requestId: requestId,
+      result: result,
+      metrics: {
+        latency: latency,
+        tokenUsage: tokenUsage,
+        totalDuration: totalDuration
+      }
+    };
+  } catch (error) {
+    // Track failure
+    telemetryClient.trackRequest({
+      name: "AgentQuery",
+      url: "InternalAgentService",
+      duration: Date.now() - requestStartTime,
+      resultCode: error.statusCode || 500,
+      success: false,
+      properties: {
+        requestId: requestId,
+        error: error.message,
+        pattern: "${pattern}"
+      }
+    });
+    
+    telemetryClient.trackException({
+      exception: error,
+      properties: {
+        requestId: requestId,
+        query: query,
+        pattern: "${pattern}"
+      }
+    });
+    
+    throw error;
+  }
+}
+
+// Generate unique request ID for tracing
+function generateRequestId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+}`
+    },
+    {
+      name: 'Authentication & Authorization',
+      icon: <Lock size={18} className="text-primary" />,
+      category: 'security',
+      description: 'Secure access control for agent capabilities and data with Azure-native authentication.',
+      tips: [
+        'Use Microsoft Entra ID for user authentication',
+        'Implement Azure RBAC for fine-grained access control',
+        'Set up Azure Key Vault for secure credential storage',
+        'Apply least privilege principles for all agent roles',
+        'Implement API authentication with OAuth 2.0'
+      ],
+      code: `import { ClientSecretCredential } from "@azure/identity";
+import { SecretClient } from "@azure/keyvault-secrets";
+import { OpenAIClient } from "@azure/openai";
+
+// Best Practice: Secure credential management
+async function getSecureClient() {
+  try {
+    // Set up Key Vault access
+    const credential = new ClientSecretCredential(
+      process.env.TENANT_ID,
+      process.env.CLIENT_ID,
+      process.env.CLIENT_SECRET
+    );
+    
+    const keyVaultUrl = process.env.KEYVAULT_URL;
+    const keyClient = new SecretClient(keyVaultUrl, credential);
+    
+    // Retrieve secrets securely
+    const apiKeySecret = await keyClient.getSecret("azure-openai-api-key");
+    const endpointSecret = await keyClient.getSecret("azure-openai-endpoint");
+    
+    // Create authenticated client
+    const openAIClient = new OpenAIClient(
+      endpointSecret.value,
+      new AzureKeyCredential(apiKeySecret.value)
+    );
+    
+    return openAIClient;
+  } catch (error) {
+    console.error("Failed to initialize secure client:", error);
+    throw error;
+  }
+}
+
+// Best Practice: Role-based access control for agent capabilities
+async function authorizeAgentOperation(userId, operationType) {
+  try {
+    // Check user's assigned roles (from session, token claims, etc.)
+    const userRoles = await getUserRoles(userId);
+    
+    // Define role-based permissions
+    const rolePermissions = {
+      "Reader": ["query"],
+      "Contributor": ["query", "feedback", "customize"],
+      "Admin": ["query", "feedback", "customize", "configure"]
+    };
+    
+    // Check if user has permission for this operation
+    const userHasPermission = userRoles.some(role => 
+      rolePermissions[role] && 
+      rolePermissions[role].includes(operationType)
+    );
+    
+    if (!userHasPermission) {
+      console.warn(\`Authorization denied: User \${userId} attempted \${operationType} without permission\`);
+      return false;
+    }
+    
+    // Log authorized access
+    console.log(\`Authorized \${userId} for \${operationType}\`);
+    return true;
+  } catch (error) {
+    console.error("Authorization error:", error);
+    return false;
+  }
+}
+
+// Example authorized agent API for administrators
+async function adminConfigureAgentPattern(userId, patternConfig) {
+  // Check authorization
+  const isAuthorized = await authorizeAgentOperation(userId, "configure");
+  
+  if (!isAuthorized) {
+    throw new Error("Unauthorized: Insufficient permissions to configure agent patterns");
+  }
+  
+  // Proceed with configuration (example)
+  console.log(\`Admin \${userId} configuring pattern ${pattern} with config:\`, patternConfig);
+  
+  // Implementation continues...
+}
+
+// Helper function to get user roles
+async function getUserRoles(userId) {
+  // In production, this would fetch roles from Microsoft Entra ID or your user system
+  return ["Contributor"]; // Example default role
+}`
+    }
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="border rounded-lg p-4 bg-muted/10">
-        <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
-          <Cloud size={20} className="text-primary" />
-          Azure AI Services Integration for {patternName}
-        </h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Choose an Azure service to see implementation guidance and best practices for the {patternName} pattern.
+    <TabsContent value="azure-best-practices" className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold mb-2">Azure Integration Best Practices</h2>
+        <p className="text-muted-foreground mb-6">
+          Recommended practices for implementing the {pattern} pattern using Azure AI services
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {azureServicesBestPractices.map(service => (
-            <Card 
-              key={service.id}
-              className={`overflow-hidden cursor-pointer transition-colors ${
-                selectedServiceId === service.id 
-                  ? 'border-primary bg-primary/5' 
-                  : 'hover:border-primary/50'
-              }`}
-              onClick={() => setSelectedServiceId(service.id)}
-            >
-              <CardHeader className="p-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  {service.icon}
-                  <span>{service.name}</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-0">
-                <p className="text-xs text-muted-foreground line-clamp-2">
-                  {service.description}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-      
-      {selectedService && (
-        <div className="border rounded-lg overflow-hidden">
-          <div className="bg-muted/30 p-4 border-b">
-            <h3 className="text-base font-medium flex items-center gap-2">
-              {selectedService.icon}
-              <span>{selectedService.name} Integration</span>
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Best practices and implementation guidance for integrating {selectedService.name} with the {patternName} pattern.
-            </p>
-          </div>
-          
-          <div className="p-4">
-            <Tabs defaultValue="best-practices">
-              <TabsList className="mb-4">
-                <TabsTrigger value="best-practices">Best Practices</TabsTrigger>
-                <TabsTrigger value="implementation">Implementation</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="best-practices" className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Integration Best Practices</h4>
-                  <ul className="list-disc pl-5 space-y-2 text-sm">
-                    {selectedService.tips.map((tip, i) => (
-                      <li key={i} className="text-foreground/90">{tip}</li>
+        <div className="space-y-4">
+          <Accordion type="single" collapsible className="w-full">
+            {practices.map((practice, index) => (
+              <AccordionItem key={index} value={`practice-${index}`} className="border bg-card">
+                <AccordionTrigger className="px-4 py-3 hover:bg-muted/50">
+                  <div className="flex items-center gap-3 text-left">
+                    {practice.icon}
+                    <div>
+                      <span className="font-medium">{practice.name}</span>
+                      <span className="ml-3">
+                        <Badge variant="outline" className="bg-primary/10 text-xs">
+                          {practice.category}
+                        </Badge>
+                      </span>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pt-2 pb-4">
+                  <CardDescription className="mb-3">
+                    {practice.description}
+                  </CardDescription>
+                  
+                  <h4 className="font-medium text-sm mb-2">Best Practices:</h4>
+                  <ul className="space-y-1.5 mb-4">
+                    {practice.tips.map((tip, i) => (
+                      <li key={i} className="flex gap-2 text-sm">
+                        <span className="text-primary">•</span>
+                        <span>{tip}</span>
+                      </li>
                     ))}
                   </ul>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-2">When to use {selectedService.name}</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div className="border rounded p-3 bg-background">
-                      <Badge variant="outline" className="mb-2">Recommended</Badge>
-                      <ul className="list-disc pl-4 text-xs space-y-1">
-                        <li>When implementing complex {patternName} patterns</li>
-                        <li>For production-grade agent deployments</li>
-                        <li>When security and compliance are critical</li>
-                      </ul>
+                  
+                  {practice.code && (
+                    <div className="mt-4">
+                      <h4 className="font-medium text-sm mb-2">Implementation Example:</h4>
+                      <div className="bg-muted rounded-md p-4 text-xs overflow-x-auto">
+                        <pre>{practice.code}</pre>
+                      </div>
                     </div>
-                    <div className="border rounded p-3 bg-background">
-                      <Badge variant="outline" className="mb-2 bg-muted/50">Consider Alternatives</Badge>
-                      <ul className="list-disc pl-4 text-xs space-y-1">
-                        <li>For prototyping and early development</li>
-                        <li>When budget constraints are significant</li>
-                        <li>For extremely simple agent patterns</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-end">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-xs" 
-                    onClick={() => window.open(selectedService.documentation, '_blank')}
-                  >
-                    Official Documentation
-                  </Button>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="implementation" className="space-y-4">
-                {implementationSteps.length > 0 ? (
-                  <Accordion type="single" collapsible className="w-full">
-                    {implementationSteps.map((step, idx) => (
-                      <AccordionItem key={idx} value={`step-${idx}`}>
-                        <AccordionTrigger className="hover:text-primary text-sm">
-                          {step.title}
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <p className="text-sm text-muted-foreground mb-3">{step.description}</p>
-                          
-                          {step.code && (
-                            <div className="relative">
-                              <pre className="bg-zinc-950 text-zinc-50 p-3 rounded text-xs overflow-x-auto">
-                                <code>{step.code}</code>
-                              </pre>
-                              <div className="absolute top-2 right-2 flex gap-1">
-                                <span className="bg-zinc-800 text-zinc-200 px-2 py-1 rounded text-[10px]">
-                                  {step.language || 'typescript'}
-                                </span>
-                                <button 
-                                  className="bg-primary text-primary-foreground px-2 py-1 rounded text-[10px]"
-                                  onClick={() => navigator.clipboard.writeText(step.code || '')}
-                                >
-                                  Copy
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                ) : (
-                  <div className="text-center py-6 border border-dashed rounded-lg">
-                    <LineSegments size={32} className="mx-auto text-muted-foreground mb-2" />
-                    <h4 className="text-base font-medium">Implementation Steps Not Available</h4>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Detailed implementation steps for {selectedService.name} with the {patternName} pattern are not available yet.
-                    </p>
-                  </div>
-                )}
-                
-                <div className="bg-muted/20 p-3 rounded text-sm">
-                  <p className="font-medium mb-1">Implementation Note</p>
-                  <p className="text-muted-foreground text-xs">
-                    These implementation examples are starting points. You may need to adapt them to your specific 
-                    requirements and Azure environment. Always refer to the latest Azure documentation.
-                  </p>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
-      )}
-    </div>
+      </div>
+    </TabsContent>
   );
 };
 
