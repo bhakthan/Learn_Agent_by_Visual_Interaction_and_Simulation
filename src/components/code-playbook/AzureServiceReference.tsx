@@ -479,7 +479,7 @@ async function setupPatternDeploymentPipeline() {
       type: "github",
       repository: "your-org/agent-patterns",
       branch: "main",
-      directory: "patterns/${patternId}"
+      directory: "patterns/" + pipelineConfig.name
     },
     deployment: {
       environments,
@@ -534,10 +534,10 @@ async function deployPatternAgent() {
   
   // Define agent configuration using the pattern
   const agentConfig = {
-    name: patternId + "-agent",
-    description: "An agent implementing the " + patternId + " pattern",
+    name: "custom-agent",
+    description: "An agent implementing a custom pattern",
     pattern: {
-      type: patternId,
+      type: "custom-pattern",
       configuration: {
         // Pattern-specific configuration
         // These values would be customized based on the pattern requirements
