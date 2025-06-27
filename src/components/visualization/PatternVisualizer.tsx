@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Play, Stop, ArrowsCounterClockwise, Info, FastForward, Pause, StepForward, Rewind, QuestionCircle } from '@phosphor-icons/react'
 // Import necessary functions from dataFlowUtils
-import * as dataFlowUtils from '@/lib/utils/dataFlowUtils'
+import { simulatePatternFlow, FlowMessage, DataFlowState, DataFlow } from '@/lib/utils/dataFlowUtils'
 import DataFlowVisualizer from './DataFlowVisualizer'
 
 interface PatternVisualizerProps {
@@ -335,7 +335,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     };
     
     // Start the simulation using our utility
-    const { cleanup } = dataFlowUtils.simulatePatternFlow(
+    const { cleanup } = simulatePatternFlow(
       nodes,
       edges,
       handleNodeStatus,

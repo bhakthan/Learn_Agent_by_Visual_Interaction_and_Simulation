@@ -234,7 +234,7 @@ export const resetDataFlow = (): DataFlowState => {
 /**
  * Get animation style parameters based on message type
  */
-export const getDataFlowAnimationStyle = (
+export { simulatePatternFlow, getDataFlowAnimationStyle, createDataFlow, resetDataFlow, getSpeedMultiplier };
   type?: 'query' | 'response' | 'tool_call' | 'observation' | 'reflection' | 'plan' | 'message' | 'data' | 'error',
   params?: { color: string; pulseSpeed: number }
 ) => {
