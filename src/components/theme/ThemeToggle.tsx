@@ -1,23 +1,17 @@
 import { Button } from "@/components/ui/button";
-import { useTheme } from "./ThemeProvider";
+import { useTheme } from "./theme-context";
 import { Moon, Sun } from "@phosphor-icons/react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useEffect, useState } from "react";
 
 export function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   
   // Only show the toggle after hydration to avoid SSR mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
-  
-  // Handler with extra console logging for debugging
-  const handleToggleTheme = () => {
-    console.log("Toggling theme from " + theme + " to " + (theme === "light" ? "dark" : "light"));
-    toggleTheme();
-  };
   
   if (!mounted) {
     return <div className="w-9 h-9" />; // Placeholder with same dimensions
@@ -30,7 +24,7 @@ export function ThemeToggle() {
           <Button
             variant="outline"
             size="icon"
-            onClick={handleToggleTheme}
+            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
             className={`rounded-full h-9 w-9 ${
               theme === "light" 
               ? "border-primary/20 bg-background" 
