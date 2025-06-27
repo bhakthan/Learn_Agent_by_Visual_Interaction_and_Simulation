@@ -166,7 +166,7 @@ export const azureAIServices: AzureAIService[] = [
     ],
     bestPractices: [
       "Implement pre-moderation for AI-generated content before display",
-      "Set appropriate threshold levels based on your application's audience",
+      "Set appropriate threshold levels based on your application\'s audience",
       "Combine automated safety checks with human review for edge cases",
       "Create feedback loops to improve detection over time",
       "Implement blocklists for domain-specific problematic content",

@@ -18,7 +18,7 @@ export default function CommunityPatternDetails({ pattern, onBack }: CommunityPa
   const [votes, setVotes] = useState(pattern.votes);
   const [hasVoted, setHasVoted] = useState(false);
   const [comments, setComments] = useState<Array<{id: number, text: string, author: string, date: string}>>([
-    {id: 1, text: "Great implementation! I've been looking for something like this.", author: "Azure Developer", date: "3 days ago"},
+    {id: 1, text: "Great implementation! I\'ve been looking for something like this.", author: "Azure Developer", date: "3 days ago"},
     {id: 2, text: "Have you considered adding Azure Monitor integration for observability?", author: "Cloud Architect", date: "1 day ago"},
   ]);
   const [commentText, setCommentText] = useState("");
