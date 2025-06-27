@@ -235,7 +235,7 @@ const ConceptsExplorer = () => {
                 <p>
                   ModelContextProtocol (MCP) is a framework for standardizing how AI agents communicate, 
                   maintain context, and collaborate. It provides structure for how agents share information, 
-                  pass control, and maintain conversational or task state.
+                  pass control, and maintain conversational or task state across interactions.
                 </p>
                 <div className="bg-muted p-4 rounded-md">
                   <h4 className="font-semibold">Key MCP Components:</h4>

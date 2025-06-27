@@ -434,6 +434,11 @@ const ACPMCPComparison = () => {
                   </ul>
                 </div>
               </CardContent>
+              <CardFooter>
+                <p className="text-xs text-muted-foreground">
+                  Learn more at <a href="https://modelcontextprotocol.io/introduction" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">modelcontextprotocol.io</a>
+                </p>
+              </CardFooter>
             </Card>
           </div>
           

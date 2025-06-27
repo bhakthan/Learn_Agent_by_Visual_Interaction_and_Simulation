@@ -219,6 +219,9 @@ const MCPDemo = () => {
               The demo above shows how agents maintain conversation context, include metadata for 
               coordination, and perform handoffs while preserving the full interaction history.
             </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Learn more at <a href="https://modelcontextprotocol.io/introduction" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">modelcontextprotocol.io</a> and explore the <a href="https://github.com/microsoft/mcp" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Microsoft MCP GitHub repository</a>.
+            </p>
           </div>
         </div>
       </CardContent>

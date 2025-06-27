@@ -181,14 +181,19 @@ export const references: ReferencesData = {
         name: "Official Documentation",
         references: [
           {
-            title: "MCP Framework Overview",
-            url: "https://learn.microsoft.com/azure/ai-services/",
+            title: "Model Context Protocol (MCP) Introduction",
+            url: "https://modelcontextprotocol.io/introduction",
             description: "Official documentation on the ModelContextProtocol"
           },
           {
-            title: "Azure AI Model Context Documentation",
-            url: "https://learn.microsoft.com/azure/ai-studio/concepts/model-context",
-            description: "Documentation on model context in Azure AI"
+            title: "MCP Specification",
+            url: "https://modelcontextprotocol.io/specification",
+            description: "Technical specification of the Model Context Protocol"
+          },
+          {
+            title: "Azure MCP GitHub Repository",
+            url: "https://github.com/microsoft/mcp",
+            description: "Microsoft's official MCP GitHub repository"
           }
         ]
       },
@@ -197,9 +202,14 @@ export const references: ReferencesData = {
         name: "Code Samples",
         references: [
           {
-            title: "MCP Implementation Examples",
-            url: "https://github.com/microsoft/MCP-examples",
-            description: "Example implementations of the MCP"
+            title: "MCP Examples",
+            url: "https://modelcontextprotocol.io/examples",
+            description: "Example implementations of the Model Context Protocol"
+          },
+          {
+            title: "MCP Implementation Patterns",
+            url: "https://modelcontextprotocol.io/patterns",
+            description: "Common implementation patterns for MCP"
           },
           {
             title: "Azure AI Context Management Samples",
@@ -212,6 +222,11 @@ export const references: ReferencesData = {
         id: "tutorials",
         name: "Tutorials & Guides",
         references: [
+          {
+            title: "Getting Started with MCP",
+            url: "https://modelcontextprotocol.io/getting-started",
+            description: "Guide to getting started with Model Context Protocol"
+          },
           {
             title: "Context Management Best Practices",
             url: "https://learn.microsoft.com/azure/ai-services/openai/concepts/context-management",

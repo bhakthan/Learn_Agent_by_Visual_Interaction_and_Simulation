@@ -285,6 +285,10 @@ async function teamProcess(request) {
       At its core, MCP addresses the challenges of context management, message formatting, and state tracking
       in multi-agent systems. It ensures that agents can effectively collaborate across different implementations
       and platforms, maintaining coherent conversations and workflows.
+
+      The protocol was designed to solve common problems in AI systems related to context retention, message history management,
+      and effective agent collaboration. MCP is transport-agnostic, focusing on message structure and context handling
+      rather than the specific communication channels used.
     `,
     keyFeatures: [
       "Standardized message format with metadata for tracking and routing",
@@ -293,7 +297,8 @@ async function teamProcess(request) {
       "Control flow mechanisms for handling handoffs between agents",
       "Error handling and recovery procedures",
       "Interoperability between different agent implementations",
-      "Extension mechanisms for domain-specific requirements"
+      "Extension mechanisms for domain-specific requirements",
+      "Transport-agnostic design that works with various communication protocols"
     ],
     applicationAreas: [
       "Enterprise systems with multiple specialized agents",
@@ -330,34 +335,39 @@ async function teamProcess(request) {
     examples: [
       {
         title: "Basic MCP Message Structure",
-        description: "Example of a simple MCP message",
+        description: "Example of a simple MCP message following the specification",
         codeSnippet: `
 // Example MCP message format
 const mcpMessage = {
+  // Core protocol information
+  protocol: "mcp-0.1",
+  
+  // Message metadata
   message_id: "msg_123456789",
-  thread_id: "thread_abcdef",
-  timestamp: "2023-06-25T14:35:12Z",
-  sender: {
-    id: "agent_research",
-    role: "researcher"
-  },
-  recipient: {
-    id: "agent_writer",
-    role: "content_creator"
-  },
-  content: {
-    type: "research_findings",
-    body: "Here are the key facts about the topic...",
-    attachments: []
-  },
+  parent_id: "msg_previous_id",
+  trace_id: "trace_abc123",
+  
+  // Message content
+  role: "assistant",
+  content: "Here are the key facts about the topic you requested...",
+  
+  // Context handling
   context: {
-    references: ["message_previous_id"],
-    conversation_state: "in_progress"
+    current: {
+      conversation_id: "conv_xyz789",
+      turn: 3
+    },
+    references: [
+      { id: "msg_previous_id", role: "user" }
+    ]
   },
-  metadata: {
-    protocol_version: "1.0",
-    priority: "normal",
-    ttl: 3600
+  
+  // Message properties
+  properties: {
+    created_at: "2023-06-25T14:35:12Z",
+    model: "gpt-4",
+    temperature: 0.7,
+    intent: "information_retrieval"
   }
 };
 
@@ -367,52 +377,89 @@ await sendMcpMessage(recipientAgent, mcpMessage);
       },
       {
         title: "MCP Context Management",
-        description: "Maintaining conversation context across interactions",
+        description: "Implementing an MCP context manager for conversation tracking",
         codeSnippet: `
-// MCP context manager
+// MCP context manager implementation
 class McpContextManager {
-  private contexts: Map<string, any> = new Map();
+  private contexts = new Map();
   
-  // Store context for a thread
-  storeContext(threadId: string, context: any) {
-    this.contexts.set(threadId, {
-      ...this.contexts.get(threadId),
-      ...context,
+  // Store context for a conversation
+  storeContext(conversationId, contextData) {
+    const existingContext = this.contexts.get(conversationId) || {
+      messages: [],
+      turn: 0,
+      metadata: {}
+    };
+    
+    this.contexts.set(conversationId, {
+      ...existingContext,
+      ...contextData,
       lastUpdated: Date.now()
     });
   }
   
-  // Retrieve context for a thread
-  getContext(threadId: string) {
-    return this.contexts.get(threadId) || {};
+  // Add message to context history
+  addMessage(conversationId, message) {
+    const context = this.contexts.get(conversationId) || {
+      messages: [],
+      turn: 0,
+      metadata: {}
+    };
+    
+    // Add message to history and increment turn counter
+    const updatedContext = {
+      ...context,
+      messages: [...context.messages, message],
+      turn: context.turn + 1,
+      lastUpdated: Date.now()
+    };
+    
+    this.contexts.set(conversationId, updatedContext);
+    return updatedContext;
   }
   
-  // Create a new message with context
-  createMessage(threadId: string, sender: any, recipient: any, content: any) {
-    const context = this.getContext(threadId);
+  // Get context for a conversation
+  getContext(conversationId) {
+    return this.contexts.get(conversationId) || {
+      messages: [],
+      turn: 0,
+      metadata: {}
+    };
+  }
+  
+  // Create a new MCP message with appropriate context
+  createMessage(conversationId, role, content, properties = {}) {
+    const context = this.getContext(conversationId);
+    const messageId = \`msg_\${Date.now()}_\${Math.random().toString(36).substring(2, 7)}\`;
     
+    // Get parent message ID if available
+    const parentId = context.messages.length > 0 
+      ? context.messages[context.messages.length - 1].message_id
+      : null;
+    
+    // Create message following MCP specification
     const message = {
-      message_id: generateId(),
-      thread_id: threadId,
-      timestamp: new Date().toISOString(),
-      sender,
-      recipient,
+      protocol: "mcp-0.1",
+      message_id: messageId,
+      parent_id: parentId,
+      trace_id: \`trace_\${conversationId}\`,
+      role,
       content,
       context: {
-        references: context.messageHistory || [],
-        conversation_state: context.state || "new"
+        current: {
+          conversation_id: conversationId,
+          turn: context.turn
+        },
+        references: parentId ? [{ id: parentId }] : []
       },
-      metadata: {
-        protocol_version: "1.0"
+      properties: {
+        created_at: new Date().toISOString(),
+        ...properties
       }
     };
     
-    // Update context with new message
-    this.storeContext(threadId, {
-      messageHistory: [...(context.messageHistory || []), message.message_id],
-      lastMessage: message.message_id,
-      state: "in_progress"
-    });
+    // Store the message in context
+    this.addMessage(conversationId, message);
     
     return message;
   }
