@@ -1,4 +1,5 @@
 export * from './dataFlowUtils';
+export * from './algorithmVisualization';
 
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"

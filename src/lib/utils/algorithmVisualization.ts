@@ -404,3 +404,15 @@ Needs Revision: No`
   ],
   isRunning: false
 };
+
+// Function to get algorithm visualization by pattern ID
+export function getAlgorithmVisualization(patternId: string): AlgorithmVisualizationData | undefined {
+  const visualizationMap: Record<string, AlgorithmVisualizationData> = {
+    'react-agent': reactAgentVisualization,
+    'codeact-agent': codeActAgentVisualization,
+    'self-reflection': selfReflectionVisualization
+    // Add more patterns as they become available
+  };
+  
+  return visualizationMap[patternId];
+}

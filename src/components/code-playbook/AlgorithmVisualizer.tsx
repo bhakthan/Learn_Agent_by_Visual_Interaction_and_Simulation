@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Play, Pause, ArrowRight, ArrowsClockwise, CaretRight } from '@phosphor-icons/react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { AlgorithmVisualization } from '@/lib/utils/algorithmVisualization';
+import { AlgorithmVisualizationData } from '@/lib/utils/algorithmVisualization';
 
 interface AlgorithmVisualizerProps {
-  visualization: AlgorithmVisualization;
+  visualization: AlgorithmVisualizationData;
 }
 
 /**
@@ -70,8 +70,8 @@ const AlgorithmVisualizer = ({ visualization }: AlgorithmVisualizerProps) => {
       <div className="p-3 bg-muted border-b">
         <div className="flex justify-between items-center mb-3">
           <div>
-            <h3 className="font-medium">{visualization.name}</h3>
-            <p className="text-sm text-muted-foreground">{visualization.description}</p>
+            <h3 className="font-medium">{visualization.patternId}</h3>
+            <p className="text-sm text-muted-foreground">Algorithm visualization</p>
           </div>
           <div className="flex items-center space-x-2">
             <Button 
