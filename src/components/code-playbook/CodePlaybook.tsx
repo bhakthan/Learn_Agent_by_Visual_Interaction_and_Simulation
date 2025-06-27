@@ -20,7 +20,7 @@ import CodeDebugger from './CodeDebugger'
 import { getCodeExecutionSteps } from '@/lib/utils/codeExecutionSteps'
 import InteractiveCodeExecution from './InteractiveCodeExecution'
 import { getCodeExecutionExample } from '@/lib/data/codeExamples'
-import { getAlgorithmVisualization, reactAgentVisualization, codeActAgentVisualization, selfReflectionVisualization } from '@/lib/utils/algorithmVisualization'
+import { getAlgorithmVisualization } from '@/lib/utils/algorithmVisualization'
 import { getDebugExample } from '@/lib/utils/codeDebugExamples'
 import { useSidebarCollapse } from '@/hooks/use-sidebar-collapse'
 import { cn } from '@/lib/utils'
@@ -62,7 +62,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
   const algorithmSteps = getAlgorithmVisualization(patternData.id)
   
   // Get debug example if available
-  const debugExample = getDebugExample(patternData.id)
+  const debugExample = getDebugExample(patternData.id, language)
   
   // Language selector component for reuse
   const LanguageSelector = () => (
@@ -91,7 +91,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
   
   return (
     <div className="space-y-6 w-full">
-      <Card className="w-full transition-all duration-300">
+      <Card className={cn("w-full transition-all duration-300", isCollapsed ? "max-w-full" : "")}>
         <CardHeader className="p-4 sm:p-6">
           <CardTitle>{patternData.name} Implementation</CardTitle>
           <CardDescription>
@@ -101,35 +101,35 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
         <CardContent className="p-4 sm:p-6">
           <Tabs defaultValue="general" className="w-full">
             <div className="overflow-x-auto pb-2">
-              <TabsList className="flex w-full flex-nowrap gap-1 text-xs">
-                <TabsTrigger value="general" className="flex items-center gap-1 h-8 px-2 py-1">
+              <TabsList className="flex w-full flex-nowrap gap-1">
+                <TabsTrigger value="general" className="flex items-center gap-1 h-8 px-2 py-1 text-xs">
                   <ListChecks size={14} /> <span className="hidden sm:inline">General Guide</span><span className="sm:hidden">Guide</span>
                 </TabsTrigger>
-              <TabsTrigger value="steps" className="flex items-center gap-1 h-8 px-2 py-1">
-                <ListChecks size={14} /> <span className="hidden sm:inline">Implementation Steps</span><span className="sm:hidden">Steps</span>
-              </TabsTrigger>
-              <TabsTrigger value="code" className="flex items-center gap-1 h-8 px-2 py-1">
-                <Code size={14} /> <span className="hidden sm:inline">Complete Code</span><span className="sm:hidden">Code</span>
-              </TabsTrigger>
-              <TabsTrigger value="visualizer" className="flex items-center gap-1 h-8 px-2 py-1">
-                <FileCode size={14} /> <span className="hidden sm:inline">Code Visualizer</span><span className="sm:hidden">Visualizer</span>
-              </TabsTrigger>
-              <TabsTrigger value="interactive" className="flex items-center gap-1 h-8 px-2 py-1">
-                <Play size={14} /> <span className="hidden sm:inline">Interactive Example</span><span className="sm:hidden">Example</span>
-              </TabsTrigger>
-              <TabsTrigger value="debugger" className="flex items-center gap-1 h-8 px-2 py-1">
-                <Bug size={14} /> <span className="hidden sm:inline">Debugger</span><span className="sm:hidden">Debug</span>
-              </TabsTrigger>
-              <TabsTrigger value="algorithm" className="flex items-center gap-1 h-8 px-2 py-1">
-                <Graph size={14} /> <span className="hidden sm:inline">Algorithm Steps</span><span className="sm:hidden">Algorithm</span>
-              </TabsTrigger>
-              <TabsTrigger value="security" className="flex items-center gap-1 h-8 px-2 py-1">
-                <ShieldCheck size={14} /> <span className="hidden sm:inline">Security Controls</span><span className="sm:hidden">Security</span>
-              </TabsTrigger>
-              <TabsTrigger value="practices" className="flex items-center gap-1 h-8 px-2 py-1">
-                <Check size={14} /> <span className="hidden sm:inline">Best Practices</span><span className="sm:hidden">Practices</span>
-              </TabsTrigger>
-            </TabsList>
+                <TabsTrigger value="steps" className="flex items-center gap-1 h-8 px-2 py-1 text-xs">
+                  <ListChecks size={14} /> <span className="hidden sm:inline">Implementation Steps</span><span className="sm:hidden">Steps</span>
+                </TabsTrigger>
+                <TabsTrigger value="code" className="flex items-center gap-1 h-8 px-2 py-1 text-xs">
+                  <Code size={14} /> <span className="hidden sm:inline">Complete Code</span><span className="sm:hidden">Code</span>
+                </TabsTrigger>
+                <TabsTrigger value="visualizer" className="flex items-center gap-1 h-8 px-2 py-1 text-xs">
+                  <FileCode size={14} /> <span className="hidden sm:inline">Code Visualizer</span><span className="sm:hidden">Visualizer</span>
+                </TabsTrigger>
+                <TabsTrigger value="interactive" className="flex items-center gap-1 h-8 px-2 py-1 text-xs">
+                  <Play size={14} /> <span className="hidden sm:inline">Interactive Example</span><span className="sm:hidden">Example</span>
+                </TabsTrigger>
+                <TabsTrigger value="debugger" className="flex items-center gap-1 h-8 px-2 py-1 text-xs">
+                  <Bug size={14} /> <span className="hidden sm:inline">Debugger</span><span className="sm:hidden">Debug</span>
+                </TabsTrigger>
+                <TabsTrigger value="algorithm" className="flex items-center gap-1 h-8 px-2 py-1 text-xs">
+                  <Graph size={14} /> <span className="hidden sm:inline">Algorithm Steps</span><span className="sm:hidden">Algorithm</span>
+                </TabsTrigger>
+                <TabsTrigger value="security" className="flex items-center gap-1 h-8 px-2 py-1 text-xs">
+                  <ShieldCheck size={14} /> <span className="hidden sm:inline">Security Controls</span><span className="sm:hidden">Security</span>
+                </TabsTrigger>
+                <TabsTrigger value="practices" className="flex items-center gap-1 h-8 px-2 py-1 text-xs">
+                  <Check size={14} /> <span className="hidden sm:inline">Best Practices</span><span className="sm:hidden">Practices</span>
+                </TabsTrigger>
+              </TabsList>
             </div>
             
             <TabsContent value="general" className="py-4">

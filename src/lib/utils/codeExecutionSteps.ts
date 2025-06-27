@@ -15,49 +15,67 @@ export const codeExecutionSteps: StepData = {
   'react': {
     python: [
       {
-        lineStart: 0,
-        lineEnd: 1,
-        description: 'Define function parameters and initialize state',
+        lineStart: 7,
+        lineEnd: 16,
+        description: 'Initialize the ReAct agent class with model settings',
         variableState: {
-          'query': '"Calculate distance between two points"',
-          'context': '[]'
+          'client': 'OpenAI client instance',
+          'model': '"gpt-4"'
         }
       },
       {
-        lineStart: 3,
-        lineEnd: 9,
-        description: 'Initial LLM call to process the user query',
+        lineStart: 18,
+        lineEnd: 35,
+        description: 'Begin agent execution and initialize state variables',
         variableState: {
-          'thoughts': 'String containing reasoning about the problem'
+          'current_cycle': '0',
+          'done': 'false',
+          'context_history': '[]',
+          'final_answer': '""',
+          'query': '"Calculate distance between two points"'
         }
       },
       {
-        lineStart: 11,
-        lineEnd: 15,
-        description: 'Execute action based on reasoning',
-        output: 'Using the Pythagorean theorem to calculate distance',
+        lineStart: 37,
+        lineEnd: 55,
+        description: 'Set up available tools for the agent to use',
+        output: 'Tools initialized: search, calculate, weather',
         variableState: {
-          'action': 'calc_distance',
-          'action_input': '{x1: 0, y1: 0, x2: 3, y2: 4}'
+          'tools': '{search: Function, calculate: Function, weather: Function}'
         }
       },
       {
-        lineStart: 17,
-        lineEnd: 22,
-        description: 'Receive observation from action execution',
-        output: 'Distance: 5.0',
+        lineStart: 57,
+        lineEnd: 97,
+        description: 'Agent reasoning phase with LLM',
+        output: 'Reasoning: I need to calculate the distance between two points (3,4) and (0,0)',
         variableState: {
-          'observation': '5.0',
-          'context': '[Query, Thoughts, Action, Observation]'
+          'current_cycle': '1',
+          'reasoning_response': 'Thought: I need to calculate the distance...\nAction: calculate\nAction Input: ((3**2 + 4**2) ** 0.5)'
         }
       },
       {
-        lineStart: 24,
-        lineEnd: 30,
-        description: 'Generate final response based on observation',
-        output: 'The distance between points (0,0) and (3,4) is 5 units.',
+        lineStart: 99,
+        lineEnd: 121,
+        description: 'Agent action phase - execute the selected tool',
+        output: 'Executing calculation: ((3**2 + 4**2) ** 0.5)',
         variableState: {
-          'response': 'The distance between points (0,0) and (3,4) is 5 units.'
+          'tool_name': 'calculate',
+          'tool_input': '((3**2 + 4**2) ** 0.5)',
+          'tool_result': '5.0',
+          'observation': 'Observation: {"result": 5.0}'
+        }
+      },
+      {
+        lineStart: 123,
+        lineEnd: 137,
+        description: 'Return final results from the agent',
+        output: 'Final answer: The distance between points (0,0) and (3,4) is 5 units',
+        variableState: {
+          'status': 'success',
+          'cycles': '1',
+          'answer': 'The distance between points (0,0) and (3,4) is 5 units',
+          'history': '[User query, Reasoning, Observation]'
         }
       }
     ],
@@ -116,47 +134,61 @@ export const codeExecutionSteps: StepData = {
   'codeact': {
     python: [
       {
-        lineStart: 0,
-        lineEnd: 6,
-        description: 'Initialize CodeAct function with query parameter',
+        lineStart: 7,
+        lineEnd: 16,
+        description: 'Initialize CodeAct agent class and variables',
+        variableState: {
+          'client': 'OpenAI client instance',
+          'model': '"gpt-4"'
+        }
+      },
+      {
+        lineStart: 18,
+        lineEnd: 30,
+        description: 'Begin execution and setup state tracking',
         variableState: {
           'query': '"Write code to find the factorial of a number"',
-          'contextHistory': '[]'
+          'current_cycle': '0',
+          'done': 'false',
+          'context_history': '[]',
+          'final_result': '""'
         }
       },
       {
-        lineStart: 8,
-        lineEnd: 15,
-        description: 'LLM generates Python code for factorial',
-        output: '```python\ndef factorial(n):\n    if n == 0 or n == 1:\n        return 1\n    else:\n        return n * factorial(n-1)\n```',
+        lineStart: 32,
+        lineEnd: 54,
+        description: 'Define code execution simulation environment',
+        output: 'Setting up code execution environment',
         variableState: {
-          'code': 'def factorial(n):\n    if n == 0 or n == 1:\n        return 1\n    else:\n        return n * factorial(n-1)'
+          'execute_code': 'function(code) { /* code execution simulation */ }'
         }
       },
       {
-        lineStart: 17,
-        lineEnd: 25,
-        description: 'Execute the generated Python code',
-        output: '> Executing code\n> Code compiled successfully',
+        lineStart: 56,
+        lineEnd: 58,
+        description: 'Add initial query to context history',
         variableState: {
-          'contextHistory': '[User query, Generated code, Execution result]'
+          'context_history': '["User query: Write code to find the factorial of a number"]'
         }
       },
       {
-        lineStart: 27,
-        lineEnd: 35,
-        description: 'LLM evaluates the execution result',
+        lineStart: 60,
+        lineEnd: 97,
+        description: 'Generate first agent prompt and get response',
+        output: 'Agent generates factorial function',
         variableState: {
-          'evaluation': 'Code executes correctly and handles base cases'
+          'current_cycle': '1',
+          'agent_response': 'Thought: I\'ll write code to calculate factorial...\nCode:\n```\ndef factorial(n):\n    if n == 0 or n == 1:\n        return 1\n    else:\n        return n * factorial(n-1)\n\n# Test with n=5\nresult = factorial(5)\nprint(result)\n```'
         }
       },
       {
-        lineStart: 37,
-        lineEnd: 45,
-        description: 'Generate final response with working code',
-        output: 'Here is a recursive factorial function that handles base cases correctly:',
+        lineStart: 99,
+        lineEnd: 115,
+        description: 'Extract and execute the generated Python code',
+        output: 'Code executed. Result: 120',
         variableState: {
-          'response': 'Final code with explanation'
+          'code': 'def factorial(n):\n    if n == 0 or n == 1:\n        return 1\n    else:\n        return n * factorial(n-1)\n\n# Test with n=5\nresult = factorial(5)\nprint(result)',
+          'execution_result': 'Output: 120'
         }
       }
     ],
@@ -227,167 +259,321 @@ export const codeExecutionSteps: StepData = {
     ]
   },
   
-  'reflexion': {
+  'self-reflection': {
     python: [
       {
-        lineStart: 0,
-        lineEnd: 5,
-        description: 'Initialize the reflexion agent function',
+        lineStart: 7,
+        lineEnd: 16,
+        description: 'Initialize SelfReflection agent class',
+        variableState: {
+          'client': 'OpenAI client instance',
+          'model': '"gpt-4"'
+        }
+      },
+      {
+        lineStart: 18,
+        lineEnd: 25,
+        description: 'Begin execution and set up state variables',
         variableState: {
           'query': '"Find the bug in this code: sum = 0; for i in range(1, 11): sum += i; print(sum/10)"',
-          'maxReflections': '3',
-          'reflections': '[]'
+          'revisions': '0',
+          'reflections': '[]',
+          'current_response': '""'
         }
       },
+      {
+        lineStart: 28,
+        lineEnd: 36,
+        description: 'Generate initial solution response',
+        output: 'The factorial of a number n is the product of all positive integers less than or equal to n.',
+        variableState: {
+          'current_response': '"The factorial of a number n is the product of all positive integers less than or equal to n. It\'s often denoted as n!. So 5! = 5 × 4 × 3 × 2 × 1 = 120."'
+        }
+      },
+      {
+        lineStart: 38,
+        lineEnd: 44,
+        description: 'Store initial response in reflections',
+        variableState: {
+          'reflections': '[{iteration: 0, response: "The factorial...", reflection: null}]'
+        }
+      },
+      {
+        lineStart: 46,
+        lineEnd: 64,
+        description: 'First reflection cycle - evaluate initial solution',
+        output: 'Reflection: The response is accurate but could be more complete.',
+        variableState: {
+          'revisions': '1',
+          'reflection': 'The response is accurate but could be more complete. It defines factorial and gives an example for 5!, but doesn\'t explain how to calculate factorials for edge cases like 0! or mention practical applications or algorithmic implementations.'
+        }
+      },
+      {
+        lineStart: 66,
+        lineEnd: 80,
+        description: 'Generate improved response based on reflection',
+        output: 'Improved response with edge cases and implementation details',
+        variableState: {
+          'current_response': '"The factorial of a number n is the product of all positive integers less than or equal to n, denoted as n!.\\n\\nExamples:\\n- 5! = 5 × 4 × 3 × 2 × 1 = 120\\n- 3! = 3 × 2 × 1 = 6\\n\\nEdge cases:\\n- 0! is defined as 1\\n- 1! = 1\\n\\nFactorials can be calculated recursively or iteratively..."'
+        }
+      },
+      {
+        lineStart: 81,
+        lineEnd: 87,
+        description: 'Store first revised response in reflections',
+        variableState: {
+          'reflections': '[initial reflection, {iteration: 1, response: "improved response", reflection: "..."}]'
+        }
+      },
+      {
+        lineStart: 89,
+        lineEnd: 107,
+        description: 'Second reflection cycle and further improvement',
+        output: 'Second reflection and final improved solution',
+        variableState: {
+          'revisions': '2',
+          'current_response': 'Final well-structured response with definition, examples, edge cases, and implementation'
+        }
+      }
+    ]
+  },
+  
+  'agentic-rag': {
+    python: [
       {
         lineStart: 7,
-        lineEnd: 15,
-        description: 'First attempt at solving the problem',
-        output: '> Initial analysis of the code',
+        lineEnd: 16,
+        description: 'Initialize AgenticRAG agent class and components',
         variableState: {
-          'attempt': '1',
-          'solution': 'The code calculates the average of numbers 1-10'
+          'client': 'OpenAI client instance',
+          'model': '"gpt-4"',
+          'vector_store': 'null',
+          'document_processor': 'null'
         }
       },
       {
-        lineStart: 17,
-        lineEnd: 25,
-        description: 'Self-reflection on the initial solution',
-        output: '> Reflecting on solution: Is it correct?',
+        lineStart: 18,
+        lineEnd: 28,
+        description: 'Begin execution and set up document store',
         variableState: {
-          'reflection': 'The code correctly calculates the sum and average.',
-          'reflections': '[First reflection]'
+          'query': '"What are the main agent patterns used in Azure AI?"',
+          'documents': 'Array of 5 document objects with content about AI agents'
         }
       },
       {
-        lineStart: 27,
-        lineEnd: 35,
-        description: 'Second attempt with reflection incorporated',
-        output: '> Wait, I need to check if there\'s a bug in the implementation',
+        lineStart: 30,
+        lineEnd: 51,
+        description: 'Step 1: Query decomposition to identify search terms',
+        output: 'Decomposing query into search terms',
         variableState: {
-          'attempt': '2',
-          'solution': 'The code is actually correct for calculating mean of 1-10'
+          'decomposition_result': '{search_terms: ["agent patterns", "AI agents", "Azure AI", "communication protocols"], required_info: [...], query_type: "explanation"}'
         }
       },
       {
-        lineStart: 37,
-        lineEnd: 45,
-        description: 'Final solution after reflection',
-        output: 'The code correctly calculates the average of numbers from 1 to 10, which is 5.5',
+        lineStart: 53,
+        lineEnd: 72,
+        description: 'Step 2: Intelligent document retrieval based on search terms',
+        output: 'Retrieved documents containing agent pattern information',
         variableState: {
-          'finalSolution': 'Explanation that the code is actually correct'
+          'retrieved_docs': 'Array of relevant documents',
+          'unique_docs': 'Deduplicated array of documents'
+        }
+      },
+      {
+        lineStart: 74,
+        lineEnd: 95,
+        description: 'Step 3: Relevance assessment of retrieved documents',
+        output: 'Assessing document relevance to the query',
+        variableState: {
+          'relevance_assessment': '[{doc_id: "doc2", relevance: 9, reason: "..."}, ...]'
+        }
+      },
+      {
+        lineStart: 97,
+        lineEnd: 114,
+        description: 'Step 4: Information synthesis from relevant documents',
+        output: 'Synthesizing answer from relevant documents',
+        variableState: {
+          'content_for_synthesis': 'Compiled content from relevant documents',
+          'synthesis_result': '"Agent patterns are methodologies for designing AI agents with specific capabilities..."'
+        }
+      }
+    ]
+  },
+  
+  'routing': {
+    python: [
+      {
+        lineStart: 7,
+        lineEnd: 16,
+        description: 'Initialize RoutingAgent class',
+        variableState: {
+          'client': 'OpenAI client instance',
+          'model': '"gpt-4"'
+        }
+      },
+      {
+        lineStart: 18,
+        lineEnd: 40,
+        description: 'Begin execution and define specialized agent types',
+        variableState: {
+          'query': '"How do I implement a merge sort algorithm in Python?"',
+          'specialized_agents': '{math: {...}, code: {...}, research: {...}, creative: {...}}'
+        }
+      },
+      {
+        lineStart: 42,
+        lineEnd: 64,
+        description: 'Step 1: Analyze query and determine best agent',
+        output: 'Analyzing query to determine appropriate agent',
+        variableState: {
+          'routing_decision': '{selected_agent: "code", confidence: 0.92, reasoning: "...", fallback_agent: "math"}'
+        }
+      },
+      {
+        lineStart: 66,
+        lineEnd: 91,
+        description: 'Step 2: Check confidence and request clarification if needed',
+        output: 'Confidence is high (0.92), proceeding without clarification',
+        variableState: {
+          'selected_agent': 'code'
+        }
+      },
+      {
+        lineStart: 93,
+        lineEnd: 121,
+        description: 'Steps 3-4: Route to selected agent and execute',
+        output: 'Routing query to code agent...',
+        variableState: {
+          'agent_response': 'Code implementation of merge sort algorithm'
         }
       }
     ]
   },
   
   'plan-execute': {
-    typescript: [
+    python: [
       {
-        lineStart: 0,
-        lineEnd: 8,
-        description: 'Initialize the plan-execute agent',
+        lineStart: 7,
+        lineEnd: 16,
+        description: 'Initialize PlanExecuteAgent class',
         variableState: {
-          'query': '"Create a function to analyze a text for sentiment and key topics"',
-          'steps': '[]'
+          'client': 'OpenAI client instance',
+          'model': '"gpt-4"'
         }
       },
       {
-        lineStart: 10,
-        lineEnd: 20,
-        description: 'Planning phase - creating subtasks',
-        output: '> Creating execution plan',
+        lineStart: 18,
+        lineEnd: 37,
+        description: 'Begin execution and set up available tools',
         variableState: {
-          'plan': '["1. Create sentiment analysis function", "2. Create key topic extraction", "3. Combine both analyses"]'
+          'query': '"Create a budget-friendly one-week travel itinerary for Paris"',
+          'tools': '{search: Function, calculator: Function, weather: Function, translator: Function}'
         }
       },
       {
-        lineStart: 22,
-        lineEnd: 35,
-        description: 'Execute first subtask - sentiment analysis',
-        output: '> Executing Step 1: Sentiment Analysis Function\n> Created function that returns positive/negative/neutral',
+        lineStart: 39,
+        lineEnd: 66,
+        description: 'Step 1: Planning phase - create detailed plan',
+        output: 'Creating detailed plan with sequential steps',
         variableState: {
-          'currentStep': '0',
-          'stepResult': 'Function: analyzeSentiment(text)'
+          'plan': '{goal: "Create a budget-friendly one-week travel itinerary for Paris", steps: [{step_id: 1, description: "Search for budget accommodation", ...}, ...]}'
         }
       },
       {
-        lineStart: 37,
-        lineEnd: 50,
-        description: 'Execute second subtask - topic extraction',
-        output: '> Executing Step 2: Topic Extraction\n> Created function that identifies key topics using NLP techniques',
+        lineStart: 68,
+        lineEnd: 102,
+        description: 'Step 2: Execution phase - execute each step in the plan',
+        output: 'Executing steps from the plan sequentially',
         variableState: {
-          'currentStep': '1',
-          'stepResult': 'Function: extractTopics(text)'
+          'results': '[{step_id: 1, status: "success", result: {...}}, {...}]'
         }
       },
       {
-        lineStart: 52,
-        lineEnd: 65,
-        description: 'Execute final subtask - combining functions',
-        output: '> Executing Step 3: Combining Analysis Functions\n> Created combined function that returns both results',
+        lineStart: 104,
+        lineEnd: 120,
+        description: 'Step 3: Synthesis phase - combine results',
+        output: 'Synthesizing results into final response',
         variableState: {
-          'currentStep': '2',
-          'stepResult': 'Function: analyzeText(text) returning {sentiment, topics}'
-        }
-      },
-      {
-        lineStart: 67,
-        lineEnd: 75,
-        description: 'Finalize and return complete solution',
-        output: 'Created complete text analysis solution with sentiment and topic extraction',
-        variableState: {
-          'result': 'Complete code with all functions'
+          'synthesis': '"# Budget-Friendly Paris Itinerary\n\n## Accommodation\nBased on our search..."'
         }
       }
     ]
   },
   
-  'agent2agent': {
-    typescript: [
+  'evaluator-optimizer': {
+    python: [
       {
-        lineStart: 0,
-        lineEnd: 10,
-        description: 'Initialize the agent-to-agent framework',
+        lineStart: 7,
+        lineEnd: 16,
+        description: 'Initialize EvaluatorOptimizerAgent class',
         variableState: {
-          'query': '"Design an e-commerce recommendation system"',
-          'agents': '["Product Specialist", "User Behavior Analyst"]'
+          'client': 'OpenAI client instance',
+          'model': '"gpt-4"'
         }
       },
       {
-        lineStart: 12,
-        lineEnd: 25,
-        description: 'First agent analyzes the problem',
-        output: '> Agent 1: Product Specialist analyzing the request',
+        lineStart: 18,
+        lineEnd: 36,
+        description: 'Begin execution and set up tracking variables',
         variableState: {
-          'agent1Response': 'We need to consider product categories, attributes, and relationships'
+          'query': '"Explain agent patterns in Azure AI"',
+          'initial_response': '"Agent patterns are architectural approaches for AI..."',
+          'evaluations': '[]',
+          'responses': '[initial_response]',
+          'iterations': '0',
+          'max_iterations': '3',
+          'quality_threshold': '0.85'
         }
       },
       {
-        lineStart: 27,
-        lineEnd: 40,
-        description: 'Second agent responds to first agent\'s analysis',
-        output: '> Agent 2: User Behavior Analyst responding to Product Specialist',
+        lineStart: 38,
+        lineEnd: 57,
+        description: 'Set up evaluation criteria for response assessment',
+        output: 'Define evaluation criteria for assessment',
         variableState: {
-          'agent2Response': 'We should incorporate user browsing history and purchase patterns'
+          'evaluation_criteria': '{accuracy: "...", completeness: "...", clarity: "...", helpfulness: "...", conciseness: "..."}'
         }
       },
       {
-        lineStart: 42,
-        lineEnd: 55,
-        description: 'Agents collaborate to refine the solution',
-        output: '> Agents collaborating on solution refinement',
+        lineStart: 59,
+        lineEnd: 90,
+        description: 'First evaluation cycle',
+        output: 'Evaluating initial response',
         variableState: {
-          'sharedContext': 'Combined knowledge about products and user behavior'
+          'iterations': '1',
+          'evaluation_result': '{criteria: {...}, overall_score: 0.72, primary_improvements_needed: [...]}'
         }
       },
       {
-        lineStart: 57,
-        lineEnd: 65,
-        description: 'Solution synthesized from agent collaboration',
-        output: 'Recommendation system design incorporating product relationships and user behavior patterns',
+        lineStart: 91,
+        lineEnd: 112,
+        description: 'First optimization cycle',
+        output: 'Optimizing response based on evaluation',
         variableState: {
-          'finalSolution': 'Complete recommendation system design'
+          'optimized_response': '"# Understanding Agent Patterns in Azure AI\n\n## Definition\nAgent patterns are reusable architectural approaches..."',
+          'responses': '[initial_response, optimized_response]'
+        }
+      },
+      {
+        lineStart: 59,
+        lineEnd: 112,
+        description: 'Second evaluation and optimization cycle',
+        output: 'Further refining response',
+        variableState: {
+          'iterations': '2',
+          'evaluation_result': '{criteria: {...}, overall_score: 0.84, primary_improvements_needed: [...]}'
+        }
+      },
+      {
+        lineStart: 59,
+        lineEnd: 112,
+        description: 'Final evaluation cycle',
+        output: 'Final evaluation',
+        variableState: {
+          'iterations': '3',
+          'evaluation_result': '{criteria: {...}, overall_score: 0.92, primary_improvements_needed: []}',
+          'overall_score': '0.92'
         }
       }
     ]
