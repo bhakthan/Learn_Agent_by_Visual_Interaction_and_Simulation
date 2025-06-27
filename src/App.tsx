@@ -75,20 +75,33 @@ function App() {
                 <NavigationMenuTrigger className="bg-transparent">Resources</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2">
-                    <ListItem href="https://learn.microsoft.com/azure/ai-services/" title="Azure AI Documentation">
+                    <ListItem href="https://learn.microsoft.com/en-us/azure/ai-services/" title="Azure AI Documentation">
                       Official Microsoft Azure AI Services documentation
                     </ListItem>
                     <ListItem href="https://github.com/Azure/azure-sdk-for-js" title="Azure SDK for JavaScript">
                       GitHub repository for the Azure SDK
                     </ListItem>
-                    <ListItem href="https://learn.microsoft.com/azure/ai-services/openai/" title="Azure OpenAI Service">
+                    <ListItem href="https://learn.microsoft.com/en-us/azure/ai-services/openai/" title="Azure OpenAI Service">
                       Documentation for Azure OpenAI Service
                     </ListItem>
-                    <ListItem href="https://learn.microsoft.com/azure/ai-studio/" title="Azure AI Studio">
+                    <ListItem href="https://learn.microsoft.com/en-us/azure/ai-studio/" title="Azure AI Studio">
                       Create, evaluate and deploy AI solutions
+                    </ListItem>
+                    <ListItem href="https://github.com/microsoft/azure-openai-samples" title="Azure OpenAI Samples">
+                      Sample code and tutorials for Azure OpenAI
                     </ListItem>
                   </ul>
                 </NavigationMenuContent>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <a
+                  href="https://github.com/microsoft/azure-openai-agent-patterns"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  GitHub Repo
+                </a>
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>

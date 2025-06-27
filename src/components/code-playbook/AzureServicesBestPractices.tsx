@@ -609,7 +609,7 @@ const azureServicesBestPractices: AzureServiceInfo[] = [
     name: 'Azure OpenAI Service',
     icon: <Cloud size={18} className="text-primary" />,
     category: 'foundation',
-    description: 'Provides REST API access to OpenAI\'s powerful language models with Azure security and compliance features.',
+    description: 'Provides REST API access to OpenAI's powerful language models with Azure security and compliance features.',
     tips: [
       'Configure system messages to define agent behavior constraints and roles',
       'Use separate model deployments for different agent functions (reasoning vs. generation)',
@@ -617,7 +617,7 @@ const azureServicesBestPractices: AzureServiceInfo[] = [
       'Cache responses for identical or similar queries to reduce costs',
       'Set appropriate temperature values based on task requirements (lower for factual tasks, higher for creative ones)'
     ],
-    documentation: 'https://learn.microsoft.com/azure/ai-services/openai/'
+    documentation: 'https://learn.microsoft.com/en-us/azure/ai-services/openai/'
   },
   {
     id: 'azure-ai-search',
@@ -632,7 +632,7 @@ const azureServicesBestPractices: AzureServiceInfo[] = [
       'Configure proper relevance tuning based on content types',
       'Implement feedback loops to improve search quality over time'
     ],
-    documentation: 'https://learn.microsoft.com/azure/search/'
+    documentation: 'https://learn.microsoft.com/en-us/azure/search/'
   },
   {
     id: 'azure-content-safety',
@@ -642,12 +642,12 @@ const azureServicesBestPractices: AzureServiceInfo[] = [
     description: 'AI service for detecting harmful content across text and images to maintain safety and compliance.',
     tips: [
       'Implement pre-moderation for AI-generated content before display',
-      "Set appropriate threshold levels based on your application\'s audience",
+      "Set appropriate threshold levels based on your application's audience",
       'Create feedback loops to improve detection over time',
       'Implement blocklists for domain-specific problematic content',
       'Deploy content safety in multiple stages of the agent workflow'
     ],
-    documentation: 'https://learn.microsoft.com/azure/ai-services/content-safety/'
+    documentation: 'https://learn.microsoft.com/en-us/azure/ai-services/content-safety/'
   },
   {
     id: 'azure-ai-evaluation',
@@ -678,7 +678,7 @@ const azureServicesBestPractices: AzureServiceInfo[] = [
       'Optimize model size for deployment constraints (distillation, quantization)',
       'Use caching for frequently requested inference results'
     ],
-    documentation: 'https://learn.microsoft.com/azure/machine-learning/concept-inference'
+    documentation: 'https://learn.microsoft.com/en-us/azure/machine-learning/concept-inference'
   },
   {
     id: 'azure-ai-foundry',
@@ -693,7 +693,7 @@ const azureServicesBestPractices: AzureServiceInfo[] = [
       'Establish monitoring dashboards for model performance',
       'Implement testing frameworks for AI behaviors'
     ],
-    documentation: 'https://learn.microsoft.com/azure/ai-studio/'
+    documentation: 'https://learn.microsoft.com/en-us/azure/ai-studio/'
   },
   {
     id: 'azure-ai-agent-service',
@@ -708,7 +708,7 @@ const azureServicesBestPractices: AzureServiceInfo[] = [
       'Create agent testing suites that verify behavior across scenarios',
       'Implement usage throttling and cost control mechanisms'
     ],
-    documentation: 'https://learn.microsoft.com/azure/ai-services/'
+    documentation: 'https://learn.microsoft.com/en-us/azure/ai-services/'
   }
 ];
 

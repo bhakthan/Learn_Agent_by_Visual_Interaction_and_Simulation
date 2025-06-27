@@ -56,7 +56,7 @@ const azureServiceDetails: ServiceDetails[] = [
       'Consider data residency requirements for your implementation'
     ],
     pricingNotes: 'Pay-per-token pricing model with tiered rates based on model and volume.',
-    apiReference: 'https://learn.microsoft.com/azure/ai-services/openai/reference',
+    apiReference: 'https://learn.microsoft.com/en-us/azure/ai-services/openai/reference',
     samples: [
       {
         title: 'Basic Completion Request',
@@ -136,7 +136,7 @@ async function getAgentResponse(userQuery: string) {
       'Plan for index replicas for high availability'
     ],
     pricingNotes: 'Pricing based on service tier, with considerations for storage, document count, and indexing operations.',
-    apiReference: 'https://learn.microsoft.com/rest/api/searchservice/',
+    apiReference: 'https://learn.microsoft.com/en-us/rest/api/searchservice/',
     samples: [
       {
         title: 'Vector Search Setup',
@@ -259,7 +259,7 @@ async function hybridSearch(query: string) {
       'Plan integration points in the content pipeline'
     ],
     pricingNotes: 'Pay-per-transaction model with volume-based pricing tiers.',
-    apiReference: 'https://learn.microsoft.com/azure/ai-services/content-safety/reference',
+    apiReference: 'https://learn.microsoft.com/en-us/azure/ai-services/content-safety/reference',
     samples: [
       {
         title: 'LLM Output Safety Check',
@@ -574,7 +574,7 @@ def evaluate_rag_system(rag_system, test_dataset):
       'Collaboration tools for AI development teams',
       'Resource governance and organization'
     ],
-    apiReference: 'https://learn.microsoft.com/azure/ai-studio/',
+    apiReference: 'https://learn.microsoft.com/en-us/azure/ai-studio/',
     samples: [
       {
         title: 'Pattern Deployment Pipeline',
@@ -641,7 +641,7 @@ async function setupPatternDeploymentPipeline() {
       'Usage analytics and performance monitoring',
       'High availability deployment options'
     ],
-    apiReference: 'https://learn.microsoft.com/azure/ai-services/',
+    apiReference: 'https://learn.microsoft.com/en-us/azure/ai-services/',
     samples: [
       {
         title: 'Agent Deployment',
