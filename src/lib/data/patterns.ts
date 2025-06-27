@@ -431,9 +431,9 @@ const executeCodeAct = async (query, maxCycles = 5) => {
         "1. Write Python code to make progress, formatted as:\\n" +
         "   Thought: <your reasoning>\\n" +
         "   Code:\\n" +
-        "   ```\\n" +
+        "   ````\\n" +
         "   # Your Python code here\\n" +
-        "   ```\\n\\n" +
+        "   ````\\n\\n" +
         "2. Or provide the final answer if you've solved the problem:\\n" +
         "   Thought: <your reasoning>\\n" +
         "   Final Answer: <your answer>";
@@ -450,9 +450,9 @@ const executeCodeAct = async (query, maxCycles = 5) => {
         }
       } 
       // Check if the response contains code
-      else if (agentResponse.includes("```")) {
+      else if (agentResponse.includes("````")) {
         // Extract code block
-        const codeMatch = agentResponse.match(/```\s*([\s\S]*?)\s*```/);
+        const codeMatch = agentResponse.match(/````\s*([\s\S]*?)\s*````/);
         if (codeMatch) {
           const code = codeMatch[1].trim();
           
@@ -728,21 +728,21 @@ const executeAgenticRAG = async (query) => {
     // Simulated vector database and retrieval system
     const vectorDB = {
       search: async (query, topK = 3) => {
-        console.log(`Searching vector DB for: ${query}`);
+        console.log(``Searching vector DB for: ${query}``);
         // Simulate retrieving relevant chunks
         return [
           {
-            content: `Relevant information about ${query} - Part 1`,
+            content: ``Relevant information about ${query} - Part 1``,
             source: "document1.pdf",
             score: 0.92
           },
           {
-            content: `Related context for ${query} - Part 2`,
+            content: ``Related context for ${query} - Part 2``,
             source: "document2.pdf",
             score: 0.85
           },
           {
-            content: `Additional information related to ${query} - Part 3`,
+            content: ``Additional information related to ${query} - Part 3``,
             source: "document3.pdf",
             score: 0.79
           }
@@ -1020,7 +1020,7 @@ const executeModernToolUse = async (query: string) => {
     
     // Process each required tool
     for (const tool of (toolRequirements.tools || [])) {
-      console.log(`Processing tool request for: ${tool.name}`);
+      console.log(``Processing tool request for: ${tool.name}``);
       
       // Create MCP-compliant tool request
       const mcpRequest = {
@@ -1628,9 +1628,9 @@ const executeParallelLLMCalls = async (input) => {
   try {
     // Execute multiple LLM calls in parallel
     const [result1, result2, result3] = await Promise.all([
-      llm(`Process this input perspective 1: ${input}`),
-      llm(`Process this input perspective 2: ${input}`),
-      llm(`Process this input perspective 3: ${input}`)
+      llm(``Process this input perspective 1: ${input}``),
+      llm(``Process this input perspective 2: ${input}``),
+      llm(``Process this input perspective 3: ${input}``)
     ]);
     
     // Aggregate results
@@ -2467,7 +2467,7 @@ const executePlanAndExecute = async (input: string) => {
 
 const executeSubtask = async (subtaskDescription) => {
   // Execute a single subtask using appropriate agent and tools
-  return await llm(`Execute this specific task: ${subtaskDescription}`);
+  return await llm(``Execute this specific task: ${subtaskDescription}``);
 };
 
 const checkIfReplanNeeded = async (plan, subtasks, results) => {
