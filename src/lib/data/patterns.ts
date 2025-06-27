@@ -99,7 +99,7 @@ const executeReAct = async (query: string, maxCycles = 5) => {
     // Available tools
     const tools = {
       search: async (query) => {
-        return "Search results for \"" + query + "\": [simulated search results]";
+        return "Search results for \\"" + query + "\\": [simulated search results]";
       },
       calculate: (expression) => {
         try {
@@ -159,13 +159,13 @@ const executeReAct = async (query: string, maxCycles = 5) => {
           const toolInput = actionInputMatch[1].trim();
           
           // Step 2: Action phase - call the appropriate tool
-          console.log(\`Cycle \${currentCycle}: Taking action with tool "\${toolName}"...\`);
+          console.log(\`Cycle \${currentCycle}: Taking action with tool "\\\${toolName}"...\`);
           
           if (tools[toolName]) {
             const toolResult = await tools[toolName](toolInput);
             contextHistory.push(\`Observation: \${toolResult}\`);
           } else {
-            contextHistory.push(\`Observation: Error - Tool "\${toolName}" not found.\`);
+            contextHistory.push(\`Observation: Error - Tool "\\\${toolName}" not found.\`);
           }
         }
       }
@@ -423,19 +423,19 @@ const executeCodeAct = async (query, maxCycles = 5) => {
       
       // Generate agent response
       const agentPrompt = 
-        "You are a CodeAct agent that solves problems by writing and executing Python code.\n\n" +
-        "Task: " + query + "\n\n" +
-        "Previous interactions:\n" + 
-        contextHistory.join('\n\n') + "\n\n" +
-        "Based on the current state, either:\n\n" +
-        "1. Write Python code to make progress, formatted as:\n" +
-        "   Thought: <your reasoning>\n" +
-        "   Code:\n" +
-        "   ```code\n" +
-        "   # Your Python code here\n" +
-        "   ```\n\n" +
-        "2. Or provide the final answer if you've solved the problem:\n" +
-        "   Thought: <your reasoning>\n" +
+        "You are a CodeAct agent that solves problems by writing and executing Python code.\\n\\n" +
+        "Task: " + query + "\\n\\n" +
+        "Previous interactions:\\n" + 
+        contextHistory.join('\\n\\n') + "\\n\\n" +
+        "Based on the current state, either:\\n\\n" +
+        "1. Write Python code to make progress, formatted as:\\n" +
+        "   Thought: <your reasoning>\\n" +
+        "   Code:\\n" +
+        "   \`\`\`code\\n" +
+        "   # Your Python code here\\n" +
+        "   \`\`\`\\n\\n" +
+        "2. Or provide the final answer if you've solved the problem:\\n" +
+        "   Thought: <your reasoning>\\n" +
         "   Final Answer: <your answer>";
       
       const agentResponse = await llm(agentPrompt);
@@ -450,9 +450,9 @@ const executeCodeAct = async (query, maxCycles = 5) => {
         }
       } 
       // Check if the response contains code
-      else if (agentResponse.includes("```")) {
+      else if (agentResponse.includes("\`\`\`")) {
         // Extract code block
-        const codeMatch = agentResponse.match(/```\s*([\s\S]*?)\s*```/);
+        const codeMatch = agentResponse.match(/\`\`\`\\s*([\\s\\S]*?)\\s*\`\`\`/);
         if (codeMatch) {
           const code = codeMatch[1].trim();
           
@@ -565,7 +565,7 @@ const executeSelfReflection = async (query: string, maxRevisions = 3) => {
     console.log("Generating initial response...");
     currentResponse = await llm(\`
       Provide a comprehensive response to this query:
-      "\${query}"
+      "\\\${query}"
     \`);
     
     reflectionHistory.push({
@@ -582,7 +582,7 @@ const executeSelfReflection = async (query: string, maxRevisions = 3) => {
       const reflection = await llm(\`
         You are a critical evaluator. Analyze this response to the query:
         
-        Query: "\${query}"
+        Query: "\\\${query}"
         
         Response:
         \${currentResponse}
@@ -627,7 +627,7 @@ const executeSelfReflection = async (query: string, maxRevisions = 3) => {
       currentResponse = await llm(\`
         You are tasked with improving a response based on self-critique.
         
-        Original query: "\${query}"
+        Original query: "\\\${query}"
         
         Previous response:
         \${currentResponse}
@@ -728,21 +728,21 @@ const executeAgenticRAG = async (query) => {
     // Simulated vector database and retrieval system
     const vectorDB = {
       search: async (query, topK = 3) => {
-        console.log(``Searching vector DB for: ${query}``);
+        console.log(\`Searching vector DB for: \${query}\`);
         // Simulate retrieving relevant chunks
         return [
           {
-            content: ``Relevant information about ${query} - Part 1``,
+            content: \`Relevant information about \${query} - Part 1\`,
             source: "document1.pdf",
             score: 0.92
           },
           {
-            content: ``Related context for ${query} - Part 2``,
+            content: \`Related context for \${query} - Part 2\`,
             source: "document2.pdf",
             score: 0.85
           },
           {
-            content: ``Additional information related to ${query} - Part 3``,
+            content: \`Additional information related to \${query} - Part 3\`,
             source: "document3.pdf",
             score: 0.79
           }
@@ -753,13 +753,13 @@ const executeAgenticRAG = async (query) => {
     // Additional tools available to the agent
     const tools = {
       webSearch: async (subQuery) => {
-        return \`Web search results for "\${subQuery}": [simulated web results]\`;
+        return \`Web search results for "\\\${subQuery}": [simulated web results]\`;
       },
       calculateRelevance: (chunk, query) => {
         // Simulate scoring relevance between a chunk and the query
         return { 
           score: 0.7 + Math.random() * 0.3,
-          reasoning: \`This chunk addresses key aspects of "\${query}"\`
+          reasoning: \`This chunk addresses key aspects of "\\\${query}"\`
         };
       }
     };
@@ -768,7 +768,7 @@ const executeAgenticRAG = async (query) => {
     console.log("Analyzing query...");
     const queryAnalysis = await llm(\`
       Analyze this query to identify key information needs and search terms:
-      "\${query}"
+      "\\\${query}"
       
       Provide:
       1. Core information need
@@ -824,14 +824,14 @@ const executeAgenticRAG = async (query) => {
     console.log("Generating comprehensive response...");
     const responseContext = topChunks
       .map(function(chunk) { 
-        return \`Source: \${chunk.source} (Score: \${chunk.evaluatedScore.toFixed(2)})\n\${chunk.content}\`;
+        return \`Source: \${chunk.source} (Score: \${chunk.evaluatedScore.toFixed(2)})\\n\${chunk.content}\`;
       })
       .join('\\n\\n');
     
     const response = await llm(\`
       You are an AI assistant with access to retrieved information.
       
-      User query: "\${query}"
+      User query: "\\\${query}"
       
       Retrieved information:
       \${responseContext}
@@ -941,17 +941,17 @@ const executeModernToolUse = async (query: string) => {
     // Simulate MCP-enabled tools
     const tools = {
       kagiSearch: async (searchQuery) => {
-        console.log(\`Performing Kagi search for: "\${searchQuery}"\`);
+        console.log(\`Performing Kagi search for: "\\\${searchQuery}"\`);
         // Simulate Kagi search results
         return {
           results: [
             {
-              title: \`Search result 1 for "\${searchQuery}"\`,
+              title: \`Search result 1 for "\\\${searchQuery}"\`,
               snippet: \`Relevant information about \${searchQuery}...\`,
               url: \`https://example.com/result1\`
             },
             {
-              title: \`Search result 2 for "\${searchQuery}"\`,
+              title: \`Search result 2 for "\\\${searchQuery}"\`,
               snippet: \`Additional information related to \${searchQuery}...\`,
               url: \`https://example.com/result2\`
             }
@@ -1001,7 +1001,7 @@ const executeModernToolUse = async (query: string) => {
     // Step 1: Analyze the query to determine required tools
     const queryAnalysis = await llm(\`
       Analyze this user query to determine which tools might help answer it:
-      "\${query}"
+      "\\\${query}"
       
       Available tools:
       - kagi_search: Performs web search using Kagi
@@ -1020,7 +1020,7 @@ const executeModernToolUse = async (query: string) => {
     
     // Process each required tool
     for (const tool of (toolRequirements.tools || [])) {
-      console.log(``Processing tool request for: ${tool.name}``);
+      console.log(\`Processing tool request for: \${tool.name}\`);
       
       // Create MCP-compliant tool request
       const mcpRequest = {
@@ -1045,7 +1045,7 @@ const executeModernToolUse = async (query: string) => {
       })
       .join('\\n\\n');
     
-    const response = await llm("Using the following tool results, provide a comprehensive answer to the user's query.\n\nQuery: \"" + query + "\"\n\nTool Results:\n" + toolOutputsText + "\n\nGenerate a helpful response that synthesizes the information from these tools.");
+    const response = await llm("Using the following tool results, provide a comprehensive answer to the user's query.\\n\\nQuery: \\"" + query + "\\"\\n\\nTool Results:\\n" + toolOutputsText + "\\n\\nGenerate a helpful response that synthesizes the information from these tools.");
     
     return {
       status: 'success',
@@ -1198,7 +1198,7 @@ const determineContextSources = async (request) => {
 
 const fetchFromKnowledgeStore = async (source, query) => {
   // Simulate knowledge retrieval
-  return "Information from " + source + " related to \"" + query + "\"";
+  return "Information from " + source + " related to \\"" + query + "\\"";
 };
 
 const applySecurityFilter = async (data, permissions) => {
@@ -1303,7 +1303,7 @@ const executeAgentToAgent = async (taskInput: string, maxRounds = 3) => {
     console.log("Coordinator agent analyzing task...");
     const coordinatorPrompt = \`
       You are a coordinator agent. Analyze this task and break it down:
-      "\${taskInput}"
+      "\\\${taskInput}"
       
       Create structured subtasks for the following agents:
       1. Research Agent: Gathers relevant information
@@ -1351,11 +1351,11 @@ const executeAgentToAgent = async (taskInput: string, maxRounds = 3) => {
     
     const synthesizerPrompt = \`
       You are a synthesis agent. Create a comprehensive response based on the 
-      work of multiple agents on this task: "\${taskInput}"
+      work of multiple agents on this task: "\\\${taskInput}"
       
       Agent contributions:
       \${resultMessages.map(function(message) { 
-        return \`\${message.from}: \${message.content}\`;
+        return \`\\\${message.from}: \\\${message.content}\`;
       }).join('\\n\\n')}
       
       Synthesize these contributions into a cohesive final result.
@@ -1628,9 +1628,9 @@ const executeParallelLLMCalls = async (input) => {
   try {
     // Execute multiple LLM calls in parallel
     const [result1, result2, result3] = await Promise.all([
-      llm(``Process this input perspective 1: ${input}``),
-      llm(``Process this input perspective 2: ${input}``),
-      llm(``Process this input perspective 3: ${input}``)
+      llm(\`Process this input perspective 1: \${input}\`),
+      llm(\`Process this input perspective 2: \${input}\`),
+      llm(\`Process this input perspective 3: \${input}\`)
     ]);
     
     // Aggregate results
@@ -1957,7 +1957,7 @@ const executeRouting = async (input: string) => {
       2. Billing Question
       3. General Inquiry
       
-      Input: "\${input}"
+      Input: "\\\${input}"
       
       Category (respond with only the number):
     \`);
@@ -2064,13 +2064,13 @@ const executeAutonomousWorkflow = async (input: string, maxSteps = 10) => {
     // Track available environment tools
     const tools = {
       search: async (query) => {
-        return \`Results for "\${query}": [simulated search results]\`;
+        return \`Results for "\\\${query}": [simulated search results]\`;
       },
       calculate: (expression) => {
         try {
           return \`Result: \${eval(expression)}\`;
         } catch (err) {
-          return \`Error calculating "\${expression}": \${err.message}\`;
+          return \`Error calculating "\\\${expression}": \${err.message}\`;
         }
       },
       // Add more tools as needed
@@ -2117,7 +2117,7 @@ const executeAutonomousWorkflow = async (input: string, maxSteps = 10) => {
         history.push(\`Tool (\${decision.action}): \${toolResult}\`);
       } else {
         const actionName = decision.action || 'undefined';
-        history.push(\`Error: Unknown action "\${actionName}"\`);
+        history.push(\`Error: Unknown action "\\\${actionName}"\`);
       }
     }
     
@@ -2411,7 +2411,7 @@ const executePlanAndExecute = async (input: string) => {
             const id = entry[0];
             const result = entry[1];
             const subtaskDesc = subtasks.find(function(s) { return s.id === id; }).description;
-            return \`- Subtask \${id}: \${subtaskDesc}\n  Result: \${result}\`;
+            return \`- Subtask \${id}: \${subtaskDesc}\\n  Result: \${result}\`;
           }).join('\\n')}
           
           Create an updated plan with remaining and new subtasks.
@@ -2449,7 +2449,7 @@ const executePlanAndExecute = async (input: string) => {
         const id = entry[0];
         const result = entry[1];
         const subtaskDesc = subtasks.find(function(s) { return s.id === id; }).description;
-        return \`- Subtask \${id}: \${subtaskDesc}\n  Result: \${result}\`;
+        return \`- Subtask \${id}: \${subtaskDesc}\\n  Result: \${result}\`;
       }).join('\\n')}
     \`);
     
@@ -2467,7 +2467,7 @@ const executePlanAndExecute = async (input: string) => {
 
 const executeSubtask = async (subtaskDescription) => {
   // Execute a single subtask using appropriate agent and tools
-  return await llm(``Execute this specific task: ${subtaskDescription}``);
+  return await llm(\`Execute this specific task: \${subtaskDescription}\`);
 };
 
 const checkIfReplanNeeded = async (plan, subtasks, results) => {
@@ -2800,7 +2800,7 @@ const executeDeepResearcher = async (researchQuery: string) => {
     const researchPlan = await llm(\`
       You are a research planning AI.
       
-      Research Query: "\${researchQuery}"
+      Research Query: "\\\${researchQuery}"
       
       Create a comprehensive research plan to explore this topic. Include:
       1. Key aspects to investigate
@@ -2859,7 +2859,7 @@ const executeDeepResearcher = async (researchQuery: string) => {
     const synthesis = await llm(\`
       You are a research synthesis AI. Create a comprehensive research report based on the following:
       
-      Research Query: "\${researchQuery}"
+      Research Query: "\\\${researchQuery}"
       
       Research Findings:
       \${JSON.stringify(knowledgeBase, null, 2)}
@@ -2908,7 +2908,7 @@ async function extractInformation(source, questions) {
     findings: questions.map(q => {
       return {
         question: q,
-        answer: \`Simulated answer to "\${q}" based on source \${source.title}\`,
+        answer: \`Simulated answer to "\\\${q}" based on source \${source.title}\`,
         confidence: 0.6 + Math.random() * 0.4
       };
     })
@@ -3047,14 +3047,14 @@ const executeVoiceAgent = async (voiceInput: ArrayBuffer) => { // In real use, t
     const speechToText = new SpeechToTextService();
     const transcribedText = await speechToText.transcribe(voiceInput);
     
-    console.log(\`Transcribed text: "\${transcribedText}"\`);
+    console.log(\`Transcribed text: "\\\${transcribedText}"\`);
     
     // Step 2: Natural Language Understanding
     const nluResult = await llm(\`
       You are a natural language understanding system.
       Analyze this user utterance:
       
-      "\${transcribedText}"
+      "\\\${transcribedText}"
       
       Extract the following in JSON format:
       1. intent: The user's primary intent
@@ -3082,7 +3082,7 @@ const executeVoiceAgent = async (voiceInput: ArrayBuffer) => { // In real use, t
     const dialogResponse = await llm(\`
       You are a conversational voice assistant.
       
-      User's transcribed input: "\${transcribedText}"
+      User's transcribed input: "\\\${transcribedText}"
       
       NLU analysis:
       - Intent: \${nlu.intent}
@@ -3091,7 +3091,7 @@ const executeVoiceAgent = async (voiceInput: ArrayBuffer) => { // In real use, t
       
       Conversation history:
       \${conversationContext.history.map(function(entry, index) { 
-        return \`[\${index + 1}] User: \${entry.userInput} → Assistant: \${entry.agentResponse || ''}\`; 
+        return \`[\\\${index + 1}] User: \\\${entry.userInput} → Assistant: \\\${entry.agentResponse || ''}\`; 
       }).join('\\n')}
       
       Generate a natural, conversational response that:
@@ -3107,7 +3107,7 @@ const executeVoiceAgent = async (voiceInput: ArrayBuffer) => { // In real use, t
     const nlgResponse = await llm(\`
       You are a natural language generation system for a voice assistant.
       
-      Raw response: "\${dialogResponse}"
+      Raw response: "\\\${dialogResponse}"
       
       User sentiment: \${nlu.sentiment}
       
