@@ -99,7 +99,7 @@ const executeReAct = async (query: string, maxCycles = 5) => {
     // Available tools
     const tools = {
       search: async (query) => {
-        return \`Search results for "\${query}": [simulated search results]\`;
+        return "Search results for \"" + query + "\": [simulated search results]";
       },
       calculate: (expression) => {
         try {
@@ -109,7 +109,7 @@ const executeReAct = async (query: string, maxCycles = 5) => {
         }
       },
       lookup: (entity) => {
-        return \`Information about \${entity}: [simulated encyclopedia entry]\`;
+        return "Information about " + entity + ": [simulated encyclopedia entry]";
       }
     };
 
@@ -300,7 +300,7 @@ class ReActAgent:
     
     async def _lookup_tool(self, entity: str) -> str:
         """Look up information about an entity."""
-        return \`Information about \${entity}: [simulated encyclopedia entry]\`
+        return f"Information about {entity}: [simulated encyclopedia entry]"
 
 # Example usage
 async def main():
@@ -427,15 +427,15 @@ const executeCodeAct = async (query, maxCycles = 5) => {
         "Task: " + query + "\n\n" +
         "Previous interactions:\n" + 
         contextHistory.join('\n\n') + "\n\n" +
-        "Based on the current state, either:\n\n" +
-        "1. Write Python code to make progress, formatted as:\n" +
-        "   Thought: <your reasoning>\n" +
-        "   Code:\n" +
-        "   ```code\n" +
-        "   # Your Python code here\n" +
-        "   ```\n\n" +
-        "2. Or provide the final answer if you've solved the problem:\n" +
-        "   Thought: <your reasoning>\n" +
+        "Based on the current state, either:\\n\\n" +
+        "1. Write Python code to make progress, formatted as:\\n" +
+        "   Thought: <your reasoning>\\n" +
+        "   Code:\\n" +
+        "   ```\\n" +
+        "   # Your Python code here\\n" +
+        "   ```\\n\\n" +
+        "2. Or provide the final answer if you've solved the problem:\\n" +
+        "   Thought: <your reasoning>\\n" +
         "   Final Answer: <your answer>";
       
       const agentResponse = await llm(agentPrompt);
@@ -450,9 +450,9 @@ const executeCodeAct = async (query, maxCycles = 5) => {
         }
       } 
       // Check if the response contains code
-      else if (agentResponse.includes("\`\`\`code")) {
+      else if (agentResponse.includes("```")) {
         // Extract code block
-        const codeMatch = agentResponse.match(/\`\`\`code\\s*([\\s\\S]*?)\\s*\`\`\`/);
+        const codeMatch = agentResponse.match(/```\s*([\s\S]*?)\s*```/);
         if (codeMatch) {
           const code = codeMatch[1].trim();
           
@@ -1041,18 +1041,11 @@ const executeModernToolUse = async (query: string) => {
       .map(function(entry) {
         const toolName = entry[0];
         const result = entry[1];
-        return \`\${toolName} result: \${JSON.stringify(result, null, 2)}\`;
+        return toolName + " result: " + JSON.stringify(result, null, 2);
       })
       .join('\\n\\n');
     
-    const response = await llm(\`Using the following tool results, provide a comprehensive answer to the user's query.
-
-Query: "\${query}"
-
-Tool Results:
-\${toolOutputsText}
-
-Generate a helpful response that synthesizes the information from these tools.\`);
+    const response = await llm("Using the following tool results, provide a comprehensive answer to the user's query.\n\nQuery: \"" + query + "\"\n\nTool Results:\n" + toolOutputsText + "\n\nGenerate a helpful response that synthesizes the information from these tools.");
     
     return {
       status: 'success',
@@ -1205,7 +1198,7 @@ const determineContextSources = async (request) => {
 
 const fetchFromKnowledgeStore = async (source, query) => {
   // Simulate knowledge retrieval
-  return \`Information from \${source} related to "\${query}"\`;
+  return "Information from " + source + " related to \"" + query + "\"";
 };
 
 const applySecurityFilter = async (data, permissions) => {
