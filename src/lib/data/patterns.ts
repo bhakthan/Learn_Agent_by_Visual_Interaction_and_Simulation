@@ -103,9 +103,9 @@ const executeReAct = async (query: string, maxCycles = 5) => {
       },
       calculate: (expression) => {
         try {
-          return \`Calculation result: \${eval(expression)}\`;
+          return "Calculation result: " + eval(expression);
         } catch (error) {
-          return \`Error in calculation: \${error.message}\`;
+          return "Error in calculation: " + error.message;
         }
       },
       lookup: (entity) => {
@@ -294,9 +294,9 @@ class ReActAgent:
         """Calculate mathematical expressions."""
         try:
             result = eval(expression)
-            return \`Calculation result: \${result}\`
+            return "Calculation result: " + str(result)
         except Exception as error:
-            return \`Error in calculation: \${str(error)}\`
+            return "Error in calculation: " + str(error)
     
     async def _lookup_tool(self, entity: str) -> str:
         """Look up information about an entity."""
@@ -403,7 +403,7 @@ const executeCodeAct = async (query, maxCycles = 5) => {
       if (code.includes('print(')) {
         const printMatch = code.match(/print\\(([^)]+)\\)/);
         if (printMatch) {
-          return \`Output: \${printMatch[1]}\`;
+          return "Output: " + printMatch[1];
         }
       }
       
@@ -416,35 +416,30 @@ const executeCodeAct = async (query, maxCycles = 5) => {
     };
 
     // Add the initial query to context
-    contextHistory.push(`User query: ${query}`);
+    contextHistory.push("User query: " + query);
 
     while (!done && currentCycle < maxCycles) {
       currentCycle++;
       
       // Generate agent response
       const agentPrompt = 
-        `You are a CodeAct agent that solves problems by writing and executing Python code.
-
-Task: ${query}
-
-Previous interactions:
-${contextHistory.join('\n\n')}
-
-Based on the current state, either:
-
-1. Write Python code to make progress, formatted as:
-   Thought: <your reasoning>
-   Code:
-   \`\`\`python
-   # Your Python code here
-   \`\`\`
-
-2. Or provide the final answer if you've solved the problem:
-   Thought: <your reasoning>
-   Final Answer: <your answer>`;
+        "You are a CodeAct agent that solves problems by writing and executing Python code.\n\n" +
+        "Task: " + query + "\n\n" +
+        "Previous interactions:\n" + 
+        contextHistory.join('\n\n') + "\n\n" +
+        "Based on the current state, either:\n\n" +
+        "1. Write Python code to make progress, formatted as:\n" +
+        "   Thought: <your reasoning>\n" +
+        "   Code:\n" +
+        "   ```code\n" +
+        "   # Your Python code here\n" +
+        "   ```\n\n" +
+        "2. Or provide the final answer if you've solved the problem:\n" +
+        "   Thought: <your reasoning>\n" +
+        "   Final Answer: <your answer>";
       
       const agentResponse = await llm(agentPrompt);
-      contextHistory.push(`Agent: ${agentResponse}`);
+      contextHistory.push("Agent: " + agentResponse);
       
       // Check if the response contains a final answer
       if (agentResponse.includes('Final Answer:')) {
@@ -465,7 +460,7 @@ Based on the current state, either:
           const executionResult = await executeCode(code);
           
           // Add the observation to the history
-          contextHistory.push(`Observation: ${executionResult}`);
+          contextHistory.push("Observation: " + executionResult);
         }
       }
     }
