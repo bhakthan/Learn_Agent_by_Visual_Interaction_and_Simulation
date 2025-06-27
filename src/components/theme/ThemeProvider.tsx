@@ -27,18 +27,31 @@ const syncTheme = (theme: Theme) => {
   const root = window.document.documentElement;
   const body = window.document.body;
   
-  // Remove all theme classes
-  root.classList.remove("light", "dark");
-  body.classList.remove("light", "dark");
+  // To prevent flashes during theme change, first set a class that will manage
+  // the transition, then after a small delay update the actual theme classes
+  root.classList.add("theme-transition");
+  body.classList.add("theme-transition");
   
-  // Add the new theme class
-  root.classList.add(theme);
-  body.classList.add(theme);
-  
-  // Set data attributes for component libraries that use them
-  root.setAttribute('data-theme', theme);
-  root.setAttribute('data-appearance', theme);
-  body.setAttribute('data-theme', theme);
+  setTimeout(() => {
+    // Remove all theme classes
+    root.classList.remove("light", "dark");
+    body.classList.remove("light", "dark");
+    
+    // Add the new theme class
+    root.classList.add(theme);
+    body.classList.add(theme);
+    
+    // Set data attributes for component libraries that use them
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-appearance', theme);
+    body.setAttribute('data-theme', theme);
+    
+    // Remove the transition blocker after changes are complete
+    setTimeout(() => {
+      root.classList.remove("theme-transition");
+      body.classList.remove("theme-transition");
+    }, 100);
+  }, 10);
 };
 
 export function ThemeProvider({

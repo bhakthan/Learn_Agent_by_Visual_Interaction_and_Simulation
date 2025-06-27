@@ -92,10 +92,9 @@ export function PatternSidebar({ activePatternId, onPatternSelect }: PatternSide
               <Button 
                 variant="outline" 
                 size="sm"
-                className="rounded-r-full rounded-l-none shadow-md hover:shadow-lg sidebar-transition hover:translate-x-1 hover:bg-primary hover:text-primary-foreground group"
+                className="rounded-r-full rounded-l-none shadow-md hover:shadow-lg sidebar-transition hover:translate-x-1 hover:bg-primary hover:text-primary-foreground group bg-primary/5"
                 onClick={toggleSidebar}
                 aria-label="Show patterns sidebar"
-                className="bg-primary/5 hover:bg-primary hover:text-primary-foreground group"
               >
                 <CaretRight size={16} className="mr-1 group-hover:animate-pulse" />
                 <span className="text-xs">Patterns</span>

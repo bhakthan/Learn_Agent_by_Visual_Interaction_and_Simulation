@@ -16,24 +16,37 @@
             const defaultTheme = 'light';
             
             function getThemePreference() {
+                // Check local storage first
                 const savedTheme = localStorage.getItem(storageKey);
                 if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
                     return savedTheme;
                 }
                 
+                // Fall back to system preference
                 const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 return systemPrefersDark ? 'dark' : defaultTheme;
             }
             
             const theme = getThemePreference();
+            
+            // Block transitions during initial load
+            document.documentElement.classList.add('theme-transition');
+            
+            // Apply theme classes
             document.documentElement.classList.add(theme);
             document.documentElement.setAttribute('data-theme', theme);
             document.documentElement.setAttribute('data-appearance', theme);
             
-            // Also add to body when it loads
+            // Add listeners for when body is available
             window.addEventListener('DOMContentLoaded', () => {
                 document.body.classList.add(theme);
                 document.body.setAttribute('data-theme', theme);
+                
+                // Remove transition blocker after a short delay
+                setTimeout(() => {
+                    document.documentElement.classList.remove('theme-transition');
+                    document.body.classList.remove('theme-transition');
+                }, 200);
             });
         })();
     </script>

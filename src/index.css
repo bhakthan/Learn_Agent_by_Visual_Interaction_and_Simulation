@@ -11,11 +11,48 @@
     --transition-duration: 0.3s;
   }
   
-  body, button, a, div, header, footer, nav, main, section, article {
+  /* Global transition properties for theme changes */
+  body, 
+  div, 
+  section, 
+  header, 
+  footer, 
+  nav, 
+  main, 
+  article, 
+  aside, 
+  button, 
+  a,
+  span,
+  p,
+  h1, h2, h3, h4, h5, h6,
+  input, 
+  textarea, 
+  select, 
+  table, 
+  .card,
+  .border,
+  .bg-background,
+  .bg-card,
+  .bg-primary,
+  .bg-secondary,
+  .bg-accent,
+  .bg-muted,
+  [class*="bg-"],
+  [class*="text-"],
+  [class*="border-"] {
     transition: background-color var(--transition-duration) ease, 
                 color var(--transition-duration) ease,
                 border-color var(--transition-duration) ease,
-                box-shadow var(--transition-duration) ease;
+                box-shadow var(--transition-duration) ease,
+                fill var(--transition-duration) ease,
+                stroke var(--transition-duration) ease;
+  }
+  
+  /* Theme transition blocker - used during theme switching to prevent flashes */
+  .theme-transition,
+  .theme-transition * {
+    transition: none !important;
   }
   
   /* Add smoother sidebar transitions */
@@ -129,7 +166,6 @@
 
 body {
   font-family: 'Roboto', sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 h1, h2, h3, h4, h5, h6, 

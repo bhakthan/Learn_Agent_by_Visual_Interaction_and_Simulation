@@ -31,7 +31,7 @@ export function ThemeToggle() {
             variant="outline"
             size="icon"
             onClick={handleToggleTheme}
-            className={`rounded-full h-9 w-9 transition-all duration-300 ${
+            className={`rounded-full h-9 w-9 ${
               theme === "light" 
               ? "border-primary/20 bg-background" 
               : "border-primary/40 bg-primary/10"
@@ -39,9 +39,9 @@ export function ThemeToggle() {
             aria-label="Toggle theme"
           >
             {theme === "light" ? (
-              <Moon size={18} weight="fill" className="text-primary transition-all duration-300" />
+              <Moon size={18} weight="fill" className="text-primary" />
             ) : (
-              <Sun size={18} weight="fill" className="text-primary transition-all duration-300" />
+              <Sun size={18} weight="fill" className="text-primary" />
             )}
             <span className="sr-only">
               {theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
