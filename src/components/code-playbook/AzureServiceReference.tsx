@@ -48,7 +48,7 @@ const azureServiceDetails: ServiceDetails[] = [
       'Fine-tuning capabilities for custom scenarios',
       'Content filtering and safety mechanisms',
       'Azure security, compliance, and regional availability',
-      'Integration with Azure's identity and access management'
+      'Integration with Azure\'s identity and access management'
     ],
     resourceRequirements: [
       'Requires quota approval for production usage',
