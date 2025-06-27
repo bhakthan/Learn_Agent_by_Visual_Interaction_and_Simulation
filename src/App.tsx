@@ -34,7 +34,7 @@ function App() {
           <div className="flex items-center space-x-4">
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <span className="text-xs text-muted-foreground hidden md:inline-block">Night Mode</span>
+              <span className="text-xs text-muted-foreground hidden md:inline-block">Mode</span>
             </div>
             <NavigationMenu>
             <NavigationMenuList>
@@ -255,7 +255,7 @@ function App() {
       </footer>
     </div>
     </ThemeProvider>
-  )
+  );
 }
 
 function ListItem({ className, title, children, ...props }: React.ComponentPropsWithoutRef<"a"> & { title: string }) {
