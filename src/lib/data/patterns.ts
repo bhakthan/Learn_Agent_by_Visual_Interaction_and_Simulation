@@ -45,7 +45,7 @@ export const agentPatterns: PatternData[] = [
     description: 'A reasoning and acting framework where an agent alternates between reasoning (using LLMs) and acting (using tools like Google or email).',
     category: 'Core',
     useCases: ['Multi-Step Problem Solving', 'Research Tasks', 'Information Gathering'],
-    whenToUse: 'Use the ReAct pattern when your task requires the agent to gather external information and reason about it iteratively. It's ideal for complex inquiries that need multiple tool interactions, such as research questions, multi-step problem-solving, or scenarios where an agent needs to evaluate its actions and adjust its approach based on new information.',
+    whenToUse: 'Use the ReAct pattern when your task requires the agent to gather external information and reason about it iteratively. It\'s ideal for complex inquiries that need multiple tool interactions, such as research questions, multi-step problem-solving, or scenarios where an agent needs to evaluate its actions and adjust its approach based on new information.',
     nodes: [
       {
         id: 'input',
@@ -330,7 +330,7 @@ async def main():
     description: 'Allows agents to autonomously execute Python code instead of using JSON, enabling them to handle complex tasks more efficiently.',
     category: 'Core',
     useCases: ['Complex Computational Tasks', 'Data Analysis', 'Algorithmic Problem Solving'],
-    whenToUse: 'Select the CodeAct pattern when your tasks involve complex computations, data manipulation, or algorithmic problem solving that would benefit from actual code execution. It's particularly valuable for data science workflows, mathematical computations, and situations where the agent needs to process structured data dynamically rather than relying on pre-defined API calls.',
+    whenToUse: 'Select the CodeAct pattern when your tasks involve complex computations, data manipulation, or algorithmic problem solving that would benefit from actual code execution. It\'s particularly valuable for data science workflows, mathematical computations, and situations where the agent needs to process structured data dynamically rather than relying on pre-defined API calls.',
     nodes: [
       {
         id: 'user',
@@ -668,7 +668,7 @@ const executeSelfReflection = async (query: string, maxRevisions = 3) => {
     description: 'AI agents retrieving and evaluating relevant data to generate context-aware and well-reasoned output using memory and tools.',
     category: 'Advanced',
     useCases: ['Enterprise Knowledge Management', 'Research Analysis', 'Expert Systems'],
-    whenToUse: 'Use Agentic RAG when you need to ground AI responses in specific knowledge bases or documents with high accuracy and relevance. This pattern is ideal for enterprise applications requiring access to proprietary information, expert systems that need domain-specific knowledge, or any context where responses must be based on authoritative sources rather than the LLM's pre-trained knowledge.',
+    whenToUse: 'Use Agentic RAG when you need to ground AI responses in specific knowledge bases or documents with high accuracy and relevance. This pattern is ideal for enterprise applications requiring access to proprietary information, expert systems that need domain-specific knowledge, or any context where responses must be based on authoritative sources rather than the LLM\'s pre-trained knowledge.',
     nodes: [
       {
         id: 'user',
@@ -1488,7 +1488,7 @@ const parseTasks = (coordinatorOutput) => {
     name: 'Prompt Chaining',
     description: 'It decomposes a task into steps, where each LLM call processes the output of the previous one.',
     useCases: ['Chatbot Applications', 'Tool using AI Agents'],
-    whenToUse: 'Employ Prompt Chaining when a complex task naturally breaks down into sequential subtasks where each step depends on the previous one's output. This pattern works well for structured workflows like data transformation, step-by-step reasoning, or content refinement processes where the output of each stage serves as input to the next step in a clear linear progression.',
+    whenToUse: 'Employ Prompt Chaining when a complex task naturally breaks down into sequential subtasks where each step depends on the previous one\'s output. This pattern works well for structured workflows like data transformation, step-by-step reasoning, or content refinement processes where the output of each stage serves as input to the next step in a clear linear progression.',
     nodes: [
       {
         id: 'input',
