@@ -45,7 +45,7 @@ export const agentPatterns: PatternData[] = [
     description: 'A reasoning and acting framework where an agent alternates between reasoning (using LLMs) and acting (using tools like Google or email).',
     category: 'Core',
     useCases: ['Multi-Step Problem Solving', 'Research Tasks', 'Information Gathering'],
-    whenToUse: 'Use the ReAct pattern when your task requires the agent to gather external information and reason about it iteratively. It\'s ideal for complex inquiries that need multiple tool interactions, such as research questions, multi-step problem-solving, or scenarios where an agent needs to evaluate its actions and adjust its approach based on new information.',
+    whenToUse: "Use the ReAct pattern when your task requires the agent to gather external information and reason about it iteratively. It's ideal for complex inquiries that need multiple tool interactions, such as research questions, multi-step problem-solving, or scenarios where an agent needs to evaluate its actions and adjust its approach based on new information.",
     nodes: [
       {
         id: 'input',
@@ -99,7 +99,7 @@ const executeReAct = async (query: string, maxCycles = 5) => {
     // Available tools
     const tools = {
       search: async (query) => {
-        return "Search results for \\"" + query + "\\": [simulated search results]";
+        return "Search results for \"" + query + "\": [simulated search results]";
       },
       calculate: (expression) => {
         try {
@@ -423,19 +423,19 @@ const executeCodeAct = async (query, maxCycles = 5) => {
       
       // Generate agent response
       const agentPrompt = 
-        "You are a CodeAct agent that solves problems by writing and executing Python code.\\n\\n" +
-        "Task: " + query + "\\n\\n" +
-        "Previous interactions:\\n" + 
-        contextHistory.join('\\n\\n') + "\\n\\n" +
-        "Based on the current state, either:\\n\\n" +
-        "1. Write Python code to make progress, formatted as:\\n" +
-        "   Thought: <your reasoning>\\n" +
-        "   Code:\\n" +
-        "   code block:\\n" +
-        "   # Your Python code here\\n" +
-        "   end code\\n\\n" +
-        "2. Or provide the final answer if you've solved the problem:\\n" +
-        "   Thought: <your reasoning>\\n" +
+        "You are a CodeAct agent that solves problems by writing and executing Python code.\n\n" +
+        "Task: " + query + "\n\n" +
+        "Previous interactions:\n" + 
+        contextHistory.join('\n\n') + "\n\n" +
+        "Based on the current state, either:\n\n" +
+        "1. Write Python code to make progress, formatted as:\n" +
+        "   Thought: <your reasoning>\n" +
+        "   Code:\n" +
+        "   ```\n" +
+        "   # Your Python code here\n" +
+        "   ```\n\n" +
+        "2. Or provide the final answer if you've solved the problem:\n" +
+        "   Thought: <your reasoning>\n" +
         "   Final Answer: <your answer>";
       
       const agentResponse = await llm(agentPrompt);
@@ -450,9 +450,9 @@ const executeCodeAct = async (query, maxCycles = 5) => {
         }
       } 
       // Check if the response contains code
-      else if (agentResponse.includes("\`\`\`")) {
+      else if (agentResponse.includes("```")) {
         // Extract code block
-        const codeMatch = agentResponse.match(/\`\`\`\\s*([\\s\\S]*?)\\s*\`\`\`/);
+        const codeMatch = agentResponse.match(/```\s*([\s\S]*?)\s*```/);
         if (codeMatch) {
           const code = codeMatch[1].trim();
           
