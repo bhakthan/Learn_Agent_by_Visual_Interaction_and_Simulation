@@ -428,14 +428,14 @@ const executeCodeAct = async (query, maxCycles = 5) => {
         "Previous interactions:\n" + 
         contextHistory.join('\n\n') + "\n\n" +
         "Based on the current state, either:\n\n" +
-        "1. Write Python code to make progress, formatted as:\n" +
-        "   Thought: <your reasoning>\n" +
-        "   Code:\n" +
-        "   ```\n" +
-        "   # Your Python code here\n" +
-        "   ```\n\n" +
-        "2. Or provide the final answer if you've solved the problem:\n" +
-        "   Thought: <your reasoning>\n" +
+        "1. Write Python code to make progress, formatted as:\\n" +
+        "   Thought: <your reasoning>\\n" +
+        "   Code:\\n" +
+        "   ```\\n" +
+        "   # Your Python code here\\n" +
+        "   ```\\n\\n" +
+        "2. Or provide the final answer if you've solved the problem:\\n" +
+        "   Thought: <your reasoning>\\n" +
         "   Final Answer: <your answer>";
       
       const agentResponse = await llm(agentPrompt);
