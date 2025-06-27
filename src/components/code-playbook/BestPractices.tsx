@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { InfoCircle, CaretDoubleRight, Warning, Code, SmileyWink, Cloud, Database, Lightning, ShieldCheck, Lightbulb } from "@phosphor-icons/react";
+import { InfoCircle, CaretDoubleRight, Warning, Code, SmileyWink, Cloud, Database, Lightning, ShieldCheck, Lightbulb, BookmarkSimple } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { azureAIServices, azureServicePatternMappings } from "@/lib/data/azureAiServices";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import AzureIntegrationGuide from "./AzureIntegrationGuide";
 import AzureServicesBestPractices from "./AzureServicesBestPractices";
 import AzureServiceReference from "./AzureServiceReference";
+import { Separator } from "@/components/ui/separator";
 
 interface BestPracticesProps {
   patternId: string;
@@ -32,6 +33,12 @@ const BestPractices: React.FC<BestPracticesProps> = ({ patternId, patternName })
   // Get Azure service mappings
   const serviceMappings = azureServicePatternMappings.filter(mapping => mapping.patternId === patternId);
   
+  // Find the most important Azure services for this pattern (top 2)
+  const keyServices = serviceMappings
+    .map(mapping => azureAIServices.find(s => s.id === mapping.serviceId))
+    .filter(service => service !== undefined)
+    .slice(0, 2);
+  
   return (
     <div className="space-y-6">
       <Card className="border-primary/20 shadow-sm">
@@ -51,7 +58,50 @@ const BestPractices: React.FC<BestPracticesProps> = ({ patternId, patternName })
         </CardHeader>
         <CardContent className="pt-6">
           {practiceType === 'general' && (
-            <div className="mt-0 space-y-4">
+            <div className="mt-0 space-y-6">
+              {/* Add Azure services highlight in General tab if there are services */}
+              {serviceMappings.length > 0 && (
+                <div className="border rounded-lg p-4 bg-primary/5 mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Cloud size={20} className="text-primary" />
+                    <h3 className="font-medium">Azure AI Services for {patternName}</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    This pattern works best with the following Azure AI services:
+                  </p>
+                  <div className="flex flex-wrap gap-3 mb-3">
+                    {keyServices.map((service) => (
+                      service && (
+                        <div key={service.id} className="flex items-center gap-2 border rounded-md px-3 py-2 bg-card">
+                          {getServiceIcon(service.id)}
+                          <span className="font-medium text-sm">{service.name}</span>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                  <div className="flex justify-end">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-xs text-primary"
+                      onClick={() => {
+                        setPracticeType('azure');
+                        setAzureView('overview');
+                      }}
+                    >
+                      View Azure Integration Details →
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
+              <div className="mb-2">
+                <h3 className="text-md font-medium mb-1">General Best Practices</h3>
+                <p className="text-sm text-muted-foreground">
+                  Implementation guidelines for the {patternName} pattern regardless of cloud platform.
+                </p>
+              </div>
+              
               {generalPractices.length > 0 ? (
                 <Accordion type="multiple" className="w-full">
                   {generalPractices.map((practice, index) => (
@@ -89,6 +139,16 @@ const BestPractices: React.FC<BestPracticesProps> = ({ patternId, patternName })
           
           {practiceType === 'azure' && (
             <div className="mt-0 space-y-4">
+              <div className="mb-2">
+                <h3 className="text-md font-medium flex items-center gap-2">
+                  <Cloud size={18} className="text-primary" />
+                  Azure AI Services Integration
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Learn how to implement the {patternName} pattern with Azure AI services.
+                </p>
+              </div>
+              
               <Tabs value={azureView} onValueChange={(v) => setAzureView(v as 'overview' | 'detailed' | 'reference')} className="w-full">
                 <TabsList className="w-full grid grid-cols-3">
                   <TabsTrigger value="overview">Service Overview</TabsTrigger>
@@ -101,6 +161,34 @@ const BestPractices: React.FC<BestPracticesProps> = ({ patternId, patternName })
                 {azureView === 'overview' && <AzureIntegrationGuide patternId={patternId} patternName={patternName} />}
                 {azureView === 'detailed' && <AzureServicesBestPractices patternId={patternId} patternName={patternName} />}
                 {azureView === 'reference' && <AzureServiceReference patternId={patternId} patternName={patternName} />}
+              </div>
+              
+              {/* Add resources section */}
+              <div className="mt-6 pt-4 border-t">
+                <div className="flex items-center gap-2 mb-3">
+                  <BookmarkSimple size={18} className="text-primary" />
+                  <h3 className="font-medium">Additional Resources</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <a 
+                    href="https://learn.microsoft.com/azure/ai-services/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="border rounded-md p-3 hover:border-primary/50 hover:bg-muted/20 transition-colors"
+                  >
+                    <h4 className="font-medium text-sm">Azure AI Documentation</h4>
+                    <p className="text-xs text-muted-foreground">Official Microsoft Azure AI Services documentation</p>
+                  </a>
+                  <a 
+                    href="https://learn.microsoft.com/azure/ai-studio/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="border rounded-md p-3 hover:border-primary/50 hover:bg-muted/20 transition-colors"
+                  >
+                    <h4 className="font-medium text-sm">Azure AI Studio</h4>
+                    <p className="text-xs text-muted-foreground">Visual development environment for AI applications</p>
+                  </a>
+                </div>
               </div>
             </div>
           )}
@@ -433,6 +521,26 @@ function getGeneralBestPracticesForPattern(patternId: string): PracticeItem[] {
 
   // Combine generic practices with pattern-specific ones
   return [...(specificPractices[patternId] || []), ...genericPractices];
+}
+
+// Helper function to get service icon based on service ID
+function getServiceIcon(serviceId: string) {
+  switch (serviceId) {
+    case 'azure-openai':
+      return <Cloud size={18} className="text-primary" />;
+    case 'azure-ai-search':
+      return <Database size={18} className="text-secondary" />;
+    case 'azure-content-safety':
+      return <ShieldCheck size={18} className="text-destructive" />;
+    case 'azure-ai-inference':
+      return <Lightning size={18} className="text-accent" />;
+    case 'azure-ai-foundry':
+      return <Cloud size={18} className="text-primary" />;
+    case 'azure-ai-evaluation':
+      return <InfoCircle size={18} className="text-secondary" />;
+    default:
+      return <Cloud size={18} className="text-primary" />;
+  }
 }
 
 export default BestPractices;
