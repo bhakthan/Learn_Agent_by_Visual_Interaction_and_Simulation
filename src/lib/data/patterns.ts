@@ -103,7 +103,7 @@ const executeReAct = async (query: string, maxCycles = 5) => {
       },
       calculate: (expression) => {
         try {
-          return "Calculation result: " + eval(expression);
+          return `Calculation result: ${eval(expression)}`;
         } catch (error) {
           return \`Error in calculation: \${error.message}\`;
         }
@@ -403,7 +403,7 @@ const executeCodeAct = async (query, maxCycles = 5) => {
       if (code.includes('print(')) {
         const printMatch = code.match(/print\\(([^)]+)\\)/);
         if (printMatch) {
-          return "Output: " + printMatch[1];
+          return `Output: ${printMatch[1]}`;
         }
       }
       
@@ -416,30 +416,35 @@ const executeCodeAct = async (query, maxCycles = 5) => {
     };
 
     // Add the initial query to context
-    contextHistory.push("User query: " + query);
+    contextHistory.push(`User query: ${query}`);
 
     while (!done && currentCycle < maxCycles) {
       currentCycle++;
       
       // Generate agent response
       const agentPrompt = 
-        "You are a CodeAct agent that solves problems by writing and executing Python code.\\n\\n" +
-        "Task: " + query + "\\n\\n" +
-        "Previous interactions:\\n" + 
-        contextHistory.join('\\n\\n') + "\\n\\n" +
-        "Based on the current state, either:\\n\\n" +
-        "1. Write Python code to make progress, formatted as:\\n" +
-        "   Thought: <your reasoning>\\n" +
-        "   Code:\\n" +
-        "   \`\`\`python\\n" +
-        "   # Your Python code here\\n" +
-        "   \`\`\`\\n\\n" +
-        "2. Or provide the final answer if you've solved the problem:\\n" +
-        "   Thought: <your reasoning>\\n" +
-        "   Final Answer: <your answer>";
+        `You are a CodeAct agent that solves problems by writing and executing Python code.
+
+Task: ${query}
+
+Previous interactions:
+${contextHistory.join('\n\n')}
+
+Based on the current state, either:
+
+1. Write Python code to make progress, formatted as:
+   Thought: <your reasoning>
+   Code:
+   \`\`\`python
+   # Your Python code here
+   \`\`\`
+
+2. Or provide the final answer if you've solved the problem:
+   Thought: <your reasoning>
+   Final Answer: <your answer>`;
       
       const agentResponse = await llm(agentPrompt);
-      contextHistory.push("Agent: " + agentResponse);
+      contextHistory.push(`Agent: ${agentResponse}`);
       
       // Check if the response contains a final answer
       if (agentResponse.includes('Final Answer:')) {
@@ -460,7 +465,7 @@ const executeCodeAct = async (query, maxCycles = 5) => {
           const executionResult = await executeCode(code);
           
           // Add the observation to the history
-          contextHistory.push("Observation: " + executionResult);
+          contextHistory.push(`Observation: ${executionResult}`);
         }
       }
     }
@@ -728,21 +733,21 @@ const executeAgenticRAG = async (query) => {
     // Simulated vector database and retrieval system
     const vectorDB = {
       search: async (query, topK = 3) => {
-        console.log("Searching vector DB for: " + query);
+        console.log(`Searching vector DB for: ${query}`);
         // Simulate retrieving relevant chunks
         return [
           {
-            content: "Relevant information about " + query + " - Part 1",
+            content: `Relevant information about ${query} - Part 1`,
             source: "document1.pdf",
             score: 0.92
           },
           {
-            content: "Related context for " + query + " - Part 2",
+            content: `Related context for ${query} - Part 2`,
             source: "document2.pdf",
             score: 0.85
           },
           {
-            content: "Additional information related to " + query + " - Part 3",
+            content: `Additional information related to ${query} - Part 3`,
             source: "document3.pdf",
             score: 0.79
           }
@@ -824,7 +829,7 @@ const executeAgenticRAG = async (query) => {
     console.log("Generating comprehensive response...");
     const responseContext = topChunks
       .map(function(chunk) { 
-        return "Source: " + chunk.source + " (Score: " + chunk.evaluatedScore.toFixed(2) + ")\\n" + chunk.content;
+        return `Source: ${chunk.source} (Score: ${chunk.evaluatedScore.toFixed(2)})\n${chunk.content}`;
       })
       .join('\\n\\n');
     
@@ -1020,7 +1025,7 @@ const executeModernToolUse = async (query: string) => {
     
     // Process each required tool
     for (const tool of (toolRequirements.tools || [])) {
-      console.log("Processing tool request for: " + tool.name);
+      console.log(`Processing tool request for: ${tool.name}`);
       
       // Create MCP-compliant tool request
       const mcpRequest = {
@@ -1041,7 +1046,7 @@ const executeModernToolUse = async (query: string) => {
       .map(function(entry) {
         const toolName = entry[0];
         const result = entry[1];
-        return toolName + " result: " + JSON.stringify(result, null, 2);
+        return `${toolName} result: ${JSON.stringify(result, null, 2)}`;
       })
       .join('\\n\\n');
     
@@ -1362,7 +1367,7 @@ const executeAgentToAgent = async (taskInput: string, maxRounds = 3) => {
       
       Agent contributions:
       \${resultMessages.map(function(message) { 
-        return message.from + ": " + message.content;
+        return `${message.from}: ${message.content}`;
       }).join('\\n\\n')}
       
       Synthesize these contributions into a cohesive final result.
@@ -1635,9 +1640,9 @@ const executeParallelLLMCalls = async (input) => {
   try {
     // Execute multiple LLM calls in parallel
     const [result1, result2, result3] = await Promise.all([
-      llm("Process this input perspective 1: " + input),
-      llm("Process this input perspective 2: " + input),
-      llm("Process this input perspective 3: " + input)
+      llm(`Process this input perspective 1: ${input}`),
+      llm(`Process this input perspective 2: ${input}`),
+      llm(`Process this input perspective 3: ${input}`)
     ]);
     
     // Aggregate results
@@ -1748,7 +1753,7 @@ const executeOrchestratorWorker = async (input: string) => {
     const synthesizedResult = await llm(\`
       Synthesize these results into a coherent response:
       \${workerResults.map(function(result, i) { 
-        return "Result " + (i+1) + ": " + result;
+        return `Result ${i+1}: ${result}`;
       }).join('\\n')}
     \`);
     
@@ -2075,7 +2080,7 @@ const executeAutonomousWorkflow = async (input: string, maxSteps = 10) => {
       },
       calculate: (expression) => {
         try {
-          return "Result: " + eval(expression);
+          return `Result: ${eval(expression)}`;
         } catch (err) {
           return \`Error calculating "\${expression}": \${err.message}\`;
         }
@@ -2095,7 +2100,7 @@ const executeAutonomousWorkflow = async (input: string, maxSteps = 10) => {
         
         History:
         \${history.map(function(h) { 
-          return "- " + h;
+          return `- ${h}`;
         }).join('\\n')}
         
         Available tools:
@@ -2418,7 +2423,7 @@ const executePlanAndExecute = async (input: string) => {
             const id = entry[0];
             const result = entry[1];
             const subtaskDesc = subtasks.find(function(s) { return s.id === id; }).description;
-            return "- Subtask " + id + ": " + subtaskDesc + "\\n  Result: " + result;
+            return `- Subtask ${id}: ${subtaskDesc}\n  Result: ${result}`;
           }).join('\\n')}
           
           Create an updated plan with remaining and new subtasks.
@@ -2456,7 +2461,7 @@ const executePlanAndExecute = async (input: string) => {
         const id = entry[0];
         const result = entry[1];
         const subtaskDesc = subtasks.find(function(s) { return s.id === id; }).description;
-        return "- Subtask " + id + ": " + subtaskDesc + "\\n  Result: " + result;
+        return `- Subtask ${id}: ${subtaskDesc}\n  Result: ${result}`;
       }).join('\\n')}
     \`);
     
@@ -2474,7 +2479,7 @@ const executePlanAndExecute = async (input: string) => {
 
 const executeSubtask = async (subtaskDescription) => {
   // Execute a single subtask using appropriate agent and tools
-  return await llm("Execute this specific task: " + subtaskDescription);
+  return await llm(`Execute this specific task: ${subtaskDescription}`);
 };
 
 const checkIfReplanNeeded = async (plan, subtasks, results) => {
