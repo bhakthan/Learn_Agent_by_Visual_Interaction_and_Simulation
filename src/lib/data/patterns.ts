@@ -431,9 +431,9 @@ const executeCodeAct = async (query, maxCycles = 5) => {
         "1. Write Python code to make progress, formatted as:\\n" +
         "   Thought: <your reasoning>\\n" +
         "   Code:\\n" +
-        "   \`\`\`code\\n" +
+        "   code block:\\n" +
         "   # Your Python code here\\n" +
-        "   \`\`\`\\n\\n" +
+        "   end code\\n\\n" +
         "2. Or provide the final answer if you've solved the problem:\\n" +
         "   Thought: <your reasoning>\\n" +
         "   Final Answer: <your answer>";

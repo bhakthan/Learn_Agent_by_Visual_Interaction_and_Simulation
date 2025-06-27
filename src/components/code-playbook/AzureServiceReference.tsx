@@ -293,7 +293,7 @@ async function validateOutput(llmOutput: string) {
         .map(c => c.category)
         .join(", ");
         
-      console.log(\`Content flagged for: \${flaggedCategories}\`);
+    console.log("Content flagged for: " + flaggedCategories);
       return {
         isSafe: false,
         sanitizedOutput: "I'm sorry, but I cannot provide that information. Let me offer an alternative approach."
@@ -603,7 +603,7 @@ async function setupPatternDeploymentPipeline() {
       type: "github",
       repository: "your-org/agent-patterns",
       branch: "main",
-      directory: `patterns/${patternId}`
+      directory: "patterns/" + patternId
     },
     deployment: {
       environments,
