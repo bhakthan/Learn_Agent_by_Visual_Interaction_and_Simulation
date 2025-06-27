@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Edge, Node } from 'reactflow';
 import { motion } from 'framer-motion';
 import * as dataFlowUtils from '@/lib/utils/dataFlowUtils';
-const { getDataFlowAnimationStyle, getNodeDataFlowParams } = dataFlowUtils;
 import { DataFlowFilter } from './DataFlowControls';
 import { Button } from '@/components/ui/button';
 import { ChartLine } from '@phosphor-icons/react';
@@ -178,8 +177,8 @@ const EnhancedDataFlowVisualizer = ({
     
     // Get animation style based on flow type
     const sourceNodeType = edge.sourceHandle ? edge.sourceHandle : 'default';
-    const typeParams = getNodeDataFlowParams(sourceNodeType);
-    const style = getDataFlowAnimationStyle(flow.type, typeParams);
+    const typeParams = dataFlowUtils.getNodeDataFlowParams(sourceNodeType);
+    const style = dataFlowUtils.getDataFlowAnimationStyle(flow.type, typeParams);
     
     return (
       <motion.g 
@@ -234,8 +233,8 @@ const EnhancedDataFlowVisualizer = ({
     
     // Get animation style based on flow type
     const sourceNodeType = edge.sourceHandle ? edge.sourceHandle : 'default';
-    const typeParams = getNodeDataFlowParams(sourceNodeType);
-    const style = getDataFlowAnimationStyle(flow.type, typeParams);
+    const typeParams = dataFlowUtils.getNodeDataFlowParams(sourceNodeType);
+    const style = dataFlowUtils.getDataFlowAnimationStyle(flow.type, typeParams);
 
     // Get nodes for additional info
     const sourceNode = nodes.find(n => n.id === flow.source);
@@ -311,8 +310,8 @@ const EnhancedDataFlowVisualizer = ({
                 const targetNode = nodes.find(n => n.id === flow.target);
                 
                 // Get style based on flow type
-                const typeParams = getNodeDataFlowParams('default');
-                const style = getDataFlowAnimationStyle(flow.type, typeParams);
+                const typeParams = dataFlowUtils.getNodeDataFlowParams('default');
+                const style = dataFlowUtils.getDataFlowAnimationStyle(flow.type, typeParams);
                 
                 return (
                   <div 

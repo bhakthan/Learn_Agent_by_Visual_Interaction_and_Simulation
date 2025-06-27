@@ -1,4 +1,4 @@
-export const pythonCodeExamples = {
+export const pythonPatterns = {
   'react-agent': `
 import openai
 import json

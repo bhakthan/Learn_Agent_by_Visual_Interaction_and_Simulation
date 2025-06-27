@@ -23,7 +23,6 @@ import {
 } from '@phosphor-icons/react'
 // Import necessary functions from dataFlowUtils
 import * as dataFlowUtils from '@/lib/utils/dataFlowUtils'
-const { simulatePatternFlow } = dataFlowUtils
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import EnhancedDataFlowVisualizer from './EnhancedDataFlowVisualizer'
 import DataFlowControls, { DataFlowFilter } from './DataFlowControls'
@@ -276,7 +275,7 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
     };
     
     // Start the simulation using our utility
-    const { cleanup } = simulatePatternFlow(
+    const { cleanup } = dataFlowUtils.simulatePatternFlow(
       nodes,
       edges,
       handleNodeStatus,

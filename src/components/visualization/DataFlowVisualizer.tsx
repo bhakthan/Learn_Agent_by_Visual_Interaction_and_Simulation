@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Edge } from 'reactflow';
 import { motion } from 'framer-motion';
 import * as dataFlowUtils from '@/lib/utils/dataFlowUtils';
-const { getDataFlowAnimationStyle, getNodeDataFlowParams } = dataFlowUtils;
 
 // Updated the interface with all required properties
 interface DataFlow {
@@ -97,8 +96,8 @@ const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete, speed
     
     // Get animation style based on flow type
     const sourceNodeType = edge.sourceHandle ? edge.sourceHandle : 'default';
-    const typeParams = getNodeDataFlowParams(sourceNodeType);
-    const style = getDataFlowAnimationStyle(flow.type, typeParams);
+    const typeParams = dataFlowUtils.getNodeDataFlowParams(sourceNodeType);
+    const style = dataFlowUtils.getDataFlowAnimationStyle(flow.type, typeParams);
     
     return (
       <motion.g 
