@@ -21,7 +21,9 @@ import {
   FastForward, Pause, StepForward, Rewind, 
   CaretDown, CaretUp, ChartLine, List, Gear
 } from '@phosphor-icons/react'
-import { simulatePatternFlow } from '@/lib/utils/dataFlowUtils'
+// Import necessary functions from dataFlowUtils
+import * as dataFlowUtils from '@/lib/utils/dataFlowUtils'
+const { simulatePatternFlow } = dataFlowUtils
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import EnhancedDataFlowVisualizer from './EnhancedDataFlowVisualizer'
 import DataFlowControls, { DataFlowFilter } from './DataFlowControls'

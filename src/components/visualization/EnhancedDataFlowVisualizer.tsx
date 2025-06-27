@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Edge, Node } from 'reactflow';
 import { motion } from 'framer-motion';
-import { getDataFlowAnimationStyle, getNodeDataFlowParams } from '@/lib/utils/dataFlowUtils';
+import * as dataFlowUtils from '@/lib/utils/dataFlowUtils';
+const { getDataFlowAnimationStyle, getNodeDataFlowParams } = dataFlowUtils;
 import { DataFlowFilter } from './DataFlowControls';
 import { Button } from '@/components/ui/button';
 import { ChartLine } from '@phosphor-icons/react';

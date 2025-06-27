@@ -25,7 +25,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Play, Stop, ArrowsCounterClockwise, Info, FastForward, Pause, StepForward, Rewind, QuestionCircle } from '@phosphor-icons/react'
-import { createDataFlow, simulatePatternFlow } from '@/lib/utils/dataFlowUtils'
+// Import necessary functions from dataFlowUtils
+import * as dataFlowUtils from '@/lib/utils/dataFlowUtils'
+const { createDataFlow, simulatePatternFlow } = dataFlowUtils
 import DataFlowVisualizer from './DataFlowVisualizer'
 
 interface PatternVisualizerProps {

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Edge } from 'reactflow';
 import { motion } from 'framer-motion';
-import { getDataFlowAnimationStyle, getNodeDataFlowParams } from '@/lib/utils/dataFlowUtils';
+import * as dataFlowUtils from '@/lib/utils/dataFlowUtils';
+const { getDataFlowAnimationStyle, getNodeDataFlowParams } = dataFlowUtils;
 
 // Updated the interface with all required properties
 interface DataFlow {
