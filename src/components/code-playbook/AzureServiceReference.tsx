@@ -91,7 +91,7 @@ async function getCompletion(prompt: string) {
         language: 'typescript',
         description: 'Configuring an agent with system message',
         code: `// Define an agent with role-specific system message
-const agentSystemMessage = \`You are an Azure AI agent specialized in ${patternName}.
+const agentSystemMessage = `You are an Azure AI agent specialized in this pattern.
 Your capabilities include:
 1. Understanding user requests related to this pattern
 2. Explaining how the pattern works
@@ -101,7 +101,7 @@ Guidelines:
 - Provide concise, accurate information
 - When unsure, acknowledge limitations
 - Focus on practical implementation advice
-\`;
+`;
 
 // Use the system message in an agent interaction
 async function getAgentResponse(userQuery: string) {
@@ -476,12 +476,12 @@ async function setupPatternDeploymentPipeline() {
   
   // Define deployment pipeline for agent pattern
   const pipelineConfig = {
-    name: \`\${patternName}-deployment-pipeline\`,
+    name: "pattern-deployment-pipeline",
     source: {
       type: "github",
       repository: "your-org/agent-patterns",
       branch: "main",
-      directory: \`patterns/\${patternId}\`
+      directory: `patterns/\${patternId}`
     },
     deployment: {
       environments,
@@ -522,12 +522,12 @@ async function setupPatternDeploymentPipeline() {
     apiReference: 'https://learn.microsoft.com/azure/ai-services/',
     samples: [
       {
-        title: `${patternName} Agent Deployment`,
+        title: 'Agent Deployment',
         language: 'typescript',
-        description: `Deploy a ${patternName} agent to production`,
+        description: 'Deploy an agent to production',
         code: `import { AgentServiceClient } from "@azure/ai-agent-service";
 
-// Deploy agent with the ${patternName} pattern
+// Deploy agent with the pattern
 async function deployPatternAgent() {
   const agentClient = new AgentServiceClient({
     endpoint: "https://your-agent-service.azure.com",
@@ -536,8 +536,8 @@ async function deployPatternAgent() {
   
   // Define agent configuration using the pattern
   const agentConfig = {
-    name: \`${patternId}-agent\`,
-    description: \`An agent implementing the ${patternName} pattern\`,
+    name: `\${patternId}-agent`,
+    description: `An agent implementing the pattern`,
     pattern: {
       type: "${patternId}",
       configuration: {
