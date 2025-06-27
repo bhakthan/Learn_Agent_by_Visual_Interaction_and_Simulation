@@ -525,4 +525,4 @@ export const simulatePatternFlow = (
 };
 
 // Export all utility functions
-export { simulatePatternFlow, createDataFlow, resetDataFlow, getSpeedMultiplier };
+export { simulatePatternFlow, createDataFlow, resetDataFlow };
