@@ -37,7 +37,6 @@ const AzureServicesOverview = () => {
     switch (serviceId) {
       case 'azure-openai':
         return <Cloud size={24} />;
-      case 'azure-cognitive-search':
       case 'azure-ai-search':
         return <Search size={24} />;
       case 'azure-content-safety':

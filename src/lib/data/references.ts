@@ -813,6 +813,21 @@ export const references: ReferencesData = {
             title: "Vector Search in Azure AI Search",
             url: "https://learn.microsoft.com/azure/search/vector-search-overview",
             description: "Guide to vector search capabilities"
+          },
+          {
+            title: "Semantic Ranking in Azure AI Search",
+            url: "https://learn.microsoft.com/azure/search/semantic-ranking-overview",
+            description: "Deep learning-based ranking for improved relevance"
+          },
+          {
+            title: "Vector Quantization for Azure AI Search",
+            url: "https://learn.microsoft.com/azure/search/vector-search-quantization",
+            description: "Optimize vector search performance and costs"
+          },
+          {
+            title: "Multimodal Search in Azure AI Search",
+            url: "https://learn.microsoft.com/azure/search/vector-search-how-to-multimedia-retrieval",
+            description: "Search across text and images with multimodal vectors"
           }
         ]
       },
@@ -824,6 +839,27 @@ export const references: ReferencesData = {
             title: "Azure AI Search Samples",
             url: "https://github.com/Azure-Samples/azure-search-openai-demo",
             description: "Sample implementation of Azure AI Search with OpenAI"
+          },
+          {
+            title: "Azure AI Search Vector Samples",
+            url: "https://github.com/Azure-Samples/azure-search-vector-samples",
+            description: "End-to-end vector search examples with various embeddings models"
+          }
+        ]
+      },
+      {
+        id: "concepts",
+        name: "Key Concepts",
+        references: [
+          {
+            title: "Hybrid Search Implementation",
+            url: "https://learn.microsoft.com/azure/search/hybrid-search-overview",
+            description: "Combining keyword and vector search for optimal results"
+          },
+          {
+            title: "Building RAG Applications with Azure AI Search",
+            url: "https://learn.microsoft.com/azure/search/retrieval-augmented-generation-overview",
+            description: "End-to-end guide for implementing RAG with Azure AI Search"
           }
         ]
       }
@@ -835,9 +871,19 @@ export const references: ReferencesData = {
         name: "Documentation",
         references: [
           {
-            title: "Azure AI Evaluation Documentation",
+            title: "Azure AI Evaluation SDK Documentation",
+            url: "https://learn.microsoft.com/en-us/python/api/overview/azure/ai-evaluation-readme?view=azure-python",
+            description: "Official SDK documentation for Azure AI Evaluation"
+          },
+          {
+            title: "Azure AI Evaluation Guide",
             url: "https://learn.microsoft.com/azure/ai-studio/how-to/evaluation",
             description: "Guide to evaluating AI models in Azure"
+          },
+          {
+            title: "Model Evaluation Best Practices",
+            url: "https://learn.microsoft.com/azure/machine-learning/how-to-evaluate-model-quality",
+            description: "Best practices for AI model evaluation in Azure"
           }
         ]
       },
@@ -849,6 +895,11 @@ export const references: ReferencesData = {
             title: "Azure AI Evaluation SDK",
             url: "https://github.com/Azure/azureai-evaluation",
             description: "SDK for evaluating AI models in Azure"
+          },
+          {
+            title: "Azure AI Evaluation Metrics",
+            url: "https://learn.microsoft.com/en-us/python/api/azure-ai-evaluation/azure.ai.evaluation.modelqualityevaluationoutput",
+            description: "Available metrics for AI model evaluation"
           }
         ]
       }

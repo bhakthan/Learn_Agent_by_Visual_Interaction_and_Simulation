@@ -209,6 +209,10 @@ export const azureAIServices: AzureAIService[] = [
     capabilities: [
       "Vector search for semantic retrieval",
       "Hybrid search combining keyword and semantic approaches",
+      "Semantic ranking and cross-field scoring",
+      "Vector quantization for memory and cost optimization",
+      "Multimodal search for text and images",
+      "Multi-stage ranking with semantic & textual features",
       "Document chunking and indexing",
       "Content enrichment pipelines",
       "Natural language query understanding"
@@ -217,17 +221,20 @@ export const azureAIServices: AzureAIService[] = [
       "Enterprise RAG implementations",
       "Knowledge base search",
       "Document discovery and exploration",
-      "Content recommendation"
+      "Content recommendation",
+      "Multimodal retrieval"
     ],
     bestPractices: [
       "Design optimal chunking strategies for your document corpus",
       "Implement hybrid retrieval combining vector and keyword search",
+      "Use semantic ranking to improve relevance of search results",
+      "Apply vector quantization to optimize large vector indexes",
       "Create query rewriting steps to improve retrieval quality",
       "Use filters to narrow search scope for more relevant results",
       "Implement feedback loops to capture user interaction with search results",
       "Configure proper relevance tuning based on content types"
     ],
-    documentation: "https://learn.microsoft.com/azure/search/"
+    documentation: "https://learn.microsoft.com/azure/ai-search/"
   },
   {
     id: "azure-document-intelligence",
