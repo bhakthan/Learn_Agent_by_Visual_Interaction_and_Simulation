@@ -116,7 +116,7 @@ async function verifyAgentMessage(signedMessage: SignedAgentMessage) {
   
   // Get the key reference by version
   const agentKeyName = "agent-auth-key"; // Fixed key name used for agent authentication
-  const keyWithVersion = \`${agentKeyName}/${security.keyId}\`;
+  const keyWithVersion = `${agentKeyName}/${security.keyId}`;
   const key = await keyClient.getKey(keyWithVersion);
   
   // Create cryptography client
@@ -246,7 +246,7 @@ async function validateAgentAuthToken(token: string) {
     const keyVaultUrl = "https://your-key-vault.vault.azure.net";
     const credential = new DefaultAzureCredential();
     const keyClient = new KeyClient(keyVaultUrl, credential);
-    const key = await keyClient.getKey(\`agent-auth-key/${header.kid}\`);
+    const key = await keyClient.getKey(`agent-auth-key/${header.kid}`);
     
     // Create cryptography client
     const cryptoClient = new CryptographyClient(key.id, credential);
