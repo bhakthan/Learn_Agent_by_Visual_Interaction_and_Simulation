@@ -68,7 +68,7 @@ export const references: ReferencesData = {
           },
           {
             title: "Azure OpenAI Cookbook",
-            url: "https://github.com/Azure/OpenAI-Cookbook",
+            url: "https://cookbook.openai.com/",
             description: "Collection of guidance for using Azure OpenAI"
           }
         ]
