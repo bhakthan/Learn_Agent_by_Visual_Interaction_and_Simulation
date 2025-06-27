@@ -23,7 +23,7 @@ const PatternExplorer = () => {
   useEffect(() => {
     // Force a re-render if patterns were updated
     if (agentPatterns.length > 2) {
-      console.log(`Loaded ${agentPatterns.length} agent patterns`);
+      console.log("Loaded " + agentPatterns.length + " agent patterns");
     }
   }, []);
   

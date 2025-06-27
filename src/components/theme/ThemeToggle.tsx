@@ -15,7 +15,7 @@ export function ThemeToggle() {
   
   // Handler with extra console logging for debugging
   const handleToggleTheme = () => {
-    console.log(`Toggling theme from ${theme} to ${theme === "light" ? "dark" : "light"}`);
+    console.log("Toggling theme from " + theme + " to " + (theme === "light" ? "dark" : "light"));
     toggleTheme();
   };
   

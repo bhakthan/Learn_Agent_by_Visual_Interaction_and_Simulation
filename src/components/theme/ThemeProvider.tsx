@@ -80,7 +80,7 @@ export function ThemeProvider({
   useEffect(() => {
     syncTheme(theme);
     localStorage.setItem(storageKey, theme);
-    console.log(`Theme set to: ${theme}`);
+    console.log("Theme set to: " + theme);
   }, [theme, storageKey]);
 
   // Initialize theme on mount
