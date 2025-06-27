@@ -523,5 +523,3 @@ export const simulatePatternFlow = (
     }
   };
 };
-
-// No need for additional exports as they're already exported above
