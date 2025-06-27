@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Outlet, Route, Routes } from 'react-router-dom'
+import { Outlet, Route, Routes, Link, useLocation, Navigate } from 'react-router-dom'
 import { ThemeProvider } from './components/theme/ThemeProvider'
 import { ThemeToggle } from './components/theme/ThemeToggle'
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu"
@@ -100,6 +100,8 @@ function App() {
             <Route path="/azure-services" element={<AzureServicesOverview />} />
             <Route path="/references" element={<ReferencesSection />} />
             <Route path="/community" element={<CommunitySharing />} />
+            {/* Fallback route to redirect to home page */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <Outlet />
         </main>
@@ -115,7 +117,8 @@ function App() {
 }
 
 function TabLink({ to, icon, label }: { to: string, icon: React.ReactNode, label: string }) {
-  const isActive = window.location.pathname === to;
+  const location = useLocation();
+  const isActive = location.pathname === to;
   
   return (
     <Button
@@ -124,10 +127,10 @@ function TabLink({ to, icon, label }: { to: string, icon: React.ReactNode, label
       size="sm"
       className="h-9"
     >
-      <a href={to} className="flex items-center gap-1">
+      <Link to={to} className="flex items-center gap-1">
         {icon}
         <span>{label}</span>
-      </a>
+      </Link>
     </Button>
   );
 }

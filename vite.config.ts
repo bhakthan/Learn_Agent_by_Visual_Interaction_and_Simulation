@@ -45,6 +45,8 @@ export default defineConfig({
     cors: {
       origin: /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\]|(?:.*\.)?github\.com)(?::\d+)?$/
     },
+    // Enable history fallback for SPA routing
+    historyApiFallback: true,
     watch: {
       ignored: [
         "**/prd.md", 
