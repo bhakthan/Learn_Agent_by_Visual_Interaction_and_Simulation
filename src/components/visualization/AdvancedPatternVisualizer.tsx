@@ -22,7 +22,7 @@ import {
   CaretDown, CaretUp, ChartLine, List, Gear
 } from '@phosphor-icons/react'
 // Import necessary functions from dataFlowUtils
-import { simulatePatternFlow, FlowMessage, DataFlowState, DataFlow } from '@/lib/utils/dataFlowUtils'
+import { simulatePatternFlow, FlowMessage, DataFlowState, DataFlow, getDataFlowAnimationStyle } from '@/lib/utils/dataFlowUtils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import EnhancedDataFlowVisualizer from './EnhancedDataFlowVisualizer'
 import DataFlowControls, { DataFlowFilter } from './DataFlowControls'
