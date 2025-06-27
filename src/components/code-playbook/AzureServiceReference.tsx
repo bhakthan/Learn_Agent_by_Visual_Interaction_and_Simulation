@@ -383,7 +383,7 @@ async function configureAgentInference() {
       'Human feedback integration capabilities',
       'Regression testing for model updates'
     ],
-    apiReference: 'https://learn.microsoft.com/azure/ai-services/content-safety/',
+    apiReference: 'https://learn.microsoft.com/en-us/python/api/overview/azure/ai-evaluation-readme?view=azure-python',
     samples: [
       {
         title: 'Agent Pattern Evaluation',
@@ -479,7 +479,7 @@ async function setupPatternDeploymentPipeline() {
       type: "github",
       repository: "your-org/agent-patterns",
       branch: "main",
-      directory: "patterns/" + pipelineConfig.name
+      directory: "patterns/agent-pattern"
     },
     deployment: {
       environments,
