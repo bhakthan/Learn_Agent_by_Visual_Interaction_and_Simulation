@@ -103,7 +103,7 @@ const executeReAct = async (query: string, maxCycles = 5) => {
       },
       calculate: (expression) => {
         try {
-          return `Calculation result: ${eval(expression)}`;
+          return \`Calculation result: \${eval(expression)}\`;
         } catch (error) {
           return \`Error in calculation: \${error.message}\`;
         }
@@ -294,13 +294,13 @@ class ReActAgent:
         """Calculate mathematical expressions."""
         try:
             result = eval(expression)
-            return f"Calculation result: {result}"
+            return \`Calculation result: \${result}\`
         except Exception as error:
-            return f"Error in calculation: {str(error)}"
+            return \`Error in calculation: \${str(error)}\`
     
     async def _lookup_tool(self, entity: str) -> str:
         """Look up information about an entity."""
-        return f"Information about {entity}: [simulated encyclopedia entry]"
+        return \`Information about \${entity}: [simulated encyclopedia entry]\`
 
 # Example usage
 async def main():
@@ -403,7 +403,7 @@ const executeCodeAct = async (query, maxCycles = 5) => {
       if (code.includes('print(')) {
         const printMatch = code.match(/print\\(([^)]+)\\)/);
         if (printMatch) {
-          return `Output: ${printMatch[1]}`;
+          return \`Output: \${printMatch[1]}\`;
         }
       }
       
@@ -829,7 +829,7 @@ const executeAgenticRAG = async (query) => {
     console.log("Generating comprehensive response...");
     const responseContext = topChunks
       .map(function(chunk) { 
-        return `Source: ${chunk.source} (Score: ${chunk.evaluatedScore.toFixed(2)})\n${chunk.content}`;
+        return \`Source: \${chunk.source} (Score: \${chunk.evaluatedScore.toFixed(2)})\n\${chunk.content}\`;
       })
       .join('\\n\\n');
     
@@ -1046,7 +1046,7 @@ const executeModernToolUse = async (query: string) => {
       .map(function(entry) {
         const toolName = entry[0];
         const result = entry[1];
-        return `${toolName} result: ${JSON.stringify(result, null, 2)}`;
+        return \`\${toolName} result: \${JSON.stringify(result, null, 2)}\`;
       })
       .join('\\n\\n');
     
@@ -1367,7 +1367,7 @@ const executeAgentToAgent = async (taskInput: string, maxRounds = 3) => {
       
       Agent contributions:
       \${resultMessages.map(function(message) { 
-        return `${message.from}: ${message.content}`;
+        return \`\${message.from}: \${message.content}\`;
       }).join('\\n\\n')}
       
       Synthesize these contributions into a cohesive final result.
@@ -1753,7 +1753,7 @@ const executeOrchestratorWorker = async (input: string) => {
     const synthesizedResult = await llm(\`
       Synthesize these results into a coherent response:
       \${workerResults.map(function(result, i) { 
-        return `Result ${i+1}: ${result}`;
+        return \`Result \${i+1}: \${result}\`;
       }).join('\\n')}
     \`);
     
@@ -2080,7 +2080,7 @@ const executeAutonomousWorkflow = async (input: string, maxSteps = 10) => {
       },
       calculate: (expression) => {
         try {
-          return `Result: ${eval(expression)}`;
+          return \`Result: \${eval(expression)}\`;
         } catch (err) {
           return \`Error calculating "\${expression}": \${err.message}\`;
         }
@@ -2100,7 +2100,7 @@ const executeAutonomousWorkflow = async (input: string, maxSteps = 10) => {
         
         History:
         \${history.map(function(h) { 
-          return `- ${h}`;
+          return \`- \${h}\`;
         }).join('\\n')}
         
         Available tools:
@@ -2423,7 +2423,7 @@ const executePlanAndExecute = async (input: string) => {
             const id = entry[0];
             const result = entry[1];
             const subtaskDesc = subtasks.find(function(s) { return s.id === id; }).description;
-            return `- Subtask ${id}: ${subtaskDesc}\n  Result: ${result}`;
+            return \`- Subtask \${id}: \${subtaskDesc}\n  Result: \${result}\`;
           }).join('\\n')}
           
           Create an updated plan with remaining and new subtasks.
@@ -2461,7 +2461,7 @@ const executePlanAndExecute = async (input: string) => {
         const id = entry[0];
         const result = entry[1];
         const subtaskDesc = subtasks.find(function(s) { return s.id === id; }).description;
-        return `- Subtask ${id}: ${subtaskDesc}\n  Result: ${result}`;
+        return \`- Subtask \${id}: \${subtaskDesc}\n  Result: \${result}\`;
       }).join('\\n')}
     \`);
     
