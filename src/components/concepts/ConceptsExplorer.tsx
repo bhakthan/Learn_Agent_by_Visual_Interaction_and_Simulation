@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import A2ADemo from "../interactive-demos/A2ADemo"
 import MCPDemo from "../interactive-demos/MCPDemo"
+import ACPDemo from "../interactive-demos/ACPDemo"
 import ConceptDetails from "./ConceptDetails"
 import { BookOpen, BookmarkSimple } from "@phosphor-icons/react"
 import ReferenceSection from "../references/ReferenceSection"
@@ -13,10 +14,11 @@ const ConceptsExplorer = () => {
   const [showDetails, setShowDetails] = useState({
     agents: false,
     a2a: false,
-    mcp: false
+    mcp: false,
+    acp: false
   })
 
-  const toggleDetails = (concept: 'agents' | 'a2a' | 'mcp') => {
+  const toggleDetails = (concept: 'agents' | 'a2a' | 'mcp' | 'acp') => {
     setShowDetails(prev => ({
       ...prev,
       [concept]: !prev[concept]
@@ -25,10 +27,11 @@ const ConceptsExplorer = () => {
   return (
     <div className="space-y-8">
       <Tabs defaultValue="agents" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="agents">AI Agents</TabsTrigger>
           <TabsTrigger value="a2a">Agent-to-Agent (A2A)</TabsTrigger>
           <TabsTrigger value="mcp">ModelContextProtocol (MCP)</TabsTrigger>
+          <TabsTrigger value="acp">ACP</TabsTrigger>
         </TabsList>
         <TabsContent value="agents" className="space-y-6 pt-6">
           <Card>
@@ -283,6 +286,69 @@ const ConceptsExplorer = () => {
           </p>
           
           <MCPDemo />
+        </TabsContent>
+
+        <TabsContent value="acp" className="space-y-6 pt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Agent Communication Protocol (ACP)</CardTitle>
+              <CardDescription>Open standard for agent interoperability</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p>
+                  The Agent Communication Protocol (ACP) is an open protocol for agent interoperability that solves
+                  the growing challenge of connecting AI agents, applications, and humans. It enables agents built
+                  across different frameworks, teams, and infrastructures to communicate effectively.
+                </p>
+                <div className="bg-muted p-4 rounded-md">
+                  <h4 className="font-semibold">Key ACP Features:</h4>
+                  <ul className="list-disc list-inside space-y-2 mt-2">
+                    <li>Standardized RESTful API for agent communication</li>
+                    <li>Support for all forms of modality (text, images, audio, etc.)</li>
+                    <li>Both synchronous and asynchronous communication patterns</li>
+                    <li>Streaming interactions for real-time responses</li>
+                    <li>Stateful and stateless operation models</li>
+                    <li>Online and offline agent discovery mechanisms</li>
+                    <li>Long-running task support with state persistence</li>
+                  </ul>
+                </div>
+                <div className="py-4">
+                  <h4 className="font-semibold mb-2">ACP Deployment Patterns:</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="border border-border rounded-md p-3">
+                      <h5 className="font-medium text-primary">Single-Agent Pattern</h5>
+                      <p className="text-sm">Simple client-server deployment connecting directly to a single agent via REST</p>
+                    </div>
+                    <div className="border border-border rounded-md p-3">
+                      <h5 className="font-medium text-primary">Multi-Agent Server</h5>
+                      <p className="text-sm">Server hosts multiple agents with shared infrastructure and centralized routing</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={() => toggleDetails('acp')} className="flex items-center gap-2">
+                <BookOpen size={18} />
+                {showDetails.acp ? 'Hide Details' : 'Show Detailed Content'}
+              </Button>
+            </CardFooter>
+          </Card>
+          
+          {showDetails.acp && <ConceptDetails conceptId="acp" />}
+          
+          {/* References section for ACP */}
+          <ReferenceSection type="concept" itemId="acp" />
+          
+          <Separator className="my-6" />
+          
+          <h2 className="text-2xl font-semibold tracking-tight mb-4">Interactive ACP Demonstration</h2>
+          <p className="text-muted-foreground mb-6">
+            Explore how the Agent Communication Protocol enables standardized communication between clients and agents.
+          </p>
+          
+          <ACPDemo />
         </TabsContent>
       </Tabs>
     </div>

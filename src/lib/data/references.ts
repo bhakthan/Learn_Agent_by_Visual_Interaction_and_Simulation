@@ -219,6 +219,63 @@ export const references: ReferencesData = {
           }
         ]
       }
+    ],
+    
+    // Agent Communication Protocol (ACP) concept
+    acp: [
+      {
+        id: "documentation",
+        name: "Official Documentation",
+        references: [
+          {
+            title: "ACP Official Documentation",
+            url: "https://agentcommunicationprotocol.dev/",
+            description: "Official documentation for the Agent Communication Protocol"
+          },
+          {
+            title: "ACP Introduction",
+            url: "https://agentcommunicationprotocol.dev/introduction",
+            description: "Introduction to the Agent Communication Protocol"
+          },
+          {
+            title: "ACP Specification",
+            url: "https://agentcommunicationprotocol.dev/specification",
+            description: "Technical specification for the ACP standard"
+          }
+        ]
+      },
+      {
+        id: "quickstart",
+        name: "Quickstart & Examples",
+        references: [
+          {
+            title: "ACP Quickstart Guide",
+            url: "https://agentcommunicationprotocol.dev/introduction/quickstart",
+            description: "Getting started quickly with ACP implementation"
+          },
+          {
+            title: "Example Agents",
+            url: "https://agentcommunicationprotocol.dev/introduction/example-agents",
+            description: "Sample agents implementing the ACP standard"
+          }
+        ]
+      },
+      {
+        id: "deployments",
+        name: "Deployment Patterns",
+        references: [
+          {
+            title: "Single-Agent Deployment",
+            url: "https://agentcommunicationprotocol.dev/patterns/single-agent",
+            description: "Documentation for simple single-agent ACP deployments"
+          },
+          {
+            title: "Multi-Agent Server Deployment",
+            url: "https://agentcommunicationprotocol.dev/patterns/multi-agent",
+            description: "Setting up multi-agent systems with ACP"
+          }
+        ]
+      }
     ]
   },
   

@@ -420,5 +420,157 @@ class McpContextManager {
         `
       }
     ]
+  },
+  {
+    id: 'acp',
+    name: 'Agent Communication Protocol (ACP)',
+    description: `
+      The Agent Communication Protocol (ACP) is an open standard for agent interoperability that solves the 
+      growing challenge of connecting AI agents, applications, and humans. It addresses the fragmentation that 
+      occurs when agents are built in isolation across different frameworks, teams, and infrastructures.
+      
+      ACP provides a standardized RESTful API for agent communication that supports multiple modalities, both 
+      synchronous and asynchronous communication patterns, streaming interactions, stateful and stateless 
+      operation, agent discovery, and long-running tasks.
+    `,
+    keyFeatures: [
+      "Open protocol design for universal agent connectivity",
+      "RESTful API for standardized communication endpoints",
+      "Multi-modal support for text, images, audio, and more",
+      "Synchronous and asynchronous communication patterns",
+      "Streaming capability for real-time responses",
+      "Stateful and stateless operational models",
+      "Agent discovery mechanisms for finding available agents"
+    ],
+    applicationAreas: [
+      "Enterprise agent ecosystems with multiple specialized agents",
+      "Cross-platform agent interoperability",
+      "Multi-agent systems that span organizational boundaries",
+      "Agent marketplaces for discoverable agent services",
+      "Hybrid human-AI collaborative systems",
+      "Long-running agent tasks with persistent state",
+      "Distributed agent networks with central coordination"
+    ],
+    technicalDetails: `
+      ACP is implemented as a RESTful API with standard endpoints for agent operations. The primary patterns include:
+
+      1. Single-Agent Pattern: A client connects directly to a single agent via REST interface over HTTP. This is ideal for direct communication with specialized agents, lightweight setups, development environments, and proof-of-concept implementations.
+
+      2. Multi-Agent Single Server Pattern: An ACP Server hosts multiple agents behind a single HTTP endpoint. Each agent is individually addressable through the server's routing mechanism using agent metadata.
+
+      The protocol's message format includes:
+      - Agent identification and metadata
+      - Request parameters and context
+      - Response data with multiple modality support
+      - State tracking for multi-turn interactions
+      - Error handling and status reporting
+    `,
+    implementationConsiderations: [
+      "Determine whether a single-agent or multi-agent pattern best fits your use case",
+      "Consider authentication and authorization mechanisms for agent access",
+      "Plan for logging and monitoring of agent interactions",
+      "Implement appropriate error handling and retry strategies",
+      "Decide on stateful vs. stateless operation based on requirements",
+      "Consider deployment options: serverless functions, containers, or dedicated servers",
+      "Plan for scaling with increasing agent load and complexity"
+    ],
+    examples: [
+      {
+        title: "Basic ACP Client-Server Interaction",
+        description: "Simple client-server interaction using ACP",
+        codeSnippet: `
+// Client-side code to communicate with an ACP server
+async function callAgent(query) {
+  // Standard ACP endpoint for agent invocation
+  const response = await fetch('https://acp-server.example.com/agent/invoke', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      input: query,
+      parameters: {
+        temperature: 0.7,
+        max_tokens: 500
+      }
+    })
+  });
+  
+  // Handle the ACP-formatted response
+  const result = await response.json();
+  return result.output;
+}
+
+// Example usage
+const result = await callAgent("Analyze the quarterly sales data");
+console.log(result);
+        `
+      },
+      {
+        title: "Multi-Agent ACP Server Configuration",
+        description: "Setting up an ACP server with multiple agents",
+        codeSnippet: `
+// Server-side code for multi-agent ACP implementation
+import express from 'express';
+import { ACPServer } from 'acp-server';
+
+const app = express();
+app.use(express.json());
+
+// Configure the ACP server with multiple agents
+const acpServer = new ACPServer({
+  agents: [
+    {
+      id: 'research-agent',
+      name: 'Research Specialist',
+      description: 'Agent specialized in data research and analysis',
+      handler: async (request) => {
+        // Agent implementation for research tasks
+        const { input } = request;
+        // Process the request and generate research results
+        return {
+          output: 'Research results: ...',
+          metadata: {
+            process_time: 1.2,
+            confidence: 0.95
+          }
+        };
+      }
+    },
+    {
+      id: 'content-agent',
+      name: 'Content Creator',
+      description: 'Agent specialized in content generation',
+      handler: async (request) => {
+        // Agent implementation for content creation
+        const { input } = request;
+        // Generate content based on input
+        return {
+          output: 'Generated content: ...',
+          metadata: {
+            word_count: 250,
+            tone: 'informative'
+          }
+        };
+      }
+    }
+  ]
+});
+
+// Set up ACP endpoints
+app.post('/agent/invoke', (req, res) => {
+  // Route the request to the appropriate agent based on metadata
+  const { agent_id } = req.body;
+  acpServer.handleRequest(agent_id, req.body)
+    .then(result => res.json(result))
+    .catch(error => res.status(500).json({ error: error.message }));
+});
+
+app.listen(3000, () => {
+  console.log('ACP Server running on port 3000');
+});
+        `
+      }
+    ]
   }
 ];

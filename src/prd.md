@@ -25,7 +25,12 @@
    - Purpose: Help users understand agent architectures visually
    - Success criteria: Clear representation of component relationships and data flow
 
-2. **Implementation Playbooks**
+2. **Core Concepts Explorer**
+   - Functionality: Comprehensive exploration of AI agent concepts including basic agents, A2A, MCP, and ACP
+   - Purpose: Establish fundamental understanding of agent communication protocols and standards
+   - Success criteria: Clear explanations with interactive demonstrations of each concept
+
+3. **Implementation Playbooks**
    - Functionality: Step-by-step guides with code samples in both TypeScript and Python
    - Purpose: Provide concrete implementation examples for each pattern
    - Success criteria: Complete, working code examples that follow best practices
