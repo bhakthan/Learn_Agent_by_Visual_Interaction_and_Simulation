@@ -150,3 +150,58 @@ export const resetDataFlow = (): DataFlowState => {
     isPlaying: false
   };
 };
+
+/**
+ * Get animation style parameters based on message type
+ */
+export const getDataFlowAnimationStyle = (
+  type?: 'query' | 'response' | 'tool_call' | 'observation' | 'reflection' | 'plan',
+  params?: { color: string; pulseSpeed: number }
+) => {
+  // Default values
+  const defaultStyle = {
+    stroke: '#10a37f',
+    fill: '#10a37f',
+    strokeWidth: 2,
+    strokeDasharray: '10,5',
+    animationDuration: '3s',
+  };
+
+  if (!type || !params) {
+    return defaultStyle;
+  }
+
+  return {
+    stroke: params.color,
+    fill: params.color,
+    strokeWidth: 2,
+    strokeDasharray: type === 'reflection' ? '5,3' : '10,5',
+    animationDuration: `${4 / params.pulseSpeed}s`,
+  };
+};
+
+/**
+ * Get node-specific flow parameters based on node type
+ */
+export const getNodeDataFlowParams = (
+  nodeType: string
+): { color: string; pulseSpeed: number } => {
+  switch (nodeType) {
+    case 'input':
+      return { color: '#3b82f6', pulseSpeed: 1.2 }; // Blue
+    case 'llm':
+      return { color: '#10b981', pulseSpeed: 1.5 }; // Green
+    case 'tool':
+      return { color: '#f59e0b', pulseSpeed: 0.8 }; // Amber
+    case 'evaluator':
+      return { color: '#8b5cf6', pulseSpeed: 1 }; // Purple
+    case 'planner':
+      return { color: '#ec4899', pulseSpeed: 0.9 }; // Pink
+    case 'memory':
+      return { color: '#6366f1', pulseSpeed: 0.7 }; // Indigo
+    case 'output':
+      return { color: '#ef4444', pulseSpeed: 1.3 }; // Red
+    default:
+      return { color: '#10a37f', pulseSpeed: 1 }; // Default OpenAI green
+  }
+};

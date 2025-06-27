@@ -14,7 +14,7 @@ interface DataFlow {
   target: string;
   content: string;
   timestamp: number;
-  type: 'message' | 'data' | 'response' | 'error';
+  type: 'query' | 'response' | 'tool_call' | 'observation' | 'reflection' | 'plan' | 'message' | 'data' | 'error';
   progress: number;
   label?: string;
   complete?: boolean;
