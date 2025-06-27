@@ -1,14 +1,18 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { InfoCircle, CaretDoubleRight, Warning, Code, SmileyWink, Cloud, Database, Lightning, ShieldCheck } from "@phosphor-icons/react";
+import { InfoCircle, CaretDoubleRight, Warning, Code, SmileyWink, Cloud, Database, Lightning, ShieldCheck, Lightbulb } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { azureAIServices, azureServicePatternMappings } from "@/lib/data/azureAiServices";
 import { Button } from "@/components/ui/button";
+import AzureIntegrationGuide from "./AzureIntegrationGuide";
+import AzureServicesBestPractices from "./AzureServicesBestPractices";
+import AzureServiceReference from "./AzureServiceReference";
 
 interface BestPracticesProps {
   patternId: string;
+  patternName: string; // Added pattern name for display purposes
 }
 
 interface PracticeItem {
@@ -18,8 +22,9 @@ interface PracticeItem {
   tags: string[];
 }
 
-const BestPractices: React.FC<BestPracticesProps> = ({ patternId }) => {
+const BestPractices: React.FC<BestPracticesProps> = ({ patternId, patternName }) => {
   const [practiceType, setPracticeType] = useState<'general' | 'azure'>('general');
+  const [azureView, setAzureView] = useState<'overview' | 'detailed' | 'reference'>('overview');
   
   // Get best practices based on pattern ID
   const generalPractices = getGeneralBestPracticesForPattern(patternId);
@@ -28,145 +33,82 @@ const BestPractices: React.FC<BestPracticesProps> = ({ patternId }) => {
   const serviceMappings = azureServicePatternMappings.filter(mapping => mapping.patternId === patternId);
   
   return (
-    <Card className="border-primary/20 shadow-sm">
-      <CardHeader className="bg-muted/30">
-        <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="flex items-center gap-2 text-lg">
-            <InfoCircle size={20} className="text-primary" />
-            Implementation Best Practices
-          </div>
-          <Tabs defaultValue="general" value={practiceType} onValueChange={(v) => setPracticeType(v as 'general' | 'azure')} className="w-full sm:w-auto">
-            <TabsList className="h-8 w-full grid grid-cols-2 sm:w-auto sm:flex">
-              <TabsTrigger value="general" className="text-xs px-3 py-1 h-7">General</TabsTrigger>
-              <TabsTrigger value="azure" className="text-xs px-3 py-1 h-7">Azure AI Services</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-6">
-        {practiceType === 'general' && (
-          <div className="mt-0 space-y-4">
-            {generalPractices.length > 0 ? (
-              <Accordion type="multiple" className="w-full">
-                {generalPractices.map((practice, index) => (
-                  <AccordionItem key={index} value={`practice-${index}`}>
-                    <AccordionTrigger className="hover:text-primary">
-                      <div className="flex items-center gap-2">
-                        {practice.icon}
-                        <span>{practice.title}</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="space-y-4">
-                      <p className="text-foreground/80">{practice.description}</p>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {practice.tags.map((tag, i) => (
-                          <Badge key={i} variant="outline" className="bg-muted/50">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            ) : (
-              <div className="text-center p-6 border border-dashed rounded-lg">
-                <InfoCircle size={32} className="mx-auto text-muted-foreground mb-2" />
-                <h3 className="text-lg font-medium">No Best Practices</h3>
-                <p className="text-muted-foreground mt-2">
-                  General best practices are not defined for this pattern.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {practiceType === 'azure' && (
-          <div className="mt-0 space-y-4">
-            {serviceMappings.length > 0 ? (
-              serviceMappings.map((mapping, idx) => {
-                const service = azureAIServices.find(s => s.id === mapping.serviceId);
-                if (!service) return null;
-                
-                return (
-                  <Card key={idx} className="border border-border shadow-sm overflow-hidden">
-                    <CardHeader className="bg-muted/30 py-3">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        {getServiceIcon(service.id)}
-                        <span>{service.name}</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 space-y-3">
-                      <div className="text-sm text-muted-foreground">
-                        <strong>Integration:</strong> {mapping.integration}
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-medium">Best Practices:</h4>
-                        <ul className="list-disc pl-5 space-y-1 text-sm">
-                          {mapping.bestPractices.map((practice, i) => (
-                            <li key={i} className="text-foreground/90">{practice}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      
-                      <div className="pt-2 flex flex-col sm:flex-row sm:justify-between gap-2">
-                        <div className="flex flex-wrap gap-2 mb-2 sm:mb-0">
-                          {service.capabilities.slice(0, 2).map((capability, i) => (
-                            <Badge key={i} variant="outline" className="bg-primary/5 text-xs">
-                              {capability}
-                            </Badge>
-                          ))}
-                          {service.capabilities.length > 2 && (
-                            <Badge variant="outline" className="bg-muted/20 text-xs">
-                              +{service.capabilities.length - 2} more
-                            </Badge>
-                          )}
+    <div className="space-y-6">
+      <Card className="border-primary/20 shadow-sm">
+        <CardHeader className="bg-muted/30">
+          <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="flex items-center gap-2 text-lg">
+              <Lightbulb size={20} className="text-primary" />
+              Implementation Best Practices
+            </div>
+            <Tabs defaultValue="general" value={practiceType} onValueChange={(v) => setPracticeType(v as 'general' | 'azure')} className="w-full sm:w-auto">
+              <TabsList className="h-8 w-full grid grid-cols-2 sm:w-auto sm:flex">
+                <TabsTrigger value="general" className="text-xs px-3 py-1 h-7">General</TabsTrigger>
+                <TabsTrigger value="azure" className="text-xs px-3 py-1 h-7">Azure AI Services</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6">
+          {practiceType === 'general' && (
+            <div className="mt-0 space-y-4">
+              {generalPractices.length > 0 ? (
+                <Accordion type="multiple" className="w-full">
+                  {generalPractices.map((practice, index) => (
+                    <AccordionItem key={index} value={`practice-${index}`}>
+                      <AccordionTrigger className="hover:text-primary">
+                        <div className="flex items-center gap-2">
+                          {practice.icon}
+                          <span>{practice.title}</span>
                         </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="text-xs w-full sm:w-auto" 
-                          onClick={() => window.open(service.documentation, '_blank')}
-                        >
-                          Documentation
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
-            ) : (
-              <div className="text-center p-6 border border-dashed rounded-lg">
-                <Cloud size={32} className="mx-auto text-muted-foreground mb-2" />
-                <h3 className="text-lg font-medium">No Azure Service Mappings</h3>
-                <p className="text-muted-foreground mt-2">
-                  No specific Azure AI service integrations defined for this pattern.
-                </p>
+                      </AccordionTrigger>
+                      <AccordionContent className="space-y-4">
+                        <p className="text-foreground/80">{practice.description}</p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {practice.tags.map((tag, i) => (
+                            <Badge key={i} variant="outline" className="bg-muted/50">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              ) : (
+                <div className="text-center p-6 border border-dashed rounded-lg">
+                  <InfoCircle size={32} className="mx-auto text-muted-foreground mb-2" />
+                  <h3 className="text-lg font-medium">No Best Practices</h3>
+                  <p className="text-muted-foreground mt-2">
+                    General best practices are not defined for this pattern.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {practiceType === 'azure' && (
+            <div className="mt-0 space-y-4">
+              <Tabs value={azureView} onValueChange={(v) => setAzureView(v as 'overview' | 'detailed' | 'reference')} className="w-full">
+                <TabsList className="w-full grid grid-cols-3">
+                  <TabsTrigger value="overview">Service Overview</TabsTrigger>
+                  <TabsTrigger value="detailed">Implementation Guide</TabsTrigger>
+                  <TabsTrigger value="reference">Service Reference</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              
+              <div className="mt-4">
+                {azureView === 'overview' && <AzureIntegrationGuide patternId={patternId} patternName={patternName} />}
+                {azureView === 'detailed' && <AzureServicesBestPractices patternId={patternId} patternName={patternName} />}
+                {azureView === 'reference' && <AzureServiceReference patternId={patternId} patternName={patternName} />}
               </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
-
-// Helper function to get service icon based on service ID
-function getServiceIcon(serviceId: string) {
-  switch (serviceId) {
-    case 'azure-openai':
-      return <Cloud size={18} className="text-primary" />;
-    case 'azure-cognitive-search':
-      return <Database size={18} className="text-secondary" />;
-    case 'azure-content-safety':
-      return <ShieldCheck size={18} className="text-destructive" />;
-    case 'azure-ai-inference':
-      return <Lightning size={18} className="text-accent" />;
-    default:
-      return <Cloud size={18} className="text-primary" />;
-  }
-}
 
 // Helper function to get general practices based on pattern ID
 function getGeneralBestPracticesForPattern(patternId: string): PracticeItem[] {

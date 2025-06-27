@@ -305,7 +305,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                   and specific Azure AI service integrations.
                 </p>
               </div>
-              <BestPractices patternId={patternData.id} />
+              <BestPractices patternId={patternData.id} patternName={patternData.name} />
             </TabsContent>
             
             <TabsContent value="algorithm" className="py-4">
