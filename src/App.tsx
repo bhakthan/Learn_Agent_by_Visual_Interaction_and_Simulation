@@ -11,8 +11,9 @@ import { agentPatterns } from './lib/data/patterns'
 import CodePlaybook from './components/code-playbook/CodePlaybook'
 import { ReactFlowProvider } from 'reactflow'
 import AzureServicesOverview from './components/azure-services/AzureServicesOverview'
+import SecurityCompliancePractices from './components/security/SecurityCompliancePractices'
 import CommunityHub from './components/community/CommunityHub'
-import { Cloud, Users } from '@phosphor-icons/react'
+import { Cloud, Users, ShieldCheck } from '@phosphor-icons/react'
 import { ThemeProvider } from './components/theme/ThemeProvider'
 import { ThemeToggle } from './components/theme/ThemeToggle'
 import { ThemeTester } from './components/theme/ThemeTester'
@@ -95,7 +96,7 @@ function App() {
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <a
-                  href="https://github.com/microsoft/azure-openai-agent-patterns"
+                  href="https://github.com/bhakthan/azure-ai-agent-visua"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
@@ -196,7 +197,28 @@ function App() {
                   </p>
                 </div>
               </div>
-              <AzureServicesOverview />
+              <Tabs defaultValue="services" className="mb-8">
+                <TabsList>
+                  <TabsTrigger value="services">AI Services</TabsTrigger>
+                  <TabsTrigger value="security">Security & Compliance</TabsTrigger>
+                </TabsList>
+                <TabsContent value="services">
+                  <AzureServicesOverview />
+                </TabsContent>
+                <TabsContent value="security">
+                  <div className="flex items-center p-4 mb-6 rounded-lg bg-secondary/5 border border-secondary/30">
+                    <ShieldCheck size={24} className="text-secondary mr-3" />
+                    <div>
+                      <h3 className="font-medium">Security & Compliance for Regulated Industries</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Follow these security best practices when implementing Azure AI agents in regulated environments.
+                        Based on Microsoft's Secure Future Initiative (SFI) security pillars.
+                      </p>
+                    </div>
+                  </div>
+                  <SecurityCompliancePractices />
+                </TabsContent>
+              </Tabs>
               <div className="mt-8">
                 <ThemeTester />
               </div>
