@@ -524,5 +524,4 @@ export const simulatePatternFlow = (
   };
 };
 
-// Export all utility functions
-export { simulatePatternFlow, createDataFlow, resetDataFlow };
+// No need for additional exports as they're already exported above
