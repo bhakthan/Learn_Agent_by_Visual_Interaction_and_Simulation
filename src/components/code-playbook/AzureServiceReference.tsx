@@ -118,8 +118,8 @@ async function getAgentResponse(userQuery: string) {
     ]
   },
   {
-    id: 'azure-cognitive-search',
-    name: 'Azure Cognitive Search',
+    id: 'azure-ai-search',
+    name: 'Azure AI Search',
     icon: <Database size={24} className="text-secondary" />,
     description: 'AI-powered cloud search service with built-in retrieval capabilities for knowledge-intensive applications with vector, keyword, and hybrid search capabilities.',
     keyFeatures: [

@@ -203,8 +203,8 @@ export const azureAIServices: AzureAIService[] = [
     documentation: "https://learn.microsoft.com/azure/ai-services/language-service/"
   },
   {
-    id: "azure-cognitive-search",
-    name: "Azure Cognitive Search",
+    id: "azure-ai-search",
+    name: "Azure AI Search",
     description: "AI-powered cloud search service with built-in retrieval capabilities for knowledge-intensive applications.",
     capabilities: [
       "Vector search for semantic retrieval",
@@ -368,7 +368,7 @@ export const azureServicePatternMappings: AzureServicePatternMapping[] = [
   },
   {
     patternId: "agentic-rag",
-    serviceId: "azure-cognitive-search",
+    serviceId: "azure-ai-search",
     integration: "Knowledge retrieval backbone",
     bestPractices: [
       "Design hybrid retrieval strategies combining semantic and keyword search",
@@ -423,7 +423,7 @@ export const azureServicePatternMappings: AzureServicePatternMapping[] = [
   },
   {
     patternId: "model-context-protocol",
-    serviceId: "azure-cognitive-search",
+    serviceId: "azure-ai-search",
     integration: "Efficient context retrieval and filtering",
     bestPractices: [
       "Implement context routers based on query classification",
@@ -655,7 +655,7 @@ export const azureServicePatternMappings: AzureServicePatternMapping[] = [
   },
   {
     patternId: "react-agent",
-    serviceId: "azure-cognitive-search",
+    serviceId: "azure-ai-search",
     integration: "Knowledge retrieval for tool-assisted reasoning",
     bestPractices: [
       "Provide access to domain knowledge through search tools",

@@ -531,12 +531,12 @@ async function evaluateQueryDocumentRelevance(queries, retrievedDocuments) {
     ]
   },
   {
-    serviceId: 'azure-cognitive-search',
+    serviceId: 'azure-ai-search',
     patternId: 'agentic-rag',
     steps: [
       {
-        title: '1. Configure Azure Cognitive Search',
-        description: 'Set up vector search in Azure Cognitive Search',
+        title: '1. Configure Azure AI Search',
+        description: 'Set up vector search in Azure AI Search',
         code: `import { SearchClient, AzureKeyCredential } from "@azure/search-documents";
 
 // Configure search client with vector capabilities
@@ -620,8 +620,8 @@ const azureServicesBestPractices: AzureServiceInfo[] = [
     documentation: 'https://learn.microsoft.com/azure/ai-services/openai/'
   },
   {
-    id: 'azure-cognitive-search',
-    name: 'Azure Cognitive Search',
+    id: 'azure-ai-search',
+    name: 'Azure AI Search',
     icon: <Database size={18} className="text-secondary" />,
     category: 'knowledge',
     description: 'AI-powered cloud search service with built-in retrieval capabilities for knowledge-intensive applications.',
