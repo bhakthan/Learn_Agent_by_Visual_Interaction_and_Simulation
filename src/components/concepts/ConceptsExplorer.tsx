@@ -6,8 +6,9 @@ import { Separator } from "@/components/ui/separator"
 import A2ADemo from "../interactive-demos/A2ADemo"
 import MCPDemo from "../interactive-demos/MCPDemo"
 import ACPDemo from "../interactive-demos/ACPDemo"
+import ACPMCPComparison from "../interactive-demos/ACPMCPComparison"
 import ConceptDetails from "./ConceptDetails"
-import { BookOpen, BookmarkSimple } from "@phosphor-icons/react"
+import { BookOpen, BookmarkSimple, ArrowsHorizontal } from "@phosphor-icons/react"
 import ReferenceSection from "../references/ReferenceSection"
 
 const ConceptsExplorer = () => {
@@ -349,6 +350,21 @@ const ConceptsExplorer = () => {
           </p>
           
           <ACPDemo />
+          
+          <Separator className="my-6" />
+          
+          <h2 className="text-2xl font-semibold tracking-tight mb-4">
+            <div className="flex items-center gap-2">
+              <ArrowsHorizontal size={24} className="text-primary" />
+              ACP and MCP Protocol Comparison
+            </div>
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            Compare the Agent Communication Protocol (ACP) with ModelContextProtocol (MCP) to understand their 
+            differences, similarities, and how they can work together in agent communication architectures.
+          </p>
+          
+          <ACPMCPComparison />
         </TabsContent>
       </Tabs>
     </div>
