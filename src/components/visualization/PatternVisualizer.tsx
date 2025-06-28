@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react'
+import React, { useState, useCallback, useRef, useEffect, memo } from 'react'
 import ReactFlow, { 
   Background, 
   Controls,
@@ -36,6 +36,7 @@ import {
 } from '@/lib/utils/dataFlowUtils'
 import DataFlowVisualizer from './DataFlowVisualizer'
 import { useMemoizedCallback } from '@/lib/utils'
+import { useFlowContainer } from '@/lib/hooks'
 
 interface PatternVisualizerProps {
   patternData: PatternData
@@ -66,7 +67,7 @@ interface AnimationState {
 }
 
 // Custom node types
-const CustomNode = React.memo(({ data, id }: { data: any, id: string }) => {
+const CustomNode = memo(({ data, id }: { data: any, id: string }) => {
   const getNodeStyle = () => {
     const baseStyle = {
       padding: '10px 20px',
@@ -185,6 +186,9 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
   const stepQueueRef = useRef<Array<() => void>>([])
   const reactFlowInstance = useReactFlow()
   
+  // Use custom flow container hook to better handle resizing
+  const { containerRef, dimensions, isReady } = useFlowContainer()
+  
   // Reset flow and nodes when pattern changes
   useEffect(() => {
     resetVisualization();
@@ -202,6 +206,16 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     };
     setSpeedFactor(factors[animationState.speed]);
   }, [animationState.speed]);
+  
+  // Effect to fit view whenever dimensions change significantly
+  useEffect(() => {
+    if (dimensions.width > 0 && dimensions.height > 0 && flowInstanceRef.current) {
+      const fitViewTimeout = setTimeout(() => {
+        flowInstanceRef.current?.fitView({ duration: 300, padding: 0.2 });
+      }, 200);
+      return () => clearTimeout(fitViewTimeout);
+    }
+  }, [dimensions]);
   
   // Reset visualization
   const resetVisualization = useCallback(() => {
@@ -250,7 +264,10 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
   
   // Reset node layout to original positions
   const resetLayout = useCallback(() => {
-    setNodes(patternData.nodes.map(node => ({
+    // Clone original pattern nodes to avoid mutation
+    const originalNodes = JSON.parse(JSON.stringify(patternData.nodes));
+    
+    setNodes(originalNodes.map(node => ({
       ...node,
       data: {
         ...node.data,
@@ -262,7 +279,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     // Also fit the view to ensure all nodes are visible
     if (flowInstanceRef.current) {
       setTimeout(() => {
-        flowInstanceRef.current?.fitView({ duration: 800 });
+        flowInstanceRef.current?.fitView({ duration: 800, padding: 0.2 });
       }, 100);
     }
   }, [patternData.nodes, setNodes]);
@@ -576,7 +593,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
             </div>
           )}
         </div>
-        <div style={{ height: 400 }}>
+        <div style={{ height: 400 }} ref={containerRef}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -588,6 +605,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
             nodesDraggable={true}
             nodesConnectable={false}
             elementsSelectable={true}
+            key={`flow-${dimensions.width}-${dimensions.height}`}
           >
             <Background />
             <Controls />
@@ -656,4 +674,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
   )
 }
 
-export default React.memo(PatternVisualizer);
+export default memo(PatternVisualizer, (prevProps, nextProps) => {
+  // Only re-render if the pattern ID changes
+  return prevProps.patternData.id === nextProps.patternData.id;
+});

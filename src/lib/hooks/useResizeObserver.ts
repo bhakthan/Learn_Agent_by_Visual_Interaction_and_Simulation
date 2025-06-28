@@ -1,88 +1,113 @@
-import { useRef, useState, useEffect } from 'react';
-import { createDebouncedResizeObserver } from '../utils/resizeObserverUtils';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-interface ResizeObserverOptions {
-  debounce?: number;
-  skipInitialCallback?: boolean;
-  onResize?: (dimensions: DOMRectReadOnly) => void;
+interface ResizeObserverEntry {
+  target: Element;
+  contentRect: DOMRectReadOnly;
+  borderBoxSize: ReadonlyArray<ResizeObserverSize>;
+  contentBoxSize: ReadonlyArray<ResizeObserverSize>;
+  devicePixelContentBoxSize: ReadonlyArray<ResizeObserverSize>;
 }
 
-/**
- * A hook to safely observe element resizing
- * 
- * @param options Configuration options
- * @returns [ref, dimensions, isReady]
- */
-export function useResizeObserver<T extends HTMLElement = HTMLDivElement>(
-  options: ResizeObserverOptions = {}
-): [React.RefObject<T>, DOMRectReadOnly | undefined, boolean] {
-  const {
-    debounce = 300, // Increased default debounce
-    skipInitialCallback = false,
-    onResize
-  } = options;
-  
-  const ref = useRef<T>(null);
-  const [dimensions, setDimensions] = useState<DOMRectReadOnly>();
-  const [isReady, setIsReady] = useState<boolean>(false);
-  const skipNext = useRef<boolean>(skipInitialCallback);
-  const observerRef = useRef<ResizeObserver | null>(null);
+interface ResizeObserverSize {
+  inlineSize: number;
+  blockSize: number;
+}
 
+type ResizeHandler = (entry: ResizeObserverEntry) => void;
+
+/**
+ * Custom hook that safely implements ResizeObserver with error handling
+ * specifically designed for ReactFlow components
+ */
+export function useResizeObserver(onResize?: ResizeHandler) {
+  const [entry, setEntry] = useState<ResizeObserverEntry | null>(null);
+  const [observedNode, setObservedNode] = useState<Element | null>(null);
+  const observerRef = useRef<ResizeObserver | null>(null);
+  const onResizeRef = useRef<ResizeHandler | undefined>(onResize);
+  
+  // Update ref when callback changes
   useEffect(() => {
-    if (!ref.current) return;
+    onResizeRef.current = onResize;
+  }, [onResize]);
+  
+  // Throttle function to prevent excessive updates
+  const throttleCallback = useCallback((callback: () => void) => {
+    let running = false;
+    return () => {
+      if (running) return;
+      running = true;
+      requestAnimationFrame(() => {
+        callback();
+        running = false;
+      });
+    };
+  }, []);
+  
+  // Create the node ref callback
+  const ref = useCallback((node: Element | null) => {
+    if (node === observedNode) return;
     
-    const currentElement = ref.current;
-    
-    // Clean up previous observer
+    // Cleanup previous observer
     if (observerRef.current) {
       observerRef.current.disconnect();
       observerRef.current = null;
     }
     
-    try {
-      // Create a debounced observer that won't trigger ResizeObserver loops
-      observerRef.current = createDebouncedResizeObserver((entries) => {
-        if (entries.length === 0 || !entries[0].contentRect) return;
-        
-        // Skip the initial callback if requested
-        if (skipNext.current) {
-          skipNext.current = false;
-          return;
-        }
-        
-        const newRect = entries[0].contentRect;
-        
-        // Only update dimensions if there's an actual change
-        setDimensions(prev => {
-          const hasChanged = !prev ||
-            Math.abs(prev.width - newRect.width) > 2 || // Increased threshold
-            Math.abs(prev.height - newRect.height) > 2;
-          
-          return hasChanged ? newRect : prev;
-        });
-        
-        // Call the onResize callback if provided
-        if (onResize) {
-          onResize(newRect);
-        }
-        
-        if (!isReady && newRect.width > 0 && newRect.height > 0) {
-          setIsReady(true);
-        }
-      }, debounce);
-      
-      observerRef.current.observe(currentElement);
-    } catch (error) {
-      console.log('Safe resize observer error handled:', error);
-    }
+    setObservedNode(node);
     
+    if (!node) return;
+    
+    // Attempt to create a new observer with error handling
+    try {
+      const observer = new ResizeObserver(
+        throttleCallback(() => {
+          try {
+            if (!node) return;
+            
+            // Get the ResizeObserverEntry for this node
+            const borderBoxSize = 
+              'getBoundingClientRect' in node
+                ? { inlineSize: node.getBoundingClientRect().width, blockSize: node.getBoundingClientRect().height }
+                : { inlineSize: 0, blockSize: 0 };
+                
+            // Create a simplified entry object
+            const newEntry = {
+              target: node,
+              contentRect: node.getBoundingClientRect(),
+              borderBoxSize: [borderBoxSize],
+              contentBoxSize: [borderBoxSize],
+              devicePixelContentBoxSize: [borderBoxSize],
+            };
+            
+            // Update state and call callback
+            setEntry(newEntry);
+            
+            if (onResizeRef.current) {
+              onResizeRef.current(newEntry);
+            }
+          } catch (e) {
+            // Silent error - don't crash the app
+            console.error('ResizeObserver error handled:', e);
+          }
+        })
+      );
+      
+      // Start observing
+      observer.observe(node);
+      observerRef.current = observer;
+    } catch (error) {
+      console.error('Error setting up ResizeObserver:', error);
+    }
+  }, [throttleCallback, observedNode]);
+  
+  // Cleanup observer on unmount
+  useEffect(() => {
     return () => {
       if (observerRef.current) {
         observerRef.current.disconnect();
-        observerRef.current = null;
       }
     };
-  }, [debounce, skipInitialCallback, onResize]);
-
-  return [ref, dimensions, isReady];
+  }, []);
+  
+  return { ref, entry };
 }
