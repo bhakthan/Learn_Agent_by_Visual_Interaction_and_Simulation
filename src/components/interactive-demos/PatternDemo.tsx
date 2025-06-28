@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { PatternData } from '@/lib/data/patterns'
-import { Play, ArrowsClockwise, CheckCircle, Clock, WarningCircle, ArrowBendDownRight } from "@phosphor-icons/react"
+import { Play, ArrowsClockwise, CheckCircle, Clock, WarningCircle, ArrowBendDownRight, Gauge } from "@phosphor-icons/react"
 import { useTheme } from '@/components/theme/ThemeProvider'
 import ReactFlow, {
   ReactFlowProvider,
@@ -210,6 +210,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
     setCurrentNodeId(null);
     setDataFlows([]);
     setIterations(0); // Reset iterations count
+    setWaitingForNextStep(false); // Reset step-by-step state
     
     // Reset nodes
     setNodes(nodes.map(node => ({
@@ -270,9 +271,11 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
       
       // Final output
       setIsRunning(false);
+      setWaitingForNextStep(false);
     } catch (error) {
       console.error('Error in demo:', error);
       setIsRunning(false);
+      setWaitingForNextStep(false);
       setOutput(`Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
     }
   };
@@ -381,6 +384,19 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
         // Wait proportionally to the animation speed (faster speed = shorter delay)
         await new Promise(resolve => setTimeout(resolve, 800 / animationSpeed));
         
+        // If step-by-step mode is active, wait for user to click "Next Step" button
+        if (animationMode === 'step-by-step') {
+          setWaitingForNextStep(true);
+          await new Promise<void>(resolve => {
+            const checkInterval = setInterval(() => {
+              if (!waitingForNextStep) {
+                clearInterval(checkInterval);
+                resolve();
+              }
+            }, 100);
+          });
+        }
+        
         // Process target node
         await processNode(edge.target);
       }
@@ -437,6 +453,19 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
         
         await new Promise(resolve => setTimeout(resolve, 500));
         
+        // If step-by-step mode is active, wait for user to click "Next Step" button
+        if (animationMode === 'step-by-step') {
+          setWaitingForNextStep(true);
+          await new Promise<void>(resolve => {
+            const checkInterval = setInterval(() => {
+              if (!waitingForNextStep) {
+                clearInterval(checkInterval);
+                resolve();
+              }
+            }, 100);
+          });
+        }
+        
         // Process failure path
         await processNode(edge.target);
         return;
@@ -456,8 +485,12 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
   
   // Animation speeds
   const [animationSpeed, setAnimationSpeed] = useState<number>(1); // Default to normal speed (1x)
+  // Animation mode (auto/step-by-step)
+  const [animationMode, setAnimationMode] = useState<'auto' | 'step-by-step'>('auto'); 
   // Increment iterations counter
   const [iterations, setIterations] = useState<number>(0); // Track number of steps in the execution
+  // Track if we're waiting for user to advance to next step
+  const [waitingForNextStep, setWaitingForNextStep] = useState<boolean>(false);
   
   return (
     <Card className="mb-6">
@@ -495,12 +528,57 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
           </div>
           
           <div className="flex justify-between items-center">
+            <div className="text-sm font-medium">Animation Mode:</div>
+            <div className="flex items-center gap-2">
+              <Button 
+                size="sm"
+                variant={animationMode === 'auto' ? "default" : "outline"}
+                onClick={() => {
+                  setAnimationMode('auto');
+                  // Resume execution if we were waiting for next step
+                  if (waitingForNextStep) {
+                    setWaitingForNextStep(false);
+                  }
+                }}
+                disabled={isRunning && !waitingForNextStep}
+              >
+                Auto
+              </Button>
+              <Button 
+                size="sm"
+                variant={animationMode === 'step-by-step' ? "default" : "outline"}
+                onClick={() => setAnimationMode('step-by-step')}
+                disabled={isRunning && !waitingForNextStep}
+              >
+                Step-by-Step
+              </Button>
+              {waitingForNextStep && (
+                <Button 
+                  size="sm"
+                  variant="secondary"
+                  className="ml-2 pulse-animation"
+                  onClick={() => setWaitingForNextStep(false)}
+                >
+                  <Gauge size={16} weight="bold" className="mr-1" /> Next Step
+                </Button>
+              )}
+            </div>
+          </div>
+          
+          <div className="space-y-1.5 mb-4">
+            <div className="text-sm text-muted-foreground">
+              Switch between <span className="font-bold text-primary">Auto</span> and <span className="font-bold text-primary">Step-by-Step</span> modes to analyze how agents interact. Auto mode runs automatically, while Step-by-Step lets you control the pace to understand each agent communication in detail.
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center">
             <div className="text-sm font-medium">Animation Speed:</div>
             <div className="flex items-center gap-2">
               <Button 
                 size="sm"
                 variant={animationSpeed === 0.5 ? "default" : "outline"}
                 onClick={() => setAnimationSpeed(0.5)}
+                disabled={isRunning && animationMode === 'auto'}
               >
                 Slow
               </Button>
@@ -508,6 +586,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
                 size="sm"
                 variant={animationSpeed === 1 ? "default" : "outline"}
                 onClick={() => setAnimationSpeed(1)}
+                disabled={isRunning && animationMode === 'auto'}
               >
                 Normal
               </Button>
@@ -515,6 +594,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
                 size="sm"
                 variant={animationSpeed === 2 ? "default" : "outline"}
                 onClick={() => setAnimationSpeed(2)}
+                disabled={isRunning && animationMode === 'auto'}
               >
                 Fast
               </Button>
