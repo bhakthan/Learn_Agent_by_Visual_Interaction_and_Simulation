@@ -58,59 +58,81 @@ const PatternDetails: React.FC<PatternDetailsProps> = ({ pattern }) => {
             <TabsContent value="advantages">
               <h3 className="font-medium mb-4 text-primary">Advantages</h3>
               <ul className="space-y-3">
-                {content.advantages.map((item, index) => (
+                {content.advantages && Array.isArray(content.advantages) ? content.advantages.map((item, index) => (
                   <li key={index} className="flex items-start gap-2">
                     <span className="text-primary mt-1">•</span>
                     <span>{item}</span>
                   </li>
-                ))}
+                )) : (
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>No advantages listed</span>
+                  </li>
+                )}
               </ul>
             </TabsContent>
             
             <TabsContent value="limitations">
               <h3 className="font-medium mb-4 text-primary">Limitations</h3>
               <ul className="space-y-3">
-                {content.limitations.map((item, index) => (
+                {content.limitations && Array.isArray(content.limitations) ? content.limitations.map((item, index) => (
                   <li key={index} className="flex items-start gap-2">
                     <span className="text-primary mt-1">•</span>
                     <span>{item}</span>
                   </li>
-                ))}
+                )) : (
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>No limitations listed</span>
+                  </li>
+                )}
               </ul>
             </TabsContent>
             
             <TabsContent value="applications">
               <h3 className="font-medium mb-4 text-primary">Real-World Applications</h3>
               <ul className="space-y-3">
-                {content.realWorldApplications.map((item, index) => (
+                {content.realWorldApplications && Array.isArray(content.realWorldApplications) ? content.realWorldApplications.map((item, index) => (
                   <li key={index} className="flex items-start gap-2">
                     <span className="text-primary mt-1">•</span>
                     <span>{item}</span>
                   </li>
-                ))}
+                )) : (
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>No applications listed</span>
+                  </li>
+                )}
               </ul>
             </TabsContent>
             
             <TabsContent value="practices">
               <h3 className="font-medium mb-4 text-primary">Best Practices</h3>
               <ul className="space-y-3">
-                {content.bestPractices.map((item, index) => (
+                {content.bestPractices && Array.isArray(content.bestPractices) ? content.bestPractices.map((item, index) => (
                   <li key={index} className="flex items-start gap-2">
                     <span className="text-primary mt-1">•</span>
                     <span>{item}</span>
                   </li>
-                ))}
+                )) : (
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>No best practices listed</span>
+                  </li>
+                )}
               </ul>
             </TabsContent>
             
             <TabsContent value="related">
               <h3 className="font-medium mb-4 text-primary">Related Patterns</h3>
               <div className="flex flex-wrap gap-2">
-                {content.relatedPatterns.map((item, index) => (
+                {content.relatedPatterns && Array.isArray(content.relatedPatterns) ? content.relatedPatterns.map((item, index) => (
                   <Badge key={index} variant="outline" className="bg-primary/10 hover:bg-primary/20">
                     {item}
                   </Badge>
-                ))}
+                )) : (
+                  <span className="text-muted-foreground">No related patterns listed</span>
+                )}
               </div>
             </TabsContent>
           </ScrollArea>
@@ -128,9 +150,11 @@ const PatternDetails: React.FC<PatternDetailsProps> = ({ pattern }) => {
             </AccordionTrigger>
             <AccordionContent>
               <ol className="space-y-2 ml-6 list-decimal">
-                {pattern.implementation.map((step, index) => (
+                {pattern.implementation && Array.isArray(pattern.implementation) ? pattern.implementation.map((step, index) => (
                   <li key={index}>{step}</li>
-                ))}
+                )) : (
+                  <li>No implementation steps provided</li>
+                )}
               </ol>
             </AccordionContent>
           </AccordionItem>

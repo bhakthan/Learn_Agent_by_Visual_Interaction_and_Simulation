@@ -227,9 +227,9 @@ const MultiPatternVisualizer = ({ initialPatterns, useAdvancedVisualizer = true 
                       <div>
                         <h4 className="text-sm font-semibold text-muted-foreground">Best For:</h4>
                         <div className="flex flex-wrap gap-1 mt-1">
-                          {pattern.useCases.map((useCase, index) => (
+                          {pattern.useCases && Array.isArray(pattern.useCases) ? pattern.useCases.map((useCase, index) => (
                             <Badge key={index} variant="outline" className="text-xs">{useCase}</Badge>
-                          ))}
+                          )) : <Badge variant="outline" className="text-xs">General use</Badge>}
                         </div>
                       </div>
                       
@@ -257,28 +257,34 @@ const MultiPatternVisualizer = ({ initialPatterns, useAdvancedVisualizer = true 
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <div className="h-3 w-3 rounded-full bg-primary"></div>
-                        <p className="text-sm"><span className="font-medium">{selectedPatterns[0].name}</span> vs <span className="font-medium">{selectedPatterns[1].name}</span></p>
+                        <p className="text-sm">
+                          <span className="font-medium">{selectedPatterns[0]?.name || 'First pattern'}</span> vs <span className="font-medium">{selectedPatterns[1]?.name || 'Second pattern'}</span>
+                        </p>
                       </div>
                       
                       <ul className="space-y-2 text-sm pl-5">
                         {/* Dynamically calculate differences */}
-                        <li>
-                          <span className="font-medium">{selectedPatterns[0].name}</span> uses {selectedPatterns[0].nodes.length} nodes compared to {selectedPatterns[1].nodes.length} in <span className="font-medium">{selectedPatterns[1].name}</span>
-                        </li>
-                        <li>
-                          <span className="font-medium">Communication path:</span> {
-                            selectedPatterns[0].nodes.some(n => n.data.nodeType === 'router') ? 
-                            `${selectedPatterns[0].name} uses routing for decision-making` : 
-                            `${selectedPatterns[0].name} has a more linear communication flow`
-                          }
-                        </li>
-                        <li>
-                          <span className="font-medium">Complexity trade-offs:</span> {
-                            selectedPatterns[0].nodes.length > selectedPatterns[1].nodes.length ? 
-                            `${selectedPatterns[0].name} is more complex but potentially more powerful` : 
-                            `${selectedPatterns[1].name} is more complex but potentially more powerful`
-                          }
-                        </li>
+                        {selectedPatterns[0] && selectedPatterns[1] && (
+                          <>
+                            <li>
+                              <span className="font-medium">{selectedPatterns[0].name}</span> uses {selectedPatterns[0].nodes.length} nodes compared to {selectedPatterns[1].nodes.length} in <span className="font-medium">{selectedPatterns[1].name}</span>
+                            </li>
+                            <li>
+                              <span className="font-medium">Communication path:</span> {
+                                selectedPatterns[0].nodes.some(n => n.data.nodeType === 'router') ? 
+                                `${selectedPatterns[0].name} uses routing for decision-making` : 
+                                `${selectedPatterns[0].name} has a more linear communication flow`
+                              }
+                            </li>
+                            <li>
+                              <span className="font-medium">Complexity trade-offs:</span> {
+                                selectedPatterns[0].nodes.length > selectedPatterns[1].nodes.length ? 
+                                `${selectedPatterns[0].name} is more complex but potentially more powerful` : 
+                                `${selectedPatterns[1].name} is more complex but potentially more powerful`
+                              }
+                            </li>
+                          </>
+                        )}
                       </ul>
                     </div>
                   )}

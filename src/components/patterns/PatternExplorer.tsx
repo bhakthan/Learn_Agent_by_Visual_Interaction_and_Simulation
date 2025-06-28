@@ -15,7 +15,7 @@ import { Toggle } from '@/components/ui/toggle'
 import { PatternSidebar } from './PatternSidebar'
 
 const PatternExplorer = () => {
-  const [selectedPattern, setSelectedPattern] = useState(agentPatterns[0])
+  const [selectedPattern, setSelectedPattern] = useState(agentPatterns[0] || null)
   const [viewMode, setViewMode] = useState<'single' | 'compare'>('single')
   const [useAdvancedVisualizer, setUseAdvancedVisualizer] = useState<boolean>(true)
   
@@ -66,75 +66,85 @@ const PatternExplorer = () => {
       {viewMode === 'single' ? (
         <div className="flex relative">
           {/* Sidebar */}
-          <div className="hidden md:block">
-            <PatternSidebar 
-              activePatternId={selectedPattern.id} 
-              onPatternSelect={handlePatternSelect}
-            />
-          </div>
-          
-          {/* Mobile Pattern Selector */}
-          <Card className="md:hidden mb-4 w-full">
-            <CardHeader className="py-3">
-              <h3 className="text-sm font-medium">Select Pattern</h3>
-            </CardHeader>
-            <CardContent className="py-2">
-              <ScrollArea className="h-[150px]">
-                <div className="space-y-2">
-                  {agentPatterns.map((pattern) => (
-                    <div
-                      key={pattern.id}
-                      className={`p-2 rounded-md cursor-pointer transition-colors ${
-                        selectedPattern.id === pattern.id
-                          ? 'bg-primary/10 border-l-2 border-primary'
-                          : 'hover:bg-muted'
-                      }`}
-                      onClick={() => setSelectedPattern(pattern)}
-                    >
-                      <h3 className="text-sm font-medium">{pattern.name}</h3>
+          {selectedPattern && (
+            <>
+              <div className="hidden md:block">
+                <PatternSidebar 
+                  activePatternId={selectedPattern.id} 
+                  onPatternSelect={handlePatternSelect}
+                />
+              </div>
+              
+              {/* Mobile Pattern Selector */}
+              <Card className="md:hidden mb-4 w-full">
+                <CardHeader className="py-3">
+                  <h3 className="text-sm font-medium">Select Pattern</h3>
+                </CardHeader>
+                <CardContent className="py-2">
+                  <ScrollArea className="h-[150px]">
+                    <div className="space-y-2">
+                      {agentPatterns.map((pattern) => (
+                        <div
+                          key={pattern.id}
+                          className={`p-2 rounded-md cursor-pointer transition-colors ${
+                            selectedPattern.id === pattern.id
+                              ? 'bg-primary/10 border-l-2 border-primary'
+                              : 'hover:bg-muted'
+                          }`}
+                          onClick={() => setSelectedPattern(pattern)}
+                        >
+                          <h3 className="text-sm font-medium">{pattern.name}</h3>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+              
+              {/* Main Content Area */}
+              <div className="flex-1 md:pl-[260px]">
+                <Tabs defaultValue="visualization" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="visualization" className="flex items-center gap-2">
+                      <ChartLine size={16} /> Visualization
+                    </TabsTrigger>
+                    <TabsTrigger value="details" className="flex items-center gap-2">
+                      <Info size={16} /> Educational Content
+                    </TabsTrigger>
+                    <TabsTrigger value="implementation" className="flex items-center gap-2">
+                      <Code size={16} /> Implementation
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="visualization">
+                    <ReactFlowProvider>
+                      {useAdvancedVisualizer ? (
+                        <AdvancedPatternVisualizer key={selectedPattern.id} patternData={selectedPattern} />
+                      ) : (
+                        <PatternVisualizer key={selectedPattern.id} patternData={selectedPattern} />
+                      )}
+                    </ReactFlowProvider>
+                  </TabsContent>
+                  
+                  <TabsContent value="details">
+                    <PatternDetails pattern={selectedPattern} />
+                  </TabsContent>
+                  
+                  <TabsContent value="implementation">
+                    <ReactFlowProvider>
+                      <CodePlaybook patternData={selectedPattern} />
+                    </ReactFlowProvider>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </>
+          )}
           
-          {/* Main Content Area */}
-          <div className="flex-1 md:pl-[260px]">
-            <Tabs defaultValue="visualization" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="visualization" className="flex items-center gap-2">
-                  <ChartLine size={16} /> Visualization
-                </TabsTrigger>
-                <TabsTrigger value="details" className="flex items-center gap-2">
-                  <Info size={16} /> Educational Content
-                </TabsTrigger>
-                <TabsTrigger value="implementation" className="flex items-center gap-2">
-                  <Code size={16} /> Implementation
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="visualization">
-                <ReactFlowProvider>
-                  {useAdvancedVisualizer ? (
-                    <AdvancedPatternVisualizer key={selectedPattern.id} patternData={selectedPattern} />
-                  ) : (
-                    <PatternVisualizer key={selectedPattern.id} patternData={selectedPattern} />
-                  )}
-                </ReactFlowProvider>
-              </TabsContent>
-              
-              <TabsContent value="details">
-                <PatternDetails pattern={selectedPattern} />
-              </TabsContent>
-              
-              <TabsContent value="implementation">
-                <ReactFlowProvider>
-                  <CodePlaybook patternData={selectedPattern} />
-                </ReactFlowProvider>
-              </TabsContent>
-            </Tabs>
-          </div>
+          {!selectedPattern && (
+            <div className="w-full p-8 text-center border border-dashed rounded-lg">
+              <p className="text-muted-foreground">No patterns available to display</p>
+            </div>
+          )}
         </div>
       ) : (
         <ReactFlowProvider>
