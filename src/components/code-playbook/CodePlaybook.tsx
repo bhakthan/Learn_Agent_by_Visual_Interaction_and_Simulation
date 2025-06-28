@@ -206,9 +206,9 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                     <CardContent className="p-4">
                       <h4 className="text-sm font-medium mb-2">Choose this pattern when:</h4>
                       <ul className="list-disc pl-5 space-y-1 text-xs text-muted-foreground">
-                        <li>You need {patternData.advantages && patternData.advantages.length > 0 ? patternData.advantages[0].toLowerCase() : 'improved agent capabilities'}</li>
-                        <li>Your application requires {patternData.advantages && patternData.advantages.length > 1 ? patternData.advantages[1].toLowerCase() : 'advanced pattern implementation'}</li>
-                        <li>You want to {patternData.description.split(' ').slice(0, 5).join(' ').toLowerCase()}...</li>
+                        <li>You need {patternData.advantages && Array.isArray(patternData.advantages) && patternData.advantages.length > 0 ? patternData.advantages[0].toLowerCase() : 'improved agent capabilities'}</li>
+                        <li>Your application requires {patternData.advantages && Array.isArray(patternData.advantages) && patternData.advantages.length > 1 ? patternData.advantages[1].toLowerCase() : 'advanced pattern implementation'}</li>
+                        <li>You want to {patternData.description ? patternData.description.split(' ').slice(0, 5).join(' ').toLowerCase() : 'implement this pattern'}...</li>
                       </ul>
                     </CardContent>
                   </Card>

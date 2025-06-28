@@ -221,31 +221,43 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   const [waitingForNextStep, setWaitingForNextStep] = useState<boolean>(false);
   
   // Create demo nodes for visualization - memoize them based on patternData
-  const initialDemoNodes = useMemo(() => patternData.nodes.map(node => ({
-    ...node,
-    type: 'demoNode',
-    data: {
-      ...node.data,
-      status: 'idle',
-    },
-    draggable: false,
-    selectable: false,
-  })), [patternData.nodes]);
+  const initialDemoNodes = useMemo(() => {
+    if (!patternData || !Array.isArray(patternData.nodes)) {
+      return [];
+    }
+    
+    return patternData.nodes.map(node => ({
+      ...node,
+      type: 'demoNode',
+      data: {
+        ...node.data,
+        status: 'idle',
+      },
+      draggable: false,
+      selectable: false,
+    }));
+  }, [patternData?.nodes]);
   
   // Optimize node positions for the demo display - memoized
-  const optimizedNodes = useMemo(() => initialDemoNodes.map(node => {
-    // Scale and center the nodes for better visualization
-    return {
-      ...node,
-      position: {
-        x: node.position.x * 0.8 + 50,
-        y: node.position.y + 50
-      }
-    };
-  }), [initialDemoNodes]);
+  const optimizedNodes = useMemo(() => {
+    if (!initialDemoNodes || !initialDemoNodes.length) {
+      return [];
+    }
+    
+    return initialDemoNodes.map(node => {
+      // Scale and center the nodes for better visualization
+      return {
+        ...node,
+        position: {
+          x: node.position.x * 0.8 + 50,
+          y: node.position.y + 50
+        }
+      };
+    });
+  }, [initialDemoNodes]);
   
   const [nodes, setNodes, onNodesChange] = useNodesState(optimizedNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(patternData.edges);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(patternData?.edges || []);
   
   // Remove completed flows
   const onFlowComplete = (flowId: string) => {
@@ -272,13 +284,15 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     })));
     
     // Reset edges (remove animation)
-    setEdges(patternData.edges.map(edge => ({
+    setEdges((patternData?.edges || []).map(edge => ({
       ...edge,
       animated: false
     })));
   };
 
   const getEdgePoints = useCallback((edgeId: string) => {
+    if (!Array.isArray(edges) || !Array.isArray(nodes)) return null;
+    
     const edge = edges.find(e => e.id === edgeId);
     if (!edge) return null;
     
@@ -297,7 +311,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   }, [edges, nodes]);
 
   const runDemo = async () => {
-    if (!userInput.trim() || isRunning) return;
+    if (!userInput.trim() || isRunning || !patternData || !Array.isArray(patternData.nodes)) return;
     
     resetDemo();
     setIsRunning(true);
@@ -330,6 +344,10 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   };
   
   const processNode = async (nodeId: string) => {
+    if (!patternData || !Array.isArray(patternData.nodes) || !Array.isArray(patternData.edges)) {
+      throw new Error('Invalid pattern data');
+    }
+    
     // Mark node as running
     setCurrentNodeId(nodeId);
     setSteps(prev => ({
@@ -373,7 +391,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
         result = 'Combining results from parallel processes...';
         await new Promise(resolve => setTimeout(resolve, 1200 / animationSpeed)); // Longer delay for aggregation
       } else {
-        result = `Processed by ${node.data.label}`;
+        result = `Processed by ${node.data?.label || nodeId}`;
         await new Promise(resolve => setTimeout(resolve, 700 / animationSpeed));
       }
       
@@ -424,8 +442,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
           target: edge.target,
           content: result,
           timestamp: Date.now(),
-          type: node.data.nodeType === 'router' ? 'data' : 
-                node.data.nodeType === 'llm' ? 'response' : 'message',
+          type: node.data?.nodeType === 'router' ? 'data' : 
+                node.data?.nodeType === 'llm' ? 'response' : 'message',
           progress: 0
         };
         setDataFlows(flows => [...flows, newFlow]);
@@ -476,10 +494,10 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       ));
       
       // Create error flow visualization
-      const failureEdges = patternData.edges.filter(edge => 
+      const failureEdges = Array.isArray(patternData.edges) ? patternData.edges.filter(edge => 
         edge.source === nodeId && 
-        patternData.nodes.find(n => n.id === edge.target)?.data.label?.toLowerCase().includes('fail')
-      );
+        patternData.nodes.find(n => n.id === edge.target)?.data?.label?.toLowerCase().includes('fail')
+      ) : [];
       
       for (const edge of failureEdges) {
         // Animate edge
@@ -795,7 +813,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                 <h3 className="text-lg font-medium">Execution Log</h3>
                 
                 <div className="space-y-3">
-                  {patternData.nodes.map((node) => {
+                  {Array.isArray(patternData?.nodes) && patternData.nodes.map((node) => {
                     const step = steps[node.id];
                     if (!step) return null;
                     
@@ -816,10 +834,10 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                               {step.status === 'complete' && <CheckCircle className="text-green-500" size={16} />}
                               {step.status === 'failed' && <WarningCircle className="text-destructive" size={16} />}
                               
-                              <span className="font-medium">{node.data.label}</span>
+                              <span className="font-medium">{node.data?.label || 'Unknown Node'}</span>
                               
                               <Badge variant="outline" className="ml-1">
-                                {node.data.nodeType}
+                                {node.data?.nodeType || 'node'}
                               </Badge>
                             </div>
                             
