@@ -33,7 +33,7 @@ import {
 } from '../visualization/MemoizedFlowComponents'
 
 // Import custom hooks
-import { useFlowContainer } from '@/lib/hooks/useFlowContainer'
+import { useFlowContainer } from '@/lib/hooks'
 import { useResizeObserver } from '@/lib/hooks/useResizeObserver'
 
 import DataFlowVisualizer from '../visualization/DataFlowVisualizer'
@@ -564,7 +564,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   const reactFlowInstance = useReactFlow();
   
   // Use custom hooks for improved stability
-  const { triggerResize } = useFlowContainer(flowContainerRef);
+  const { updateDimensions: triggerResize } = useFlowContainer(flowContainerRef);
   
   // Setup safe resize handling with improved monitoring
   useEffect(() => {

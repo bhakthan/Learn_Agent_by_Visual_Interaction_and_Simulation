@@ -410,9 +410,9 @@ const ACPDemo = () => {
                 onNodeClick={onNodeClick}
                 fitView
                 key="single-agent-flow"
-                ref={(instance) => {
-                  if (instance && flowContainerRef1.current) {
-                    instance.fitView();
+                onInit={(instance) => {
+                  if (flowContainerRef1.current) {
+                    setTimeout(() => instance.fitView(), 100);
                   }
                 }}
               >
@@ -520,9 +520,9 @@ const ACPDemo = () => {
                 edges={multiAgentEdges}
                 onNodeClick={onNodeClick}
                 fitView
-                ref={(instance) => {
-                  if (instance && flowContainerRef2.current) {
-                    instance.fitView();
+                onInit={(instance) => {
+                  if (flowContainerRef2.current) {
+                    setTimeout(() => instance.fitView(), 100);
                   }
                 }}
               >

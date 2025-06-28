@@ -187,7 +187,8 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
   const reactFlowInstance = useReactFlow()
   
   // Use custom flow container hook to better handle resizing
-  const { containerRef, dimensions, isReady } = useFlowContainer()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const { dimensions, updateDimensions } = useFlowContainer(containerRef)
   
   // Reset flow and nodes when pattern changes
   useEffect(() => {
