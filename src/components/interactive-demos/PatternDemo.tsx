@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { PatternData } from '@/lib/data/patterns'
 import { Play, ArrowsClockwise, CheckCircle, Clock, WarningCircle, ArrowBendDownRight, Gauge } from "@phosphor-icons/react"
 import { useTheme } from '@/components/theme/ThemeProvider'
-import ReactFlow, {
+import {
   ReactFlowProvider,
   Node,
   Edge,
@@ -17,15 +17,24 @@ import ReactFlow, {
   NodeTypes,
   useNodesState,
   useEdgesState,
-  Background,
   useReactFlow,
-  MiniMap,
-  Controls,
   MarkerType
 } from 'reactflow'
 import { StepController } from '@/lib/utils/stepControl'
 import 'reactflow/dist/style.css'
-import { setupSafeReactFlowResize, resetReactFlowRendering } from '@/lib/utils/visualizationUtils';
+import { resetReactFlowRendering } from '@/lib/utils/visualizationUtils';
+
+// Import custom memoized components
+import {
+  MemoizedReactFlow,
+  MemoizedBackground,
+  MemoizedControls,
+  MemoizedMiniMap
+} from '../visualization/MemoizedFlowComponents'
+
+// Import custom hooks
+import { useFlowContainer } from '@/lib/hooks/useFlowContainer'
+import { useResizeObserver } from '@/lib/hooks/useResizeObserver'
 
 import DataFlowVisualizer from '../visualization/DataFlowVisualizer'
 // Mock response generation to simulate LLM calls
@@ -552,25 +561,53 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
 
   // Reference for the flow container
   const flowContainerRef = useRef<HTMLDivElement>(null);
+  const reactFlowInstance = useReactFlow();
   
-  // Setup safe resize handling for ReactFlow
+  // Use custom hooks for improved stability
+  const { triggerResize } = useFlowContainer(flowContainerRef);
+  
+  // Setup safe resize handling with improved monitoring
   useEffect(() => {
     if (!flowContainerRef.current) return;
     
     // Apply safer resize behavior
     const resetTimeout = setTimeout(() => {
       resetReactFlowRendering(flowContainerRef);
+      triggerResize();
     }, 1000);
+    
+    // Monitor for errors and re-trigger resize if needed
+    const handleLayoutUpdate = () => {
+      requestAnimationFrame(() => {
+        if (flowContainerRef.current) {
+          resetReactFlowRendering(flowContainerRef);
+          triggerResize();
+        }
+      });
+    };
+    
+    // Listen for layout update events
+    window.addEventListener('layout-update', handleLayoutUpdate);
     
     return () => {
       clearTimeout(resetTimeout);
+      window.removeEventListener('layout-update', handleLayoutUpdate);
     };
-  }, []);
+  }, [triggerResize]);
   
-  // Define nodeTypes for ReactFlow
-  const nodeTypes: NodeTypes = {
-    demoNode: CustomDemoNode
-  };
+  // Define nodeTypes for ReactFlow with memoization
+  const nodeTypes = useMemo<NodeTypes>(() => ({
+    demoNode: React.memo(CustomDemoNode, (prevProps, nextProps) => {
+      // Skip re-renders when node status hasn't changed
+      if (prevProps.data.status !== nextProps.data.status) return false;
+      if (prevProps.data.result !== nextProps.data.result) return false;
+      if (prevProps.data.label !== nextProps.data.label) return false;
+      if (prevProps.selected !== nextProps.selected) return false;
+      
+      // Otherwise, skip re-rendering
+      return true;
+    })
+  }), []);
   
   // Function to handle node drag events
   const onNodeDragStop = useCallback(() => {
@@ -716,7 +753,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
             style={{ height: '400px' }}
           >
             <ReactFlowProvider>
-              <ReactFlow
+              <MemoizedReactFlow
                 nodes={nodes}
                 edges={edges}
                 onNodesChange={onNodesChange}
@@ -741,9 +778,9 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                   markerEnd: { type: MarkerType.Arrow }
                 }}
               >
-                <Background color={theme === 'dark' ? '#ffffff20' : '#aaa'} gap={16} />
-                <Controls className={theme === 'dark' ? 'dark-controls' : ''} />
-                <MiniMap 
+                <MemoizedBackground color={theme === 'dark' ? '#ffffff20' : '#aaa'} gap={16} />
+                <MemoizedControls className={theme === 'dark' ? 'dark-controls' : ''} />
+                <MemoizedMiniMap 
                   style={{ 
                     backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.6)' : undefined,
                     maskColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.7)' : undefined
@@ -756,7 +793,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                   onFlowComplete={onFlowComplete}
                   speed={animationSpeed}
                 />
-                </ReactFlow>
+              </MemoizedReactFlow>
             </ReactFlowProvider>
           </div>
           
