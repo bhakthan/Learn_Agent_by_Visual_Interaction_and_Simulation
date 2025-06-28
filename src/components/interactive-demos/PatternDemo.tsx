@@ -847,17 +847,6 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   // The component will handle its own state changes internally
   return true;
 });
-        </div>
-      </CardContent>
-    </Card>
-  );
-}, (prevProps, nextProps) => {
-  // Only re-render when pattern data has changed in a meaningful way
-  if (prevProps.patternData.id !== nextProps.patternData.id) return false;
-  
-  // Deep compare important pattern data properties that would affect rendering
-  const prevNodes = prevProps.patternData.nodes;
-  const nextNodes = nextProps.patternData.nodes;
   
   if (prevNodes.length !== nextNodes.length) return false;
   
