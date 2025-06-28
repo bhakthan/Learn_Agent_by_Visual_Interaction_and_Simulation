@@ -94,11 +94,14 @@ const MCPDemo = () => {
     // Simulate processing delay
     await new Promise(resolve => setTimeout(resolve, 1500));
     
+    // Save input to use in closure
+    const inputValue = userInput;
+    
     // Create second agent response
     const agent2Message: Message = {
       id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       role: 'agent2',
-      content: `As the specialized expert agent, I can provide detailed information on your request about "${userInput}". This shows how the ModelContextProtocol allows agents to maintain context across handoffs and collaborate effectively.`,
+      content: `As the specialized expert agent, I can provide detailed information on your request about "${inputValue}". This shows how the ModelContextProtocol allows agents to maintain context across handoffs and collaborate effectively.`,
       metadata: {
         protocol: 'MCP/1.0',
         contextId: currentContextId,

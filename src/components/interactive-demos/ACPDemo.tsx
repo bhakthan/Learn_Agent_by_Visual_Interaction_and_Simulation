@@ -289,26 +289,38 @@ const ACPDemo = () => {
     }
   ];
 
-  // Run the simulation
+  // Run the simulation - moved to useEffect
   const runSimulation = () => {
     setIsSimulationRunning(true);
     setCurrentStep(0);
     setMessages([]);
-    
-    const messageSet = activeDemo === 'single' ? singleAgentMessages : multiAgentMessages;
-    let step = 0;
-    
-    const interval = setInterval(() => {
-      if (step < messageSet.length) {
-        setMessages(prev => [...prev, messageSet[step]]);
-        setCurrentStep(step + 1);
-        step++;
-      } else {
-        clearInterval(interval);
-        setIsSimulationRunning(false);
-      }
-    }, 1500);
   };
+  
+  // Effect to handle simulation logic and cleanup
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isSimulationRunning) {
+      const messageSet = activeDemo === 'single' ? singleAgentMessages : multiAgentMessages;
+      let step = 0;
+      
+      interval = setInterval(() => {
+        if (step < messageSet.length) {
+          setMessages(prev => [...prev, messageSet[step]]);
+          setCurrentStep(prev => prev + 1);
+          step++;
+        } else {
+          clearInterval(interval);
+          setIsSimulationRunning(false);
+        }
+      }, 1500);
+    }
+    
+    // Cleanup function
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isSimulationRunning, activeDemo]);
   
   // Reset the simulation
   const resetSimulation = () => {

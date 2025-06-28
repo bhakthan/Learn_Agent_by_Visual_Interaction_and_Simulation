@@ -309,11 +309,14 @@ const ProtocolWalkthrough = () => {
   
   // Handle step transition
   useEffect(() => {
+    let messageTimerId: NodeJS.Timeout | null = null;
+    let stepTimerId: NodeJS.Timeout | null = null;
+
     if (isPlaying) {
       const currentStep = steps[currentStepIndex];
       
       if (currentMessageIndex < currentStep.messages.length) {
-        const messageTimerId = setTimeout(() => {
+        messageTimerId = setTimeout(() => {
           const message = currentStep.messages[currentMessageIndex];
           
           // Add message to display
@@ -323,31 +326,33 @@ const ProtocolWalkthrough = () => {
           setHighlightedNodes([message.from, message.to]);
           
           // Advance to next message
-          setCurrentMessageIndex(currentMessageIndex + 1);
+          setCurrentMessageIndex(prev => prev + 1);
         }, 1000);
         
         // Update active edges
         setHighlightedEdges(currentStep.activeEdges);
-        
-        return () => clearTimeout(messageTimerId);
       } else {
         // We've shown all messages for this step
         
         // If there are more steps, move to the next one after a delay
         if (currentStepIndex < steps.length - 1) {
-          const stepTimerId = setTimeout(() => {
-            setCurrentStepIndex(currentStepIndex + 1);
+          stepTimerId = setTimeout(() => {
+            setCurrentStepIndex(prev => prev + 1);
             setCurrentMessageIndex(0);
           }, 2000);
-          
-          return () => clearTimeout(stepTimerId);
         } else {
           // We've completed all steps
           setIsPlaying(false);
         }
       }
     }
-  }, [isPlaying, currentStepIndex, currentMessageIndex, steps]);
+
+    // Cleanup function to clear any active timers
+    return () => {
+      if (messageTimerId) clearTimeout(messageTimerId);
+      if (stepTimerId) clearTimeout(stepTimerId);
+    };
+  }, [isPlaying, currentStepIndex, currentMessageIndex, steps.length]);
   
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);
@@ -366,21 +371,24 @@ const ProtocolWalkthrough = () => {
     if (currentStepIndex > 0) {
       setIsPlaying(false);
       
-      // Remove messages from the current step and previous step
-      const prevStepMessageCount = steps[currentStepIndex - 1].messages.length;
-      const currentStepMessageCount = currentMessageIndex;
+      // Calculate messages to keep
+      const messagesFromPreviousSteps = steps
+        .slice(0, currentStepIndex - 1)
+        .reduce((acc, step) => acc + step.messages.length, 0);
       
-      setDisplayedMessages(prev => 
-        prev.slice(0, prev.length - currentStepMessageCount - (currentMessageIndex === 0 ? prevStepMessageCount : 0))
-      );
+      // Keep only messages from steps before the previous step
+      setDisplayedMessages(prev => prev.slice(0, messagesFromPreviousSteps));
       
-      setCurrentStepIndex(currentStepIndex - 1);
+      // Go to previous step
+      setCurrentStepIndex(prev => prev - 1);
       setCurrentMessageIndex(0);
       
       // Update highlighted elements based on previous step
-      setHighlightedEdges(steps[currentStepIndex - 1].activeEdges);
-      if (steps[currentStepIndex - 1].messages.length > 0) {
-        const lastMessage = steps[currentStepIndex - 1].messages[steps[currentStepIndex - 1].messages.length - 1];
+      const previousStep = steps[currentStepIndex - 1];
+      setHighlightedEdges(previousStep.activeEdges);
+      
+      if (previousStep.messages.length > 0) {
+        const lastMessage = previousStep.messages[0]; // Start with first message of the step
         setHighlightedNodes([lastMessage.from, lastMessage.to]);
       } else {
         setHighlightedNodes([]);
@@ -401,11 +409,12 @@ const ProtocolWalkthrough = () => {
       }
       
       // Move to next step
-      setCurrentStepIndex(currentStepIndex + 1);
+      setCurrentStepIndex(prev => prev + 1);
       setCurrentMessageIndex(0);
       
       // Update highlighted elements based on next step
-      setHighlightedEdges(steps[currentStepIndex + 1].activeEdges);
+      const nextStep = steps[currentStepIndex + 1];
+      setHighlightedEdges(nextStep.activeEdges);
       
       // Clear highlighted nodes until next message is processed
       setHighlightedNodes([]);

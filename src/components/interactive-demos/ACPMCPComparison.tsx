@@ -321,21 +321,33 @@ const ACPMCPComparison = () => {
     setIsSimulationRunning(true);
     setCurrentStep(0);
     setDisplayedMessages([]);
-    
-    const currentExchange = messageExchanges[activeExchangeId];
-    let step = 0;
-    
-    const interval = setInterval(() => {
-      if (step < currentExchange.messages.length) {
-        setDisplayedMessages(prev => [...prev, currentExchange.messages[step]]);
-        setCurrentStep(step + 1);
-        step++;
-      } else {
-        clearInterval(interval);
-        setIsSimulationRunning(false);
-      }
-    }, 2000);
   };
+  
+  // Effect to handle simulation logic and cleanup
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isSimulationRunning) {
+      const currentExchange = messageExchanges[activeExchangeId];
+      let step = 0;
+      
+      interval = setInterval(() => {
+        if (step < currentExchange.messages.length) {
+          setDisplayedMessages(prev => [...prev, currentExchange.messages[step]]);
+          setCurrentStep(prev => prev + 1);
+          step++;
+        } else {
+          clearInterval(interval);
+          setIsSimulationRunning(false);
+        }
+      }, 2000);
+    }
+    
+    // Cleanup function
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isSimulationRunning, activeExchangeId, messageExchanges]);
   
   const resetSimulation = () => {
     setIsSimulationRunning(false);

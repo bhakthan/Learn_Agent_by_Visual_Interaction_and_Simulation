@@ -215,7 +215,7 @@ const A2ADemo = () => {
         content: `Task completed successfully through agent collaboration. Final output ready.`
       });
       
-      // Generate final output for display
+      // Generate final output for display - use a functional update to avoid closure issues
       setFinalOutput(`Completed task: "${task}"\n\nThis demonstrates A2A collaboration between ${activeAgents.length} specialized agents:\n- Manager orchestrated the workflow\n- Research gathered key information\n- Writer created content\n- Critic ensured quality\n\nThe agents communicated directly when needed and coordinated through the manager when appropriate, showing different A2A communication patterns.`);
       
     } catch (error) {
