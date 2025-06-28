@@ -1,116 +1,153 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-
-interface ResizeObserverEntry {
-  target: Element;
-  contentRect: DOMRectReadOnly;
-  borderBoxSize: ReadonlyArray<ResizeObserverSize>;
-  contentBoxSize: ReadonlyArray<ResizeObserverSize>;
-  devicePixelContentBoxSize: ReadonlyArray<ResizeObserverSize>;
-}
-
-interface ResizeObserverSize {
-  inlineSize: number;
-  blockSize: number;
-}
-
-type ResizeHandler = (entry: ResizeObserverEntry) => void;
+import { useEffect, useRef } from 'react';
+import { createStableResizeObserver } from '../utils/resizeObserverUtils';
 
 /**
- * Custom hook that safely implements ResizeObserver with error handling
- * specifically designed for ReactFlow components
+ * React hook for safely observing element resizes
+ * Uses our buffered, error-resistant approach to prevent ResizeObserver loops
+ * 
+ * @param callback Function to call when the element resizes
+ * @param elementRef React ref to the element to observe
+ * @param options Options for the resize observer
  */
-export function useResizeObserver(onResize?: ResizeHandler) {
-  const [entry, setEntry] = useState<ResizeObserverEntry | null>(null);
-  const [observedNode, setObservedNode] = useState<Element | null>(null);
-  const observerRef = useRef<ResizeObserver | null>(null);
-  const onResizeRef = useRef<ResizeHandler | undefined>(onResize);
+export function useResizeObserver(
+  callback: (entry: ResizeObserverEntry) => void,
+  elementRef: React.RefObject<Element>,
+  options?: {
+    debounce?: number;
+    disabled?: boolean;
+  }
+) {
+  // Keep track of the latest callback
+  const callbackRef = useRef(callback);
   
   // Update ref when callback changes
   useEffect(() => {
-    onResizeRef.current = onResize;
-  }, [onResize]);
-  
-  // Throttle function to prevent excessive updates
-  const throttleCallback = useCallback((callback: () => void) => {
-    let running = false;
-    return () => {
-      if (running) return;
-      running = true;
-      requestAnimationFrame(() => {
-        callback();
-        running = false;
-      });
-    };
-  }, []);
-  
-  // Create the node ref callback
-  const ref = useCallback((node: Element | null) => {
-    if (node === observedNode) return;
-    
-    // Cleanup previous observer
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-      observerRef.current = null;
-    }
-    
-    setObservedNode(node);
-    
-    if (!node) return;
-    
-    // Use a delayed setup to avoid multiple synchronous observations
-    setTimeout(() => {
-      // Attempt to create a new observer with error handling
-      try {
-        // Create a more fault-tolerant observer
-        const observer = new ResizeObserver(
-          throttleCallback(() => {
-            try {
-              if (!node || !node.isConnected) return;
-              
-              // Get the dimensions using the safer getBoundingClientRect
-              const rect = node.getBoundingClientRect();
-              if (rect.width === 0 && rect.height === 0) return; // Skip empty elements
-              
-              // Create a simplified entry object
-              const newEntry = {
-                target: node,
-                contentRect: rect,
-                borderBoxSize: [{ inlineSize: rect.width, blockSize: rect.height }],
-                contentBoxSize: [{ inlineSize: rect.width, blockSize: rect.height }],
-                devicePixelContentBoxSize: [{ inlineSize: rect.width, blockSize: rect.height }],
-              };
-              
-              // Update state and call callback
-              setEntry(newEntry);
-              
-              if (onResizeRef.current) {
-                onResizeRef.current(newEntry);
-              }
-            } catch (e) {
-              // Silent error - don't crash the app
-              console.error('ResizeObserver error handled (suppressed)');
-            }
-          })
-        );
-        
-        // Start observing with a safer approach
-        observer.observe(node, { box: 'border-box' });
-        observerRef.current = observer;
-      } catch (error) {
-        // Fail gracefully
-        console.error('Error setting up ResizeObserver (suppressed)');
-      }
-    }, 50); // Delay observer creation
-  }, [throttleCallback, observedNode]);
-  
-  // Cleanup observer on unmount
+    callbackRef.current = callback;
+  }, [callback]);
+
+  // Set up the resize observer
   useEffect(() => {
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
+    // Skip if disabled or no element
+    if (options?.disabled || !elementRef.current) {
+      return;
+    }
+
+    // Track whether we've set up error recovery
+    let hasSetupErrorRecovery = false;
+    let isActive = true;
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    
+    // Create buffered observer with error handling
+    const observer = createStableResizeObserver(entries => {
+      if (!isActive) return;
+      
+      // Clear any existing debounce timer
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+      
+      // Debounce the callback for performance
+      const delay = options?.debounce || 0;
+      
+      if (delay > 0) {
+        debounceTimer = setTimeout(() => {
+          if (entries[0] && isActive) {
+            callbackRef.current(entries[0]);
+          }
+        }, delay);
+      } else {
+        // Call immediately if no debounce
+        if (entries[0] && isActive) {
+          callbackRef.current(entries[0]);
+        }
+      }
+    });
+
+    // Set up error handling specific to this observer
+    const handleResizeError = () => {
+      if (!hasSetupErrorRecovery && isActive) {
+        hasSetupErrorRecovery = true;
+        
+        // Temporarily disable observer
+        isActive = false;
+        observer.disconnect();
+        
+        // Re-enable after a cooldown period
+        setTimeout(() => {
+          if (elementRef.current) {
+            try {
+              isActive = true;
+              observer.observe(elementRef.current);
+            } catch (e) {
+              // Silent fail - don't break the app
+            }
+          }
+        }, 1000);
       }
     };
-  }, []);
-  
-  return { ref, entry };
+
+    try {
+      // Start observing
+      observer.observe(elementRef.current);
+      
+      // Listen for ResizeObserver errors
+      const errorHandler = (event: ErrorEvent) => {
+        if (event.message?.includes('ResizeObserver')) {
+          handleResizeError();
+        }
+      };
+      
+      window.addEventListener('error', errorHandler);
+      
+      // Clean up
+      return () => {
+        window.removeEventListener('error', errorHandler);
+        observer.disconnect();
+        isActive = false;
+        
+        if (debounceTimer) {
+          clearTimeout(debounceTimer);
+        }
+      };
+    } catch (e) {
+      // Fallback to simple polling if ResizeObserver fails
+      console.warn('ResizeObserver setup failed (handled)');
+      
+      // Use polling as fallback
+      let element = elementRef.current;
+      let lastWidth = element?.clientWidth || 0;
+      let lastHeight = element?.clientHeight || 0;
+      
+      const intervalId = setInterval(() => {
+        if (!element || !isActive) return;
+        
+        const newWidth = element.clientWidth;
+        const newHeight = element.clientHeight;
+        
+        if (newWidth !== lastWidth || newHeight !== lastHeight) {
+          lastWidth = newWidth;
+          lastHeight = newHeight;
+          
+          // Create a minimal entry-like object
+          const entry = {
+            target: element,
+            contentRect: {
+              width: newWidth,
+              height: newHeight,
+              x: 0,
+              y: 0,
+              top: 0,
+              right: newWidth,
+              bottom: newHeight,
+              left: 0
+            }
+          } as unknown as ResizeObserverEntry;
+          
+          callbackRef.current(entry);
+        }
+      }, 1000);
+      
+      return () => clearInterval(intervalId);
+    }
+  }, [elementRef, options?.debounce, options?.disabled]);
 }

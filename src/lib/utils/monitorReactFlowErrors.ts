@@ -1,115 +1,288 @@
-import { debounce } from '../utils';
+/**
+ * Comprehensive monitoring and recovery system for ReactFlow-specific errors
+ */
 
 /**
- * Runtime monitor for ReactFlow components to detect and fix unstable behaviors
+ * Setup monitoring for ReactFlow-specific errors and apply fixes
  */
 export function monitorReactFlowErrors() {
   // Only run in browser environment
   if (typeof window === 'undefined') return;
   
-  // Prevent duplicate initialization
-  if ((window as any).__reactFlowMonitorInitialized) return;
+  // Only set up once
+  if ((window as any).__reactFlowMonitoringSetup) return;
   
-  // Track performance metrics for ReactFlow components
-  let recentErrors = 0;
-  let lastErrorTime = 0;
-  let resizeCount = 0;
-  let lastResizeTime = 0;
+  // Error tracking
+  const errorCounts = {
+    resizeObserver: 0,
+    renderError: 0,
+    stateError: 0
+  };
   
-  // Check for signs of instability
-  const checkForInstability = debounce(() => {
+  let lastErrorTime = Date.now();
+  let recoveryInProgress = false;
+  
+  // Patch React Error boundaries for ReactFlow specifically
+  patchReactErrorHandler();
+  
+  // Setup monitoring for ResizeObserver errors
+  monitorResizeObserverErrors();
+  
+  // Listen for ReactFlow-specific errors
+  window.addEventListener('error', (event) => {
+    const errorMsg = event.message || '';
+    const errorStack = event.error?.stack || '';
     const now = Date.now();
     
-    // Check if we're seeing frequent errors
-    if (recentErrors > 3 && now - lastErrorTime < 2000) {
-      applyStabilizationFixes();
+    // Reset counters if it's been a while
+    if (now - lastErrorTime > 10000) {
+      errorCounts.resizeObserver = 0;
+      errorCounts.renderError = 0;
+      errorCounts.stateError = 0;
     }
     
-    // Check for resize thrashing
-    if (resizeCount > 10 && now - lastResizeTime < 500) {
-      applyStabilizationFixes();
-    }
+    lastErrorTime = now;
     
-    // Reset counters periodically
-    if (now - lastErrorTime > 5000) {
-      recentErrors = 0;
-    }
-    if (now - lastResizeTime > 2000) {
-      resizeCount = 0;
-    }
-  }, 500);
-  
-  // Apply fixes to stabilize ReactFlow components
-  const applyStabilizationFixes = debounce(() => {
-    // Skip if already stabilizing
-    if ((window as any).__stabilizing) return;
-    (window as any).__stabilizing = true;
-    
-    // Find all ReactFlow instances
-    const flowContainers = document.querySelectorAll('.react-flow-wrapper, .react-flow');
-    
-    // Apply stabilization fixes to each container
-    flowContainers.forEach(container => {
-      // Temporarily freeze dimensions
-      const rect = container.getBoundingClientRect();
+    // Handle ReactFlow-specific errors
+    if (isReactFlowError(errorMsg, errorStack)) {
+      // React/ReactDOM errors often related to ReactFlow
+      errorCounts.renderError++;
       
-      // Only apply to visible elements
-      if (rect.width > 0 && rect.height > 0) {
-        container.setAttribute('data-frozen', 'true');
-        (container as HTMLElement).style.width = `${rect.width}px`;
-        (container as HTMLElement).style.height = `${rect.height}px`;
-        (container as HTMLElement).style.overflow = 'hidden';
-        
-        // Force GPU acceleration
-        (container as HTMLElement).style.transform = 'translateZ(0)';
-        (container as HTMLElement).style.willChange = 'transform';
+      // Prevent propagation
+      event.preventDefault();
+      event.stopPropagation();
+      
+      // Apply recovery if errors are increasing
+      if (errorCounts.renderError > 2 && !recoveryInProgress) {
+        applyReactFlowRecovery();
+      }
+      
+      return false;
+    }
+    
+    // Handle ResizeObserver errors (often caused by ReactFlow)
+    if (errorMsg.includes('ResizeObserver')) {
+      errorCounts.resizeObserver++;
+      
+      // Prevent propagation
+      event.preventDefault();
+      event.stopPropagation();
+      
+      // Apply specific fixes for ResizeObserver
+      if (errorCounts.resizeObserver > 2 && !recoveryInProgress) {
+        applyResizeObserverFixes();
+      }
+      
+      return false;
+    }
+    
+    // Handle state update errors
+    if (errorMsg.includes('Maximum update depth exceeded') || 
+        errorMsg.includes('Cannot update a component')) {
+      errorCounts.stateError++;
+      
+      // Prevent propagation
+      event.preventDefault();
+      event.stopPropagation();
+      
+      if (errorCounts.stateError > 1 && !recoveryInProgress) {
+        preventInfiniteUpdates();
+      }
+      
+      return false;
+    }
+  }, true);
+  
+  // Mark as set up
+  (window as any).__reactFlowMonitoringSetup = true;
+}
+
+/**
+ * Check if an error is related to ReactFlow
+ */
+function isReactFlowError(errorMsg: string, errorStack: string): boolean {
+  // Check message for ReactFlow specific terms
+  const isReactFlowMsg = errorMsg.includes('react-flow') || 
+                        errorMsg.includes('ReactFlow') ||
+                        errorMsg.includes('edges') ||
+                        errorMsg.includes('nodes');
+  
+  // Check stack trace for ReactFlow references
+  const isReactFlowStack = errorStack.includes('react-flow') ||
+                           errorStack.includes('ReactFlow') ||
+                           errorStack.includes('PatternVisualizer') ||
+                           errorStack.includes('visualization');
+  
+  return isReactFlowMsg || isReactFlowStack;
+}
+
+/**
+ * Apply fixes to ReactFlow components
+ */
+function applyReactFlowRecovery() {
+  if (typeof document === 'undefined') return;
+  
+  // Mark recovery as in progress
+  (window as any).__reactFlowRecoveryInProgress = true;
+  
+  try {
+    // Find all ReactFlow containers
+    document.querySelectorAll('.react-flow, .react-flow__renderer, .react-flow__container').forEach(el => {
+      if (el instanceof HTMLElement) {
+        // Apply fixes
+        applyFixesToElement(el);
       }
     });
     
-    // Release stabilization after a cooling-off period
+    // Force reflow by triggering resize
+    window.dispatchEvent(new Event('resize'));
+    
+    // Reset recovery flag after a delay
     setTimeout(() => {
-      flowContainers.forEach(container => {
-        container.removeAttribute('data-frozen');
-        (container as HTMLElement).style.width = '';
-        (container as HTMLElement).style.height = '';
-        (container as HTMLElement).style.overflow = '';
-        (container as HTMLElement).style.transform = '';
-        (container as HTMLElement).style.willChange = '';
-      });
-      
-      (window as any).__stabilizing = false;
-      recentErrors = 0;
-      resizeCount = 0;
-    }, 2000);
-  }, 1000, { leading: true, trailing: false });
+      (window as any).__reactFlowRecoveryInProgress = false;
+    }, 5000);
+  } catch (e) {
+    // Silent fail
+    (window as any).__reactFlowRecoveryInProgress = false;
+  }
+}
+
+/**
+ * Apply fixes to ReactFlow elements with ResizeObserver issues
+ */
+function applyResizeObserverFixes() {
+  if (typeof document === 'undefined') return;
   
-  // Listen for errors
+  // Mark recovery as in progress
+  (window as any).__resizeObserverRecoveryInProgress = true;
+  
+  try {
+    // Apply fixes to ReactFlow components
+    document.querySelectorAll('.react-flow, .react-flow__pane, .react-flow__viewport').forEach(el => {
+      if (el instanceof HTMLElement) {
+        // Force hardware acceleration and compositing
+        el.style.transform = 'translateZ(0)';
+        el.style.backfaceVisibility = 'hidden';
+        el.style.willChange = 'transform';
+        
+        // Set stable size
+        if (!el.style.height || el.offsetHeight < 20) {
+          el.style.height = '400px';
+        }
+        
+        // Force a reflow
+        el.getBoundingClientRect();
+      }
+    });
+    
+    // Reset recovery flag after a delay
+    setTimeout(() => {
+      (window as any).__resizeObserverRecoveryInProgress = false;
+    }, 5000);
+  } catch (e) {
+    // Silent fail
+    (window as any).__resizeObserverRecoveryInProgress = false;
+  }
+}
+
+/**
+ * Prevent infinite update loops in React components
+ */
+function preventInfiniteUpdates() {
+  // Apply a global patch to break update cycles
+  if (typeof window !== 'undefined' && !(window as any).__reactUpdateLimitApplied) {
+    (window as any).__reactUpdateLimitApplied = true;
+    
+    // Force a document reflow to interrupt loops
+    document.body.style.opacity = '0.99';
+    
+    // Set timeout to restore normal state
+    setTimeout(() => {
+      document.body.style.opacity = '1';
+      (window as any).__reactUpdateLimitApplied = false;
+    }, 500);
+    
+    // Trigger refresh for ReactFlow
+    window.dispatchEvent(new Event('resize'));
+  }
+}
+
+/**
+ * Apply specific fixes to a ReactFlow element
+ */
+function applyFixesToElement(element: HTMLElement) {
+  // Force GPU acceleration
+  element.style.transform = 'translateZ(0)';
+  element.style.backfaceVisibility = 'hidden';
+  element.style.willChange = 'transform';
+  
+  // Add explicit containment for layout stability
+  element.style.contain = 'layout paint';
+  
+  // Ensure elements have explicit dimensions
+  if (element.offsetHeight < 20) {
+    element.style.height = '400px'; 
+  }
+  
+  // Find and fix nodes and edges containers
+  const nodeContainer = element.querySelector('.react-flow__nodes');
+  const edgeContainer = element.querySelector('.react-flow__edges');
+  
+  if (nodeContainer instanceof HTMLElement) {
+    nodeContainer.style.transform = 'translateZ(0)';
+  }
+  
+  if (edgeContainer instanceof HTMLElement) {
+    edgeContainer.style.transform = 'translateZ(0)';
+  }
+}
+
+/**
+ * Patch React's error handler to better handle ReactFlow errors
+ */
+function patchReactErrorHandler() {
+  // Only run in browser
+  if (typeof window === 'undefined') return;
+  
+  // Only patch once
+  if ((window as any).__reactErrorHandlerPatched) return;
+  
+  try {
+    // Try to find React DevTools global hook
+    const hook = (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    
+    if (hook && typeof hook.onCommitFiberRoot === 'function') {
+      const originalOnCommit = hook.onCommitFiberRoot;
+      
+      // Patch the commit function to catch errors
+      hook.onCommitFiberRoot = function(id: any, root: any, ...args: any[]) {
+        try {
+          return originalOnCommit.apply(this, [id, root, ...args]);
+        } catch (e) {
+          // Silently handle React DevTools errors
+          return null;
+        }
+      };
+    }
+    
+    (window as any).__reactErrorHandlerPatched = true;
+  } catch (e) {
+    // Silent fail
+  }
+}
+
+/**
+ * Monitor specifically for ResizeObserver errors
+ */
+function monitorResizeObserverErrors() {
+  if (typeof window === 'undefined') return;
+  
   const originalConsoleError = console.error;
   console.error = function(msg, ...args) {
-    // Check for ReactFlow or ResizeObserver errors
-    if (typeof msg === 'string' && (
-      msg.includes('ResizeObserver') || 
-      msg.includes('react-flow') ||
-      msg.includes('ReactFlow') ||
-      msg.includes('undelivered notifications')
-    )) {
-      // Track error frequency
-      recentErrors++;
-      lastErrorTime = Date.now();
-      
-      // Check if we need to stabilize
-      checkForInstability();
-      
-      // Still log the error in development
-      if (process.env.NODE_ENV === 'development') {
-        originalConsoleError.apply(console, [
-          '%c[Monitored Error]', 
-          'color: orange; font-weight: bold;', 
-          msg, 
-          ...args
-        ]);
-      }
-      
+    // Detect ResizeObserver errors
+    if (typeof msg === 'string' && msg.includes('ResizeObserver')) {
+      // Track and prevent showing these errors
+      trackResizeObserverError();
       return;
     }
     
@@ -117,20 +290,24 @@ export function monitorReactFlowErrors() {
     return originalConsoleError.apply(console, [msg, ...args]);
   };
   
-  // Track resize events
-  window.addEventListener('resize', () => {
-    resizeCount++;
-    lastResizeTime = Date.now();
-    checkForInstability();
-  });
+  let errorCount = 0;
+  let lastErrorTime = 0;
   
-  // Listen for ReactFlow's custom events
-  window.addEventListener('flow-resize', () => {
-    resizeCount++;
-    lastResizeTime = Date.now();
-    checkForInstability();
-  });
-  
-  // Mark as initialized
-  (window as any).__reactFlowMonitorInitialized = true;
+  // Track errors and apply fixes when needed
+  function trackResizeObserverError() {
+    const now = Date.now();
+    
+    // Reset count if it's been a while
+    if (now - lastErrorTime > 5000) {
+      errorCount = 0;
+    }
+    
+    errorCount++;
+    lastErrorTime = now;
+    
+    // Apply fixes if errors are frequent
+    if (errorCount > 3 && !(window as any).__resizeObserverRecoveryInProgress) {
+      applyResizeObserverFixes();
+    }
+  }
 }

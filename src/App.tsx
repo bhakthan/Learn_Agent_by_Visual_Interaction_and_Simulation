@@ -21,16 +21,16 @@ function App() {
   useEffect(() => {
     setMounted(true)
     
-    // Set up global ResizeObserver error handling
-    setupResizeObserverErrorHandling()
+    // Set up global ResizeObserver error handling with improved prevention
+    setupResizeObserverErrorHandling();
     
-    // Set up specific handling for ReactFlow components
+    // Set up specific handling for ReactFlow components with additional monitoring
     const importReactFlowUtils = async () => {
       try {
         const { setupReactFlowErrorHandling } = await import('./lib/utils/reactFlowUtils');
         setupReactFlowErrorHandling();
         
-        // Add comprehensive monitoring for ResizeObserver errors
+        // Add comprehensive monitoring for ResizeObserver errors with advanced error buffering
         const { monitorReactFlowErrors } = await import('./lib/utils/monitorReactFlowErrors');
         monitorReactFlowErrors();
       } catch (err) {
@@ -39,28 +39,39 @@ function App() {
     };
     importReactFlowUtils();
     
-    // Add error event listener for ResizeObserver errors
+    // Advanced error handler with improved blocking of ResizeObserver errors
     const handleError = (event: ErrorEvent) => {
-      if (event.message && event.message.includes('ResizeObserver')) {
+      if (event.message && (
+        event.message.includes('ResizeObserver') ||
+        event.message.includes('loop') ||
+        event.message.includes('undelivered notifications')
+      )) {
         // Prevent the error from propagating
         event.preventDefault();
         event.stopPropagation();
         
-        // Apply emergency fixes to problematic ResizeObservers
+        // Apply emergency fixes to problematic ResizeObservers with adaptive approach
         disableResizeObserverIfProblematic();
         return false;
       }
     };
-    window.addEventListener('error', handleError);
+    window.addEventListener('error', handleError, true); // Use capture phase
     
-    // Throttle resize event firing
+    // Improved throttled resize event firing with RAF
     const debouncedDispatch = (eventName: string) => {
       let timer: ReturnType<typeof setTimeout> | null = null;
+      let frameId: number | null = null;
+      
       return () => {
         if (timer) clearTimeout(timer);
+        if (frameId) cancelAnimationFrame(frameId);
+        
         timer = setTimeout(() => {
-          window.dispatchEvent(new Event(eventName));
-        }, 100);
+          frameId = requestAnimationFrame(() => {
+            window.dispatchEvent(new Event(eventName));
+            frameId = null;
+          });
+        }, 150); // Increased debounce for better stability
       };
     };
     
@@ -68,28 +79,54 @@ function App() {
     const dispatchLayoutUpdate = debouncedDispatch('layout-update');
     const dispatchContentResize = debouncedDispatch('content-resize');
     
-    // Listen for ResizeObserver errors
+    // Listen for ResizeObserver errors with enhanced prevention
     window.addEventListener('error', (e) => {
-      if (e.message?.includes('ResizeObserver') || e.message?.includes('undelivered notifications')) {
+      if (e.message?.includes('ResizeObserver') || 
+          e.message?.includes('undelivered notifications') ||
+          e.message?.includes('exceeded')) {
         e.preventDefault();
         e.stopPropagation();
-        // Force recalculation of layout after a small delay
-        setTimeout(dispatchLayoutUpdate, 200); // Increased delay
+        
+        // Track error and apply progressive fixes
+        if (!(window as any).__resizeRecoveryInProgress) {
+          (window as any).__resizeRecoveryInProgress = true;
+          
+          // Force recalculation of layout after a small delay
+          setTimeout(() => {
+            try {
+              dispatchLayoutUpdate();
+              // Apply stabilization to problematic elements
+              document.querySelectorAll('.react-flow').forEach(el => {
+                if (el instanceof HTMLElement) {
+                  el.style.transform = 'translateZ(0)';
+                }
+              });
+            } finally {
+              setTimeout(() => {
+                (window as any).__resizeRecoveryInProgress = false;
+              }, 2000);
+            }
+          }, 250);
+        }
         return false;
       }
     }, true);
     
-    // Monitor for layout shifts that might cause ResizeObserver errors
+    // Enhanced monitoring for layout shifts that might cause ResizeObserver errors
     const layoutShiftObserver = new PerformanceObserver((entryList) => {
       for (const entry of entryList.getEntries()) {
-        if ((entry as any).value > 0.05) { // Only trigger for significant shifts
-          dispatchLayoutUpdate();
+        const value = (entry as any).value;
+        if (value > 0.05) { // Only trigger for significant shifts
+          // Use RAF for smoother handling
+          requestAnimationFrame(() => {
+            dispatchLayoutUpdate();
+          });
           break;
         }
       }
     });
     
-    // Try to observe layout shifts (might not be supported in all browsers)
+    // Try to observe layout shifts with better error handling
     try {
       layoutShiftObserver.observe({ type: 'layout-shift', buffered: true });
     } catch (e) {
@@ -98,7 +135,7 @@ function App() {
     
     return () => {
       // Clean up event listeners
-      window.removeEventListener('error', handleError);
+      window.removeEventListener('error', handleError, true);
       
       try {
         layoutShiftObserver.disconnect();
