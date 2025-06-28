@@ -349,95 +349,91 @@ const ACPDemo = () => {
           <TabsTrigger value="multi">Multi-Agent Demo</TabsTrigger>
         </TabsList>
         
-        <div className="flex items-center justify-between my-4">
-          <div>
-            <h3 className="text-lg font-medium">
-              {activeDemo === 'single' ? 'Basic Single-Agent Communication' : 'Multi-Agent Single Server'}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {activeDemo === 'single' 
-                ? 'Direct communication between client and a single agent via ACP Server' 
-                : 'Multiple agents communicating through a central ACP Server'}
-            </p>
+        <TabsContent value="single">
+          <div className="flex items-center justify-between my-4">
+            <div>
+              <h3 className="text-lg font-medium">Basic Single-Agent Communication</h3>
+              <p className="text-sm text-muted-foreground">
+                Direct communication between client and a single agent via ACP Server
+              </p>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={resetSimulation}
+                disabled={isSimulationRunning || messages.length === 0}
+              >
+                <ArrowsCounterClockwise className="mr-1" size={16} />
+                Reset
+              </Button>
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={runSimulation}
+                disabled={isSimulationRunning}
+              >
+                <Play className="mr-1" size={16} />
+                Run Simulation
+              </Button>
+            </div>
           </div>
-          
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={resetSimulation}
-              disabled={isSimulationRunning || messages.length === 0}
-            >
-              <ArrowsCounterClockwise className="mr-1" size={16} />
-              Reset
-            </Button>
-            <Button 
-              variant="default" 
-              size="sm" 
-              onClick={runSimulation}
-              disabled={isSimulationRunning}
-            >
-              <Play className="mr-1" size={16} />
-              Run Simulation
-            </Button>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-2 border rounded-md overflow-hidden h-[350px]">
-            <ReactFlow
-              nodes={activeDemo === 'single' ? singleAgentNodes : multiAgentNodes}
-              edges={activeDemo === 'single' ? singleAgentEdges : multiAgentEdges}
-              onNodeClick={onNodeClick}
-              fitView
-            >
-              <Background />
-              <Controls />
-            </ReactFlow>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2 border rounded-md overflow-hidden h-[350px]">
+              <ReactFlow
+                nodes={singleAgentNodes}
+                edges={singleAgentEdges}
+                onNodeClick={onNodeClick}
+                fitView
+              >
+                <Background />
+                <Controls />
+              </ReactFlow>
+            </div>
+            
+            <div className="border rounded-md overflow-hidden">
+              <div className="bg-muted py-2 px-4 border-b">
+                <h3 className="text-sm font-medium">Message Log</h3>
+              </div>
+              <div className="h-[308px] overflow-y-auto p-2">
+                <AnimatePresence>
+                  {messages.map((message) => (
+                    <motion.div 
+                      key={message.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="mb-2"
+                    >
+                      <Card className={`overflow-hidden ${message.from === selectedNode || message.to === selectedNode ? 'border-primary' : ''}`}>
+                        <CardContent className="p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs font-semibold">{message.from}</span>
+                              <span className="text-xs">→</span>
+                              <span className="text-xs font-semibold">{message.to}</span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">{message.timestamp}</span>
+                          </div>
+                          <p className="text-xs whitespace-pre-wrap">{message.content}</p>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                
+                {messages.length === 0 && (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-sm text-muted-foreground">Run the simulation to see messages</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           
-          <div className="border rounded-md overflow-hidden">
-            <div className="bg-muted py-2 px-4 border-b">
-              <h3 className="text-sm font-medium">Message Log</h3>
-            </div>
-            <div className="h-[308px] overflow-y-auto p-2">
-              <AnimatePresence>
-                {messages.map((message, index) => (
-                  <motion.div 
-                    key={message.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="mb-2"
-                  >
-                    <Card className={`overflow-hidden ${message.from === selectedNode || message.to === selectedNode ? 'border-primary' : ''}`}>
-                      <CardContent className="p-3">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs font-semibold">{message.from}</span>
-                            <span className="text-xs">→</span>
-                            <span className="text-xs font-semibold">{message.to}</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground">{message.timestamp}</span>
-                        </div>
-                        <p className="text-xs whitespace-pre-wrap">{message.content}</p>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-              
-              {messages.length === 0 && (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-sm text-muted-foreground">Run the simulation to see messages</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        
-        <TabsContent value="single" className="mt-6">
-          {activeDemo === 'single' && (
+          <div className="mt-6">
             <Card>
               <CardContent className="pt-6">
                 <div className="space-y-4">
@@ -455,11 +451,94 @@ const ACPDemo = () => {
                 </div>
               </CardContent>
             </Card>
-          )}
+          </div>
         </TabsContent>
         
-        <TabsContent value="multi" className="mt-6">
-          {activeDemo === 'multi' && (
+        <TabsContent value="multi">
+          <div className="flex items-center justify-between my-4">
+            <div>
+              <h3 className="text-lg font-medium">Multi-Agent Single Server</h3>
+              <p className="text-sm text-muted-foreground">
+                Multiple agents communicating through a central ACP Server
+              </p>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={resetSimulation}
+                disabled={isSimulationRunning || messages.length === 0}
+              >
+                <ArrowsCounterClockwise className="mr-1" size={16} />
+                Reset
+              </Button>
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={runSimulation}
+                disabled={isSimulationRunning}
+              >
+                <Play className="mr-1" size={16} />
+                Run Simulation
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2 border rounded-md overflow-hidden h-[350px]">
+              <ReactFlow
+                nodes={multiAgentNodes}
+                edges={multiAgentEdges}
+                onNodeClick={onNodeClick}
+                fitView
+              >
+                <Background />
+                <Controls />
+              </ReactFlow>
+            </div>
+            
+            <div className="border rounded-md overflow-hidden">
+              <div className="bg-muted py-2 px-4 border-b">
+                <h3 className="text-sm font-medium">Message Log</h3>
+              </div>
+              <div className="h-[308px] overflow-y-auto p-2">
+                <AnimatePresence>
+                  {messages.map((message) => (
+                    <motion.div 
+                      key={message.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="mb-2"
+                    >
+                      <Card className={`overflow-hidden ${message.from === selectedNode || message.to === selectedNode ? 'border-primary' : ''}`}>
+                        <CardContent className="p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs font-semibold">{message.from}</span>
+                              <span className="text-xs">→</span>
+                              <span className="text-xs font-semibold">{message.to}</span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">{message.timestamp}</span>
+                          </div>
+                          <p className="text-xs whitespace-pre-wrap">{message.content}</p>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                
+                {messages.length === 0 && (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-sm text-muted-foreground">Run the simulation to see messages</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-6">
             <Card>
               <CardContent className="pt-6">
                 <div className="space-y-4">
@@ -479,7 +558,7 @@ const ACPDemo = () => {
                 </div>
               </CardContent>
             </Card>
-          )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

@@ -132,11 +132,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, integration, bestPra
             <TabsTrigger value="integration" className="text-xs">Integration</TabsTrigger>
             <TabsTrigger value="practices" className="text-xs">Best Practices</TabsTrigger>
           </TabsList>
-        </Tabs>
-      </div>
-      <CardContent className="p-0 flex-1 flex flex-col">
-        <div className="p-4 flex-1">
-          {activeTab === 'integration' && (
+          
+          <TabsContent value="integration" className="p-0 border-none m-0">
             <div className="space-y-3">
               <p className="text-sm">{integration}</p>
               <div className="flex flex-wrap gap-2">
@@ -152,15 +149,19 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, integration, bestPra
                 )}
               </div>
             </div>
-          )}
-
-          {activeTab === 'practices' && (
+          </TabsContent>
+          
+          <TabsContent value="practices" className="p-0 border-none m-0">
             <ul className="list-disc pl-5 space-y-2 text-sm">
               {bestPractices.map((practice, i) => (
                 <li key={i} className="text-foreground/90">{practice}</li>
               ))}
             </ul>
-          )}
+          </TabsContent>
+        </Tabs>
+      </div>
+      <CardContent className="p-0 flex-1 flex flex-col">
+        <div className="p-4 flex-1">
         </div>
         <div className="p-3 border-t mt-auto bg-card flex justify-end">
           <Button 
