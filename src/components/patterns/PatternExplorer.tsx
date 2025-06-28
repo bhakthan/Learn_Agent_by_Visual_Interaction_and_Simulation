@@ -147,9 +147,13 @@ const PatternExplorer = () => {
           )}
         </div>
       ) : (
-        <ReactFlowProvider>
-          <MultiPatternVisualizer initialPatterns={[selectedPattern.id]} />
-        </ReactFlowProvider>
+        <Tabs defaultValue="comparison">
+          <TabsContent value="comparison">
+            <ReactFlowProvider>
+              <MultiPatternVisualizer initialPatterns={[selectedPattern.id]} />
+            </ReactFlowProvider>
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   )
