@@ -30,6 +30,27 @@ const ACPDemo = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  
+  // Reference for flow containers
+  const flowContainerRef1 = useRef<HTMLDivElement>(null);
+  const flowContainerRef2 = useRef<HTMLDivElement>(null);
+  
+  // Setup safe resize handling for ReactFlow instances
+  useEffect(() => {
+    // Apply to both flow containers with a delay between them
+    if (flowContainerRef1.current) {
+      resetReactFlowRendering(flowContainerRef1);
+    }
+    
+    // Delay the second container's initialization to prevent conflicts
+    const timeout = setTimeout(() => {
+      if (flowContainerRef2.current) {
+        resetReactFlowRendering(flowContainerRef2);
+      }
+    }, 500);
+    
+    return () => clearTimeout(timeout);
+  }, []);
 
   // Single-Agent Demo Nodes and Edges
   const singleAgentNodes: Node[] = [
@@ -54,26 +75,6 @@ const ACPDemo = () => {
         label: (
           <div className="bg-muted/50 p-1 rounded-md">
             <div className="font-semibold">ACP Server</div>
-  // Reference for flow containers
-  const flowContainerRef1 = useRef<HTMLDivElement>(null);
-  const flowContainerRef2 = useRef<HTMLDivElement>(null);
-  
-  // Setup safe resize handling for ReactFlow instances
-  useEffect(() => {
-    // Apply to both flow containers with a delay between them
-    if (flowContainerRef1.current) {
-      resetReactFlowRendering(flowContainerRef1);
-    }
-    
-    // Delay the second container's initialization to prevent conflicts
-    const timeout = setTimeout(() => {
-      if (flowContainerRef2.current) {
-        resetReactFlowRendering(flowContainerRef2);
-      }
-    }, 500);
-    
-    return () => clearTimeout(timeout);
-  }, []);
           </div>
         )
       },
@@ -402,13 +403,18 @@ const ACPDemo = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2 border rounded-md overflow-hidden h-[350px]">
+            <div className="md:col-span-2 border rounded-md overflow-hidden h-[350px]" ref={flowContainerRef1}>
               <ReactFlow
                 nodes={singleAgentNodes}
                 edges={singleAgentEdges}
                 onNodeClick={onNodeClick}
                 fitView
                 key="single-agent-flow"
+                ref={(instance) => {
+                  if (instance && flowContainerRef1.current) {
+                    instance.fitView();
+                  }
+                }}
               >
                 <Background />
                 <Controls />
@@ -508,12 +514,17 @@ const ACPDemo = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2 border rounded-md overflow-hidden h-[350px]">
+            <div className="md:col-span-2 border rounded-md overflow-hidden h-[350px]" ref={flowContainerRef2}>
               <ReactFlow
                 nodes={multiAgentNodes}
                 edges={multiAgentEdges}
                 onNodeClick={onNodeClick}
                 fitView
+                ref={(instance) => {
+                  if (instance && flowContainerRef2.current) {
+                    instance.fitView();
+                  }
+                }}
               >
                 <Background />
                 <Controls />
