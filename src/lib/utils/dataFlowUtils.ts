@@ -272,16 +272,18 @@ export const getNodeDataFlowParams = (
  * Simulate the flow of data through a pattern
  */
 export const simulatePatternFlow = (
-  pattern: PatternData,
   nodes: Node[],
-  edges: Edge[],
-  onUpdate: (state: Partial<DataFlowState>) => void,
-  speedSetting: FlowSpeed = 'normal',
-  stepMode: boolean = false
+  edges: Edge[] | any[],
+  handleNodeStatus: (nodeId: string, status: string | null) => void,
+  handleEdgeStatus: (edgeId: string, animated: boolean) => void,
+  handleDataFlow: (flow: any) => void,
+  queryInput: string,
+  handleAddStep: (stepFn: () => void) => number | null,
+  speedFactor?: number
 ) => {
   const timeouts: (number | null)[] = [];
   let cancelled = false;
-  const speedMultiplier = getSpeedMultiplier(speedSetting);
+  const speedMultiplier = speedFactor || 1;
   let currentTime = 0;
   
   // Find nodes and edges in the simulation
@@ -292,20 +294,13 @@ export const simulatePatternFlow = (
   
   // Core simulation functions
   const startSimulation = () => {
-    // Reset state
-    onUpdate({
-      messages: [],
-      activeNodes: new Set(),
-      activeEdges: new Set(),
-      currentTime: 0,
-      duration: 0,
-      hasSimulationRun: true
-    });
-
+    // No need for a reset state as we'll handle this in the component
+    
     // Find the input node(s)
     const inputNodes = nodes.filter(node => 
       (node.type === 'input' || (node.data?.nodeType === 'input')) ||
-      !edges.some(e => e.target === node.id)
+      // Safely check if edges is an array before using some()
+      (Array.isArray(edges) && !edges.some(e => e.target === node.id))
     );
     
     if (inputNodes.length === 0) {
@@ -332,12 +327,11 @@ export const simulatePatternFlow = (
     const activateNode = () => {
       if (cancelled) return;
       
-      onUpdate(prevState => ({
-        activeNodes: new Set([...prevState.activeNodes, nodeId])
-      }));
+      // Update node status
+      handleNodeStatus(nodeId, 'processing');
       
       // Schedule the node to finish processing and send data to connected nodes
-      timeouts.push(window.setTimeout(processNode, processingTime / speedMultiplier));
+      timeouts.push(handleAddStep(processNode) || null);
     };
     
     // Process outgoing edges from this node
@@ -361,55 +355,49 @@ export const simulatePatternFlow = (
         const sendData = () => {
           if (cancelled) return;
           
-          // Create a data flow message
-          const flow = createDataFlow(
-            nodeId,
-            edge.target,
-            generateMessageContent(nodeId, edge.target),
-            determineMessageType(node, targetNode),
-            0,
-            1000
-          );
+          // Animate the edge
+          handleEdgeStatus(edge.id, true);
           
-          const message: FlowMessage = {
-            ...flow,
-            id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            startTime: processedTime + edgeDelay,
-            delivered: false
+          // Create and send a data flow message
+          const flowData = {
+            id: `flow-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            edgeId: edge.id,
+            source: nodeId,
+            target: edge.target,
+            content: generateMessageContent(nodeId, edge.target),
+            type: determineMessageType(node, targetNode),
+            timestamp: Date.now(),
+            progress: 0
           };
           
-          messages.push(message);
-          onUpdate({ messages: [...messages] });
+          // Send the flow data to handler
+          handleDataFlow(flowData);
           
           // Process the target node after the message is delivered
           const processTarget = () => {
             if (cancelled) return;
             
-            // Mark message as delivered
-            const updatedMessages = messages.map(m => 
-              m.id === message.id 
-                ? { ...m, delivered: true, endTime: message.startTime + 1000 } 
-                : m
-            );
+            // Stop animating the edge
+            handleEdgeStatus(edge.id, false);
             
-            messages.splice(0, messages.length, ...updatedMessages);
-            onUpdate({ messages: [...messages] });
+            // Mark the target node as active
+            handleNodeStatus(edge.target, 'processing');
             
             // Process the next node 
             simulateNodeProcessing(edge.target, processedTime + edgeDelay + 1000);
           };
           
-          // Schedule the next node to process
-          timeouts.push(window.setTimeout(processTarget, 1000 / speedMultiplier));
+          // Schedule the next node to process using the handler
+          timeouts.push(handleAddStep(processTarget) || null);
         };
         
-        // Schedule sending data with the edge delay
-        timeouts.push(window.setTimeout(sendData, edgeDelay / speedMultiplier));
+        // Schedule sending data with the edge delay using the handler
+        timeouts.push(handleAddStep(sendData) || null);
       });
     };
     
-    // Start activating this node
-    timeouts.push(window.setTimeout(activateNode, 0));
+    // Start activating this node immediately using the handler
+    timeouts.push(handleAddStep(activateNode) || null);
   };
   
   // Helper to calculate node processing time based on node type
