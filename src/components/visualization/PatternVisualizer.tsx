@@ -24,7 +24,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
-import { Play, Stop, ArrowsCounterClockwise, Info, FastForward, Pause, StepForward, Rewind, QuestionCircle } from '@phosphor-icons/react'
+import { Play, Stop, ArrowsCounterClockwise, Info, FastForward, Pause, StepForward, Rewind, QuestionCircle, DotsSixVertical } from '@phosphor-icons/react'
+import NodeDragHint from './NodeDragHint'
 // Import necessary functions from dataFlowUtils directly
 import { 
   simulatePatternFlow, 
@@ -105,10 +106,13 @@ const CustomNode = React.memo(({ data, id }: { data: any, id: string }) => {
   }
   
   return (
-    <div style={getNodeStyle()}>
+    <div style={getNodeStyle()} title="Click and drag to reposition node">
       <Handle type="target" position={Position.Left} />
       <div>
-        <strong>{data.label}</strong>
+        <strong className="flex items-center gap-1">
+          <DotsSixVertical size={12} className="drag-handle text-muted-foreground" />
+          {data.label}
+        </strong>
         {data.description && <div style={{ fontSize: '12px' }}>{data.description}</div>}
         {data.status && (
           <div className="mt-1 text-xs px-2 py-1 rounded" style={{
@@ -199,6 +203,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     setSpeedFactor(factors[animationState.speed]);
   }, [animationState.speed]);
   
+  // Reset visualization
   const resetVisualization = useCallback(() => {
     // Clear any running timeouts
     if (simulationRef.current) {
@@ -242,6 +247,25 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       animated: false
     })));
   }, [patternData.edges, setNodes, setEdges]);
+  
+  // Reset node layout to original positions
+  const resetLayout = useCallback(() => {
+    setNodes(patternData.nodes.map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        isActive: false,
+        status: null
+      }
+    })));
+    
+    // Also fit the view to ensure all nodes are visible
+    if (flowInstanceRef.current) {
+      setTimeout(() => {
+        flowInstanceRef.current?.fitView({ duration: 800 });
+      }, 100);
+    }
+  }, [patternData.nodes, setNodes]);
   
   const getEdgePoints = useMemoizedCallback((edgeId: string) => {
     const edge = edges.find(e => e.id === edgeId);
@@ -416,6 +440,16 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
             <Button 
               variant="outline" 
               size="sm"
+              onClick={resetLayout}
+              title="Restore original node positions"
+              className="hidden sm:flex"
+            >
+              <ArrowsCounterClockwise className="mr-1" size={14} />
+              Reset Layout
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
               onClick={resetVisualization}
               disabled={isAnimating && !animationState.isPaused}
             >
@@ -551,10 +585,14 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
             nodeTypes={nodeTypes}
             fitView
             onInit={onInit}
+            nodesDraggable={true}
+            nodesConnectable={false}
+            elementsSelectable={true}
           >
             <Background />
             <Controls />
             <MiniMap />
+            <NodeDragHint />
             <DataFlowVisualizer 
               flows={dataFlows} 
               edges={edges}
@@ -563,12 +601,13 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
               speed={speedFactor}
             />
             <Panel position="bottom-center">
-              <div className="bg-card p-2 rounded shadow-sm text-xs text-muted-foreground">
+              <div className="bg-card p-2 rounded shadow-sm text-xs text-muted-foreground flex items-center gap-2">
+                <DotsSixVertical size={12} />
                 {isAnimating ? 
                   animationState.mode === 'step-by-step' ? 
                     `Step by step mode: ${animationState.step} steps completed` : 
                     'Visualizing data flow between agents...' 
-                  : 'Click "Start Simulation" to see data flow between agents'}
+                  : 'Drag nodes to customize layout. Click "Start Simulation" to see data flow between agents'}
               </div>
             </Panel>
           </ReactFlow>

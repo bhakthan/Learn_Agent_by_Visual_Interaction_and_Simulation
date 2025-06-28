@@ -19,8 +19,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { 
   Play, Stop, ArrowsCounterClockwise, Info, 
   FastForward, Pause, StepForward, Rewind, 
-  CaretDown, CaretUp, ChartLine, List, Gear
+  CaretDown, CaretUp, ChartLine, List, Gear, DotsSixVertical
 } from '@phosphor-icons/react'
+import NodeDragHint from './NodeDragHint'
 // Import necessary functions from dataFlowUtils
 import { simulatePatternFlow, FlowMessage, DataFlowState, DataFlow, getDataFlowAnimationStyle } from '@/lib/utils/dataFlowUtils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -308,11 +309,29 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
     setAnimationState(prev => ({ ...prev, speed: newSpeed }));
   }, []);
   
+  // Reset node layout to original positions
+  const resetLayout = useCallback(() => {
+    setNodes(patternData.nodes.map(node => ({
+      ...node,
+      data: {
   const changeAnimationMode = useCallback((newMode: AnimationMode) => {
     // Reset visualization when changing mode
     resetVisualization();
     setAnimationState(prev => ({ ...prev, mode: newMode, step: 0 }));
   }, [resetVisualization]);
+        ...node.data,
+        isActive: false,
+        status: null
+      }
+    })));
+    
+    // Also fit the view to ensure all nodes are visible
+    if (flowInstanceRef.current) {
+      setTimeout(() => {
+        flowInstanceRef.current?.fitView({ duration: 800 });
+      }, 100);
+    }
+  }, [patternData.nodes, setNodes]);
 
   const handleDataFlowFilterChange = useCallback((filter: DataFlowFilter) => {
     setDataFlowFilter(filter);
@@ -347,6 +366,16 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
           </Tabs>
           
           <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={resetLayout}
+              title="Restore original node positions"
+              className="hidden sm:flex"
+            >
+              <ArrowsCounterClockwise className="mr-1" size={14} />
+              Reset Layout
+            </Button>
             <Button 
               variant="outline" 
               size="sm"
@@ -536,10 +565,14 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
             nodeTypes={nodeTypes}
             fitView
             onInit={onInit}
+            nodesDraggable={true}
+            nodesConnectable={false}
+            elementsSelectable={true}
           >
             <Background />
             <Controls />
             <MiniMap />
+            <NodeDragHint />
             <EnhancedDataFlowVisualizer 
               flows={dataFlows} 
               edges={edges}
@@ -551,12 +584,13 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
               visualizationMode={visualizationMode}
             />
             <Panel position="bottom-center">
-              <div className="bg-card p-2 rounded shadow-sm text-xs text-muted-foreground">
+              <div className="bg-card p-2 rounded shadow-sm text-xs text-muted-foreground flex items-center gap-2">
+                <DotsSixVertical size={12} />
                 {isAnimating ? 
                   animationState.mode === 'step-by-step' ? 
                     `Step by step mode: ${animationState.step} steps completed` : 
                     'Visualizing data flow between agents...' 
-                  : 'Click "Start Simulation" to see data flow between agents'}
+                  : 'Drag nodes to customize layout. Click "Start Simulation" to see data flow between agents'}
               </div>
             </Panel>
           </ReactFlow>
