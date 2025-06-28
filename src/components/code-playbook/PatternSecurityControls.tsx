@@ -1,5 +1,5 @@
 import React from 'react';
-import { TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
@@ -30,10 +30,11 @@ const mockEnv = {
 };
 
 interface PatternSecurityControlsProps {
-  pattern: string;
+  patternId: string;
+  patternName: string;
 }
 
-const PatternSecurityControls: React.FC<PatternSecurityControlsProps> = ({ pattern }) => {
+const PatternSecurityControls: React.FC<PatternSecurityControlsProps> = ({ patternId, patternName }) => {
   // Security controls for agent patterns
   const securityControls = [
     {
@@ -277,7 +278,7 @@ function logAgentActivity(agentId, activityType, details, user = null) {
     agentId: agentId,
     activityId: activityId,
     activityType: activityType, // e.g., "query", "tool_use", "response"
-    patternType: "${pattern}",
+    patternType: "${patternId}",
     details: details,
     user: user || "system"
   };
@@ -824,18 +825,19 @@ stages:
   ];
 
   return (
-    <TabsContent value="security" className="space-y-6">
-      <div>
-        <div className="flex items-center gap-2 mb-6">
-          <ShieldCheck size={24} className="text-primary" weight="duotone" />
-          <h2 className="text-2xl font-bold">Security Controls</h2>
-        </div>
+    <Tabs defaultValue="security">
+      <TabsContent value="security" className="space-y-6">
+        <div>
+          <div className="flex items-center gap-2 mb-6">
+            <ShieldCheck size={24} className="text-primary" weight="duotone" />
+            <h2 className="text-2xl font-bold">Security Controls</h2>
+          </div>
         
         <Alert className="mb-6">
           <ShieldWarning size={20} className="h-5 w-5" />
           <AlertTitle>Security Best Practices</AlertTitle>
           <AlertDescription>
-            Implementing these security controls helps ensure your {pattern} agent pattern meets enterprise security requirements and follows Azure Well-Architected Framework security principles.
+            Implementing these security controls helps ensure your {patternName} agent pattern meets enterprise security requirements and follows Azure Well-Architected Framework security principles.
           </AlertDescription>
         </Alert>
         
@@ -883,6 +885,7 @@ stages:
         </div>
       </div>
     </TabsContent>
+    </Tabs>
   );
 };
 

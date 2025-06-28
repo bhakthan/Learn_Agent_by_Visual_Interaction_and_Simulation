@@ -1,5 +1,5 @@
 import React from 'react';
-import { TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import {
   Card,
   CardContent,
@@ -42,10 +42,11 @@ const mockEnv = {
 };
 
 interface AzureServicesBestPracticesProps {
-  pattern: string;
+  patternId: string;
+  patternName: string;
 }
 
-const AzureServicesBestPractices: React.FC<AzureServicesBestPracticesProps> = ({ pattern }) => {
+const AzureServicesBestPractices: React.FC<AzureServicesBestPracticesProps> = ({ patternId, patternName }) => {
   const practices = [
     {
       name: 'Azure OpenAI Integration',
@@ -83,7 +84,7 @@ const getClient = () => {
 const client = getClient();
 
 // Best Practice: Consistent system messages for agent patterns
-const agentSystemPrompt = "You are an Azure AI agent implementing the " + pattern + " pattern.
+const agentSystemPrompt = "You are an Azure AI agent implementing the " + patternName + " pattern.
 Your capabilities include:
 1. Analyzing user requests related to this domain
 2. Following a structured reasoning process
@@ -373,7 +374,7 @@ async function storeConversationData(conversationId, userData, agentResponses) {
       agentResponses: agentResponses,
       metadata: {
         agentVersion: mockEnv.AGENT_VERSION,
-        patternType: "${pattern}"
+        patternType: "${patternId}"
       }
     };
     
@@ -573,7 +574,7 @@ async function agentWithTelemetry(query, userId) {
         userId: userId,
         queryLength: query.length,
         timestamp: new Date().toISOString(),
-        pattern: "${pattern}"
+        pattern: "${patternId}"
       }
     });
 
@@ -665,7 +666,7 @@ async function agentWithTelemetry(query, userId) {
         requestId: requestId,
         responseTime: totalDuration,
         tokenUsage: tokenUsage,
-        pattern: "${pattern}",
+        pattern: "${patternId}",
         userSatisfaction: "Unknown" // To be updated later with feedback
       }
     });
@@ -690,7 +691,7 @@ async function agentWithTelemetry(query, userId) {
       properties: {
         requestId: requestId,
         error: error.message,
-        pattern: "${pattern}"
+        pattern: "${patternId}"
       }
     });
     
@@ -699,7 +700,7 @@ async function agentWithTelemetry(query, userId) {
       properties: {
         requestId: requestId,
         query: query,
-        pattern: "${pattern}"
+        pattern: "${patternId}"
       }
     });
     
@@ -801,7 +802,7 @@ async function adminConfigureAgentPattern(userId, patternConfig) {
   }
   
   // Proceed with configuration (example)
-  console.log(\`Admin \${userId} configuring pattern ${pattern} with config:\`, patternConfig);
+  console.log(\`Admin \${userId} configuring pattern ${patternId} with config:\`, patternConfig);
   
   // Implementation continues...
 }
@@ -815,16 +816,17 @@ async function getUserRoles(userId) {
   ];
 
   return (
-    <TabsContent value="azure-best-practices" className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Azure Integration Best Practices</h2>
-        <p className="text-muted-foreground mb-6">
-          Recommended practices for implementing the {pattern} pattern using Azure AI services
-        </p>
-        
-        <div className="space-y-4">
-          <Accordion type="single" collapsible className="w-full">
-            {practices.map((practice, index) => (
+    <Tabs defaultValue="azure-best-practices">
+      <TabsContent value="azure-best-practices" className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold mb-2">Azure Integration Best Practices</h2>
+          <p className="text-muted-foreground mb-6">
+            Recommended practices for implementing the {patternName} pattern using Azure AI services
+          </p>
+          
+          <div className="space-y-4">
+            <Accordion type="single" collapsible className="w-full">
+              {practices.map((practice, index) => (
               <AccordionItem key={index} value={`practice-${index}`} className="border bg-card">
                 <AccordionTrigger className="px-4 py-3 hover:bg-muted/50">
                   <div className="flex items-center gap-3 text-left">
@@ -869,6 +871,7 @@ async function getUserRoles(userId) {
         </div>
       </div>
     </TabsContent>
+    </Tabs>
   );
 };
 
