@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
@@ -826,6 +826,9 @@ stages:
 
   return (
     <Tabs defaultValue="security">
+      <TabsList className="mb-4">
+        <TabsTrigger value="security">Security Controls</TabsTrigger>
+      </TabsList>
       <TabsContent value="security" className="space-y-6">
         <div>
           <div className="flex items-center gap-2 mb-6">

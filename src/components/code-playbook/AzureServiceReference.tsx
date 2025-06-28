@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -305,7 +305,11 @@ for criterion in evaluation_criteria:
   ];
 
   return (
-    <TabsContent value="azure-services" className="space-y-6">
+    <Tabs defaultValue="azure-services">
+      <TabsList className="mb-4">
+        <TabsTrigger value="azure-services">Azure Services</TabsTrigger>
+      </TabsList>
+      <TabsContent value="azure-services" className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-2">Azure AI Services Reference</h2>
         <p className="text-muted-foreground mb-6">
@@ -386,6 +390,7 @@ for criterion in evaluation_criteria:
         </div>
       </div>
     </TabsContent>
+    </Tabs>
   );
 };
 

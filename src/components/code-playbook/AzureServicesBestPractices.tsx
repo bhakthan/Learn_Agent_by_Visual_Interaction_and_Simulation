@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Card,
   CardContent,
@@ -817,6 +817,9 @@ async function getUserRoles(userId) {
 
   return (
     <Tabs defaultValue="azure-best-practices">
+      <TabsList className="mb-4">
+        <TabsTrigger value="azure-best-practices">Azure Best Practices</TabsTrigger>
+      </TabsList>
       <TabsContent value="azure-best-practices" className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold mb-2">Azure Integration Best Practices</h2>
