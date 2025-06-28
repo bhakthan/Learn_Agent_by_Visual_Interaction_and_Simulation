@@ -12,13 +12,36 @@ import ConceptsExplorer from './components/concepts/ConceptsExplorer'
 import AzureServicesOverview from './components/azure-services/AzureServicesOverview'
 import CommunitySharing from './components/community/CommunitySharing'
 import ReferencesSection from './components/references/ReferencesSection'
+import { setupResizeObserverErrorHandling } from './lib/utils/resizeObserverUtils'
 
 function App() {
   const [mounted, setMounted] = useState(false)
   
-  // Fix hydration issues
+  // Fix hydration issues and set up error handling
   useEffect(() => {
     setMounted(true)
+    
+    // Set up global ResizeObserver error handling
+    setupResizeObserverErrorHandling()
+    
+    // Prevent undelivered notification errors
+    const handleRAF = () => {
+      // Use requestAnimationFrame to synchronize visual updates
+      if (window.requestAnimationFrame) {
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => {
+            // This nested RAF ensures layout calculations are complete
+          })
+        })
+      }
+    }
+    
+    // Listen for layout updates and trigger RAF
+    window.addEventListener('layout-update', handleRAF)
+    
+    return () => {
+      window.removeEventListener('layout-update', handleRAF)
+    }
   }, [])
 
   if (!mounted) {

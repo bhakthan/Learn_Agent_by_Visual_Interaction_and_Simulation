@@ -38,9 +38,22 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
   // Listen to sidebar state changes to trigger resize/layout adjustments
   useEffect(() => {
     // Adding a small delay to ensure layout updates after transition completes
+    // with error handling to prevent ResizeObserver loop errors
     const timer = setTimeout(() => {
-      window.dispatchEvent(new Event('resize'));
-    }, 300);
+      try {
+        // Use a safer approach with a custom event that won't trigger all resize observers
+        const customResizeEvent = new CustomEvent('layout-update', { detail: { source: 'sidebar-toggle' } });
+        window.dispatchEvent(customResizeEvent);
+        
+        // For components that specifically need the resize event, dispatch it separately 
+        // with error handling in a RAF to prevent loop errors
+        requestAnimationFrame(() => {
+          window.dispatchEvent(new Event('resize'));
+        });
+      } catch (error) {
+        console.log('Layout adjustment error prevented:', error);
+      }
+    }, 350); // Slightly longer delay to ensure transitions complete
     
     return () => clearTimeout(timer);
   }, [isCollapsed]);

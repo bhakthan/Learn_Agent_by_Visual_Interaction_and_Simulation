@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -18,6 +18,7 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   Background,
+  useReactFlow,
   MiniMap,
   Controls,
   MarkerType
@@ -506,6 +507,40 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
     return '';
   };
 
+  // Flow container ref and resize handling
+  const flowContainerRef = useRef<HTMLDivElement>(null);
+  const [flowMounted, setFlowMounted] = useState(false);
+  
+  // Handle resize events for ReactFlow
+  const handleResize = useCallback(() => {
+    try {
+      // Allow a small delay for the resize operation to complete
+      setTimeout(() => {
+        if (flowContainerRef.current) {
+          // This will trigger a single update to ReactFlow dimensions
+          window.dispatchEvent(new Event('resize'));
+        }
+      }, 100);
+    } catch (error) {
+      console.log('Flow resize error:', error);
+    }
+  }, []);
+
+  // Listen for layout changes
+  useEffect(() => {
+    setFlowMounted(true);
+    
+    // Handle global resize and custom layout update events
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('layout-update', handleResize);
+    
+    return () => {
+      setFlowMounted(false);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('layout-update', handleResize);
+    };
+  }, [handleResize]);
+  
   // Define nodeTypes for ReactFlow
   const nodeTypes: NodeTypes = {
     demoNode: CustomDemoNode
@@ -637,42 +672,44 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
           </div>
           
           {/* Flow visualization */}
-          <div className="border border-border rounded-md overflow-hidden" style={{ height: '400px' }}>
+          <div ref={flowContainerRef} className="border border-border rounded-md overflow-hidden" style={{ height: '400px' }}>
             <ReactFlowProvider>
-              <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                nodeTypes={nodeTypes}
-                fitView
-                panOnScroll
-                minZoom={0.5}
-                maxZoom={1.5}
-                defaultEdgeOptions={{
-                  style: { 
-                    strokeWidth: 2,
-                    stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined // Enhanced edge visibility in dark mode
-                  },
-                  markerEnd: { type: MarkerType.Arrow }
-                }}
-              >
-                <Background color={theme === 'dark' ? '#ffffff20' : '#aaa'} gap={16} />
-                <Controls className={theme === 'dark' ? 'dark-controls' : ''} />
-                <MiniMap 
-                  style={{ 
-                    backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.6)' : undefined,
-                    maskColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.7)' : undefined
-                  }} 
-                />
-                <DataFlowVisualizer 
-                  flows={dataFlows} 
+              {flowMounted && (
+                <ReactFlow
+                  nodes={nodes}
                   edges={edges}
-                  getEdgePoints={getEdgePoints}
-                  onFlowComplete={onFlowComplete}
-                  speed={animationSpeed}
-                />
-              </ReactFlow>
+                  onNodesChange={onNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  nodeTypes={nodeTypes}
+                  fitView
+                  panOnScroll
+                  minZoom={0.5}
+                  maxZoom={1.5}
+                  defaultEdgeOptions={{
+                    style: { 
+                      strokeWidth: 2,
+                      stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined // Enhanced edge visibility in dark mode
+                    },
+                    markerEnd: { type: MarkerType.Arrow }
+                  }}
+                >
+                  <Background color={theme === 'dark' ? '#ffffff20' : '#aaa'} gap={16} />
+                  <Controls className={theme === 'dark' ? 'dark-controls' : ''} />
+                  <MiniMap 
+                    style={{ 
+                      backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.6)' : undefined,
+                      maskColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.7)' : undefined
+                    }} 
+                  />
+                  <DataFlowVisualizer 
+                    flows={dataFlows} 
+                    edges={edges}
+                    getEdgePoints={getEdgePoints}
+                    onFlowComplete={onFlowComplete}
+                    speed={animationSpeed}
+                  />
+                </ReactFlow>
+              )}
             </ReactFlowProvider>
           </div>
           

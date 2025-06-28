@@ -50,6 +50,17 @@
                 }, 200);
             });
         })();
+        
+        // Suppress ResizeObserver errors in the console
+        const originalConsoleError = console.error;
+        console.error = function(msg, ...args) {
+            if (typeof msg === 'string' && 
+                (msg.includes('ResizeObserver loop') || 
+                 msg.includes('ResizeObserver was created in a different document'))) {
+                return; // Suppress known ResizeObserver errors
+            }
+            originalConsoleError.apply(console, [msg, ...args]);
+        };
     </script>
 </head>
 
