@@ -175,9 +175,9 @@ Based on the current state, either:
 1. Write Python code to make progress, formatted as:
    Thought: <your reasoning>
    Code:
-   ```
+   \`\`\`
    # Your Python code here
-   ```
+   \`\`\`
 
 2. Or provide the final answer if you've solved the problem:
    Thought: <your reasoning>

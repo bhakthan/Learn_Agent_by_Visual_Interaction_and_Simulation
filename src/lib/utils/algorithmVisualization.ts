@@ -408,9 +408,11 @@ Needs Revision: No`
 // Function to get algorithm visualization by pattern ID
 export function getAlgorithmVisualization(patternId: string): AlgorithmVisualizationData | undefined {
   const visualizationMap: Record<string, AlgorithmVisualizationData> = {
+    'react': reactAgentVisualization,
+    'codeact': codeActAgentVisualization,
+    'self-reflection': selfReflectionVisualization,
     'react-agent': reactAgentVisualization,
-    'codeact-agent': codeActAgentVisualization,
-    'self-reflection': selfReflectionVisualization
+    'codeact-agent': codeActAgentVisualization
     // Add more patterns as they become available
   };
   
