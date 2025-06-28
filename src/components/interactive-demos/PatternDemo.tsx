@@ -33,7 +33,7 @@ import {
 } from '../visualization/MemoizedFlowComponents'
 
 // Import custom hooks
-import { useFlowContainer } from '@/lib/hooks'
+import { useFlowContainer } from '@/lib/hooks/useFlowContainer'
 import { useResizeObserver } from '@/lib/hooks/useResizeObserver'
 
 import DataFlowVisualizer from '../visualization/DataFlowVisualizer'
@@ -562,13 +562,16 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   // Reference for the flow container
   const flowContainerRef = useRef<HTMLDivElement>(null);
   
-  // Use custom hooks for improved stability 
+  // Use custom hooks for improved stability
   const reactFlowInstance = useReactFlow();
   const handleResize = useCallback(() => {
     if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
       reactFlowInstance.fitView({ padding: 0.2, duration: 200 });
     }
   }, [reactFlowInstance]);
+  
+  // Use the flow container hook
+  const { triggerResize } = useFlowContainer(flowContainerRef);
   
   // Setup safe resize handling with improved monitoring
   useEffect(() => {
@@ -577,7 +580,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     // Apply safer resize behavior
     const resetTimeout = setTimeout(() => {
       resetReactFlowRendering(flowContainerRef);
-      handleResize();
+      triggerResize();
     }, 1000);
     
     // Monitor for errors and re-trigger resize if needed
@@ -585,7 +588,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       requestAnimationFrame(() => {
         if (flowContainerRef.current) {
           resetReactFlowRendering(flowContainerRef);
-          handleResize();
+          triggerResize();
         }
       });
     };
@@ -597,7 +600,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       clearTimeout(resetTimeout);
       window.removeEventListener('layout-update', handleLayoutUpdate);
     };
-  }, [handleResize]);
+  }, [triggerResize]);
   
   // Define nodeTypes for ReactFlow with memoization
   const nodeTypes = useMemo<NodeTypes>(() => ({
