@@ -251,15 +251,15 @@ const ConceptsExplorer = () => {
                   <h4 className="font-semibold mb-2">MCP Benefits:</h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="border border-border rounded-md p-3">
-                      <h5 className="font-medium text-secondary">Interoperability</h5>
+                      <h5 className="font-medium text-accent">Interoperability</h5>
                       <p className="text-sm">Agents from different systems can communicate using common standards</p>
                     </div>
                     <div className="border border-border rounded-md p-3">
-                      <h5 className="font-medium text-secondary">Context Preservation</h5>
+                      <h5 className="font-medium text-accent">Context Preservation</h5>
                       <p className="text-sm">Maintaining conversation history and state across agent interactions</p>
                     </div>
                     <div className="border border-border rounded-md p-3">
-                      <h5 className="font-medium text-secondary">Scalability</h5>
+                      <h5 className="font-medium text-accent">Scalability</h5>
                       <p className="text-sm">Easier integration of new agents into existing systems</p>
                     </div>
                   </div>
@@ -368,7 +368,7 @@ const ConceptsExplorer = () => {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
 
 export default ConceptsExplorer
