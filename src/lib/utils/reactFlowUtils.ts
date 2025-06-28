@@ -239,10 +239,10 @@ export function setupSafeReactFlowResizeHandler(container: HTMLElement | null) {
             isResizing = false;
             animationFrameId = null;
             resizeTimeout = null;
-          }, 100);
+          }, 200); // Increased delay to prevent re-triggering
         }
       });
-    }, 250); // Substantial debounce to avoid rapid firing
+    }, 300); // Increased substantial debounce to avoid rapid firing
   });
   
   // Start observing the container
@@ -274,17 +274,14 @@ export function setupReactFlowErrorHandling() {
   // Flag ReactFlow errors differently to allow selective handling
   const originalHandleError = window.onerror;
   window.onerror = function(message, source, lineno, colno, error) {
-    if (typeof message === 'string' && message.includes('ResizeObserver')) {
-      // Check if it's from a ReactFlow component
-      if (source && (
-        source.includes('react-flow') || 
-        source.includes('reactflow') ||
-        document.activeElement?.closest('.react-flow')
-      )) {
-        // Mark as ReactFlow error and suppress
-        (error as any).__reactFlowError = true;
-        return true; // Prevents default handling
-      }
+    // Handle all ResizeObserver errors, not just from ReactFlow
+    if (typeof message === 'string' && 
+        (message.includes('ResizeObserver') || 
+         message.includes('loop limit exceeded') ||
+         message.includes('undelivered notifications'))) {
+      
+      // Always suppress ResizeObserver errors
+      return true; // Prevents default handling
     }
     
     // Forward to original handler

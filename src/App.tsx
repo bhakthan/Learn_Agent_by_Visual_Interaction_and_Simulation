@@ -52,11 +52,11 @@ function App() {
     
     // Listen for ResizeObserver errors
     window.addEventListener('error', (e) => {
-      if (e.message?.includes('ResizeObserver')) {
+      if (e.message?.includes('ResizeObserver') || e.message?.includes('undelivered notifications')) {
         e.preventDefault();
         e.stopPropagation();
         // Force recalculation of layout after a small delay
-        setTimeout(dispatchLayoutUpdate, 100);
+        setTimeout(dispatchLayoutUpdate, 200); // Increased delay
         return false;
       }
     }, true);

@@ -23,7 +23,8 @@ export function setupResizeObserverErrorHandling() {
   window.addEventListener('error', (e) => {
     if (
       e.message === 'ResizeObserver loop limit exceeded' || 
-      e.message.includes('ResizeObserver loop completed with undelivered notifications')
+      e.message.includes('ResizeObserver loop completed with undelivered notifications') ||
+      e.message.includes('ResizeObserver loop')
     ) {
       // Prevent the error from appearing in console
       e.stopImmediatePropagation();
@@ -185,7 +186,8 @@ export function setupResizeObserverErrorHandling() {
         (args[0].includes('ResizeObserver loop') || 
          args[0].includes('ResizeObserver was created') ||
          args[0].includes('ResizeObserver loop completed with undelivered notifications') ||
-         args[0].includes('undelivered notifications'))) {
+         args[0].includes('undelivered notifications') ||
+         args[0].includes('ResizeObserver'))) {
       // Suppress these specific errors
       return;
     }

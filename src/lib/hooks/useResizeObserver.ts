@@ -17,7 +17,7 @@ export function useResizeObserver<T extends HTMLElement = HTMLDivElement>(
   options: ResizeObserverOptions = {}
 ): [React.RefObject<T>, DOMRectReadOnly | undefined, boolean] {
   const {
-    debounce = 250,
+    debounce = 300, // Increased default debounce
     skipInitialCallback = false,
     onResize
   } = options;
@@ -55,8 +55,8 @@ export function useResizeObserver<T extends HTMLElement = HTMLDivElement>(
         // Only update dimensions if there's an actual change
         setDimensions(prev => {
           const hasChanged = !prev ||
-            Math.abs(prev.width - newRect.width) > 1 ||
-            Math.abs(prev.height - newRect.height) > 1;
+            Math.abs(prev.width - newRect.width) > 2 || // Increased threshold
+            Math.abs(prev.height - newRect.height) > 2;
           
           return hasChanged ? newRect : prev;
         });

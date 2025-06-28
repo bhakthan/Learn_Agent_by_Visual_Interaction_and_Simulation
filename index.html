@@ -59,7 +59,8 @@
                 (msg.includes('ResizeObserver loop') || 
                  msg.includes('ResizeObserver was created') ||
                  msg.includes('undelivered notifications') ||
-                 msg.includes('ResizeObserver completed'))) {
+                 msg.includes('ResizeObserver completed') ||
+                 msg.includes('ResizeObserver'))) {
                 // Completely suppress these specific errors
                 return;
             }
@@ -82,7 +83,9 @@
         window.addEventListener('error', function(e) {
             if (e && e.message && (
                 e.message.includes('ResizeObserver loop') || 
-                e.message.includes('ResizeObserver completed with undelivered notifications')
+                e.message.includes('ResizeObserver completed with undelivered notifications') ||
+                e.message.includes('ResizeObserver') ||
+                e.message.includes('undelivered notifications')
             )) {
                 e.preventDefault();
                 e.stopPropagation();
