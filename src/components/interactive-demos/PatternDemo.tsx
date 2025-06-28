@@ -753,6 +753,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
               )}
             </ReactFlowProvider>
           </div>
+        </CardContent>
+      </Card>
           
           {Object.keys(steps).length > 0 && (
             <>
