@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { createStableResizeObserver } from '../utils/resizeObserverUtils';
+import { createStableResizeObserver } from '../utils/stableResizeObserver';
 
 /**
  * Hook for safely managing ReactFlow container dimensions

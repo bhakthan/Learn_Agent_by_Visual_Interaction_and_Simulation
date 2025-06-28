@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { createStableResizeObserver } from '../utils/resizeObserverUtils';
+import { createStableResizeObserver } from '../utils/stableResizeObserver';
 
 /**
  * React hook for safely observing element resizes
