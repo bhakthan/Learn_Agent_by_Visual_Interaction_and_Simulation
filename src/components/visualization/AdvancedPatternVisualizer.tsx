@@ -309,16 +309,17 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
     setAnimationState(prev => ({ ...prev, speed: newSpeed }));
   }, []);
   
-  // Reset node layout to original positions
-  const resetLayout = useCallback(() => {
-    setNodes(patternData.nodes.map(node => ({
-      ...node,
-      data: {
   const changeAnimationMode = useCallback((newMode: AnimationMode) => {
     // Reset visualization when changing mode
     resetVisualization();
     setAnimationState(prev => ({ ...prev, mode: newMode, step: 0 }));
   }, [resetVisualization]);
+
+  // Reset node layout to original positions
+  const resetLayout = useCallback(() => {
+    setNodes(patternData.nodes.map(node => ({
+      ...node,
+      data: {
         ...node.data,
         isActive: false,
         status: null
