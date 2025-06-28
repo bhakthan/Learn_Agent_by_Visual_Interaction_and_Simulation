@@ -36,7 +36,9 @@ export function useFlowContainer(containerRef: React.RefObject<HTMLDivElement>) 
         try {
           // Use requestAnimationFrame to ensure DOM has stabilized
           requestAnimationFrame(() => {
-            reactFlow.fitView({ padding: 0.2, duration: 200 });
+            if (reactFlow && typeof reactFlow.fitView === 'function') {
+              reactFlow.fitView({ padding: 0.2, duration: 200 });
+            }
           });
         } catch (err) {
           console.error('Error updating flow view:', err);
@@ -94,8 +96,9 @@ export function useFlowContainer(containerRef: React.RefObject<HTMLDivElement>) 
     };
   }, [containerRef, handleResize]);
   
-  // Return a function to manually trigger a resize
+  // Return an object with functions to manually trigger a resize
   return {
+    updateDimensions: handleResize,
     triggerResize: handleResize
   };
 }

@@ -563,8 +563,13 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   const flowContainerRef = useRef<HTMLDivElement>(null);
   const reactFlowInstance = useReactFlow();
   
-  // Use custom hooks for improved stability
-  const { updateDimensions: triggerResize } = useFlowContainer(flowContainerRef);
+  // Use custom hooks for improved stability 
+  const reactFlowInstance = useReactFlow();
+  const handleResize = useCallback(() => {
+    if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
+      reactFlowInstance.fitView({ padding: 0.2, duration: 200 });
+    }
+  }, [reactFlowInstance]);
   
   // Setup safe resize handling with improved monitoring
   useEffect(() => {
@@ -573,7 +578,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     // Apply safer resize behavior
     const resetTimeout = setTimeout(() => {
       resetReactFlowRendering(flowContainerRef);
-      triggerResize();
+      handleResize();
     }, 1000);
     
     // Monitor for errors and re-trigger resize if needed
@@ -581,7 +586,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       requestAnimationFrame(() => {
         if (flowContainerRef.current) {
           resetReactFlowRendering(flowContainerRef);
-          triggerResize();
+          handleResize();
         }
       });
     };
@@ -593,7 +598,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       clearTimeout(resetTimeout);
       window.removeEventListener('layout-update', handleLayoutUpdate);
     };
-  }, [triggerResize]);
+  }, [handleResize]);
   
   // Define nodeTypes for ReactFlow with memoization
   const nodeTypes = useMemo<NodeTypes>(() => ({
