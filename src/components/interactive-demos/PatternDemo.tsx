@@ -531,8 +531,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   }, []);
 
   // Import our custom hook
-  const { useFlowContainer } = require('@/lib/hooks/useFlowContainer');
-  const { useResizeObserver } = require('@/lib/hooks/useResizeObserver');
+  import { useFlowContainer } from '@/lib/hooks/useFlowContainer';
+  import { useResizeObserver } from '@/lib/hooks/useResizeObserver';
 
   // Use the FlowContainer hook for better handling of ReactFlow resizing
   const flowContainerRef = useFlowContainer<HTMLDivElement>();
