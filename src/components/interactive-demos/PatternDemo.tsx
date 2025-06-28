@@ -535,32 +535,59 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   // Use the FlowContainer hook for better handling of ReactFlow resizing
   const flowContainerRef = useFlowContainer<HTMLDivElement>();
   
-  // Use resize observer to detect container size changes
-  const [wrapperRef, wrapperDimensions] = useResizeObserver<HTMLDivElement>(200);
+  // Use resize observer with longer debounce time to detect container size changes
+  const [wrapperRef, wrapperDimensions] = useResizeObserver<HTMLDivElement>(300);
   
-  // Listen for flow-specific resize events
+  // Track whether the flow has been properly initialized
+  const flowInitializedRef = useRef(false);
+  
+  // Listen for flow-specific resize events with enhanced error handling
   useEffect(() => {
-    const handleFlowResize = () => {
-      if (flowContainerRef.current) {
-        // Use RAF to safely handle flow resize operations
-        requestAnimationFrame(() => {
+    const handleFlowResize = (e?: Event) => {
+      if (!flowContainerRef.current) return;
+      
+      // Skip excessive resizes
+      if ((e as any)?.detail?.skipReactFlow) return;
+      
+      // Use nested RAF to safely handle flow resize operations
+      // This helps break potential loops by ensuring layout calculations are complete
+      let rafId = requestAnimationFrame(() => {
+        rafId = requestAnimationFrame(() => {
           try {
-            // This may trigger ReactFlow's internal resize logic
-            const reactFlowInstance = document.querySelector('.react-flow');
-            if (reactFlowInstance) {
-              reactFlowInstance.dispatchEvent(new CustomEvent('flow-update'));
+            // Only trigger flow updates after initialization
+            if (flowInitializedRef.current) {
+              // This may trigger ReactFlow's internal resize logic
+              const reactFlowInstance = document.querySelector('.react-flow');
+              if (reactFlowInstance) {
+                // Dispatch with a small delay
+                setTimeout(() => {
+                  reactFlowInstance.dispatchEvent(new CustomEvent('flow-update'));
+                }, 50);
+              }
             }
           } catch (error) {
             // Silently handle any errors to prevent loops
           }
         });
-      }
+      });
+      
+      return () => {
+        if (rafId) cancelAnimationFrame(rafId);
+      };
     };
     
+    // Handle both custom events and window resize
     window.addEventListener('flow-resize', handleFlowResize);
+    
+    // Add a delayed resize handler for initial render
+    const initTimer = setTimeout(() => {
+      flowInitializedRef.current = true;
+      handleFlowResize();
+    }, 500);
     
     return () => {
       window.removeEventListener('flow-resize', handleFlowResize);
+      clearTimeout(initTimer);
     };
   }, []);
   

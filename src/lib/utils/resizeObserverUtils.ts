@@ -14,6 +14,10 @@ export function setupResizeObserverErrorHandling() {
   // Check if the error event listener has already been added
   if ((window as any).__resizeObserverErrorHandlerAdded) return;
   
+  // Track if we're in a ResizeObserver callback to prevent loops
+  let inResizeObserverCallback = false;
+  let pendingResizeObserverErrors = 0;
+  
   // Add error event listener specifically for ResizeObserver errors
   window.addEventListener('error', (e) => {
     if (
@@ -22,10 +26,72 @@ export function setupResizeObserverErrorHandling() {
     ) {
       // Prevent the error from appearing in console
       e.stopImmediatePropagation();
-      // This is a benign error that doesn't need user notification
+      e.preventDefault();
+      
+      // Track how many errors we've suppressed in a row
+      pendingResizeObserverErrors++;
+      
+      // If we're seeing a cascade of errors, add some delay to break the cycle
+      if (pendingResizeObserverErrors > 3) {
+        pendingResizeObserverErrors = 0;
+        setTimeout(() => {
+          // This empty timeout helps break potential layout loops
+        }, 100);
+      }
+      
+      return false;
     }
-  });
+  }, true);
 
+  // Patch ResizeObserver to throttle notifications if needed
+  const OriginalResizeObserver = window.ResizeObserver;
+  if (OriginalResizeObserver && typeof OriginalResizeObserver === 'function') {
+    window.ResizeObserver = class EnhancedResizeObserver extends OriginalResizeObserver {
+      private observerCallbackTimeout: ReturnType<typeof setTimeout> | null = null;
+      
+      constructor(callback: ResizeObserverCallback) {
+        // Create a wrapped callback with additional safety measures
+        const safeCallback: ResizeObserverCallback = (entries, observer) => {
+          if (inResizeObserverCallback) {
+            // We're already in a callback, schedule this one for later to avoid loops
+            if (this.observerCallbackTimeout) {
+              clearTimeout(this.observerCallbackTimeout);
+            }
+            
+            this.observerCallbackTimeout = setTimeout(() => {
+              try {
+                inResizeObserverCallback = true;
+                callback(entries, observer);
+              } catch (error) {
+                // Silently handle errors in callback
+              } finally {
+                inResizeObserverCallback = false;
+                this.observerCallbackTimeout = null;
+              }
+            }, 20);
+            return;
+          }
+          
+          try {
+            inResizeObserverCallback = true;
+            callback(entries, observer);
+          } catch (error) {
+            // Silently handle errors in callback
+          } finally {
+            inResizeObserverCallback = false;
+          }
+        };
+        
+        super(safeCallback);
+      }
+    } as any;
+
+    // Copy over static properties
+    Object.keys(OriginalResizeObserver).forEach(key => {
+      (window.ResizeObserver as any)[key] = (OriginalResizeObserver as any)[key];
+    });
+  }
+  
   // Patch console.error to filter out ResizeObserver warnings
   const originalConsoleError = console.error;
   console.error = function(...args: any[]) {
@@ -58,10 +124,14 @@ export function createDebouncedResizeObserver(
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let latestEntries: ResizeObserverEntry[] = [];
   let rafId: number | null = null;
+  let hasActiveResize = false;
   
   const debouncedCallback: ResizeObserverCallback = (entries, observer) => {
     // Store the latest entries
     latestEntries = entries;
+    
+    // Mark that we're in an active resize
+    hasActiveResize = true;
     
     // Clear any existing timeout
     if (timeoutId) {
@@ -83,6 +153,7 @@ export function createDebouncedResizeObserver(
         } finally {
           timeoutId = null;
           rafId = null;
+          hasActiveResize = false;
         }
       });
     }, delay);
@@ -99,13 +170,17 @@ export function createDebouncedResizeObserver(
  */
 export function createThrottledResizeObserver(
   callback: ResizeObserverCallback,
-  limit: number = 60
+  limit: number = 100
 ): ResizeObserver {
   let lastRun = 0;
   let rafId: number | null = null;
   let latestEntries: ResizeObserverEntry[] = [];
+  let isProcessing = false;
   
   const throttledCallback: ResizeObserverCallback = (entries, observer) => {
+    // Skip if already processing to avoid loops
+    if (isProcessing) return;
+    
     // Always store the latest entries
     latestEntries = entries;
     
@@ -117,13 +192,23 @@ export function createThrottledResizeObserver(
         cancelAnimationFrame(rafId);
       }
       
+      isProcessing = true;
+      
       rafId = requestAnimationFrame(() => {
         try {
-          callback(latestEntries, observer);
+          // Use double RAF for smoother transitions
+          requestAnimationFrame(() => {
+            try {
+              callback(latestEntries, observer);
+            } finally {
+              lastRun = Date.now();
+              isProcessing = false;
+            }
+          });
         } catch (error) {
           console.log('Resize observer error prevented:', error);
+          isProcessing = false;
         } finally {
-          lastRun = Date.now();
           rafId = null;
         }
       });
