@@ -752,6 +752,80 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                 </ReactFlow>
             </ReactFlowProvider>
           </div>
+          
+          {Object.keys(steps).length > 0 && (
+            <>
+              <Separator />
+              
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Execution Log</h3>
+                
+                <div className="space-y-3">
+                  {patternData.nodes.map((node) => {
+                    const step = steps[node.id];
+                    if (!step) return null;
+                    
+                    return (
+                        <div 
+                          key={node.id} 
+                          className={`p-3 rounded-md border ${
+                            node.id === currentNodeId ? 'border-primary bg-primary/5' :
+                            step.status === 'complete' ? 'border-green-500/20 bg-green-500/5' :
+                            step.status === 'failed' ? 'border-destructive/20 bg-destructive/5' :
+                            step.status === 'running' ? 'border-amber-500/20 bg-amber-500/5' :
+                            'border-border'
+                          } ${theme === 'dark' ? 'text-foreground' : ''}`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {step.status === 'running' && <Clock className="text-amber-500" size={16} />}
+                              {step.status === 'complete' && <CheckCircle className="text-green-500" size={16} />}
+                              {step.status === 'failed' && <WarningCircle className="text-destructive" size={16} />}
+                              
+                              <span className="font-medium">{node.data.label}</span>
+                              
+                              <Badge variant="outline" className="ml-1">
+                                {node.data.nodeType}
+                              </Badge>
+                            </div>
+                            
+                            {step.status !== 'idle' && (
+                              <span className="text-xs text-muted-foreground">
+                                {getExecutionTime(step)}
+                              </span>
+                            )}
+                          </div>
+                          
+                          {step.result && (
+                            <div className="text-sm mt-1">
+                              <div className="flex items-start gap-1 text-muted-foreground">
+                                <ArrowBendDownRight size={14} className="mt-1" />
+                                <span>{step.result}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+          
+          {output && (
+            <>
+              <Separator />
+              
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Final Output</h3>
+                <Alert>
+                  <AlertDescription className="whitespace-pre-wrap">
+                    {output}
+                  </AlertDescription>
+                </Alert>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
           
