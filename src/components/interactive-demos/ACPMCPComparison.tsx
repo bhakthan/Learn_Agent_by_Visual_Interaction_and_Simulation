@@ -359,342 +359,353 @@ const ACPMCPComparison = () => {
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="comparison" onValueChange={(value) => setActiveTab(value as 'comparison' | 'walkthrough')}>
+      {/* Using key with activeTab ensures proper re-mounting of Tabs component when needed */}
+      <Tabs 
+        key={`protocol-tabs-${activeTab}`}
+        defaultValue={activeTab} 
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as 'comparison' | 'walkthrough')}
+      >
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="comparison">Protocol Comparison</TabsTrigger>
           <TabsTrigger value="walkthrough">Interactive Walkthrough</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="comparison" className="mt-6 space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* ACP Card */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>{protocols.acp.name}</CardTitle>
-                  <Badge variant="outline" className="bg-primary/10">REST API</Badge>
-                </div>
-                <CardDescription>{protocols.acp.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">Specification</h4>
-                  <p className="text-sm text-muted-foreground">{protocols.acp.specification}</p>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">Key Features</h4>
-                  <div className="grid grid-cols-1 gap-2">
-                    {protocols.acp.keyFeatures.map((feature, index) => (
-                      <div key={index} className="rounded-md border border-border p-2">
-                        <p className="font-medium text-sm">{feature.title}</p>
-                        <p className="text-xs text-muted-foreground">{feature.description}</p>
-                      </div>
-                    ))}
+        {/* TabsContent is now conditionally rendered only when active */}
+        {activeTab === 'comparison' && (
+          <TabsContent value="comparison" className="mt-6 space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* ACP Card */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>{protocols.acp.name}</CardTitle>
+                    <Badge variant="outline" className="bg-primary/10">REST API</Badge>
                   </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">Use Cases</h4>
-                  <ul className="text-sm space-y-1 list-disc list-inside">
-                    {protocols.acp.useCases.map((useCase, index) => (
-                      <li key={index}>{useCase}</li>
-                    ))}
-                  </ul>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <p className="text-xs text-muted-foreground">
-                  Learn more at <a href="https://agentcommunicationprotocol.dev" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">agentcommunicationprotocol.dev</a>
-                </p>
-              </CardFooter>
-            </Card>
-            
-            {/* MCP Card */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>{protocols.mcp.name}</CardTitle>
-                  <Badge variant="outline" className="bg-secondary/10">Message Format</Badge>
-                </div>
-                <CardDescription>{protocols.mcp.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">Specification</h4>
-                  <p className="text-sm text-muted-foreground">{protocols.mcp.specification}</p>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">Key Features</h4>
-                  <div className="grid grid-cols-1 gap-2">
-                    {protocols.mcp.keyFeatures.map((feature, index) => (
-                      <div key={index} className="rounded-md border border-border p-2">
-                        <p className="font-medium text-sm">{feature.title}</p>
-                        <p className="text-xs text-muted-foreground">{feature.description}</p>
-                      </div>
-                    ))}
+                  <CardDescription>{protocols.acp.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2">Specification</h4>
+                    <p className="text-sm text-muted-foreground">{protocols.acp.specification}</p>
                   </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">Use Cases</h4>
-                  <ul className="text-sm space-y-1 list-disc list-inside">
-                    {protocols.mcp.useCases.map((useCase, index) => (
-                      <li key={index}>{useCase}</li>
-                    ))}
-                  </ul>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <p className="text-xs text-muted-foreground">
-                  Learn more at <a href="https://modelcontextprotocol.io/introduction" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">modelcontextprotocol.io</a>
-                </p>
-              </CardFooter>
-            </Card>
-          </div>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Protocol Integration Possibilities</CardTitle>
-              <CardDescription>ACP and MCP can work together in complementary ways</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="p-4 border border-dashed border-primary/30 rounded-md bg-primary/5">
-                  <h3 className="text-md font-medium mb-2 flex items-center gap-2">
-                    <ArrowsHorizontal className="text-primary" size={20} />
-                    Complementary Protocols
-                  </h3>
-                  <p className="text-sm">
-                    ACP provides the transport layer and RESTful interfaces that define how agents are deployed and accessed,
-                    while MCP provides the message structure and context management that enables rich agent-to-agent communication.
+                  
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2">Key Features</h4>
+                    <div className="grid grid-cols-1 gap-2">
+                      {protocols.acp.keyFeatures.map((feature, index) => (
+                        <div key={index} className="rounded-md border border-border p-2">
+                          <p className="font-medium text-sm">{feature.title}</p>
+                          <p className="text-xs text-muted-foreground">{feature.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2">Use Cases</h4>
+                    <ul className="text-sm space-y-1 list-disc list-inside">
+                      {protocols.acp.useCases.map((useCase, index) => (
+                        <li key={index}>{useCase}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <p className="text-xs text-muted-foreground">
+                    Learn more at <a href="https://agentcommunicationprotocol.dev" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">agentcommunicationprotocol.dev</a>
                   </p>
-                </div>
-                
-                <div className="grid md:grid-cols-2 gap-4 mt-4">
-                  <div className="p-3 border border-border rounded-md">
-                    <h4 className="text-sm font-medium mb-1">MCP Messages Over ACP Transport</h4>
-                    <p className="text-xs text-muted-foreground">
-                      MCP-structured messages can be transmitted through ACP's REST endpoints, combining
-                      the deployment flexibility of ACP with the rich context management of MCP.
+                </CardFooter>
+              </Card>
+              
+              {/* MCP Card */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>{protocols.mcp.name}</CardTitle>
+                    <Badge variant="outline" className="bg-secondary/10">Message Format</Badge>
+                  </div>
+                  <CardDescription>{protocols.mcp.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2">Specification</h4>
+                    <p className="text-sm text-muted-foreground">{protocols.mcp.specification}</p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2">Key Features</h4>
+                    <div className="grid grid-cols-1 gap-2">
+                      {protocols.mcp.keyFeatures.map((feature, index) => (
+                        <div key={index} className="rounded-md border border-border p-2">
+                          <p className="font-medium text-sm">{feature.title}</p>
+                          <p className="text-xs text-muted-foreground">{feature.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2">Use Cases</h4>
+                    <ul className="text-sm space-y-1 list-disc list-inside">
+                      {protocols.mcp.useCases.map((useCase, index) => (
+                        <li key={index}>{useCase}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <p className="text-xs text-muted-foreground">
+                    Learn more at <a href="https://modelcontextprotocol.io/introduction" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">modelcontextprotocol.io</a>
+                  </p>
+                </CardFooter>
+              </Card>
+            </div>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Protocol Integration Possibilities</CardTitle>
+                <CardDescription>ACP and MCP can work together in complementary ways</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="p-4 border border-dashed border-primary/30 rounded-md bg-primary/5">
+                    <h3 className="text-md font-medium mb-2 flex items-center gap-2">
+                      <ArrowsHorizontal className="text-primary" size={20} />
+                      Complementary Protocols
+                    </h3>
+                    <p className="text-sm">
+                      ACP provides the transport layer and RESTful interfaces that define how agents are deployed and accessed,
+                      while MCP provides the message structure and context management that enables rich agent-to-agent communication.
                     </p>
                   </div>
                   
-                  <div className="p-3 border border-border rounded-md">
-                    <h4 className="text-sm font-medium mb-1">Hybrid Architecture</h4>
-                    <p className="text-xs text-muted-foreground">
-                      ACP can handle external system integration while MCP manages internal agent communication,
-                      creating a comprehensive agent communication stack.
-                    </p>
+                  <div className="grid md:grid-cols-2 gap-4 mt-4">
+                    <div className="p-3 border border-border rounded-md">
+                      <h4 className="text-sm font-medium mb-1">MCP Messages Over ACP Transport</h4>
+                      <p className="text-xs text-muted-foreground">
+                        MCP-structured messages can be transmitted through ACP's REST endpoints, combining
+                        the deployment flexibility of ACP with the rich context management of MCP.
+                      </p>
+                    </div>
+                    
+                    <div className="p-3 border border-border rounded-md">
+                      <h4 className="text-sm font-medium mb-1">Hybrid Architecture</h4>
+                      <p className="text-xs text-muted-foreground">
+                        ACP can handle external system integration while MCP manages internal agent communication,
+                        creating a comprehensive agent communication stack.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
         
-        <TabsContent value="walkthrough" className="mt-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-medium">Protocol Message Exchange Patterns</h3>
-              <p className="text-sm text-muted-foreground">
-                Interactive demonstrations of how ACP and MCP handle different communication scenarios.
-              </p>
-            </div>
-            
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={resetSimulation}
-                disabled={isSimulationRunning || displayedMessages.length === 0}
-              >
-                <ArrowsCounterClockwise className="mr-1" size={16} />
-                Reset
-              </Button>
-              <Button 
-                variant="default" 
-                size="sm" 
-                onClick={runSimulation}
-                disabled={isSimulationRunning}
-              >
-                <Play className="mr-1" size={16} />
-                Run Simulation
-              </Button>
-            </div>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="bg-card p-4 rounded-md border border-border space-y-2">
-              <h3 className="font-medium">Message Exchange Patterns</h3>
+        {activeTab === 'walkthrough' && (
+          <TabsContent value="walkthrough" className="mt-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium">Protocol Message Exchange Patterns</h3>
+                <p className="text-sm text-muted-foreground">
+                  Interactive demonstrations of how ACP and MCP handle different communication scenarios.
+                </p>
+              </div>
               
-              <div className="space-y-2 mt-4">
-                {Object.values(messageExchanges).map((exchange) => (
-                  <div 
-                    key={exchange.id}
-                    className={`p-2 rounded-md cursor-pointer transition-colors ${
-                      activeExchangeId === exchange.id 
-                        ? 'bg-accent/20 text-accent-foreground' 
-                        : 'hover:bg-muted'
-                    }`}
-                    onClick={() => {
-                      setActiveExchangeId(exchange.id);
-                      resetSimulation();
-                    }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <CaretRight 
-                        size={16} 
-                        className={activeExchangeId === exchange.id ? 'text-accent' : 'text-muted-foreground'}
-                      />
-                      <div>
-                        <p className="font-medium text-sm">{exchange.title}</p>
-                        <Badge variant="outline" className="text-xs mt-1 bg-muted">
-                          {exchange.protocolType}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={resetSimulation}
+                  disabled={isSimulationRunning || displayedMessages.length === 0}
+                >
+                  <ArrowsCounterClockwise className="mr-1" size={16} />
+                  Reset
+                </Button>
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  onClick={runSimulation}
+                  disabled={isSimulationRunning}
+                >
+                  <Play className="mr-1" size={16} />
+                  Run Simulation
+                </Button>
               </div>
             </div>
             
-            <div className="md:col-span-2 border rounded-md">
-              <div className="bg-muted p-3 flex items-center justify-between border-b">
-                <div>
-                  <h3 className="font-medium">{currentExchange.title}</h3>
-                  <p className="text-xs text-muted-foreground">{currentExchange.description}</p>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="bg-card p-4 rounded-md border border-border space-y-2">
+                <h3 className="font-medium">Message Exchange Patterns</h3>
+                
+                <div className="space-y-2 mt-4">
+                  {Object.values(messageExchanges).map((exchange) => (
+                    <div 
+                      key={exchange.id}
+                      className={`p-2 rounded-md cursor-pointer transition-colors ${
+                        activeExchangeId === exchange.id 
+                          ? 'bg-accent/20 text-accent-foreground' 
+                          : 'hover:bg-muted'
+                      }`}
+                      onClick={() => {
+                        setActiveExchangeId(exchange.id);
+                        resetSimulation();
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <CaretRight 
+                          size={16} 
+                          className={activeExchangeId === exchange.id ? 'text-accent' : 'text-muted-foreground'}
+                        />
+                        <div>
+                          <p className="font-medium text-sm">{exchange.title}</p>
+                          <Badge variant="outline" className="text-xs mt-1 bg-muted">
+                            {exchange.protocolType}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <Badge className={currentExchange.protocolType === 'ACP' ? 'bg-primary/20 text-primary' : 'bg-secondary/20 text-secondary'}>
-                  {currentExchange.protocolType}
-                </Badge>
               </div>
               
-              <ScrollArea className="h-[400px] p-4">
-                <AnimatePresence>
-                  {displayedMessages.length === 0 ? (
-                    <div className="flex items-center justify-center h-[300px] text-center">
-                      <div className="space-y-2">
-                        <p className="text-muted-foreground">Run the simulation to see message exchange</p>
-                        <AnimatePresence>
-                          {isSimulationRunning && (
-                            <motion.div
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              className="flex justify-center"
-                            >
-                              <ArrowsClockwise size={24} className="animate-spin text-muted-foreground" />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      {displayedMessages.map((message, index) => (
-                        <motion.div
-                          key={message.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="relative"
-                        >
-                          <div className="flex items-center gap-1 mb-1 text-sm">
-                            <span className="font-medium">{message.from}</span>
-                            <ArrowsHorizontal size={16} className="text-muted-foreground" />
-                            <span className="font-medium">{message.to}</span>
-                            {message.timestamp !== 'N/A' && (
-                              <span className="text-xs text-muted-foreground ml-2">({message.timestamp})</span>
-                            )}
-                          </div>
-                          
-                          <Card className="overflow-hidden">
-                            <CardContent className="p-3 ">
-                              <pre className="text-xs whitespace-pre-wrap bg-muted/50 p-2 rounded-md overflow-x-auto">
-                                {message.content}
-                              </pre>
-                              
-                              {message.metadata && (
-                                <div className="mt-2">
-                                  <details className="text-xs">
-                                    <summary className="cursor-pointer font-medium">Metadata</summary>
-                                    <pre className="bg-muted/50 p-2 rounded-md mt-1 overflow-x-auto">
-                                      {JSON.stringify(message.metadata, null, 2)}
-                                    </pre>
-                                  </details>
-                                </div>
-                              )}
-                            </CardContent>
-                          </Card>
-                          
-                          {message.notes && (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button className="absolute top-0 right-0 p-1 text-muted-foreground hover:text-foreground">
-                                    <Info size={16} />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className="text-xs max-w-[250px]">{message.notes}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          )}
-                        </motion.div>
-                      ))}
-                    </div>
-                  )}
-                </AnimatePresence>
-              </ScrollArea>
-            </div>
-          </div>
-          
-          <Separator className="my-6" />
-          
-          <div>
-            <h3 className="text-lg font-medium mb-4">Animated Protocol Walkthrough</h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              See how ACP and MCP can work together in a complete agent communication flow, from initial client 
-              request through agent delegation and back to the final response.
-            </p>
-            
-            <ProtocolWalkthrough />
-          </div>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>When to Use Each Protocol</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-medium text-primary mb-2">Use ACP When</h3>
-                  <ul className="list-disc list-inside space-y-1 text-sm">
-                    <li>Building RESTful agent services that need standardized endpoints</li>
-                    <li>Implementing server-based agent architectures</li>
-                    <li>Creating agent marketplaces or directories</li>
-                    <li>Working with multi-modal data (images, audio, text)</li>
-                    <li>Needing both streaming and non-streaming communication</li>
-                  </ul>
+              <div className="md:col-span-2 border rounded-md">
+                <div className="bg-muted p-3 flex items-center justify-between border-b">
+                  <div>
+                    <h3 className="font-medium">{currentExchange.title}</h3>
+                    <p className="text-xs text-muted-foreground">{currentExchange.description}</p>
+                  </div>
+                  <Badge className={currentExchange.protocolType === 'ACP' ? 'bg-primary/20 text-primary' : 'bg-secondary/20 text-secondary'}>
+                    {currentExchange.protocolType}
+                  </Badge>
                 </div>
                 
-                <div>
-                  <h3 className="font-medium text-secondary mb-2">Use MCP When</h3>
-                  <ul className="list-disc list-inside space-y-1 text-sm">
-                    <li>Managing complex multi-turn conversations</li>
-                    <li>Implementing agent handoffs that preserve context</li>
-                    <li>Tracking conversation and task state across multiple agents</li>
-                    <li>Needing rich metadata for message routing and intent recognition</li>
-                    <li>Building transport-agnostic agent communication systems</li>
-                  </ul>
-                </div>
+                <ScrollArea className="h-[400px] p-4">
+                  <AnimatePresence>
+                    {displayedMessages.length === 0 ? (
+                      <div className="flex items-center justify-center h-[300px] text-center">
+                        <div className="space-y-2">
+                          <p className="text-muted-foreground">Run the simulation to see message exchange</p>
+                          <AnimatePresence>
+                            {isSimulationRunning && (
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="flex justify-center"
+                              >
+                                <ArrowsClockwise size={24} className="animate-spin text-muted-foreground" />
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {displayedMessages.map((message, index) => (
+                          <motion.div
+                            key={message.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="relative"
+                          >
+                            <div className="flex items-center gap-1 mb-1 text-sm">
+                              <span className="font-medium">{message.from}</span>
+                              <ArrowsHorizontal size={16} className="text-muted-foreground" />
+                              <span className="font-medium">{message.to}</span>
+                              {message.timestamp !== 'N/A' && (
+                                <span className="text-xs text-muted-foreground ml-2">({message.timestamp})</span>
+                              )}
+                            </div>
+                            
+                            <Card className="overflow-hidden">
+                              <CardContent className="p-3 ">
+                                <pre className="text-xs whitespace-pre-wrap bg-muted/50 p-2 rounded-md overflow-x-auto">
+                                  {message.content}
+                                </pre>
+                                
+                                {message.metadata && (
+                                  <div className="mt-2">
+                                    <details className="text-xs">
+                                      <summary className="cursor-pointer font-medium">Metadata</summary>
+                                      <pre className="bg-muted/50 p-2 rounded-md mt-1 overflow-x-auto">
+                                        {JSON.stringify(message.metadata, null, 2)}
+                                      </pre>
+                                    </details>
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                            
+                            {message.notes && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button className="absolute top-0 right-0 p-1 text-muted-foreground hover:text-foreground">
+                                      <Info size={16} />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="text-xs max-w-[250px]">{message.notes}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
+                  </AnimatePresence>
+                </ScrollArea>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+            
+            <Separator className="my-6" />
+            
+            <div>
+              <h3 className="text-lg font-medium mb-4">Animated Protocol Walkthrough</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                See how ACP and MCP can work together in a complete agent communication flow, from initial client 
+                request through agent delegation and back to the final response.
+              </p>
+              
+              <ProtocolWalkthrough />
+            </div>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>When to Use Each Protocol</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="font-medium text-primary mb-2">Use ACP When</h3>
+                    <ul className="list-disc list-inside space-y-1 text-sm">
+                      <li>Building RESTful agent services that need standardized endpoints</li>
+                      <li>Implementing server-based agent architectures</li>
+                      <li>Creating agent marketplaces or directories</li>
+                      <li>Working with multi-modal data (images, audio, text)</li>
+                      <li>Needing both streaming and non-streaming communication</li>
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium text-secondary mb-2">Use MCP When</h3>
+                    <ul className="list-disc list-inside space-y-1 text-sm">
+                      <li>Managing complex multi-turn conversations</li>
+                      <li>Implementing agent handoffs that preserve context</li>
+                      <li>Tracking conversation and task state across multiple agents</li>
+                      <li>Needing rich metadata for message routing and intent recognition</li>
+                      <li>Building transport-agnostic agent communication systems</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

@@ -336,10 +336,14 @@ const ACPDemo = () => {
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="single" onValueChange={(val) => {
-        setActiveDemo(val as 'single' | 'multi');
-        resetSimulation();
-      }}>
+      <Tabs 
+        defaultValue="single" 
+        value={activeDemo}
+        onValueChange={(val) => {
+          setActiveDemo(val as 'single' | 'multi');
+          resetSimulation();
+        }}
+      >
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="single">Single-Agent Demo</TabsTrigger>
           <TabsTrigger value="multi">Multi-Agent Demo</TabsTrigger>
@@ -432,7 +436,8 @@ const ACPDemo = () => {
           </div>
         </div>
         
-        <TabsContent value="single" className="mt-6">
+        {activeDemo === 'single' && (
+          <TabsContent value="single" className="mt-6">
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-4">
@@ -452,7 +457,8 @@ const ACPDemo = () => {
           </Card>
         </TabsContent>
         
-        <TabsContent value="multi" className="mt-6">
+        {activeDemo === 'multi' && (
+          <TabsContent value="multi" className="mt-6">
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-4">

@@ -70,6 +70,7 @@ const A2ADemo = () => {
   const [activeAgents, setActiveAgents] = useState<string[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [finalOutput, setFinalOutput] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("messages");
   
   const resetDemo = () => {
     setMessages([]);
@@ -365,63 +366,71 @@ const A2ADemo = () => {
             </Card>
             
             <div className="col-span-1 md:col-span-2">
-              <Tabs defaultValue="messages">
+              <Tabs 
+                defaultValue="messages" 
+                value={activeTab}
+                onValueChange={setActiveTab}
+              >
                 <TabsList>
                   <TabsTrigger value="messages">Messages</TabsTrigger>
                   <TabsTrigger value="output">Final Output</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="messages">
-                  <Card>
-                    <CardContent className="p-3">
-                      <ScrollArea className="h-[400px] pr-4">
-                        {messages.length === 0 ? (
-                          <div className="h-full flex items-center justify-center text-center p-6">
-                            <div className="text-muted-foreground">
-                              <p>Run the demo to see agent communication</p>
-                              <p className="text-sm mt-1">Messages will appear here as agents collaborate</p>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            {messages.map((message) => (
-                              <div 
-                                key={message.id}
-                                className={`p-3 rounded-md ${getAgentColor(message.from)}`}
-                              >
-                                <div className="flex items-center justify-between mb-1">
-                                  <div className="flex items-center gap-1">
-                                    <span className="font-medium">{getAgentName(message.from)}</span>
-                                    <ArrowRight size={12} />
-                                    <span>{getAgentName(message.to)}</span>
-                                  </div>
-                                  <span className="text-xs text-muted-foreground">
-                                    {new Date(message.timestamp).toLocaleTimeString()}
-                                  </span>
-                                </div>
-                                <p className="text-sm">{message.content}</p>
+                {activeTab === 'messages' && (
+                  <TabsContent value="messages">
+                    <Card>
+                      <CardContent className="p-3">
+                        <ScrollArea className="h-[400px] pr-4">
+                          {messages.length === 0 ? (
+                            <div className="h-full flex items-center justify-center text-center p-6">
+                              <div className="text-muted-foreground">
+                                <p>Run the demo to see agent communication</p>
+                                <p className="text-sm mt-1">Messages will appear here as agents collaborate</p>
                               </div>
-                            ))}
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {messages.map((message) => (
+                                <div 
+                                  key={message.id}
+                                  className={`p-3 rounded-md ${getAgentColor(message.from)}`}
+                                >
+                                  <div className="flex items-center justify-between mb-1">
+                                    <div className="flex items-center gap-1">
+                                      <span className="font-medium">{getAgentName(message.from)}</span>
+                                      <ArrowRight size={12} />
+                                      <span>{getAgentName(message.to)}</span>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">
+                                      {new Date(message.timestamp).toLocaleTimeString()}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm">{message.content}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                )}
+                
+                {activeTab === 'output' && (
+                  <TabsContent value="output">
+                    <Card>
+                      <CardContent className="p-6">
+                        {finalOutput ? (
+                          <div className="whitespace-pre-wrap">{finalOutput}</div>
+                        ) : (
+                          <div className="text-center py-12">
+                            <p className="text-muted-foreground">Run the demo to generate output</p>
                           </div>
                         )}
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="output">
-                  <Card>
-                    <CardContent className="p-6">
-                      {finalOutput ? (
-                        <div className="whitespace-pre-wrap">{finalOutput}</div>
-                      ) : (
-                        <div className="text-center py-12">
-                          <p className="text-muted-foreground">Run the demo to generate output</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                )}
               </Tabs>
             </div>
           </div>
