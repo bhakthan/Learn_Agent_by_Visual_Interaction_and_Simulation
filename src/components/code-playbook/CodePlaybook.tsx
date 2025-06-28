@@ -20,7 +20,7 @@ import CodeDebugger from './CodeDebugger'
 import { getCodeExecutionSteps } from '@/lib/utils/codeExecutionSteps'
 import InteractiveCodeExecution from './InteractiveCodeExecution'
 import { getCodeExecutionExample } from '@/lib/data/codeExamples'
-import { getAlgorithmVisualization } from '@/lib/utils/algorithmVisualization'
+import { getAlgorithmVisualization, AlgorithmVisualizationData } from '@/lib/utils/algorithmVisualization'
 import { getDebugExample } from '@/lib/utils/codeDebugExamples'
 import { useSidebarCollapse } from '@/hooks/use-sidebar-collapse'
 import { cn } from '@/lib/utils'
@@ -86,7 +86,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
   const interactiveExecution = getCodeExecutionExample(patternData.id, language)
   
   // Get algorithm visualization steps if available
-  const algorithmSteps = getAlgorithmVisualization(patternData.id, patternData.id)
+  const algorithmVisData: AlgorithmVisualizationData | null = getAlgorithmVisualization(patternData.id, patternData.id)
   
   // Get debug example if available
   const debugExample = getDebugExample(patternData.id, language)
@@ -346,17 +346,14 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
             </TabsContent>
             
             <TabsContent value="algorithm" className="py-4">
-              {(() => {
-                const algorithmVis = getAlgorithmVisualization(patternData.id, patternData.id);
-                return algorithmVis ? (
-                  <AlgorithmVisualizer visualization={algorithmVis} />
-                ) : (
-                  <div className="border rounded-md p-6 text-center text-muted-foreground">
-                    <Graph size={32} className="mx-auto mb-2" />
-                    <p>Algorithm visualization not available for this pattern.</p>
-                  </div>
-                );
-              })()}
+              {algorithmVisData && algorithmVisData.steps && algorithmVisData.steps.length > 0 ? (
+                <AlgorithmVisualizer visualization={algorithmVisData} />
+              ) : (
+                <div className="border rounded-md p-6 text-center text-muted-foreground">
+                  <Graph size={32} className="mx-auto mb-2" />
+                  <p>Algorithm visualization not available for this pattern.</p>
+                </div>
+              )}
               
               <Alert className="mt-6">
                 <AlertDescription>

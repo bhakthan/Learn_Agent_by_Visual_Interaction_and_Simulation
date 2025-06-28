@@ -1,6 +1,12 @@
 import { useMemo } from 'react';
 import type { AlgorithmStep } from '@/components/visualization/AlgorithmVisualizer';
 
+// Algorithm visualization data type
+export interface AlgorithmVisualizationData {
+  patternId: string;
+  steps: AlgorithmStep[];
+}
+
 // Cache for algorithm visualization data
 interface AlgorithmVisualizationCache {
   [key: string]: {
@@ -17,7 +23,7 @@ const CACHE_TTL = 60 * 1000; // 1 minute cache lifetime
  * @param algorithmId Unique identifier for the algorithm
  * @param patternId Pattern ID to contextualize the algorithm
  */
-export function getAlgorithmVisualization(algorithmId: string, patternId: string): AlgorithmStep[] {
+export function getAlgorithmVisualization(algorithmId: string, patternId: string): AlgorithmVisualizationData {
   const cacheKey = `${patternId}:${algorithmId}`;
   const now = Date.now();
   
@@ -26,7 +32,10 @@ export function getAlgorithmVisualization(algorithmId: string, patternId: string
     visualizationCache[cacheKey] && 
     now - visualizationCache[cacheKey].timestamp < CACHE_TTL
   ) {
-    return visualizationCache[cacheKey].steps;
+    return {
+      patternId,
+      steps: visualizationCache[cacheKey].steps
+    };
   }
   
   // Generate visualization data based on algorithm type
@@ -38,13 +47,16 @@ export function getAlgorithmVisualization(algorithmId: string, patternId: string
     timestamp: now
   };
   
-  return steps;
+  return {
+    patternId,
+    steps
+  };
 }
 
 /**
  * React hook for algorithm visualization with memoization
  */
-export function useAlgorithmVisualization(algorithmId: string, patternId: string) {
+export function useAlgorithmVisualization(algorithmId: string, patternId: string): AlgorithmVisualizationData {
   return useMemo(() => getAlgorithmVisualization(algorithmId, patternId), [algorithmId, patternId]);
 }
 
