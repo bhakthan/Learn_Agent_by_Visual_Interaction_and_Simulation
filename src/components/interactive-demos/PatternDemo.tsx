@@ -25,6 +25,8 @@ import ReactFlow, {
 } from 'reactflow'
 import { StepController } from '@/lib/utils/stepControl'
 import 'reactflow/dist/style.css'
+import { useFlowContainer } from '@/lib/hooks/useFlowContainer'
+import { useResizeObserver } from '@/lib/hooks/useResizeObserver'
 
 import DataFlowVisualizer from '../visualization/DataFlowVisualizer'
 // Mock response generation to simulate LLM calls
@@ -529,10 +531,6 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     }
     return '';
   }, []);
-
-  // Import our custom hook
-  import { useFlowContainer } from '@/lib/hooks/useFlowContainer';
-  import { useResizeObserver } from '@/lib/hooks/useResizeObserver';
 
   // Use the FlowContainer hook for better handling of ReactFlow resizing
   const flowContainerRef = useFlowContainer<HTMLDivElement>();
