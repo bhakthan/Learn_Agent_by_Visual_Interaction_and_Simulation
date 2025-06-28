@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { Edge, Node } from 'reactflow';
 import { motion } from 'framer-motion';
 import * as dataFlowUtils from '@/lib/utils/dataFlowUtils';
@@ -369,4 +369,25 @@ const EnhancedDataFlowVisualizer = ({
   );
 };
 
-export default EnhancedDataFlowVisualizer;
+export default memo(EnhancedDataFlowVisualizer, (prevProps, nextProps) => {
+  // Skip re-render if flows array length hasn't changed and other key props remain the same
+  if (prevProps.flows.length !== nextProps.flows.length) return false;
+  if (prevProps.visualizationMode !== nextProps.visualizationMode) return false;
+  if (prevProps.speed !== nextProps.speed) return false;
+  
+  // If filter has changed, we need to re-render
+  if (prevProps.filter !== nextProps.filter) {
+    // Deep compare important filter properties
+    if (prevProps.filter && nextProps.filter) {
+      if (prevProps.filter.messageTypes.length !== nextProps.filter.messageTypes.length) return false;
+      if (prevProps.filter.nodeTypes.length !== nextProps.filter.nodeTypes.length) return false;
+      if (prevProps.filter.visualizationMode !== nextProps.filter.visualizationMode) return false;
+      if (prevProps.filter.highlightPattern !== nextProps.filter.highlightPattern) return false;
+    } else {
+      return false;
+    }
+  }
+  
+  // If we got here, props are similar enough to skip re-rendering
+  return true;
+});

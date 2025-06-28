@@ -385,6 +385,6 @@ export default React.memo(DataFlowControls, (prevProps, nextProps) => {
   const nextNodeIds = nextProps.availableNodes.map(n => n.id).sort().join(',');
   if (prevNodeIds !== nextNodeIds) return false;
   
-  // Functions in props are assumed stable (via useMemoizedCallback or useCallback in parent)
+  // Functions in props are assumed stable (via useCallback in parent)
   return true;
 });

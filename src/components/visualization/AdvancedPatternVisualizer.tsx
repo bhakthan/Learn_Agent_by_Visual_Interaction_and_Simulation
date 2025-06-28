@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import React, { useState, useCallback, useRef, useEffect, memo, useMemo } from 'react'
 import ReactFlow, { 
   Background, 
   Controls,
@@ -641,4 +641,7 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
   )
 }
 
-export default AdvancedPatternVisualizer
+export default memo(AdvancedPatternVisualizer, (prevProps, nextProps) => {
+  // Only re-render if the pattern ID changes
+  return prevProps.patternData.id === nextProps.patternData.id;
+});
