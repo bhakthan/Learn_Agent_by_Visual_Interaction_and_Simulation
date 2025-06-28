@@ -300,7 +300,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   };
 
   const getEdgePoints = useCallback((edgeId: string) => {
-    if (!Array.isArray(edges) || !Array.isArray(nodes)) return null;
+    if (!edges || !Array.isArray(edges) || !nodes || !Array.isArray(nodes)) return null;
     
     const edge = edges.find(e => e.id === edgeId);
     if (!edge) return null;
@@ -741,7 +741,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                 Fast
               </Button>
               <span className="ml-4 text-xs text-muted-foreground">
-                Iterations: {iterations}
+                Iterations: {iterations || 0}
               </span>
             </div>
           </div>
@@ -791,7 +791,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                   edges={edges}
                   getEdgePoints={getEdgePoints}
                   onFlowComplete={onFlowComplete}
-                  speed={animationSpeed}
+                  speed={animationSpeed || 1}
                 />
               </MemoizedReactFlow>
             </ReactFlowProvider>
@@ -879,13 +879,14 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   if (prevProps.patternData.id !== nextProps.patternData.id) return false;
   
   // Deep compare important pattern data properties that would affect rendering
-  const prevNodes = prevProps.patternData.nodes;
-  const nextNodes = nextProps.patternData.nodes;
+  const prevNodes = prevProps.patternData.nodes || [];
+  const nextNodes = nextProps.patternData.nodes || [];
   
   if (prevNodes.length !== nextNodes.length) return false;
   
   // Check if edges have changed significantly
-  if (prevProps.patternData.edges.length !== nextProps.patternData.edges.length) return false;
+  if (!prevProps.patternData.edges || !nextProps.patternData.edges || 
+      prevProps.patternData.edges.length !== nextProps.patternData.edges.length) return false;
   
   // If we got here, pattern data is similar enough to skip re-rendering
   // The component will handle its own state changes internally
