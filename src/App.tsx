@@ -26,34 +26,68 @@ function App() {
     
     // Prevent undelivered notification errors with improved RAF sequence
     const handleLayoutUpdate = () => {
-      // Create a sequence of nested requestAnimationFrames for smooth updates
-      let rafCount = 0;
-      const maxRafDepth = 2;
+      // Flag to track if we're in a layout update cycle
+      if ((window as any).__inLayoutUpdate) return;
+      (window as any).__inLayoutUpdate = true;
       
-      // Function to create nested RAF calls
+      // Track the number of RAF calls to prevent excessive nesting
+      let rafCount = 0;
+      const maxRafDepth = 3;
+      
+      // Function to create nested RAF calls with proper cleanup
       const scheduleRAF = () => {
-        if (rafCount >= maxRafDepth) return;
+        if (rafCount >= maxRafDepth) {
+          (window as any).__inLayoutUpdate = false;
+          return;
+        }
         
         rafCount++;
-        requestAnimationFrame(() => {
-          // Delay helps prevent ResizeObserver loops
+        if ((window as any).__layoutRAFId) {
+          cancelAnimationFrame((window as any).__layoutRAFId);
+        }
+        
+        (window as any).__layoutRAFId = requestAnimationFrame(() => {
+          // Use setTimeout to break potential synchronous loops
           setTimeout(() => {
             scheduleRAF();
-          }, 0);
+          }, rafCount * 16); // Increasingly longer delays
         });
       };
       
       // Start the RAF sequence
       scheduleRAF();
+      
+      // Safety cleanup - release lock after a maximum time
+      setTimeout(() => {
+        (window as any).__inLayoutUpdate = false;
+      }, 1000);
+    };
+    
+    // Debounce resize events to prevent excessive updates
+    let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
+    const handleResize = () => {
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      
+      resizeTimeout = setTimeout(() => {
+        // Trigger layout update after resize completes
+        handleLayoutUpdate();
+      }, 100); // Wait for resize to finish
     };
     
     // Listen for both layout updates and content resize events
     window.addEventListener('layout-update', handleLayoutUpdate);
     window.addEventListener('content-resize', handleLayoutUpdate);
+    window.addEventListener('resize', handleResize);
     
     return () => {
       window.removeEventListener('layout-update', handleLayoutUpdate);
       window.removeEventListener('content-resize', handleLayoutUpdate);
+      window.removeEventListener('resize', handleResize);
+      
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      if ((window as any).__layoutRAFId) {
+        cancelAnimationFrame((window as any).__layoutRAFId);
+      }
     };
   }, [])
 

@@ -54,12 +54,28 @@
         // Suppress ResizeObserver errors in the console
         const originalConsoleError = console.error;
         console.error = function(msg, ...args) {
+            // More comprehensive check for ResizeObserver related messages
             if (typeof msg === 'string' && 
                 (msg.includes('ResizeObserver loop') || 
-                 msg.includes('ResizeObserver was created in a different document'))) {
-                return; // Suppress known ResizeObserver errors
+                 msg.includes('ResizeObserver was created') ||
+                 msg.includes('undelivered notifications') ||
+                 msg.includes('ResizeObserver completed'))) {
+                // Completely suppress these specific errors
+                return;
             }
-            originalConsoleError.apply(console, [msg, ...args]);
+            
+            // Handle ReactFlow related warnings that might cause loops
+            if (typeof msg === 'string' && 
+                (msg.includes('react-flow') || msg.includes('ReactFlow'))) {
+                // Only log these in development, suppress in production
+                if (window.location.hostname === 'localhost') {
+                    return originalConsoleError.apply(console, ["%c[ReactFlow Warning suppressed]", "color: gray", msg]);
+                }
+                return;
+            }
+            
+            // Pass through all other errors
+            return originalConsoleError.apply(console, [msg, ...args]);
         };
     </script>
 </head>

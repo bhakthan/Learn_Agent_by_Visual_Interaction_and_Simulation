@@ -17,6 +17,7 @@ export function setupResizeObserverErrorHandling() {
   // Track if we're in a ResizeObserver callback to prevent loops
   let inResizeObserverCallback = false;
   let pendingResizeObserverErrors = 0;
+  let lastResizeErrorTime = 0;
   
   // Add error event listener specifically for ResizeObserver errors
   window.addEventListener('error', (e) => {
@@ -28,17 +29,33 @@ export function setupResizeObserverErrorHandling() {
       e.stopImmediatePropagation();
       e.preventDefault();
       
+      const now = Date.now();
+      
       // Track how many errors we've suppressed in a row
       pendingResizeObserverErrors++;
       
-      // If we're seeing a cascade of errors, add some delay to break the cycle
-      if (pendingResizeObserverErrors > 3) {
+      // If we're seeing a cascade of errors or frequent errors, add progressively longer delays
+      if (pendingResizeObserverErrors > 3 || (now - lastResizeErrorTime < 300)) {
         pendingResizeObserverErrors = 0;
+        lastResizeErrorTime = now;
+        
+        // Force a repaint with increasingly longer delays to break the cycle
+        const delay = Math.min(pendingResizeObserverErrors * 50, 500);
+        document.body.style.visibility = 'hidden';
+        
         setTimeout(() => {
-          // This empty timeout helps break potential layout loops
-        }, 100);
+          document.body.style.visibility = '';
+          
+          // Schedule multiple RAF cycles to ensure layout is complete
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              // Empty function to force a complete layout cycle
+            });
+          });
+        }, delay);
       }
       
+      lastResizeErrorTime = now;
       return false;
     }
   }, true);
@@ -48,32 +65,57 @@ export function setupResizeObserverErrorHandling() {
   if (OriginalResizeObserver && typeof OriginalResizeObserver === 'function') {
     window.ResizeObserver = class EnhancedResizeObserver extends OriginalResizeObserver {
       private observerCallbackTimeout: ReturnType<typeof setTimeout> | null = null;
+      private lastCallbackTime: number = 0;
+      private pendingEntries: ResizeObserverEntry[] = [];
+      private currentRAF: number | null = null;
       
       constructor(callback: ResizeObserverCallback) {
         // Create a wrapped callback with additional safety measures
         const safeCallback: ResizeObserverCallback = (entries, observer) => {
-          if (inResizeObserverCallback) {
-            // We're already in a callback, schedule this one for later to avoid loops
+          const now = Date.now();
+          
+          // Update pending entries with latest values
+          this.pendingEntries = entries;
+          
+          // If we're already in a callback or called recently, throttle
+          if (inResizeObserverCallback || (now - this.lastCallbackTime < 50)) {
+            // Cancel any existing timeouts/animations
             if (this.observerCallbackTimeout) {
               clearTimeout(this.observerCallbackTimeout);
             }
             
+            if (this.currentRAF) {
+              cancelAnimationFrame(this.currentRAF);
+            }
+            
+            // Schedule for later with increasing delay based on frequency
+            const delay = Math.min(100, Math.max(16, now - this.lastCallbackTime));
+            
             this.observerCallbackTimeout = setTimeout(() => {
-              try {
-                inResizeObserverCallback = true;
-                callback(entries, observer);
-              } catch (error) {
-                // Silently handle errors in callback
-              } finally {
-                inResizeObserverCallback = false;
-                this.observerCallbackTimeout = null;
-              }
-            }, 20);
+              // Use RAF to ensure we're in a good spot in the render cycle
+              this.currentRAF = requestAnimationFrame(() => {
+                try {
+                  const entriesCopy = [...this.pendingEntries]; // Create a copy of entries
+                  this.pendingEntries = []; // Clear pending entries
+                  
+                  inResizeObserverCallback = true;
+                  this.lastCallbackTime = Date.now();
+                  callback(entriesCopy, observer);
+                } catch (error) {
+                  // Silently handle errors in callback
+                } finally {
+                  inResizeObserverCallback = false;
+                  this.currentRAF = null;
+                  this.observerCallbackTimeout = null;
+                }
+              });
+            }, delay);
             return;
           }
           
           try {
             inResizeObserverCallback = true;
+            this.lastCallbackTime = now;
             callback(entries, observer);
           } catch (error) {
             // Silently handle errors in callback
@@ -83,6 +125,17 @@ export function setupResizeObserverErrorHandling() {
         };
         
         super(safeCallback);
+      }
+      
+      // Override disconnect to clean up resources
+      disconnect() {
+        if (this.observerCallbackTimeout) {
+          clearTimeout(this.observerCallbackTimeout);
+        }
+        if (this.currentRAF) {
+          cancelAnimationFrame(this.currentRAF);
+        }
+        super.disconnect();
       }
     } as any;
 

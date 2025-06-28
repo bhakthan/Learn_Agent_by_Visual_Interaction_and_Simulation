@@ -549,45 +549,54 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       // Skip excessive resizes
       if ((e as any)?.detail?.skipReactFlow) return;
       
-      // Use nested RAF to safely handle flow resize operations
-      // This helps break potential loops by ensuring layout calculations are complete
-      let rafId = requestAnimationFrame(() => {
-        rafId = requestAnimationFrame(() => {
-          try {
-            // Only trigger flow updates after initialization
-            if (flowInitializedRef.current) {
-              // This may trigger ReactFlow's internal resize logic
-              const reactFlowInstance = document.querySelector('.react-flow');
-              if (reactFlowInstance) {
-                // Dispatch with a small delay
-                setTimeout(() => {
-                  reactFlowInstance.dispatchEvent(new CustomEvent('flow-update'));
-                }, 50);
-              }
-            }
-          } catch (error) {
-            // Silently handle any errors to prevent loops
+      // Use a proper debounce approach to safely handle resizes
+      const triggerFlowUpdate = () => {
+        try {
+          // Only trigger flow updates after initialization
+          if (flowInitializedRef.current) {
+            // Mark a layout update is in progress to prevent duplicate processing
+            const layoutUpdateEvent = new CustomEvent('layout-update');
+            window.dispatchEvent(layoutUpdateEvent);
           }
-        });
-      });
-      
-      return () => {
-        if (rafId) cancelAnimationFrame(rafId);
+        } catch (error) {
+          // Silently handle any errors to prevent loops
+        }
       };
+      
+      // Cancel any previous animation frames
+      if ((window as any).__flowResizeRafId) {
+        cancelAnimationFrame((window as any).__flowResizeRafId);
+      }
+      
+      // Schedule update with double RAF for layout stability
+      (window as any).__flowResizeRafId = requestAnimationFrame(() => {
+        (window as any).__flowResizeRafId = requestAnimationFrame(triggerFlowUpdate);
+      });
     };
     
     // Handle both custom events and window resize
     window.addEventListener('flow-resize', handleFlowResize);
     
-    // Add a delayed resize handler for initial render
-    const initTimer = setTimeout(() => {
-      flowInitializedRef.current = true;
-      handleFlowResize();
-    }, 500);
+    // Add a delayed resize handler for initial render with multiple attempts
+    // to ensure ReactFlow properly initializes
+    const initTimers: number[] = [];
+    
+    // Try multiple times with increasing delays to ensure proper initialization
+    [500, 1000, 2000].forEach(delay => {
+      const timer = window.setTimeout(() => {
+        flowInitializedRef.current = true;
+        handleFlowResize();
+      }, delay);
+      initTimers.push(timer);
+    });
     
     return () => {
       window.removeEventListener('flow-resize', handleFlowResize);
-      clearTimeout(initTimer);
+      initTimers.forEach(timer => clearTimeout(timer));
+      
+      if ((window as any).__flowResizeRafId) {
+        cancelAnimationFrame((window as any).__flowResizeRafId);
+      }
     };
   }, []);
   
