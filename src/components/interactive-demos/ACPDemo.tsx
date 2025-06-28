@@ -436,48 +436,50 @@ const ACPDemo = () => {
           </div>
         </div>
         
-        {activeDemo === 'single' && (
-          <TabsContent value="single" className="mt-6">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Single-Agent ACP Pattern</h3>
-                <p className="text-sm">
-                  The simplest ACP deployment connects a client directly to a single agent via a REST
-                  interface over HTTP. This pattern is ideal for direct communication with a single
-                  specialized agent, lightweight setups with minimal infrastructure requirements,
-                  development and debugging environments, and proof-of-concept implementations.
-                </p>
-                <p className="text-sm">
-                  The ACP Server wraps the agent and exposes an HTTP endpoint, where the agent is invoked
-                  and returns responses in the standardized ACP format.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="single" className="mt-6">
+          {activeDemo === 'single' && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Single-Agent ACP Pattern</h3>
+                  <p className="text-sm">
+                    The simplest ACP deployment connects a client directly to a single agent via a REST
+                    interface over HTTP. This pattern is ideal for direct communication with a single
+                    specialized agent, lightweight setups with minimal infrastructure requirements,
+                    development and debugging environments, and proof-of-concept implementations.
+                  </p>
+                  <p className="text-sm">
+                    The ACP Server wraps the agent and exposes an HTTP endpoint, where the agent is invoked
+                    and returns responses in the standardized ACP format.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
         
-        {activeDemo === 'multi' && (
-          <TabsContent value="multi" className="mt-6">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Multi-Agent ACP Pattern</h3>
-                <p className="text-sm">
-                  An ACP Server can host multiple agents behind a single HTTP endpoint. Each agent is
-                  individually addressable through the server's routing mechanism, which uses agent
-                  metadata to determine the appropriate handler.
-                </p>
-                <h4 className="text-md font-medium mt-4 mb-2">Benefits:</h4>
-                <ul className="list-disc list-inside space-y-1">
-                  <li className="text-sm">Resource efficiency - shared server infrastructure</li>
-                  <li className="text-sm">Simplified deployment - single service to manage</li>
-                  <li className="text-sm">Centralized logging and monitoring</li>
-                  <li className="text-sm">Consistent authentication and authorization</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="multi" className="mt-6">
+          {activeDemo === 'multi' && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Multi-Agent ACP Pattern</h3>
+                  <p className="text-sm">
+                    An ACP Server can host multiple agents behind a single HTTP endpoint. Each agent is
+                    individually addressable through the server's routing mechanism, which uses agent
+                    metadata to determine the appropriate handler.
+                  </p>
+                  <h4 className="text-md font-medium mt-4 mb-2">Benefits:</h4>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li className="text-sm">Resource efficiency - shared server infrastructure</li>
+                    <li className="text-sm">Simplified deployment - single service to manage</li>
+                    <li className="text-sm">Centralized logging and monitoring</li>
+                    <li className="text-sm">Consistent authentication and authorization</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
