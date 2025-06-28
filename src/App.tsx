@@ -24,24 +24,37 @@ function App() {
     // Set up global ResizeObserver error handling
     setupResizeObserverErrorHandling()
     
-    // Prevent undelivered notification errors
-    const handleRAF = () => {
-      // Use requestAnimationFrame to synchronize visual updates
-      if (window.requestAnimationFrame) {
-        window.requestAnimationFrame(() => {
-          window.requestAnimationFrame(() => {
-            // This nested RAF ensures layout calculations are complete
-          })
-        })
-      }
-    }
+    // Prevent undelivered notification errors with improved RAF sequence
+    const handleLayoutUpdate = () => {
+      // Create a sequence of nested requestAnimationFrames for smooth updates
+      let rafCount = 0;
+      const maxRafDepth = 2;
+      
+      // Function to create nested RAF calls
+      const scheduleRAF = () => {
+        if (rafCount >= maxRafDepth) return;
+        
+        rafCount++;
+        requestAnimationFrame(() => {
+          // Delay helps prevent ResizeObserver loops
+          setTimeout(() => {
+            scheduleRAF();
+          }, 0);
+        });
+      };
+      
+      // Start the RAF sequence
+      scheduleRAF();
+    };
     
-    // Listen for layout updates and trigger RAF
-    window.addEventListener('layout-update', handleRAF)
+    // Listen for both layout updates and content resize events
+    window.addEventListener('layout-update', handleLayoutUpdate);
+    window.addEventListener('content-resize', handleLayoutUpdate);
     
     return () => {
-      window.removeEventListener('layout-update', handleRAF)
-    }
+      window.removeEventListener('layout-update', handleLayoutUpdate);
+      window.removeEventListener('content-resize', handleLayoutUpdate);
+    };
   }, [])
 
   if (!mounted) {

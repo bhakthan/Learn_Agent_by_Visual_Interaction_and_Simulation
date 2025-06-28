@@ -507,39 +507,41 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
     return '';
   };
 
-  // Flow container ref and resize handling
-  const flowContainerRef = useRef<HTMLDivElement>(null);
-  const [flowMounted, setFlowMounted] = useState(false);
-  
-  // Handle resize events for ReactFlow
-  const handleResize = useCallback(() => {
-    try {
-      // Allow a small delay for the resize operation to complete
-      setTimeout(() => {
-        if (flowContainerRef.current) {
-          // This will trigger a single update to ReactFlow dimensions
-          window.dispatchEvent(new Event('resize'));
-        }
-      }, 100);
-    } catch (error) {
-      console.log('Flow resize error:', error);
-    }
-  }, []);
+  // Import our custom hook
+  const { useFlowContainer } = require('@/lib/hooks/useFlowContainer');
+  const { useResizeObserver } = require('@/lib/hooks/useResizeObserver');
 
-  // Listen for layout changes
+  // Use the FlowContainer hook for better handling of ReactFlow resizing
+  const flowContainerRef = useFlowContainer<HTMLDivElement>();
+  
+  // Use resize observer to detect container size changes
+  const [wrapperRef, wrapperDimensions] = useResizeObserver<HTMLDivElement>(200);
+  
+  // Listen for flow-specific resize events
   useEffect(() => {
-    setFlowMounted(true);
+    const handleFlowResize = () => {
+      if (flowContainerRef.current) {
+        // Use RAF to safely handle flow resize operations
+        requestAnimationFrame(() => {
+          try {
+            // This may trigger ReactFlow's internal resize logic
+            const reactFlowInstance = document.querySelector('.react-flow');
+            if (reactFlowInstance) {
+              reactFlowInstance.dispatchEvent(new CustomEvent('flow-update'));
+            }
+          } catch (error) {
+            // Silently handle any errors to prevent loops
+          }
+        });
+      }
+    };
     
-    // Handle global resize and custom layout update events
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('layout-update', handleResize);
+    window.addEventListener('flow-resize', handleFlowResize);
     
     return () => {
-      setFlowMounted(false);
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('layout-update', handleResize);
+      window.removeEventListener('flow-resize', handleFlowResize);
     };
-  }, [handleResize]);
+  }, []);
   
   // Define nodeTypes for ReactFlow
   const nodeTypes: NodeTypes = {
@@ -672,29 +674,45 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
           </div>
           
           {/* Flow visualization */}
-          <div ref={flowContainerRef} className="border border-border rounded-md overflow-hidden" style={{ height: '400px' }}>
+          <div 
+            ref={(el) => {
+              // Set both refs to the same element
+              if (typeof flowContainerRef === 'function') {
+                flowContainerRef(el);
+              } else if (flowContainerRef) {
+                flowContainerRef.current = el;
+              }
+              
+              if (typeof wrapperRef === 'function') {
+                wrapperRef(el);
+              } else if (wrapperRef) {
+                wrapperRef.current = el;
+              }
+            }}
+            className="border border-border rounded-md overflow-hidden" 
+            style={{ height: '400px' }}
+          >
             <ReactFlowProvider>
-              {flowMounted && (
-                <ReactFlow
-                  nodes={nodes}
-                  edges={edges}
-                  onNodesChange={onNodesChange}
-                  onEdgesChange={onEdgesChange}
-                  nodeTypes={nodeTypes}
-                  fitView
-                  panOnScroll
-                  minZoom={0.5}
-                  maxZoom={1.5}
-                  defaultEdgeOptions={{
-                    style: { 
-                      strokeWidth: 2,
-                      stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined // Enhanced edge visibility in dark mode
-                    },
-                    markerEnd: { type: MarkerType.Arrow }
-                  }}
-                >
-                  <Background color={theme === 'dark' ? '#ffffff20' : '#aaa'} gap={16} />
-                  <Controls className={theme === 'dark' ? 'dark-controls' : ''} />
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                nodeTypes={nodeTypes}
+                fitView
+                panOnScroll
+                minZoom={0.5}
+                maxZoom={1.5}
+                defaultEdgeOptions={{
+                  style: { 
+                    strokeWidth: 2,
+                    stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined // Enhanced edge visibility in dark mode
+                  },
+                  markerEnd: { type: MarkerType.Arrow }
+                }}
+              >
+                <Background color={theme === 'dark' ? '#ffffff20' : '#aaa'} gap={16} />
+                <Controls className={theme === 'dark' ? 'dark-controls' : ''} />
                   <MiniMap 
                     style={{ 
                       backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.6)' : undefined,

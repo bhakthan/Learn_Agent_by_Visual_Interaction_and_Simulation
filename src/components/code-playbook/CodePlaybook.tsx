@@ -37,25 +37,39 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
   
   // Listen to sidebar state changes to trigger resize/layout adjustments
   useEffect(() => {
-    // Adding a small delay to ensure layout updates after transition completes
-    // with error handling to prevent ResizeObserver loop errors
-    const timer = setTimeout(() => {
-      try {
-        // Use a safer approach with a custom event that won't trigger all resize observers
-        const customResizeEvent = new CustomEvent('layout-update', { detail: { source: 'sidebar-toggle' } });
-        window.dispatchEvent(customResizeEvent);
-        
-        // For components that specifically need the resize event, dispatch it separately 
-        // with error handling in a RAF to prevent loop errors
-        requestAnimationFrame(() => {
-          window.dispatchEvent(new Event('resize'));
-        });
-      } catch (error) {
-        console.log('Layout adjustment error prevented:', error);
-      }
-    }, 350); // Slightly longer delay to ensure transitions complete
+    let timer: NodeJS.Timeout;
+    let rafId: number;
     
-    return () => clearTimeout(timer);
+    // Only run this after the component has fully rendered
+    const layoutAdjustmentSequence = () => {
+      // Step 1: Dispatch a custom layout event first
+      window.dispatchEvent(new CustomEvent('layout-update', { 
+        detail: { source: 'sidebar-toggle', timestamp: Date.now() } 
+      }));
+        
+      // Step 2: Schedule resize event in nested RAF to ensure all rendering is complete
+      rafId = requestAnimationFrame(() => {
+        rafId = requestAnimationFrame(() => {
+          // The nested RAF ensures we're not in the middle of a rendering cycle
+          try {
+            // Rather than dispatching global resize, send a more targeted event
+            window.dispatchEvent(new CustomEvent('content-resize', { 
+              detail: { source: 'sidebar-toggle', timestamp: Date.now() } 
+            }));
+          } catch (error) {
+            // Silently handle any errors
+          }
+        });
+      });
+    };
+    
+    // Delay the layout adjustment to allow transitions to complete
+    timer = setTimeout(layoutAdjustmentSequence, 400);
+    
+    return () => {
+      clearTimeout(timer);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, [isCollapsed]);
   
   const getCodeExample = () => {
