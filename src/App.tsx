@@ -32,7 +32,7 @@ function App() {
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Brain size={28} weight="duotone" className="text-primary" />
-              <h1 className="text-2xl font-bold">Azure AI Agent Visualization</h1>
+              <h1 className="text-2xl font-bold">Azure AI Agent Concept Visualization & Simulation</h1>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -113,7 +113,7 @@ function App() {
         </footer>
       </div>
     </ThemeProvider>
-  )
+  );
 }
 
 function TabLink({ to, icon, label }: { to: string, icon: React.ReactNode, label: string }) {
