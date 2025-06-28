@@ -1,173 +1,56 @@
 /**
- * Advanced monitoring for ReactFlow errors with proactive prevention
+ * Monitor for ReactFlow-specific errors with enhanced recovery
  */
-
 export function monitorReactFlowErrors() {
-  // Track error counts to identify patterns
-  let resizeObserverErrorCount = 0;
-  let lastResizeObserverError = 0;
-  let maxUpdateDepthErrors = 0;
-  let lastMaxUpdateError = 0;
-  const problematicContainers = new Set<HTMLElement>();
+  // Track ReactFlow error frequency
+  let reactFlowErrorCount = 0;
+  let lastReactFlowErrorTime = 0;
   
-  // Function to safely apply fixes to ReactFlow components
-  const applyReactFlowFixes = (source: string, forceFix = false) => {
-    // Find all ReactFlow-related containers
-    const containers = document.querySelectorAll(
-      '.react-flow, .react-flow__container, .react-flow__viewport, .react-flow__renderer'
-    );
-    
-    containers.forEach(container => {
-      if (container instanceof HTMLElement) {
-        // Apply performance optimizations
-        container.style.transform = 'translateZ(0)';
-        container.style.backfaceVisibility = 'hidden';
-        container.style.webkitBackfaceVisibility = 'hidden';
-        
-        // Set fixed height if container is collapsed
-        if (container.offsetHeight < 10 && container.parentElement) {
-          const parentHeight = container.parentElement.offsetHeight;
-          if (parentHeight > 50) {
-            container.style.height = `${parentHeight}px`;
-          } else {
-            container.style.height = '300px';
-          }
-        }
-        
-        // Force repaint to fix rendering issues
-        const originalDisplay = container.style.display;
-        container.style.display = 'none';
-        void container.offsetHeight; // Trigger reflow
-        container.style.display = originalDisplay;
-        
-        // Add container to problematic set if fixes were forced
-        if (forceFix) {
-          problematicContainers.add(container);
-        }
-      }
-    });
-    
-    // If we've accumulated enough error evidence, apply more aggressive fixes
-    if (resizeObserverErrorCount > 3 || maxUpdateDepthErrors > 2) {
-      containers.forEach(container => {
-        if (container instanceof HTMLElement) {
-          problematicContainers.add(container);
-          
-          // Disable smooth animations temporarily
-          container.style.transition = 'none';
-          
-          // Force hardware acceleration
-          container.style.transform = 'translateZ(0)';
-          container.style.perspective = '1000px';
-          container.style.contain = 'layout paint size';
-          
-          // Restore transitions after a delay
-          setTimeout(() => {
-            if (container instanceof HTMLElement) {
-              container.style.transition = '';
-            }
-          }, 1000);
-        }
-      });
+  // Listen for unhandled errors
+  window.addEventListener('error', (event) => {
+    // Check if error is related to ReactFlow
+    if (event.message && (
+      event.message.includes('react-flow') || 
+      event.message.includes('ReactFlow') ||
+      event.message.includes('edge')
+    )) {
+      const now = Date.now();
       
-      // Reset counters after applying fixes
-      resizeObserverErrorCount = Math.max(0, resizeObserverErrorCount - 1);
-      maxUpdateDepthErrors = Math.max(0, maxUpdateDepthErrors - 1);
-    }
-  };
-  
-  // Override console.error to detect specific issues
-  const originalConsoleError = console.error;
-  console.error = function(msg: any, ...args: any[]) {
-    if (typeof msg === 'string') {
-      // Check for ResizeObserver errors
-      if (msg.includes('ResizeObserver') || msg.includes('undelivered notifications')) {
-        const now = Date.now();
-        resizeObserverErrorCount++;
-        lastResizeObserverError = now;
-        
-        // Apply fixes with frequency-based intensity
-        const timeSinceLastError = now - lastResizeObserverError;
-        const isFrequentError = timeSinceLastError < 2000;
-        applyReactFlowFixes('resize-observer', isFrequentError);
-        
-        // Block error from showing
-        return;
+      // Reset counter if it's been a while
+      if (now - lastReactFlowErrorTime > 10000) {
+        reactFlowErrorCount = 1;
+      } else {
+        reactFlowErrorCount++;
       }
       
-      // Check for infinite loop errors
-      if (msg.includes('Maximum update depth exceeded')) {
-        const now = Date.now();
-        maxUpdateDepthErrors++;
-        lastMaxUpdateError = now;
-        
-        // Apply fixes immediately for update depth errors
-        applyReactFlowFixes('max-update-depth', true);
-        
-        // Try to identify the components causing the issue
-        console.warn('Max update depth error detected. Applying stabilization.');
-        
-        // Block error from showing
-        return;
-      }
+      lastReactFlowErrorTime = now;
       
-      // Check for missing ReactFlow provider errors
-      if (msg.includes('React Flow') && msg.includes('provider')) {
-        console.warn('ReactFlow provider issue detected. Check component hierarchy.');
-      }
-    }
-    
-    // Pass through other errors
-    originalConsoleError.apply(console, [msg, ...args]);
-  };
-  
-  // Monitor layout shifts that can trigger ResizeObserver issues
-  if ('PerformanceObserver' in window) {
-    try {
-      const layoutObserver = new PerformanceObserver((entries) => {
-        for (const entry of entries.getEntries()) {
-          // @ts-ignore - LayoutShift type not in standard TS lib
-          const value = (entry as any).value || 0;
-          
-          // Only react to significant layout shifts
-          if (value > 0.1) {
-            // Apply fixes after a layout shift
+      // Apply aggressive fixes if errors persist
+      if (reactFlowErrorCount > 3) {
+        // Try to reset React Flow instances
+        document.querySelectorAll('.react-flow').forEach(el => {
+          if (el instanceof HTMLElement) {
+            // Force height to ensure visibility
+            el.style.height = '300px';
+            el.style.minHeight = '300px';
+            
+            // Force hardware acceleration
+            el.style.transform = 'translateZ(0)';
+            
+            // Create a reset event
             setTimeout(() => {
-              applyReactFlowFixes('layout-shift', false);
-            }, 100);
-            break;
+              try {
+                const resetEvent = new CustomEvent('react-flow-reset', {
+                  detail: { timestamp: Date.now() }
+                });
+                window.dispatchEvent(resetEvent);
+              } catch (e) {
+                // Silently handle errors
+              }
+            }, 200);
           }
-        }
-      });
-      
-      layoutObserver.observe({ type: 'layout-shift', buffered: true });
-    } catch (e) {
-      // Observer not supported, ignore
+        });
+      }
     }
-  }
-  
-  // Set up event listener for custom stabilize events
-  window.addEventListener('flow-force-stabilize', (e: Event) => {
-    const customEvent = e as CustomEvent;
-    const source = customEvent?.detail?.source || 'unknown';
-    const attemptNumber = customEvent?.detail?.attempt || 1;
-    
-    // Apply fixes with increasing intensity based on attempt number
-    applyReactFlowFixes(`force-stabilize-${source}`, attemptNumber > 1);
   });
-  
-  return {
-    // Method to manually fix a problematic container
-    fixContainer: (container: HTMLElement) => {
-      problematicContainers.add(container);
-      applyReactFlowFixes('manual', true);
-    },
-    
-    // Method to reset monitoring state
-    resetCounters: () => {
-      resizeObserverErrorCount = 0;
-      maxUpdateDepthErrors = 0;
-      problematicContainers.clear();
-    }
-  };
 }

@@ -1,124 +1,102 @@
 /**
- * Utility functions to improve ReactFlow rendering stability and prevent ResizeObserver errors
+ * Utilities for handling ReactFlow-specific issues
  */
 
 /**
- * Sets up error handling specifically for ReactFlow components
+ * Setup specific error handling for ReactFlow components
  */
 export function setupReactFlowErrorHandling() {
-  // Create a debounced event dispatcher to prevent multiple recalculations
-  let recalculationTimer: number | null = null;
-  
-  // Track flow components that have reported errors
-  const problematicFlowContainers = new Set<HTMLElement>();
-  
-  // Function to handle ResizeObserver errors in ReactFlow components
-  const handleReactFlowError = (event: Event | string) => {
-    if (
-      (typeof event === 'string' && (
-        event.includes('ResizeObserver') || 
-        event.includes('loop') || 
-        event.includes('Maximum update depth exceeded')
-      )) ||
-      (event instanceof ErrorEvent && event.message && (
-        event.message.includes('ResizeObserver') || 
-        event.message.includes('loop') || 
-        event.message.includes('Maximum update depth exceeded')
-      ))
-    ) {
-      // Find all ReactFlow containers
-      const containers = document.querySelectorAll('.react-flow, .react-flow-wrapper');
+  // Safe attempt to apply ReactFlow-specific fixes
+  const applyReactFlowFixes = () => {
+    try {
+      // Find ReactFlow elements
+      const flowElements = document.querySelectorAll('.react-flow');
       
-      // Apply stability fixes to all containers
-      containers.forEach(container => {
-        if (container instanceof HTMLElement) {
-          // Add to problematic containers set
-          problematicFlowContainers.add(container);
+      if (flowElements.length === 0) return;
+      
+      // Apply fixes to each flow element
+      flowElements.forEach(el => {
+        if (el instanceof HTMLElement) {
+          // Apply hardware acceleration
+          el.style.transform = 'translateZ(0)';
           
-          // Apply immediate stability fixes
-          container.style.transform = 'translateZ(0)';
-          container.style.contain = 'layout paint';
+          // Fix overflow handling
+          const container = el.querySelector('.react-flow__container');
+          if (container instanceof HTMLElement) {
+            container.style.overflow = 'hidden';
+          }
           
-          // If container has no explicit height, give it one
-          if (!container.style.height || parseInt(container.style.height, 10) < 10) {
-            container.style.height = '300px';
+          // Fix height issues 
+          const parent = el.parentElement;
+          if (parent && parent.offsetHeight > 10 && (!el.style.height || el.offsetHeight < 10)) {
+            el.style.height = `${parent.offsetHeight}px`;
           }
         }
       });
-      
-      // Debounce flow recalculation
-      if (recalculationTimer) {
-        window.clearTimeout(recalculationTimer);
-      }
-      
-      recalculationTimer = window.setTimeout(() => {
-        // Trigger a flow-specific resize event
-        window.dispatchEvent(new CustomEvent('flow-force-stabilize', {
-          detail: { source: 'error-handler' }
-        }));
-        
-        recalculationTimer = null;
-      }, 300);
-      
-      // Prevent error propagation for ErrorEvent
-      if (event instanceof ErrorEvent) {
-        event.preventDefault();
-        event.stopPropagation();
-        return false;
-      }
+    } catch (error) {
+      // Silently handle errors
     }
-    
-    return undefined;
   };
   
-  // Set up global error handling for ResizeObserver errors
-  window.addEventListener('error', (event) => {
-    return handleReactFlowError(event);
-  }, true);
+  // Apply initial fixes
+  setTimeout(applyReactFlowFixes, 500);
+  setTimeout(applyReactFlowFixes, 1500); // Retry after longer delay
   
-  // Override console.error to catch ReactFlow errors
-  const originalConsoleError = console.error;
-  console.error = function(msg: any, ...args: any[]) {
-    if (typeof msg === 'string' && (
-      msg.includes('ResizeObserver') || 
-      msg.includes('react-flow') || 
-      msg.includes('Maximum update depth exceeded')
+  // Listen for ReactFlow components being added to the DOM
+  try {
+    // Use mutation observer to detect when ReactFlow components are added
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList') {
+          const addedReactFlowElements = Array.from(mutation.addedNodes)
+            .filter(node => 
+              node instanceof HTMLElement && 
+              (
+                node.classList.contains('react-flow') || 
+                node.querySelector('.react-flow')
+              )
+            );
+            
+          if (addedReactFlowElements.length > 0) {
+            setTimeout(applyReactFlowFixes, 200);
+            break;
+          }
+        }
+      }
+    });
+    
+    // Start observing
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  } catch (error) {
+    // Silently handle errors if observer fails
+  }
+  
+  // Override ReactFlow-specific error handlers
+  const originalConsoleWarn = console.warn;
+  console.warn = function(...args) {
+    // Filter out ReactFlow warnings that might cause unnecessary concern
+    const firstArg = args[0];
+    
+    if (typeof firstArg === 'string' && (
+      firstArg.includes('react-flow') || 
+      firstArg.includes('ReactFlow') ||
+      firstArg.includes('edge')
     )) {
-      handleReactFlowError(msg);
-    } else {
-      originalConsoleError.apply(console, [msg, ...args]);
-    }
-  };
-}
-
-/**
- * Applies memoization to expensive component calculations
- * to prevent unnecessary re-renders and reduce CPU load
- * 
- * @param Component The React component to optimize
- * @param propsAreEqual Optional function to determine when props have changed
- */
-export function memoizeWithPropsCheck<P extends object>(
-  Component: React.ComponentType<P>,
-  propsAreEqual?: (prevProps: Readonly<P>, nextProps: Readonly<P>) => boolean
-): React.MemoExoticComponent<React.ComponentType<P>> {
-  // Default comparison function that does a shallow check of all props
-  const defaultPropsAreEqual = (prevProps: Readonly<P>, nextProps: Readonly<P>): boolean => {
-    const prevKeys = Object.keys(prevProps);
-    const nextKeys = Object.keys(nextProps);
-    
-    if (prevKeys.length !== nextKeys.length) return false;
-    
-    // Check each prop for equality
-    for (const key of prevKeys) {
-      if ((prevProps as any)[key] !== (nextProps as any)[key]) {
-        return false;
+      // Always apply fixes when ReactFlow warnings appear
+      setTimeout(applyReactFlowFixes, 100);
+      
+      // Only log in development environments
+      if (window.location.hostname === 'localhost') {
+        originalConsoleWarn.apply(console, args);
       }
+      
+      return;
     }
     
-    return true;
+    // Pass through other warnings
+    originalConsoleWarn.apply(console, args);
   };
-  
-  // Return the memoized component
-  return React.memo(Component, propsAreEqual || defaultPropsAreEqual);
 }

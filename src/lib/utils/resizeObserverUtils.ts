@@ -1,181 +1,231 @@
 /**
- * Utilities to handle ResizeObserver errors and improve ReactFlow stability
+ * Utilities for handling ResizeObserver-related issues
  */
-
-// Track encountered errors to apply adaptive solutions
-let resizeObserverErrorCount = 0;
-let lastResizeObserverError = 0;
-const problematicObservers = new WeakSet();
 
 /**
- * Sets up global error handling for ResizeObserver errors
+ * Setup error handling for ResizeObserver to prevent crashes
  */
 export function setupResizeObserverErrorHandling() {
-  // Create a throttled dispatch function
-  let dispatchThrottled = false;
-  const throttledDispatch = (eventName: string) => {
-    if (dispatchThrottled) return;
+  // Track error frequency for adaptive handling
+  let errorCount = 0;
+  let lastErrorTime = 0;
+  let recoveryScheduled = false;
+
+  // Implement the error handler
+  const handleResizeObserverError = () => {
+    const now = Date.now();
     
-    dispatchThrottled = true;
-    window.dispatchEvent(new CustomEvent(eventName));
-    
-    setTimeout(() => {
-      dispatchThrottled = false;
-    }, 250);
-  };
-  
-  // Create error handler 
-  const handleError = (event: ErrorEvent | string) => {
-    const message = typeof event === 'string' ? event : event.message;
-    
-    // Check if it's a ResizeObserver error
-    if (message && (
-      message.includes('ResizeObserver') ||
-      message.includes('undelivered notifications') ||
-      message.includes('loop')
-    )) {
-      // Track error frequency 
-      const now = Date.now();
-      resizeObserverErrorCount++;
-      
-      if (now - lastResizeObserverError < 1000) {
-        // Frequent errors - apply aggressive fixes
-        disableResizeObserverIfProblematic(true);
-      } else {
-        // Occasional errors - apply standard fixes
-        disableResizeObserverIfProblematic();
-      }
-      
-      lastResizeObserverError = now;
-      
-      // Trigger stabilization
-      throttledDispatch('flow-force-stabilize');
-      
-      // Prevent the error from propagating if it's an event
-      if (typeof event !== 'string') {
-        event.preventDefault();
-        event.stopPropagation();
-        return false;
-      }
+    // Track error frequency
+    if (now - lastErrorTime > 5000) {
+      // Reset counter after 5 seconds of no errors
+      errorCount = 1;
+    } else {
+      errorCount++;
     }
     
-    return undefined;
+    lastErrorTime = now;
+    
+    // Apply increasingly aggressive fixes based on error frequency
+    if (errorCount > 3 && !recoveryScheduled) {
+      recoveryScheduled = true;
+      
+      // Apply stabilization with progressive delays
+      const applyStabilization = (attempt = 1) => {
+        setTimeout(() => {
+          try {
+            // Apply fixes to ReactFlow elements
+            document.querySelectorAll('.react-flow, .react-flow__container, .react-flow__viewport').forEach(el => {
+              if (el instanceof HTMLElement) {
+                // Force hardware acceleration
+                el.style.transform = 'translateZ(0)';
+                el.style.backfaceVisibility = 'hidden';
+                
+                // Set explicit size when missing
+                const parent = el.parentElement;
+                if (parent && parent.offsetHeight > 10 && (!el.style.height || el.offsetHeight < 10)) {
+                  el.style.height = `${parent.offsetHeight}px`;
+                } else if (!el.style.height || el.offsetHeight < 10) {
+                  el.style.height = '300px';
+                }
+              }
+            });
+            
+            // Force layout recalculation
+            document.body.style.opacity = '0.99';
+            setTimeout(() => {
+              document.body.style.opacity = '1';
+            }, 50);
+            
+            // Reset state with exponential backoff for repeated errors
+            setTimeout(() => {
+              recoveryScheduled = false;
+              
+              // Reduce error count after successful recovery
+              if (attempt >= 2) {
+                errorCount = Math.max(0, errorCount - 2);
+              }
+            }, Math.min(1000 * attempt, 5000));
+            
+          } catch (e) {
+            recoveryScheduled = false;
+          }
+        }, Math.min(200 * Math.pow(1.5, attempt), 2000));
+      };
+      
+      applyStabilization();
+    }
+    
+    return true;
   };
-  
-  // Add global error handler
-  window.addEventListener('error', (event) => {
-    return handleError(event);
-  }, true);
-  
-  // Override console.error to catch ResizeObserver errors
+
+  // Override console.error to intercept ResizeObserver messages
   const originalConsoleError = console.error;
   console.error = function(msg: any, ...args: any[]) {
-    if (typeof msg === 'string' && (
-      msg.includes('ResizeObserver') || 
-      msg.includes('undelivered notifications')
-    )) {
-      handleError(msg);
+    if (typeof msg === 'string' && 
+        (msg.includes('ResizeObserver loop') || 
+        msg.includes('ResizeObserver was created') ||
+        msg.includes('undelivered notifications') ||
+        msg.includes('ResizeObserver completed'))) {
+      handleResizeObserverError();
       return;
     }
     
-    // Pass through other errors
-    originalConsoleError.apply(console, [msg, ...args]);
+    return originalConsoleError.apply(console, [msg, ...args]);
   };
+
+  // Add global error handler for ResizeObserver errors
+  window.addEventListener('error', function(e) {
+    if (e && e.message && (
+      e.message.includes('ResizeObserver loop') || 
+      e.message.includes('ResizeObserver completed') ||
+      e.message.includes('undelivered notifications')
+    )) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleResizeObserverError();
+      return false;
+    }
+  }, true);
 }
 
 /**
- * Apply fixes to ReactFlow containers with ResizeObserver issues
+ * Creates a stable resize observer that handles errors and prevents loops
  */
-export function disableResizeObserverIfProblematic(applyAggressive = false) {
-  // Find ReactFlow containers
-  const flowContainers = document.querySelectorAll('.react-flow, .react-flow__container, .react-flow__viewport');
+export function createStableResizeObserver(
+  callback: ResizeObserverCallback,
+  options: { debounce?: number; disabled?: boolean } = {}
+): ResizeObserver {
+  const { debounce = 200, disabled = false } = options;
   
-  flowContainers.forEach(container => {
-    if (container instanceof HTMLElement) {
-      // Apply basic fixes
-      container.style.transform = 'translateZ(0)';
-      container.style.contain = 'layout paint';
+  if (disabled) {
+    // Return a no-op observer when disabled
+    return {
+      observe: () => {},
+      unobserve: () => {},
+      disconnect: () => {}
+    } as ResizeObserver;
+  }
+  
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  let entries: ResizeObserverEntry[] = [];
+  let isProcessing = false;
+  let lastProcessTime = 0;
+  
+  const safeCallback: ResizeObserverCallback = (newEntries, observer) => {
+    try {
+      // Reset state if significant time has passed
+      const now = Date.now();
+      if (now - lastProcessTime > 5000) {
+        entries = [];
+        if (timeout) clearTimeout(timeout);
+        timeout = null;
+        isProcessing = false;
+      }
       
-      // Apply aggressive fixes if needed
-      if (applyAggressive || resizeObserverErrorCount > 3) {
-        // Force hardware acceleration
-        container.style.webkitBackfaceVisibility = 'hidden';
-        container.style.perspective = '1000px';
-        
-        // Temporarily pause transitions
-        container.style.transition = 'none';
-        
-        // Fix height if needed
-        if ((!container.style.height || parseInt(container.style.height, 10) < 10) && container.parentElement) {
-          container.style.height = `${container.parentElement.offsetHeight || 300}px`;
+      // If already processing, just store entries
+      if (isProcessing) {
+        entries = [...entries, ...newEntries];
+        return;
+      }
+      
+      // Store entries for batched processing
+      entries = [...entries, ...newEntries];
+      
+      // Clear existing timeout
+      if (timeout) clearTimeout(timeout);
+      
+      // Set processing flag to avoid concurrent processing
+      isProcessing = true;
+      
+      // Debounce processing
+      timeout = setTimeout(() => {
+        try {
+          // Process in animation frame for smoother handling
+          requestAnimationFrame(() => {
+            try {
+              callback(entries, observer);
+            } catch (error) {
+              console.warn('Error in ResizeObserver callback', error);
+            } finally {
+              // Reset state
+              entries = [];
+              isProcessing = false;
+              lastProcessTime = Date.now();
+              timeout = null;
+            }
+          });
+        } catch (error) {
+          // Reset state on error
+          isProcessing = false;
+          entries = [];
         }
-        
-        // Restore transitions after a delay
-        setTimeout(() => {
-          container.style.transition = '';
-        }, 1000);
-      }
+      }, debounce);
+      
+    } catch (error) {
+      // Reset on unexpected error
+      isProcessing = false;
+      entries = [];
+      if (timeout) clearTimeout(timeout);
     }
-  });
-  
-  // If we have persistent issues, apply more extensive fixes
-  if (resizeObserverErrorCount > 5) {
-    document.querySelectorAll('.react-flow-wrapper').forEach(wrapper => {
-      if (wrapper instanceof HTMLElement) {
-        // Add stabilizing styles to wrapper
-        wrapper.style.transform = 'translateZ(0)';
-        wrapper.style.position = 'relative';
-        wrapper.style.overflow = 'hidden';
-      }
-    });
-    
-    // Reset counter to avoid over-applying fixes
-    resizeObserverErrorCount = 2;
+  };
+
+  // Create the observer with our safe callback
+  try {
+    return new ResizeObserver(safeCallback);
+  } catch (error) {
+    // Fallback to a no-op observer
+    console.warn('Failed to create ResizeObserver, using no-op fallback');
+    return {
+      observe: () => {},
+      unobserve: () => {},
+      disconnect: () => {}
+    } as ResizeObserver;
   }
 }
 
 /**
- * Reset ReactFlow rendering to fix common issues
+ * Disables problematic ResizeObserver instances if too many errors occur
  */
-export function resetReactFlowRendering(containerRef: React.RefObject<HTMLElement>) {
-  // Skip if no container
-  if (!containerRef.current) return;
+export function disableResizeObserverIfProblematic() {
+  // Track problematic observers (simplified implementation)
+  const errorCount = (window as any).__resizeObserverErrorCount || 0;
+  (window as any).__resizeObserverErrorCount = errorCount + 1;
   
-  const container = containerRef.current;
-  
-  // Find all ReactFlow components in the container
-  const reactFlowElements = container.querySelectorAll(
-    '.react-flow, .react-flow__container, .react-flow__viewport, .react-flow__renderer'
-  );
-  
-  // Apply fixes to each element
-  reactFlowElements.forEach(element => {
-    if (element instanceof HTMLElement) {
-      // Force hardware acceleration
-      element.style.transform = 'translateZ(0)';
-      element.style.backfaceVisibility = 'hidden';
-      element.style.webkitBackfaceVisibility = 'hidden';
-      
-      // Ensure proper sizing
-      if (!element.style.height || parseInt(element.style.height, 10) < 10) {
-        // Try to get height from parent
-        if (element.parentElement && element.parentElement.offsetHeight > 10) {
-          element.style.height = `${element.parentElement.offsetHeight}px`;
-        } else {
-          element.style.height = '300px';
+  // Disable if too many errors
+  if (errorCount > 10) {
+    console.warn('Too many ResizeObserver errors, applying emergency fixes');
+    
+    // Apply global flag to signal components to stop using ResizeObserver
+    (window as any).__disableResizeObservers = true;
+    
+    // Fix layout issues by directly setting explicit heights
+    document.querySelectorAll('.react-flow, .react-flow__container, .react-flow__viewport').forEach(el => {
+      if (el instanceof HTMLElement) {
+        const parent = el.parentElement;
+        if (parent && parent.offsetHeight > 10) {
+          el.style.height = `${parent.offsetHeight}px`;
         }
       }
-      
-      // Force repaint to fix rendering issues
-      const originalDisplay = element.style.display;
-      element.style.display = 'none';
-      void element.offsetHeight; // Trigger reflow
-      element.style.display = originalDisplay;
-    }
-  });
-  
-  // Dispatch event to notify components that a reset occurred
-  window.dispatchEvent(new CustomEvent('flow-reset', { 
-    detail: { timestamp: Date.now() } 
-  }));
+    });
+  }
 }
