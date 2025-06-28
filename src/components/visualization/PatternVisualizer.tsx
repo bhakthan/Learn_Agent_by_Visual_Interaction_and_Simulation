@@ -440,8 +440,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
           </div>
         </div>
         
-        {isAnimating && (
-          <div className="p-4 pt-0 bg-muted">
+        <div className="p-4 pt-0 bg-muted">
             <div className="flex flex-wrap items-center gap-4 mt-4">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Mode:</span>
@@ -451,6 +450,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
                     variant={animationState.mode === 'auto' ? "default" : "outline"}
                     className="h-8"
                     onClick={() => changeAnimationMode('auto')}
+                    disabled={isAnimating && !animationState.isPaused}
                   >
                     Auto
                   </Button>
@@ -459,13 +459,14 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
                     variant={animationState.mode === 'step-by-step' ? "default" : "outline"}
                     className={`h-8 ${animationState.mode === 'step-by-step' ? "ring-2 ring-primary" : ""}`}
                     onClick={() => changeAnimationMode('step-by-step')}
+                    disabled={isAnimating && !animationState.isPaused}
                   >
                     Step by Step
                   </Button>
                 </div>
               </div>
               
-              {animationState.mode === 'step-by-step' && (
+              {isAnimating && animationState.mode === 'step-by-step' && (
                 <Button 
                   size="sm" 
                   variant="default"
@@ -514,7 +515,6 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
               </div>
             </div>
           </div>
-        )}
         
         <div className="p-4">
           <p className="text-muted-foreground mb-4">{patternData.description}</p>

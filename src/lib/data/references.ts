@@ -36,7 +36,7 @@ export const references: ReferencesData = {
             description: "Official Microsoft documentation on Azure AI Services"
           },
           {
-            title: "Azure AI Studio",
+            title: "Azure AI Foundry",
             url: "https://learn.microsoft.com/azure/ai-studio/",
             description: "Create, evaluate and deploy AI solutions"
           },
@@ -801,14 +801,14 @@ export const references: ReferencesData = {
         name: "Documentation",
         references: [
           {
-            title: "Azure AI Studio Documentation",
+            title: "Azure AI Foundry Documentation",
             url: "https://learn.microsoft.com/azure/ai-studio/",
-            description: "Official documentation for Azure AI Studio"
+            description: "Official documentation for Azure AI Foundry"
           },
           {
-            title: "Azure AI Studio Tutorials",
+            title: "Azure AI Foundry Tutorials",
             url: "https://learn.microsoft.com/azure/ai-studio/tutorials/",
-            description: "Step-by-step tutorials for Azure AI Studio"
+            description: "Step-by-step tutorials for Azure AI Foundry"
           }
         ]
       }

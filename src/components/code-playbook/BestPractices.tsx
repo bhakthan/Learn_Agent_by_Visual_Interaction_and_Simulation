@@ -188,7 +188,7 @@ const BestPractices: React.FC<BestPracticesProps> = ({ patternId, patternName })
                     rel="noopener noreferrer"
                     className="border rounded-md p-3 hover:border-primary/50 hover:bg-muted/20 transition-colors"
                   >
-                    <h4 className="font-medium text-sm">Azure AI Studio</h4>
+                    <h4 className="font-medium text-sm">Azure AI Foundry</h4>
                     <p className="text-xs text-muted-foreground">Visual development environment for AI applications</p>
                   </a>
                 </div>
