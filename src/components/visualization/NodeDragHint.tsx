@@ -7,18 +7,13 @@ interface NodeDragHintProps {
   initialShow?: boolean;
 }
 
-const NodeDragHint = ({ initialShow = true }: NodeDragHintProps) => {
-  const [show, setShow] = useState(initialShow);
+const NodeDragHint = ({ initialShow = false }: NodeDragHintProps) => {
+  const [show, setShow] = useState(false); // Always initialize to false regardless of initialShow
 
-  // Auto-hide after 6 seconds
+  // No auto-show functionality
   useEffect(() => {
-    if (show) {
-      const timeout = setTimeout(() => {
-        setShow(false);
-      }, 6000);
-      
-      return () => clearTimeout(timeout);
-    }
+    // No timeout needed as we never show the hint
+    return () => {}; // Empty cleanup function
   }, [show]);
 
   if (!show) return null;

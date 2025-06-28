@@ -107,7 +107,7 @@ const CustomNode = memo(({ data, id }: { data: any, id: string }) => {
   }
   
   return (
-    <div style={getNodeStyle()} title="Click and drag to reposition node">
+    <div style={getNodeStyle()}>
       <Handle type="target" position={Position.Left} />
       <div>
         <strong className="flex items-center gap-1">
@@ -611,7 +611,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
             <Background />
             <Controls />
             <MiniMap />
-            <NodeDragHint />
+            {/* NodeDragHint disabled to avoid pop-up message */}
             <DataFlowVisualizer 
               flows={dataFlows} 
               edges={edges}
@@ -626,7 +626,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
                   animationState.mode === 'step-by-step' ? 
                     `Step by step mode: ${animationState.step} steps completed` : 
                     'Visualizing data flow between agents...' 
-                  : 'Drag nodes to customize layout. Click "Start Simulation" to see data flow between agents'}
+                  : 'Click "Start Simulation" to see data flow between agents'}
               </div>
             </Panel>
           </ReactFlow>
