@@ -847,15 +847,5 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   // The component will handle its own state changes internally
   return true;
 });
-  
-  if (prevNodes.length !== nextNodes.length) return false;
-  
-  // Check if edges have changed significantly
-  if (prevProps.patternData.edges.length !== nextProps.patternData.edges.length) return false;
-  
-  // If we got here, pattern data is similar enough to skip re-rendering
-  // The component will handle its own state changes internally
-  return true;
-});
 
 export default PatternDemo;
