@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Edge } from 'reactflow';
 import { motion } from 'framer-motion';
 import { getNodeDataFlowParams, getDataFlowAnimationStyle } from '@/lib/utils/visualizationUtils';
@@ -72,7 +72,7 @@ interface DataFlowVisualizerProps {
 /**
  * Component to visualize data flowing between nodes on the ReactFlow canvas
  */
-const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete, speed = 1 }: DataFlowVisualizerProps) => {
+const DataFlowVisualizer = React.memo(({ flows, edges, getEdgePoints, onFlowComplete, speed = 1 }: DataFlowVisualizerProps) => {
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
   const [activeFlows, setActiveFlows] = useState<DataFlow[]>([]);
@@ -195,6 +195,19 @@ const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete, speed
       {activeFlows.map(renderFlowIndicator)}
     </>
   );
-};
+}, (prevProps, nextProps) => {
+  // Only re-render when relevant props change
+  if (prevProps.speed !== nextProps.speed) return false;
+  if (prevProps.edges.length !== nextProps.edges.length) return false;
+  if (prevProps.flows.length !== nextProps.flows.length) return false;
+  
+  // Check if flows array has changed significantly
+  const prevFlowIds = new Set(prevProps.flows.map(f => f.id));
+  const nextFlowIds = new Set(nextProps.flows.map(f => f.id));
+  if (prevFlowIds.size !== nextFlowIds.size) return false;
+  
+  // If we got here, props are similar enough to skip re-rendering
+  return true;
+});
 
 export default DataFlowVisualizer;

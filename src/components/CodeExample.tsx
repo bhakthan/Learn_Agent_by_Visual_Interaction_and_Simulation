@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import React, { FC, useState } from 'react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Copy, Link } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
@@ -100,4 +100,9 @@ const CodeExample: FC<CodeExampleProps> = ({ example }) => {
   )
 }
 
-export default CodeExample
+export default React.memo(CodeExample, (prevProps, nextProps) => {
+  // Deep compare example object for equality
+  return prevProps.example.id === nextProps.example.id && 
+         prevProps.example.title === nextProps.example.title &&
+         prevProps.example.code === nextProps.example.code;
+});

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Outlet, Route, Routes, Link, useLocation, Navigate } from 'react-router-dom'
 import { ThemeProvider } from './components/theme/ThemeProvider'
 import { ThemeToggle } from './components/theme/ThemeToggle'
@@ -116,7 +116,7 @@ function App() {
   );
 }
 
-function TabLink({ to, icon, label }: { to: string, icon: React.ReactNode, label: string }) {
+const TabLink = React.memo(function TabLink({ to, icon, label }: { to: string, icon: React.ReactNode, label: string }) {
   const location = useLocation();
   const isActive = location.pathname === to;
   
@@ -133,9 +133,9 @@ function TabLink({ to, icon, label }: { to: string, icon: React.ReactNode, label
       </Link>
     </Button>
   );
-}
+});
 
-function ListItem({ className, title, children, ...props }: React.ComponentPropsWithoutRef<"a"> & { title: string }) {
+const ListItem = React.memo(function ListItem({ className, title, children, ...props }: React.ComponentPropsWithoutRef<"a"> & { title: string }) {
   return (
     <li>
       <NavigationMenuLink asChild>
@@ -154,6 +154,6 @@ function ListItem({ className, title, children, ...props }: React.ComponentProps
       </NavigationMenuLink>
     </li>
   )
-}
+});
 
 export default App

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import ReactFlow, { 
   Background, 
   Controls,
@@ -34,6 +34,7 @@ import {
   getDataFlowAnimationStyle 
 } from '@/lib/utils/dataFlowUtils'
 import DataFlowVisualizer from './DataFlowVisualizer'
+import { useMemoizedCallback } from '@/lib/utils'
 
 interface PatternVisualizerProps {
   patternData: PatternData
@@ -64,7 +65,7 @@ interface AnimationState {
 }
 
 // Custom node types
-const CustomNode = ({ data, id }: { data: any, id: string }) => {
+const CustomNode = React.memo(({ data, id }: { data: any, id: string }) => {
   const getNodeStyle = () => {
     const baseStyle = {
       padding: '10px 20px',
@@ -131,7 +132,14 @@ const CustomNode = ({ data, id }: { data: any, id: string }) => {
       <Handle type="source" position={Position.Right} />
     </div>
   )
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison function to control re-renders
+  return prevProps.id === nextProps.id && 
+         prevProps.data.label === nextProps.data.label &&
+         prevProps.data.description === nextProps.data.description &&
+         prevProps.data.status === nextProps.data.status &&
+         prevProps.data.isActive === nextProps.data.isActive;
+});
 
 const nodeTypes: NodeTypes = {
   input: CustomNode,
@@ -235,7 +243,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     })));
   }, [patternData.edges, setNodes, setEdges]);
   
-  const getEdgePoints = useCallback((edgeId: string) => {
+  const getEdgePoints = useMemoizedCallback((edgeId: string) => {
     const edge = edges.find(e => e.id === edgeId);
     if (!edge) return null;
     
@@ -251,9 +259,9 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     const targetY = targetNode.position.y + 40;
     
     return { sourceX, sourceY, targetX, targetY };
-  }, [nodes, edges]);
+  }, []);
   
-  const onFlowComplete = useCallback((flowId: string) => {
+  const onFlowComplete = useMemoizedCallback((flowId: string) => {
     setDataFlows(currentFlows => {
       const flow = currentFlows.find(f => f.id === flowId);
       if (!flow) return currentFlows;
@@ -276,7 +284,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       // Return flows with completed flow filtered out
       return currentFlows.filter(f => f.id !== flowId);
     });
-  }, [setNodes]);
+  }, []);
   
   const togglePauseSimulation = useCallback(() => {
     setAnimationState(prev => ({ ...prev, isPaused: !prev.isPaused }));
@@ -609,4 +617,4 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
   )
 }
 
-export default PatternVisualizer
+export default React.memo(PatternVisualizer);

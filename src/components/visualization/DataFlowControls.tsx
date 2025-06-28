@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Check, Funnel, Eye, EyeClosed, ArrowsClockwise, PaintBucket, List } from '@phosphor-icons/react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -374,4 +374,17 @@ const DataFlowControls = ({
   );
 };
 
-export default DataFlowControls;
+export default React.memo(DataFlowControls, (prevProps, nextProps) => {
+  // Shallow compare most props
+  if (prevProps.availableMessageTypes.length !== nextProps.availableMessageTypes.length) return false;
+  if (prevProps.availableNodes.length !== nextProps.availableNodes.length) return false;
+  if (prevProps.availableEdges.length !== nextProps.availableEdges.length) return false;
+  
+  // Deep compare for available nodes if lengths match (to detect data changes)
+  const prevNodeIds = prevProps.availableNodes.map(n => n.id).sort().join(',');
+  const nextNodeIds = nextProps.availableNodes.map(n => n.id).sort().join(',');
+  if (prevNodeIds !== nextNodeIds) return false;
+  
+  // Functions in props are assumed stable (via useMemoizedCallback or useCallback in parent)
+  return true;
+});
