@@ -519,6 +519,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
           Interactive demonstration of the {patternData.name} agent pattern with step-by-step visualization
         </CardDescription>
       </CardHeader>
+      <CardContent>
         <div className="space-y-6">
           <div className="flex gap-2 items-center">
             <Input
