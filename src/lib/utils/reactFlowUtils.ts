@@ -192,6 +192,113 @@ export function useFlowLayout(
 }
 
 /**
+ * ResizeObserver utilities for ReactFlow components
+ */
+
+/**
+ * Configure a safer ResizeObserver specifically for ReactFlow
+ * Call this in your ReactFlow components to set up error-resistant resize handling
+ */
+export function setupSafeReactFlowResizeHandler(container: HTMLElement | null) {
+  if (!container) return null;
+  
+  // Track resize state to prevent excessive updates
+  let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
+  let animationFrameId: number | null = null;
+  let isResizing = false;
+  
+  // Create ResizeObserver with enhanced error handling
+  const observer = new ResizeObserver(entries => {
+    // Skip if we're already processing to avoid loops
+    if (isResizing) return;
+    
+    isResizing = true;
+    
+    // Clear existing timeouts
+    if (resizeTimeout) {
+      clearTimeout(resizeTimeout);
+    }
+    
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+    }
+    
+    // Debounce resize events
+    resizeTimeout = setTimeout(() => {
+      animationFrameId = requestAnimationFrame(() => {
+        try {
+          // Dispatch a custom event that can be handled by ReactFlow components
+          // but with reduced frequency
+          const event = new CustomEvent('safe-flow-resize', { detail: entries });
+          container.dispatchEvent(event);
+        } catch (error) {
+          // Silently handle any errors
+        } finally {
+          // Reset flags after a short delay to prevent immediate re-triggering
+          setTimeout(() => {
+            isResizing = false;
+            animationFrameId = null;
+            resizeTimeout = null;
+          }, 100);
+        }
+      });
+    }, 250); // Substantial debounce to avoid rapid firing
+  });
+  
+  // Start observing the container
+  observer.observe(container);
+  
+  // Return a cleanup function that can be used in useEffect
+  return () => {
+    if (resizeTimeout) {
+      clearTimeout(resizeTimeout);
+    }
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+    }
+    observer.disconnect();
+  };
+}
+
+/**
+ * Safely catch ResizeObserver errors specifically for ReactFlow components
+ * This adds an additional layer of protection on top of global handling
+ */
+export function setupReactFlowErrorHandling() {
+  // Only run in browser environment
+  if (typeof window === 'undefined') return;
+  
+  // Only set up once
+  if ((window as any).__reactFlowErrorHandlerAdded) return;
+  
+  // Flag ReactFlow errors differently to allow selective handling
+  const originalHandleError = window.onerror;
+  window.onerror = function(message, source, lineno, colno, error) {
+    if (typeof message === 'string' && message.includes('ResizeObserver')) {
+      // Check if it's from a ReactFlow component
+      if (source && (
+        source.includes('react-flow') || 
+        source.includes('reactflow') ||
+        document.activeElement?.closest('.react-flow')
+      )) {
+        // Mark as ReactFlow error and suppress
+        (error as any).__reactFlowError = true;
+        return true; // Prevents default handling
+      }
+    }
+    
+    // Forward to original handler
+    if (originalHandleError) {
+      return originalHandleError.call(window, message, source, lineno, colno, error);
+    }
+    
+    return false;
+  };
+  
+  (window as any).__reactFlowErrorHandlerAdded = true;
+}
+
+/**
  * Get connected nodes from a given node
  */
 export function getConnectedNodes(

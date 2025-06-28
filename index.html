@@ -77,6 +77,18 @@
             // Pass through all other errors
             return originalConsoleError.apply(console, [msg, ...args]);
         };
+        
+        // Add global error handler for ResizeObserver errors
+        window.addEventListener('error', function(e) {
+            if (e && e.message && (
+                e.message.includes('ResizeObserver loop') || 
+                e.message.includes('ResizeObserver completed with undelivered notifications')
+            )) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        }, true);
     </script>
 </head>
 

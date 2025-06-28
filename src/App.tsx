@@ -24,69 +24,65 @@ function App() {
     // Set up global ResizeObserver error handling
     setupResizeObserverErrorHandling()
     
-    // Prevent undelivered notification errors with improved RAF sequence
-    const handleLayoutUpdate = () => {
-      // Flag to track if we're in a layout update cycle
-      if ((window as any).__inLayoutUpdate) return;
-      (window as any).__inLayoutUpdate = true;
-      
-      // Track the number of RAF calls to prevent excessive nesting
-      let rafCount = 0;
-      const maxRafDepth = 3;
-      
-      // Function to create nested RAF calls with proper cleanup
-      const scheduleRAF = () => {
-        if (rafCount >= maxRafDepth) {
-          (window as any).__inLayoutUpdate = false;
-          return;
-        }
-        
-        rafCount++;
-        if ((window as any).__layoutRAFId) {
-          cancelAnimationFrame((window as any).__layoutRAFId);
-        }
-        
-        (window as any).__layoutRAFId = requestAnimationFrame(() => {
-          // Use setTimeout to break potential synchronous loops
-          setTimeout(() => {
-            scheduleRAF();
-          }, rafCount * 16); // Increasingly longer delays
-        });
+    // Set up specific handling for ReactFlow components
+    const importReactFlowUtils = async () => {
+      try {
+        const { setupReactFlowErrorHandling } = await import('./lib/utils/reactFlowUtils');
+        setupReactFlowErrorHandling();
+      } catch (err) {
+        // Silently handle import errors
+      }
+    };
+    importReactFlowUtils();
+    
+    // Throttle resize event firing
+    const debouncedDispatch = (eventName: string) => {
+      let timer: ReturnType<typeof setTimeout> | null = null;
+      return () => {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+          window.dispatchEvent(new Event(eventName));
+        }, 100);
       };
-      
-      // Start the RAF sequence
-      scheduleRAF();
-      
-      // Safety cleanup - release lock after a maximum time
-      setTimeout(() => {
-        (window as any).__inLayoutUpdate = false;
-      }, 1000);
     };
     
-    // Debounce resize events to prevent excessive updates
-    let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
-    const handleResize = () => {
-      if (resizeTimeout) clearTimeout(resizeTimeout);
-      
-      resizeTimeout = setTimeout(() => {
-        // Trigger layout update after resize completes
-        handleLayoutUpdate();
-      }, 100); // Wait for resize to finish
-    };
+    // Create debounced event dispatchers
+    const dispatchLayoutUpdate = debouncedDispatch('layout-update');
+    const dispatchContentResize = debouncedDispatch('content-resize');
     
-    // Listen for both layout updates and content resize events
-    window.addEventListener('layout-update', handleLayoutUpdate);
-    window.addEventListener('content-resize', handleLayoutUpdate);
-    window.addEventListener('resize', handleResize);
+    // Listen for ResizeObserver errors
+    window.addEventListener('error', (e) => {
+      if (e.message?.includes('ResizeObserver')) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Force recalculation of layout after a small delay
+        setTimeout(dispatchLayoutUpdate, 100);
+        return false;
+      }
+    }, true);
+    
+    // Monitor for layout shifts that might cause ResizeObserver errors
+    const layoutShiftObserver = new PerformanceObserver((entryList) => {
+      for (const entry of entryList.getEntries()) {
+        if ((entry as any).value > 0.05) { // Only trigger for significant shifts
+          dispatchLayoutUpdate();
+          break;
+        }
+      }
+    });
+    
+    // Try to observe layout shifts (might not be supported in all browsers)
+    try {
+      layoutShiftObserver.observe({ type: 'layout-shift', buffered: true });
+    } catch (e) {
+      // Silently handle unsupported observer
+    }
     
     return () => {
-      window.removeEventListener('layout-update', handleLayoutUpdate);
-      window.removeEventListener('content-resize', handleLayoutUpdate);
-      window.removeEventListener('resize', handleResize);
-      
-      if (resizeTimeout) clearTimeout(resizeTimeout);
-      if ((window as any).__layoutRAFId) {
-        cancelAnimationFrame((window as any).__layoutRAFId);
+      try {
+        layoutShiftObserver.disconnect();
+      } catch (e) {
+        // Silently handle cleanup errors
       }
     };
   }, [])

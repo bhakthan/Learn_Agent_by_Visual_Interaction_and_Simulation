@@ -1,119 +1,89 @@
-import { useRef, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { setupSafeReactFlowResizeHandler } from '../utils/reactFlowUtils';
 
 /**
- * Custom hook for optimizing ReactFlow container handling
- * This hook provides memoized dimensions and proper resize handling
- * using a ResizeObserver and layout optimization
+ * Hook to safely handle ReactFlow container resizing
+ * Helps prevent ResizeObserver errors and improves rendering
+ * 
+ * @returns Object with container ref and dimensions
  */
-export function useFlowContainer<T extends HTMLElement>() {
-  const ref = useRef<T | null>(null);
-  const sizeCacheRef = useRef<{ width: number; height: number } | null>(null);
-  const observerRef = useRef<ResizeObserver | null>(null);
-  const rafIdRef = useRef<number | null>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingUpdateRef = useRef<boolean>(false);
-  
+export function useFlowContainer() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [isReady, setIsReady] = useState(false);
+  const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
-    if (!ref.current) return;
+    if (!containerRef.current) return;
     
-    // Create a memoized resize observer to prevent excessive calculations
-    const element = ref.current;
-    let skipNextResize = false;
-    
-    // Define a function to safely dispatch resize events
-    const safelyDispatchResizeEvent = (width: number, height: number) => {
-      // Safely dispatch events only if we're not in the middle of layout operations
-      try {
-        if (pendingUpdateRef.current) return;
+    // Helper to measure dimensions safely
+    const updateDimensions = () => {
+      if (!containerRef.current) return;
+      
+      // Clear any pending updates
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+      
+      // Schedule update with slight delay to ensure measurements are accurate
+      // and to avoid excessive updates during rapid resizing
+      resizeTimeoutRef.current = setTimeout(() => {
+        if (!containerRef.current) return;
         
-        pendingUpdateRef.current = true;
+        const { width, height } = containerRef.current.getBoundingClientRect();
         
-        // Cancel any pending animations and timeouts
-        if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        
-        // Use double RAF to ensure a clean render cycle
-        rafIdRef.current = requestAnimationFrame(() => {
-          rafIdRef.current = requestAnimationFrame(() => {
-            try {
-              // Dispatch a custom event that ReactFlow can listen to
-              const event = new CustomEvent('flow-resize', { 
-                detail: { width, height } 
-              });
-              window.dispatchEvent(event);
-              
-              // Add a small delay before allowing more updates
-              timeoutRef.current = setTimeout(() => {
-                pendingUpdateRef.current = false;
-                timeoutRef.current = null;
-              }, 150);
-              
-            } catch (error) {
-              // Silently handle errors to prevent observer loop crashes
-              pendingUpdateRef.current = false;
-            }
+        // Only update if dimensions have changed significantly
+        setDimensions(prev => {
+          const hasChanged = 
+            Math.abs(prev.width - width) > 2 || 
+            Math.abs(prev.height - height) > 2;
             
-            rafIdRef.current = null;
-          });
+          return hasChanged ? { width, height } : prev;
         });
-      } catch (error) {
-        pendingUpdateRef.current = false;
-      }
+        
+        // Mark as ready after initial dimension calculation
+        if (!isReady && width > 0 && height > 0) {
+          setIsReady(true);
+        }
+      }, 100);
     };
     
-    // Create observer with error handling
-    observerRef.current = new ResizeObserver((entries) => {
-      try {
-        if (skipNextResize) {
-          skipNextResize = false;
-          return;
-        }
-        
-        // Ignore observations if we're already handling an update
-        if (pendingUpdateRef.current) return;
-        
-        // Get the first observation
-        const observation = entries[0];
-        if (!observation) return;
-        
-        // Extract box dimensions, preferring content box
-        const box = observation.contentBoxSize?.[0] || observation.contentRect;
-        const newWidth = Math.round(box.inlineSize || observation.contentRect.width);
-        const newHeight = Math.round(box.blockSize || observation.contentRect.height);
-        
-        // Skip if no significant change (minimum 2px difference to avoid sub-pixel issues)
-        if (sizeCacheRef.current && 
-            Math.abs(sizeCacheRef.current.width - newWidth) < 2 && 
-            Math.abs(sizeCacheRef.current.height - newHeight) < 2) {
-          return;
-        }
-        
-        // Update size cache
-        sizeCacheRef.current = { width: newWidth, height: newHeight };
-        
-        // Debounce the resize event with significant delay to prevent loops
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        
-        timeoutRef.current = setTimeout(() => {
-          safelyDispatchResizeEvent(newWidth, newHeight);
-        }, 200);
-      } catch (error) {
-        // Prevent observer errors from crashing the app
-        console.log('Safely handled resize observer error');
+    // Set up safe resize handler
+    const cleanup = setupSafeReactFlowResizeHandler(containerRef.current);
+    
+    // Setup event listener for the custom resize event
+    const handleSafeResize = () => updateDimensions();
+    containerRef.current.addEventListener('safe-flow-resize', handleSafeResize);
+    
+    // Do initial measurement
+    updateDimensions();
+    
+    // Global resize events (with debounce)
+    const handleWindowResize = () => {
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
       }
-    });
+      resizeTimeoutRef.current = setTimeout(updateDimensions, 100);
+    };
     
-    // Start observing the element
-    observerRef.current.observe(element, { box: 'border-box' });
+    window.addEventListener('resize', handleWindowResize);
     
-    // Cleanup on unmount
+    // Cleanup
     return () => {
-      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (observerRef.current) observerRef.current.disconnect();
-      observerRef.current = null;
+      if (cleanup) cleanup();
+      if (containerRef.current) {
+        containerRef.current.removeEventListener('safe-flow-resize', handleSafeResize);
+      }
+      window.removeEventListener('resize', handleWindowResize);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
     };
-  }, []);
-  
-  return ref;
+  }, [isReady]);
+
+  return {
+    containerRef,
+    dimensions,
+    isReady
+  };
 }

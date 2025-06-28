@@ -34,25 +34,56 @@ export function setupResizeObserverErrorHandling() {
       // Track how many errors we've suppressed in a row
       pendingResizeObserverErrors++;
       
-      // If we're seeing a cascade of errors or frequent errors, add progressively longer delays
+      // If we're seeing a cascade of errors or frequent errors, use different mitigation strategies
       if (pendingResizeObserverErrors > 3 || (now - lastResizeErrorTime < 300)) {
-        pendingResizeObserverErrors = 0;
-        lastResizeErrorTime = now;
-        
-        // Force a repaint with increasingly longer delays to break the cycle
-        const delay = Math.min(pendingResizeObserverErrors * 50, 500);
-        document.body.style.visibility = 'hidden';
-        
-        setTimeout(() => {
-          document.body.style.visibility = '';
+        // For frequent errors, use a more aggressive approach
+        if (pendingResizeObserverErrors > 10) {
+          // Reset the counter to prevent infinite handling
+          pendingResizeObserverErrors = 0;
           
-          // Schedule multiple RAF cycles to ensure layout is complete
-          requestAnimationFrame(() => {
+          // Last resort: temporarily freeze all ResizeObservers by replacing the observe method
+          if (!(window as any).__originalResizeObserverObserve && window.ResizeObserver) {
+            (window as any).__originalResizeObserverObserve = window.ResizeObserver.prototype.observe;
+            (window as any).__originalResizeObserverUnobserve = window.ResizeObserver.prototype.unobserve;
+            
+            // Create no-op methods temporarily
+            window.ResizeObserver.prototype.observe = function() { return; };
+            window.ResizeObserver.prototype.unobserve = function() { return; };
+            
+            // Restore after a delay
+            setTimeout(() => {
+              if ((window as any).__originalResizeObserverObserve) {
+                window.ResizeObserver.prototype.observe = (window as any).__originalResizeObserverObserve;
+                window.ResizeObserver.prototype.unobserve = (window as any).__originalResizeObserverUnobserve;
+                delete (window as any).__originalResizeObserverObserve;
+                delete (window as any).__originalResizeObserverUnobserve;
+              }
+            }, 1000);
+          }
+        } else {
+          // Standard approach for moderate frequency errors
+          pendingResizeObserverErrors = 0;
+          lastResizeErrorTime = now;
+          
+          // Use RAF to break the loop without causing visible flicker
+          const delay = Math.min(pendingResizeObserverErrors * 50, 500);
+          
+          // Briefly pause layout calculations without hiding content
+          document.body.style.overflow = 'hidden';
+          
+          setTimeout(() => {
+            document.body.style.overflow = '';
+            
+            // Schedule multiple RAF cycles to ensure layout is complete
             requestAnimationFrame(() => {
-              // Empty function to force a complete layout cycle
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  // Use a third RAF to ensure we're well clear of the current frame
+                });
+              });
             });
-          });
-        }, delay);
+          }, delay);
+        }
       }
       
       lastResizeErrorTime = now;
@@ -152,7 +183,9 @@ export function setupResizeObserverErrorHandling() {
     if (args.length > 0 && 
         typeof args[0] === 'string' && 
         (args[0].includes('ResizeObserver loop') || 
-         args[0].includes('ResizeObserver was created'))) {
+         args[0].includes('ResizeObserver was created') ||
+         args[0].includes('ResizeObserver loop completed with undelivered notifications') ||
+         args[0].includes('undelivered notifications'))) {
       // Suppress these specific errors
       return;
     }

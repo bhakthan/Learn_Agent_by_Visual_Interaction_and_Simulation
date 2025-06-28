@@ -1,139 +1,88 @@
 import { useRef, useState, useEffect } from 'react';
+import { createDebouncedResizeObserver } from '../utils/resizeObserverUtils';
+
+interface ResizeObserverOptions {
+  debounce?: number;
+  skipInitialCallback?: boolean;
+  onResize?: (dimensions: DOMRectReadOnly) => void;
+}
 
 /**
- * Custom hook for observing element size changes with memoization
+ * A hook to safely observe element resizing
  * 
- * @param debounceMs - Debounce delay in milliseconds
- * @returns [ref, dimensions, isResizing] - Ref to attach, current dimensions, resize state
+ * @param options Configuration options
+ * @returns [ref, dimensions, isReady]
  */
-export function useResizeObserver<T extends HTMLElement>(
-  debounceMs: number = 250
-): [
-  React.RefObject<T> | ((node: T | null) => void),
-  { width: number; height: number },
-  boolean
-] {
-  // Element reference
-  const ref = useRef<T | null>(null);
+export function useResizeObserver<T extends HTMLElement = HTMLDivElement>(
+  options: ResizeObserverOptions = {}
+): [React.RefObject<T>, DOMRectReadOnly | undefined, boolean] {
+  const {
+    debounce = 250,
+    skipInitialCallback = false,
+    onResize
+  } = options;
   
-  // State for dimensions and resize status
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [isResizing, setIsResizing] = useState(false);
-  
-  // Refs for memoization and optimization
-  const prevDimensionsRef = useRef({ width: 0, height: 0 });
-  const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const rafIdRef = useRef<number | null>(null);
+  const ref = useRef<T>(null);
+  const [dimensions, setDimensions] = useState<DOMRectReadOnly>();
+  const [isReady, setIsReady] = useState<boolean>(false);
+  const skipNext = useRef<boolean>(skipInitialCallback);
   const observerRef = useRef<ResizeObserver | null>(null);
-  const processingRef = useRef<boolean>(false);
 
-  // Callback ref pattern for more flexibility
-  const setRef = (node: T | null) => {
-    if (ref.current === node) return; // Skip if unchanged
+  useEffect(() => {
+    if (!ref.current) return;
     
-    // Clean up previous observer if exists
-    if (observerRef.current && ref.current) {
-      try {
-        observerRef.current.unobserve(ref.current);
-      } catch (error) {
-        // Handle edge case of observer error
-      }
+    const currentElement = ref.current;
+    
+    // Clean up previous observer
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = null;
     }
     
-    ref.current = node;
-    
-    if (node) {
-      // Initialize new observer if node exists
-      try {
-        const observer = new ResizeObserver((entries) => {
-          try {
-            // Ignore if already processing to avoid looping
-            if (processingRef.current) return;
-            
-            const entry = entries[0];
-            if (!entry) return;
-            
-            // Get content dimensions with rounding to avoid sub-pixel differences
-            const width = Math.round(entry.contentRect.width);
-            const height = Math.round(entry.contentRect.height);
-            const prev = prevDimensionsRef.current;
-            
-            // Only update if dimensions have changed significantly (minimum 2px difference)
-            if (Math.abs(width - prev.width) > 2 || Math.abs(height - prev.height) > 2) {
-              // Mark as resizing and processing
-              setIsResizing(true);
-              processingRef.current = true;
-              
-              // Clear any pending timeout and animation frames
-              if (resizeTimeoutRef.current) {
-                clearTimeout(resizeTimeoutRef.current);
-                resizeTimeoutRef.current = null;
-              }
-              
-              if (rafIdRef.current) {
-                cancelAnimationFrame(rafIdRef.current);
-                rafIdRef.current = null;
-              }
-              
-              // Set a timeout to update dimensions after debounce period
-              resizeTimeoutRef.current = setTimeout(() => {
-                // Use double RAF for smoother visual updates and to ensure a clean layout cycle
-                rafIdRef.current = requestAnimationFrame(() => {
-                  rafIdRef.current = requestAnimationFrame(() => {
-                    try {
-                      prevDimensionsRef.current = { width, height };
-                      setDimensions({ width, height });
-                      setIsResizing(false);
-                    } finally {
-                      // Always reset processing flag
-                      processingRef.current = false;
-                      rafIdRef.current = null;
-                    }
-                  });
-                });
-              }, debounceMs);
-            }
-          } catch (error) {
-            // Reset flags in case of error
-            processingRef.current = false;
-            setIsResizing(false);
-          }
+    try {
+      // Create a debounced observer that won't trigger ResizeObserver loops
+      observerRef.current = createDebouncedResizeObserver((entries) => {
+        if (entries.length === 0 || !entries[0].contentRect) return;
+        
+        // Skip the initial callback if requested
+        if (skipNext.current) {
+          skipNext.current = false;
+          return;
+        }
+        
+        const newRect = entries[0].contentRect;
+        
+        // Only update dimensions if there's an actual change
+        setDimensions(prev => {
+          const hasChanged = !prev ||
+            Math.abs(prev.width - newRect.width) > 1 ||
+            Math.abs(prev.height - newRect.height) > 1;
+          
+          return hasChanged ? newRect : prev;
         });
         
-        // Start observing with border-box to include padding/border
-        observer.observe(node, { box: 'border-box' });
-        observerRef.current = observer;
-      } catch (error) {
-        // Fallback in case observer creation fails
-        console.log('ResizeObserver creation failed, using fallback dimensions');
-        setDimensions({
-          width: node.offsetWidth,
-          height: node.offsetHeight
-        });
-      }
-    }
-  };
-  
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current);
-      }
-      if (rafIdRef.current) {
-        cancelAnimationFrame(rafIdRef.current);
-      }
-      if (observerRef.current && ref.current) {
-        try {
-          observerRef.current.unobserve(ref.current);
-          observerRef.current.disconnect();
-        } catch (error) {
-          // Handle edge case of observer error during cleanup
+        // Call the onResize callback if provided
+        if (onResize) {
+          onResize(newRect);
         }
+        
+        if (!isReady && newRect.width > 0 && newRect.height > 0) {
+          setIsReady(true);
+        }
+      }, debounce);
+      
+      observerRef.current.observe(currentElement);
+    } catch (error) {
+      console.log('Safe resize observer error handled:', error);
+    }
+    
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
       }
-      processingRef.current = false;
     };
-  }, []);
-  
-  return [setRef, dimensions, isResizing];
+  }, [debounce, skipInitialCallback, onResize]);
+
+  return [ref, dimensions, isReady];
 }
