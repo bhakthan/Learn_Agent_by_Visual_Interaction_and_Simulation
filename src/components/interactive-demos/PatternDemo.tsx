@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -67,12 +67,13 @@ interface DataFlowMessage {
   complete?: boolean;
 }
 
-// Custom node component for the demo
-const CustomDemoNode = ({ data, id }: { data: any, id: string }) => {
+// Custom node component for the demo with memoization
+const CustomDemoNode = React.memo(({ data, id }: { data: any, id: string }) => {
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
   
-  const getNodeStyle = () => {
+  // Memoize node styles to prevent unnecessary recalculations
+  const getNodeStyle = useCallback(() => {
     const baseStyle = {
       padding: '10px 20px',
       borderRadius: '8px',
@@ -136,10 +137,18 @@ const CustomDemoNode = ({ data, id }: { data: any, id: string }) => {
           ...statusStyle 
         }
     }
-  }
+  }, [data.status, data.nodeType, isDarkMode]); // Only recalculate when these dependencies change
+
+  // Memoize the truncated result text
+  const resultText = useMemo(() => {
+    if (!data.result) return null;
+    return data.result.length > 40 ? `${data.result.substring(0, 40)}...` : data.result;
+  }, [data.result]);
+  
+  const nodeStyle = useMemo(() => getNodeStyle(), [getNodeStyle]);
   
   return (
-    <div style={getNodeStyle()}>
+    <div style={nodeStyle}>
       <Handle type="target" position={Position.Left} />
       <div>
         <div className="flex items-center gap-2">
@@ -149,18 +158,32 @@ const CustomDemoNode = ({ data, id }: { data: any, id: string }) => {
           <strong>{data.label}</strong>
         </div>
         
-        {data.result && (
+        {resultText && (
           <div className={`mt-2 text-xs p-1.5 rounded border ${isDarkMode ? 'bg-background/80 border-border text-foreground' : 'bg-background/50 border-border/50 text-foreground'}`}>
-            {data.result.length > 40 ? `${data.result.substring(0, 40)}...` : data.result}
+            {resultText}
           </div>
         )}
       </div>
       <Handle type="source" position={Position.Right} />
     </div>
-  )
-}
+  );
+}, (prevProps, nextProps) => {
+  // Only re-render when relevant props change
+  if (prevProps.id !== nextProps.id) return false;
+  
+  const prevData = prevProps.data;
+  const nextData = nextProps.data;
+  
+  // Compare important data properties
+  if (prevData.status !== nextData.status) return false;
+  if (prevData.label !== nextData.label) return false;
+  if (prevData.result !== nextData.result) return false;
+  
+  // If we got here, nothing important changed, skip re-render
+  return true;
+});
 
-const PatternDemo = ({ patternData }: PatternDemoProps) => {
+const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   const { theme } = useTheme();
   const [userInput, setUserInput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
@@ -195,8 +218,8 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
   // Track if we're waiting for user to advance to next step
   const [waitingForNextStep, setWaitingForNextStep] = useState<boolean>(false);
   
-  // Create demo nodes for visualization
-  const initialDemoNodes: Node[] = patternData.nodes.map(node => ({
+  // Create demo nodes for visualization - memoize them based on patternData
+  const initialDemoNodes = useMemo(() => patternData.nodes.map(node => ({
     ...node,
     type: 'demoNode',
     data: {
@@ -205,10 +228,10 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
     },
     draggable: false,
     selectable: false,
-  }));
+  })), [patternData.nodes]);
   
-  // Optimize node positions for the demo display
-  const optimizedNodes = initialDemoNodes.map(node => {
+  // Optimize node positions for the demo display - memoized
+  const optimizedNodes = useMemo(() => initialDemoNodes.map(node => {
     // Scale and center the nodes for better visualization
     return {
       ...node,
@@ -217,7 +240,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
         y: node.position.y + 50
       }
     };
-  });
+  }), [initialDemoNodes]);
   
   const [nodes, setNodes, onNodesChange] = useNodesState(optimizedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(patternData.edges);
@@ -253,7 +276,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
     })));
   };
 
-  const getEdgePoints = (edgeId: string) => {
+  const getEdgePoints = useCallback((edgeId: string) => {
     const edge = edges.find(e => e.id === edgeId);
     if (!edge) return null;
     
@@ -269,7 +292,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
     const targetY = targetNode.position.y + 40;
     
     return { sourceX, sourceY, targetX, targetY };
-  };
+  }, [edges, nodes]);
 
   const runDemo = async () => {
     if (!userInput.trim() || isRunning) return;
@@ -499,13 +522,13 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
     }
   };
   
-  // Calculate execution time for a step
-  const getExecutionTime = (step: StepState) => {
+  // Calculate execution time for a step with memoization
+  const getExecutionTime = useCallback((step: StepState) => {
     if (step.startTime && step.endTime) {
-      return ((step.endTime - step.startTime) / 1000).toFixed(1) + "s";
+      return `${((step.endTime - step.startTime) / 1000).toFixed(1)}s`;
     }
     return '';
-  };
+  }, []);
 
   // Import our custom hook
   const { useFlowContainer } = require('@/lib/hooks/useFlowContainer');
@@ -808,6 +831,22 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
       </CardContent>
     </Card>
   );
-};
+}, (prevProps, nextProps) => {
+  // Only re-render when pattern data has changed in a meaningful way
+  if (prevProps.patternData.id !== nextProps.patternData.id) return false;
+  
+  // Deep compare important pattern data properties that would affect rendering
+  const prevNodes = prevProps.patternData.nodes;
+  const nextNodes = nextProps.patternData.nodes;
+  
+  if (prevNodes.length !== nextNodes.length) return false;
+  
+  // Check if edges have changed significantly
+  if (prevProps.patternData.edges.length !== nextProps.patternData.edges.length) return false;
+  
+  // If we got here, pattern data is similar enough to skip re-rendering
+  // The component will handle its own state changes internally
+  return true;
+});
 
 export default PatternDemo;
