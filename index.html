@@ -11,10 +11,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Sans+Pro:wght@400;600&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="/src/main.css" rel="stylesheet" />
     <script>
+        // Initialize recovery variables 
+        window.__resizeRecoveryScheduled = false;
+        window.__resizeObserverErrorCount = 0;
+        window.__lastResizeObserverError = 0;
+        
         // Initialize theme to prevent flash of wrong theme
         (function() {
-            const storageKey = 'azure-ai-agent-theme';
-            const defaultTheme = 'light';
             
             function getThemePreference() {
                 // Check local storage first
@@ -51,7 +54,63 @@
             });
         })();
         
-        // Suppress ResizeObserver errors in the console
+        // Define a reusable function for ResizeObserver error handling
+        function handleResizeObserverError(msg) {
+            // Track errors for adaptive handling
+            const now = Date.now();
+            if (!window.__resizeObserverErrorCount) {
+                window.__resizeObserverErrorCount = 0;
+                window.__lastResizeObserverError = now;
+            }
+            
+            window.__resizeObserverErrorCount++;
+            
+            // Implement exponential backoff for error recovery
+            if (window.__resizeObserverErrorCount > 3) {
+                // If we have multiple errors in a short period, apply more aggressive fixes
+                if (now - window.__lastResizeObserverError < 2000) {
+                    if (!window.__resizeRecoveryScheduled) {
+                        window.__resizeRecoveryScheduled = true;
+                        
+                        // Apply stabilization techniques with progressive delay
+                        const applyStabilization = (attempt = 1) => {
+                            setTimeout(() => {
+                                // Apply fixes to ReactFlow elements
+                                document.querySelectorAll('.react-flow').forEach(el => {
+                                    // Force hardware acceleration
+                                    el.style.transform = 'translateZ(0)';
+                                    el.style.webkitBackfaceVisibility = 'hidden';
+                                });
+                                
+                                // Trigger a recalculation
+                                window.dispatchEvent(new CustomEvent('flow-force-stabilize', { 
+                                    detail: { timestamp: Date.now(), recovery: true } 
+                                }));
+                                
+                                // Reset recovery state after a delay
+                                setTimeout(() => {
+                                    window.__resizeRecoveryScheduled = false;
+                                    window.__resizeObserverErrorCount = 0;
+                                    document.querySelectorAll('.react-flow').forEach(el => {
+                                        el.style.transform = '';
+                                        el.style.webkitBackfaceVisibility = '';
+                                    });
+                                }, 1000);
+                                
+                            }, Math.min(100 * Math.pow(2, attempt), 2000));
+                        };
+                        
+                        applyStabilization();
+                    }
+                }
+            }
+            
+            // Update last error time
+            window.__lastResizeObserverError = now;
+            
+            // Always suppress these errors
+            return true;
+        }
         const originalConsoleError = console.error;
         console.error = function(msg, ...args) {
             // More comprehensive check for ResizeObserver related messages
@@ -61,7 +120,8 @@
                  msg.includes('undelivered notifications') ||
                  msg.includes('ResizeObserver completed') ||
                  msg.includes('ResizeObserver'))) {
-                // Completely suppress these specific errors
+                // Handle the error with our utility
+                handleResizeObserverError(msg);
                 return;
             }
             
@@ -79,7 +139,7 @@
             return originalConsoleError.apply(console, [msg, ...args]);
         };
         
-        // Add global error handler for ResizeObserver errors
+        // Add global error handler for ResizeObserver errors with enhanced recovery
         window.addEventListener('error', function(e) {
             if (e && e.message && (
                 e.message.includes('ResizeObserver loop') || 
@@ -87,11 +147,53 @@
                 e.message.includes('ResizeObserver') ||
                 e.message.includes('undelivered notifications')
             )) {
+                // Prevent the error from propagating
                 e.preventDefault();
                 e.stopPropagation();
+                
+                // Handle the error with our utility
+                handleResizeObserverError(e.message);
+                
                 return false;
             }
         }, true);
+        // Add advanced monitoring for performance issues
+        if ('PerformanceObserver' in window) {
+            try {
+                // Monitor layout shifts that might cause ResizeObserver issues
+                const layoutObserver = new PerformanceObserver((list) => {
+                    for (const entry of list.getEntries()) {
+                        // Large layout shifts can trigger ResizeObserver loops
+                        if (entry.value > 0.1) {
+                            // Delay resize events during layout shifts
+                            if (!window.__layoutShiftProtection) {
+                                window.__layoutShiftProtection = true;
+                                setTimeout(() => {
+                                    window.__layoutShiftProtection = false;
+                                }, 500);
+                            }
+                            break;
+                        }
+                    }
+                });
+                layoutObserver.observe({ type: 'layout-shift', buffered: true });
+                
+                // Monitor long tasks that might block the main thread
+                const longTaskObserver = new PerformanceObserver((list) => {
+                    for (const entry of list.getEntries()) {
+                        if (entry.duration > 100) { // Tasks longer than 100ms
+                            // Log for diagnostics but don't interfere
+                            if (window.location.hostname === 'localhost') {
+                                console.warn('Long task detected:', entry.duration.toFixed(2) + 'ms');
+                            }
+                        }
+                    }
+                });
+                longTaskObserver.observe({ type: 'longtask', buffered: true });
+            } catch (err) {
+                // Silently fail if observers aren't supported
+            }
+        }
     </script>
 </head>
 

@@ -12,7 +12,7 @@ import ConceptsExplorer from './components/concepts/ConceptsExplorer'
 import AzureServicesOverview from './components/azure-services/AzureServicesOverview'
 import CommunitySharing from './components/community/CommunitySharing'
 import ReferencesSection from './components/references/ReferencesSection'
-import { setupResizeObserverErrorHandling } from './lib/utils/resizeObserverUtils'
+import { setupResizeObserverErrorHandling, disableResizeObserverIfProblematic } from './lib/utils/resizeObserverUtils'
 
 function App() {
   const [mounted, setMounted] = useState(false)
@@ -29,11 +29,29 @@ function App() {
       try {
         const { setupReactFlowErrorHandling } = await import('./lib/utils/reactFlowUtils');
         setupReactFlowErrorHandling();
+        
+        // Add comprehensive monitoring for ResizeObserver errors
+        const { monitorReactFlowErrors } = await import('./lib/utils/monitorReactFlowErrors');
+        monitorReactFlowErrors();
       } catch (err) {
         // Silently handle import errors
       }
     };
     importReactFlowUtils();
+    
+    // Add error event listener for ResizeObserver errors
+    const handleError = (event: ErrorEvent) => {
+      if (event.message && event.message.includes('ResizeObserver')) {
+        // Prevent the error from propagating
+        event.preventDefault();
+        event.stopPropagation();
+        
+        // Apply emergency fixes to problematic ResizeObservers
+        disableResizeObserverIfProblematic();
+        return false;
+      }
+    };
+    window.addEventListener('error', handleError);
     
     // Throttle resize event firing
     const debouncedDispatch = (eventName: string) => {
@@ -79,6 +97,9 @@ function App() {
     }
     
     return () => {
+      // Clean up event listeners
+      window.removeEventListener('error', handleError);
+      
       try {
         layoutShiftObserver.disconnect();
       } catch (e) {

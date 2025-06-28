@@ -2,6 +2,7 @@ import { ReactNode, useEffect } from 'react'
 import { ReactFlowProvider } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
+import { resetReactFlowRendering } from '@/lib/utils/resizeObserverUtils'
 
 interface ReactFlowWrapperProps {
   children: ReactNode
@@ -28,17 +29,33 @@ const ReactFlowWrapper = ({ children }: ReactFlowWrapperProps) => {
       });
     };
     
+    // Create handler for flow stability events
+    const handleFlowStabilize = () => {
+      // Find all ReactFlow containers
+      const containers = document.querySelectorAll('.react-flow-wrapper');
+      containers.forEach(container => {
+        // Apply our robust reset function to each container
+        resetReactFlowRendering({ current: container as HTMLElement });
+      });
+    };
+    
     // Listen for content resize events
     window.addEventListener('content-resize', handleContentResize);
     
+    // Listen for our custom stabilization event
+    window.addEventListener('flow-force-stabilize', handleFlowStabilize);
+    
     return () => {
       window.removeEventListener('content-resize', handleContentResize);
+      window.removeEventListener('flow-force-stabilize', handleFlowStabilize);
     };
   }, []);
   
   return (
     <ErrorBoundary>
-      <ReactFlowProvider>{children}</ReactFlowProvider>
+      <div className="react-flow-wrapper w-full h-full">
+        <ReactFlowProvider>{children}</ReactFlowProvider>
+      </div>
     </ErrorBoundary>
   )
 }

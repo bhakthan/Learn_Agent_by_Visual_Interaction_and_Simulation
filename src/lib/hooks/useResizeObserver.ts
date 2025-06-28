@@ -57,47 +57,50 @@ export function useResizeObserver(onResize?: ResizeHandler) {
     
     if (!node) return;
     
-    // Attempt to create a new observer with error handling
-    try {
-      const observer = new ResizeObserver(
-        throttleCallback(() => {
-          try {
-            if (!node) return;
-            
-            // Get the ResizeObserverEntry for this node
-            const borderBoxSize = 
-              'getBoundingClientRect' in node
-                ? { inlineSize: node.getBoundingClientRect().width, blockSize: node.getBoundingClientRect().height }
-                : { inlineSize: 0, blockSize: 0 };
-                
-            // Create a simplified entry object
-            const newEntry = {
-              target: node,
-              contentRect: node.getBoundingClientRect(),
-              borderBoxSize: [borderBoxSize],
-              contentBoxSize: [borderBoxSize],
-              devicePixelContentBoxSize: [borderBoxSize],
-            };
-            
-            // Update state and call callback
-            setEntry(newEntry);
-            
-            if (onResizeRef.current) {
-              onResizeRef.current(newEntry);
+    // Use a delayed setup to avoid multiple synchronous observations
+    setTimeout(() => {
+      // Attempt to create a new observer with error handling
+      try {
+        // Create a more fault-tolerant observer
+        const observer = new ResizeObserver(
+          throttleCallback(() => {
+            try {
+              if (!node || !node.isConnected) return;
+              
+              // Get the dimensions using the safer getBoundingClientRect
+              const rect = node.getBoundingClientRect();
+              if (rect.width === 0 && rect.height === 0) return; // Skip empty elements
+              
+              // Create a simplified entry object
+              const newEntry = {
+                target: node,
+                contentRect: rect,
+                borderBoxSize: [{ inlineSize: rect.width, blockSize: rect.height }],
+                contentBoxSize: [{ inlineSize: rect.width, blockSize: rect.height }],
+                devicePixelContentBoxSize: [{ inlineSize: rect.width, blockSize: rect.height }],
+              };
+              
+              // Update state and call callback
+              setEntry(newEntry);
+              
+              if (onResizeRef.current) {
+                onResizeRef.current(newEntry);
+              }
+            } catch (e) {
+              // Silent error - don't crash the app
+              console.error('ResizeObserver error handled (suppressed)');
             }
-          } catch (e) {
-            // Silent error - don't crash the app
-            console.error('ResizeObserver error handled:', e);
-          }
-        })
-      );
-      
-      // Start observing
-      observer.observe(node);
-      observerRef.current = observer;
-    } catch (error) {
-      console.error('Error setting up ResizeObserver:', error);
-    }
+          })
+        );
+        
+        // Start observing with a safer approach
+        observer.observe(node, { box: 'border-box' });
+        observerRef.current = observer;
+      } catch (error) {
+        // Fail gracefully
+        console.error('Error setting up ResizeObserver (suppressed)');
+      }
+    }, 50); // Delay observer creation
   }, [throttleCallback, observedNode]);
   
   // Cleanup observer on unmount

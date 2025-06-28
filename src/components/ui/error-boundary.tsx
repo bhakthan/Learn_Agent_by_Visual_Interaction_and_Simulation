@@ -39,18 +39,29 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // You can log the error to an error reporting service
-    console.error("Error caught by ErrorBoundary:", error, errorInfo);
-    
     // Filter out ResizeObserver errors to prevent logging noise
     if (error.message && (
       error.message.includes("ResizeObserver loop") || 
-      error.message.includes("ResizeObserver was created")
+      error.message.includes("ResizeObserver was created") ||
+      error.message.includes("undelivered notifications") ||
+      error.message.includes("ResizeObserver completed")
     )) {
-      // Just silently handle these
+      // For ResizeObserver errors, just reset the error state silently
+      this.setState({ 
+        hasError: false,
+        error: null,
+        errorInfo: null
+      });
+      
+      // Trigger a resize event to help ReactFlow recover
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 100);
+      
       return;
     }
     
+    // Handle other errors normally
     this.setState({
       error,
       errorInfo

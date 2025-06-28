@@ -2,3 +2,4 @@
 
 export { useFlowContainer } from './useFlowContainer';
 export { useResizeObserver } from './useResizeObserver';
+export { useStableResizeObserver } from './useStableResizeObserver';
