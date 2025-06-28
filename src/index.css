@@ -69,6 +69,51 @@
   button:hover {
     transition: all 0.2s ease !important;
   }
+  
+  /* ReactFlow dark mode enhancements */
+  .dark .react-flow__edge path {
+    stroke: rgba(255, 255, 255, 0.5);
+  }
+  
+  .dark .react-flow__edge.selected path,
+  .dark .react-flow__edge:focus path,
+  .dark .react-flow__edge:focus-visible path {
+    stroke: var(--primary) !important;
+  }
+  
+  .dark .react-flow__edge-path-selector:hover + .react-flow__edge-path {
+    stroke: var(--primary) !important;
+  }
+  
+  .dark .react-flow__controls {
+    background-color: var(--card);
+    border-color: var(--border);
+  }
+  
+  .dark .react-flow__controls button {
+    background-color: var(--card);
+    border-color: var(--border);
+    color: var(--foreground);
+  }
+  
+  .dark .react-flow__controls button:hover {
+    background-color: var(--muted);
+  }
+  
+  .dark .react-flow__attribution {
+    background-color: rgba(30, 41, 59, 0.8);
+    color: rgba(255, 255, 255, 0.8);
+  }
+  
+  .dark .react-flow__minimap {
+    background-color: var(--card);
+    border-color: var(--border);
+  }
+  
+  /* Fix for flow indicator visibility in dark mode */
+  .dark .flow-indicator {
+    filter: drop-shadow(0px 0px 2px rgba(0, 0, 0, 0.8));
+  }
 }
 
 /* Light Mode */

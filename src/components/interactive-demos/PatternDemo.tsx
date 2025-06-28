@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { PatternData } from '@/lib/data/patterns'
 import { Play, ArrowsClockwise, CheckCircle, Clock, WarningCircle, ArrowBendDownRight } from "@phosphor-icons/react"
+import { useTheme } from '@/components/theme/ThemeProvider'
 import ReactFlow, {
   ReactFlowProvider,
   Node,
@@ -66,37 +67,72 @@ interface DataFlowMessage {
 
 // Custom node component for the demo
 const CustomDemoNode = ({ data, id }: { data: any, id: string }) => {
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+  
   const getNodeStyle = () => {
     const baseStyle = {
       padding: '10px 20px',
       borderRadius: '8px',
       transition: 'all 0.2s ease',
       width: '180px',
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)',
     }
     
     // Add status-specific styling
     const statusStyle = data.status === 'running' ? {
-      boxShadow: '0 0 0 2px var(--primary), 0 0 15px rgba(66, 153, 225, 0.5)',
+      boxShadow: `0 0 0 2px var(--primary), 0 0 15px ${isDarkMode ? 'rgba(66, 153, 225, 0.3)' : 'rgba(66, 153, 225, 0.5)'}`,
       transform: 'scale(1.02)'
     } : data.status === 'complete' ? {
-      boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.6)',
+      boxShadow: `0 0 0 2px ${isDarkMode ? 'rgba(16, 185, 129, 0.8)' : 'rgba(16, 185, 129, 0.6)'}`,
     } : data.status === 'failed' ? {
-      boxShadow: '0 0 0 2px rgba(239, 68, 68, 0.6)',
+      boxShadow: `0 0 0 2px ${isDarkMode ? 'rgba(239, 68, 68, 0.8)' : 'rgba(239, 68, 68, 0.6)'}`,
     } : {};
     
+    // Node type specific styling with dark mode support
     switch(data.nodeType) {
       case 'input':
-        return { ...baseStyle, backgroundColor: 'rgb(226, 232, 240)', border: '1px solid rgb(203, 213, 225)', ...statusStyle }
+        return { 
+          ...baseStyle, 
+          backgroundColor: isDarkMode ? 'rgba(51, 65, 85, 0.8)' : 'rgb(226, 232, 240)', 
+          border: `1px solid ${isDarkMode ? 'rgba(71, 85, 105, 0.8)' : 'rgb(203, 213, 225)'}`, 
+          ...statusStyle 
+        }
       case 'llm':
-        return { ...baseStyle, backgroundColor: 'rgb(219, 234, 254)', border: '1px solid rgb(147, 197, 253)', ...statusStyle }
+        return { 
+          ...baseStyle, 
+          backgroundColor: isDarkMode ? 'rgba(30, 58, 138, 0.4)' : 'rgb(219, 234, 254)', 
+          border: `1px solid ${isDarkMode ? 'rgba(59, 130, 246, 0.5)' : 'rgb(147, 197, 253)'}`, 
+          ...statusStyle 
+        }
       case 'output':
-        return { ...baseStyle, backgroundColor: 'rgb(220, 252, 231)', border: '1px solid rgb(134, 239, 172)', ...statusStyle }
+        return { 
+          ...baseStyle, 
+          backgroundColor: isDarkMode ? 'rgba(20, 83, 45, 0.4)' : 'rgb(220, 252, 231)', 
+          border: `1px solid ${isDarkMode ? 'rgba(34, 197, 94, 0.5)' : 'rgb(134, 239, 172)'}`, 
+          ...statusStyle 
+        }
       case 'router':
-        return { ...baseStyle, backgroundColor: 'rgb(254, 242, 220)', border: '1px solid rgb(253, 224, 71)', ...statusStyle }
+        return { 
+          ...baseStyle, 
+          backgroundColor: isDarkMode ? 'rgba(113, 63, 18, 0.4)' : 'rgb(254, 242, 220)', 
+          border: `1px solid ${isDarkMode ? 'rgba(234, 179, 8, 0.5)' : 'rgb(253, 224, 71)'}`, 
+          ...statusStyle 
+        }
       case 'aggregator':
-        return { ...baseStyle, backgroundColor: 'rgb(240, 253, 240)', border: '1px solid rgb(187, 247, 208)', ...statusStyle }
+        return { 
+          ...baseStyle, 
+          backgroundColor: isDarkMode ? 'rgba(22, 101, 52, 0.4)' : 'rgb(240, 253, 240)', 
+          border: `1px solid ${isDarkMode ? 'rgba(74, 222, 128, 0.5)' : 'rgb(187, 247, 208)'}`, 
+          ...statusStyle 
+        }
       default:
-        return { ...baseStyle, backgroundColor: 'white', border: '1px solid rgb(226, 232, 240)', ...statusStyle }
+        return { 
+          ...baseStyle, 
+          backgroundColor: isDarkMode ? 'rgba(51, 65, 85, 0.6)' : 'white', 
+          border: `1px solid ${isDarkMode ? 'rgba(71, 85, 105, 0.6)' : 'rgb(226, 232, 240)'}`, 
+          ...statusStyle 
+        }
     }
   }
   
@@ -112,7 +148,7 @@ const CustomDemoNode = ({ data, id }: { data: any, id: string }) => {
         </div>
         
         {data.result && (
-          <div className="mt-2 text-xs bg-background/50 p-1.5 rounded border border-border/50">
+          <div className={`mt-2 text-xs p-1.5 rounded border ${isDarkMode ? 'bg-background/80 border-border text-foreground' : 'bg-background/50 border-border/50 text-foreground'}`}>
             {data.result.length > 40 ? `${data.result.substring(0, 40)}...` : data.result}
           </div>
         )}
@@ -127,6 +163,7 @@ const nodeTypes: NodeTypes = {
 }
 
 const PatternDemo = ({ patternData }: PatternDemoProps) => {
+  const { theme } = useTheme();
   const [userInput, setUserInput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [output, setOutput] = useState<string | null>(null);
@@ -501,13 +538,21 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
                 minZoom={0.5}
                 maxZoom={1.5}
                 defaultEdgeOptions={{
-                  style: { strokeWidth: 2 },
+                  style: { 
+                    strokeWidth: 2,
+                    stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined // Enhanced edge visibility in dark mode
+                  },
                   markerEnd: { type: MarkerType.Arrow }
                 }}
               >
-                <Background />
-                <Controls />
-                <MiniMap />
+                <Background color={theme === 'dark' ? '#ffffff20' : '#aaa'} gap={16} />
+                <Controls className={theme === 'dark' ? 'dark-controls' : ''} />
+                <MiniMap 
+                  style={{ 
+                    backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.6)' : undefined,
+                    maskColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.7)' : undefined
+                  }} 
+                />
                 <DataFlowVisualizer 
                   flows={dataFlows} 
                   edges={edges}
@@ -532,45 +577,45 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
                     if (!step) return null;
                     
                     return (
-                      <div 
-                        key={node.id} 
-                        className={`p-3 rounded-md border ${
-                          node.id === currentNodeId ? 'border-primary bg-primary/5' :
-                          step.status === 'complete' ? 'border-green-500/20 bg-green-500/5' :
-                          step.status === 'failed' ? 'border-destructive/20 bg-destructive/5' :
-                          step.status === 'running' ? 'border-amber-500/20 bg-amber-500/5' :
-                          'border-border'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            {step.status === 'running' && <Clock className="text-amber-500" size={16} />}
-                            {step.status === 'complete' && <CheckCircle className="text-green-500" size={16} />}
-                            {step.status === 'failed' && <WarningCircle className="text-destructive" size={16} />}
+                        <div 
+                          key={node.id} 
+                          className={`p-3 rounded-md border ${
+                            node.id === currentNodeId ? 'border-primary bg-primary/5' :
+                            step.status === 'complete' ? 'border-green-500/20 bg-green-500/5' :
+                            step.status === 'failed' ? 'border-destructive/20 bg-destructive/5' :
+                            step.status === 'running' ? 'border-amber-500/20 bg-amber-500/5' :
+                            'border-border'
+                          } ${theme === 'dark' ? 'text-foreground' : ''}`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {step.status === 'running' && <Clock className="text-amber-500" size={16} />}
+                              {step.status === 'complete' && <CheckCircle className="text-green-500" size={16} />}
+                              {step.status === 'failed' && <WarningCircle className="text-destructive" size={16} />}
+                              
+                              <span className="font-medium">{node.data.label}</span>
+                              
+                              <Badge variant="outline" className="ml-1">
+                                {node.data.nodeType}
+                              </Badge>
+                            </div>
                             
-                            <span className="font-medium">{node.data.label}</span>
-                            
-                            <Badge variant="outline" className="ml-1">
-                              {node.data.nodeType}
-                            </Badge>
+                            {step.status !== 'idle' && (
+                              <span className="text-xs text-muted-foreground">
+                                {getExecutionTime(step)}
+                              </span>
+                            )}
                           </div>
                           
-                          {step.status !== 'idle' && (
-                            <span className="text-xs text-muted-foreground">
-                              {getExecutionTime(step)}
-                            </span>
+                          {step.result && (
+                            <div className="text-sm mt-1">
+                              <div className="flex items-start gap-1 text-muted-foreground">
+                                <ArrowBendDownRight size={14} className="mt-1" />
+                                <span>{step.result}</span>
+                              </div>
+                            </div>
                           )}
                         </div>
-                        
-                        {step.result && (
-                          <div className="text-sm mt-1">
-                            <div className="flex items-start gap-1 text-muted-foreground">
-                              <ArrowBendDownRight size={14} className="mt-1" />
-                              <span>{step.result}</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
                     );
                   })}
                 </div>

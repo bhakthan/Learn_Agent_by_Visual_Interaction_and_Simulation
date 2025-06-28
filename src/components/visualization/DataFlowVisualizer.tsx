@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Edge } from 'reactflow';
 import { motion } from 'framer-motion';
 import * as dataFlowUtils from '@/lib/utils/dataFlowUtils';
+import { useTheme } from '@/components/theme/ThemeProvider';
 
 // Updated the interface with all required properties
 interface DataFlow {
@@ -29,6 +30,8 @@ interface DataFlowVisualizerProps {
  * Component to visualize data flowing between nodes on the ReactFlow canvas
  */
 const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete, speed = 1 }: DataFlowVisualizerProps) => {
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
   const [activeFlows, setActiveFlows] = useState<DataFlow[]>([]);
   
   // Update flow progress values
@@ -99,6 +102,11 @@ const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete, speed
     const typeParams = dataFlowUtils.getNodeDataFlowParams(sourceNodeType);
     const style = dataFlowUtils.getDataFlowAnimationStyle(flow.type, typeParams);
     
+    // Enhance visibility in dark mode
+    const textColor = isDarkMode ? 'rgba(255, 255, 255, 0.9)' : style.stroke;
+    const textStroke = isDarkMode ? 'rgba(0, 0, 0, 0.5)' : 'none';
+    const dotFill = isDarkMode && flow.type !== 'error' ? 'rgba(255, 255, 255, 0.9)' : style.stroke;
+    
     return (
       <motion.g 
         key={flow.id}
@@ -111,7 +119,7 @@ const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete, speed
           cx={x}
           cy={y}
           r={style.strokeWidth / 2}
-          fill={style.stroke}
+          fill={dotFill}
           stroke={style.stroke}
           strokeWidth={1}
           className="flow-indicator"
@@ -123,16 +131,20 @@ const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete, speed
             x={x}
             y={y - 10}
             textAnchor="middle"
-            fill={style.stroke}
+            fill={textColor}
+            stroke={textStroke}
+            strokeWidth={isDarkMode ? 0.3 : 0}
             fontSize={10}
             fontWeight={500}
+            paintOrder="stroke"
+            style={{ textShadow: isDarkMode ? '0 1px 2px rgba(0, 0, 0, 0.8)' : 'none' }}
           >
             {flow.label}
           </text>
         )}
       </motion.g>
     );
-  }, [edges, getEdgePoints]);
+  }, [edges, getEdgePoints, isDarkMode]);
 
   return (
     <>
