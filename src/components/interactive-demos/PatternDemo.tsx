@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -22,9 +22,10 @@ import ReactFlow, {
   Controls,
   MarkerType
 } from 'reactflow'
+import { StepController } from '@/lib/utils/stepControl'
 import 'reactflow/dist/style.css'
-import DataFlowVisualizer from '../visualization/DataFlowVisualizer'
 
+import DataFlowVisualizer from '../visualization/DataFlowVisualizer'
 // Mock response generation to simulate LLM calls
 const generateMockResponse = (text: string, patternId: string) => {
   return new Promise<string>((resolve) => {
@@ -158,10 +159,6 @@ const CustomDemoNode = ({ data, id }: { data: any, id: string }) => {
   )
 }
 
-const nodeTypes: NodeTypes = {
-  demoNode: CustomDemoNode
-}
-
 const PatternDemo = ({ patternData }: PatternDemoProps) => {
   const { theme } = useTheme();
   const [userInput, setUserInput] = useState('');
@@ -170,6 +167,32 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
   const [steps, setSteps] = useState<Record<string, StepState>>({});
   const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
   const [dataFlows, setDataFlows] = useState<DataFlowMessage[]>([]);
+
+  // Step controller for managing execution flow
+  const stepControllerRef = useRef<StepController | null>(null);
+
+  // Initialize step controller
+  useEffect(() => {
+    stepControllerRef.current = new StepController((isWaiting) => {
+      setWaitingForNextStep(isWaiting);
+    });
+    
+    return () => {
+      // Clean up on unmount
+      if (stepControllerRef.current) {
+        stepControllerRef.current.stop();
+      }
+    };
+  }, []);
+  
+  // Animation speeds
+  const [animationSpeed, setAnimationSpeed] = useState<number>(1); // Default to normal speed (1x)
+  // Animation mode (auto/step-by-step)
+  const [animationMode, setAnimationMode] = useState<'auto' | 'step-by-step'>('auto'); 
+  // Track number of steps in the execution
+  const [iterations, setIterations] = useState<number>(0);
+  // Track if we're waiting for user to advance to next step
+  const [waitingForNextStep, setWaitingForNextStep] = useState<boolean>(false);
   
   // Create demo nodes for visualization
   const initialDemoNodes: Node[] = patternData.nodes.map(node => ({
@@ -487,19 +510,27 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
   const [animationSpeed, setAnimationSpeed] = useState<number>(1); // Default to normal speed (1x)
   // Animation mode (auto/step-by-step)
   const [animationMode, setAnimationMode] = useState<'auto' | 'step-by-step'>('auto'); 
-  // Increment iterations counter
-  const [iterations, setIterations] = useState<number>(0); // Track number of steps in the execution
+  // Track number of steps in the execution
+  const [iterations, setIterations] = useState<number>(0);
   // Track if we're waiting for user to advance to next step
   const [waitingForNextStep, setWaitingForNextStep] = useState<boolean>(false);
   
-  return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>Interactive {patternData.name} Demo</CardTitle>
-        <CardDescription>
-          See how this pattern processes user input in real-time
-        </CardDescription>
-      </CardHeader>
+  // Step controller for managing execution flow
+  const stepControllerRef = useRef<StepController | null>(null);
+
+  // Initialize step controller
+  useEffect(() => {
+    stepControllerRef.current = new StepController((isWaiting) => {
+      setWaitingForNextStep(isWaiting);
+    });
+    
+    return () => {
+      // Clean up on unmount
+      if (stepControllerRef.current) {
+        stepControllerRef.current.stop();
+      }
+    };
+  }, []);
       <CardContent>
         <div className="space-y-6">
           <div className="flex gap-2 items-center">
@@ -541,6 +572,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
                   }
                 }}
                 disabled={isRunning && !waitingForNextStep}
+                className="min-w-[110px]"
               >
                 Auto
               </Button>
@@ -549,6 +581,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
                 variant={animationMode === 'step-by-step' ? "default" : "outline"}
                 onClick={() => setAnimationMode('step-by-step')}
                 disabled={isRunning && !waitingForNextStep}
+                className="min-w-[110px]"
               >
                 Step-by-Step
               </Button>
@@ -557,7 +590,13 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
                   size="sm"
                   variant="secondary"
                   className="ml-2 pulse-animation"
-                  onClick={() => setWaitingForNextStep(false)}
+                  onClick={() => {
+                    if (stepControllerRef.current) {
+                      stepControllerRef.current.advanceToNextStep();
+                    } else {
+                      setWaitingForNextStep(false);
+                    }
+                  }}
                 >
                   <Gauge size={16} weight="bold" className="mr-1" /> Next Step
                 </Button>
@@ -569,6 +608,11 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
             <div className="text-sm text-muted-foreground">
               Switch between <span className="font-bold text-primary">Auto</span> and <span className="font-bold text-primary">Step-by-Step</span> modes to analyze how agents interact. Auto mode runs automatically, while Step-by-Step lets you control the pace to understand each agent communication in detail.
             </div>
+            {animationMode === 'step-by-step' && (
+              <div className="text-sm flex items-center text-primary-foreground bg-primary/10 px-3 py-2 rounded-md">
+                <span className="mr-2">•</span> Click <span className="mx-1 font-semibold">Next Step</span> to advance through each interaction in the workflow
+              </div>
+            )}
           </div>
           
           <div className="flex justify-between items-center">

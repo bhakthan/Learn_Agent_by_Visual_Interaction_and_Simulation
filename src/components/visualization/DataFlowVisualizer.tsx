@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Edge } from 'reactflow';
 import { motion } from 'framer-motion';
-import * as dataFlowUtils from '@/lib/utils/dataFlowUtils';
+import { getNodeDataFlowParams, getDataFlowAnimationStyle } from '@/lib/utils/visualizationUtils';
 import { useTheme } from '@/components/theme/ThemeProvider';
 
 // Updated the interface with all required properties
@@ -25,6 +25,49 @@ interface DataFlowVisualizerProps {
   onFlowComplete?: (flowId: string) => void;
   speed?: number; // Speed factor to control animation speed
 }
+
+  // Simulate pattern flow
+  const simulatePatternFlow = (
+    nodeId: string,
+    steps: any[],
+    handleNodeStatus: (nodeId: string, status: string | null) => void,
+    handleEdgeStatus: (edgeId: string, animated: boolean) => void,
+    handleDataFlow: (flow: any) => void,
+    onComplete: () => void,
+    speedFactor?: number
+  ) => {
+    let currentStep = 0;
+    const executeStep = () => {
+      if (currentStep < steps.length) {
+        const step = steps[currentStep];
+        
+        // Execute the current step
+        if (step.type === 'nodeStatus') {
+          handleNodeStatus(step.nodeId, step.status);
+        } else if (step.type === 'edgeStatus') {
+          handleEdgeStatus(step.edgeId, step.animated);
+        } else if (step.type === 'dataFlow') {
+          handleDataFlow(step.flow);
+        }
+        
+        currentStep++;
+        setTimeout(executeStep, 500 / (speedFactor || 1));
+      } else {
+        onComplete();
+      }
+    };
+    
+    // Start execution
+    executeStep();
+    
+    // Return cleanup function
+    return {
+      cleanup: () => {
+        // Stop execution if needed
+        currentStep = steps.length;
+      }
+    };
+  };
 
 /**
  * Component to visualize data flowing between nodes on the ReactFlow canvas
@@ -99,8 +142,8 @@ const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete, speed
     
     // Get animation style based on flow type
     const sourceNodeType = edge.sourceHandle ? edge.sourceHandle : 'default';
-    const typeParams = dataFlowUtils.getNodeDataFlowParams(sourceNodeType);
-    const style = dataFlowUtils.getDataFlowAnimationStyle(flow.type, typeParams);
+    const typeParams = getNodeDataFlowParams(sourceNodeType);
+    const style = getDataFlowAnimationStyle(flow.type, typeParams);
     
     // Enhance visibility in dark mode
     const textColor = isDarkMode ? 'rgba(255, 255, 255, 0.95)' : style.stroke;
