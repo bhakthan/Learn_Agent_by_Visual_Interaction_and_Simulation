@@ -561,7 +561,6 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
 
   // Reference for the flow container
   const flowContainerRef = useRef<HTMLDivElement>(null);
-  const reactFlowInstance = useReactFlow();
   
   // Use custom hooks for improved stability 
   const reactFlowInstance = useReactFlow();
