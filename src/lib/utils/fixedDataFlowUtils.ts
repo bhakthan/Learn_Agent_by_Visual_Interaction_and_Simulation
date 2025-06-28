@@ -486,6 +486,9 @@ export const simulatePatternFlow = (
     return 'message';
   };
   
+  // Complete the entire node to show it's done processing
+  const completeNode = () => {};
+  
   // Start the simulation
   startSimulation();
   
