@@ -750,7 +750,6 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                     speed={animationSpeed}
                   />
                 </ReactFlow>
-              )}
             </ReactFlowProvider>
           </div>
         </CardContent>
