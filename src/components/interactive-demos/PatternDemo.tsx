@@ -25,8 +25,7 @@ import ReactFlow, {
 } from 'reactflow'
 import { StepController } from '@/lib/utils/stepControl'
 import 'reactflow/dist/style.css'
-import { useFlowContainer } from '@/lib/hooks/useFlowContainer'
-import { useResizeObserver } from '@/lib/hooks/useResizeObserver'
+import { setupSafeReactFlowResize, resetReactFlowRendering } from '@/lib/utils/visualizationUtils';
 
 import DataFlowVisualizer from '../visualization/DataFlowVisualizer'
 // Mock response generation to simulate LLM calls
@@ -551,71 +550,20 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     return '';
   }, []);
 
-  // Use the FlowContainer hook for better handling of ReactFlow resizing
-  const flowContainerRef = useFlowContainer<HTMLDivElement>();
+  // Reference for the flow container
+  const flowContainerRef = useRef<HTMLDivElement>(null);
   
-  // Use resize observer with longer debounce time to detect container size changes
-  const [wrapperRef, wrapperDimensions] = useResizeObserver<HTMLDivElement>(300);
-  
-  // Track whether the flow has been properly initialized
-  const flowInitializedRef = useRef(false);
-  
-  // Listen for flow-specific resize events with enhanced error handling
+  // Setup safe resize handling for ReactFlow
   useEffect(() => {
-    const handleFlowResize = (e?: Event) => {
-      if (!flowContainerRef.current) return;
-      
-      // Skip excessive resizes
-      if ((e as any)?.detail?.skipReactFlow) return;
-      
-      // Use a proper debounce approach to safely handle resizes
-      const triggerFlowUpdate = () => {
-        try {
-          // Only trigger flow updates after initialization
-          if (flowInitializedRef.current) {
-            // Mark a layout update is in progress to prevent duplicate processing
-            const layoutUpdateEvent = new CustomEvent('layout-update');
-            window.dispatchEvent(layoutUpdateEvent);
-          }
-        } catch (error) {
-          // Silently handle any errors to prevent loops
-        }
-      };
-      
-      // Cancel any previous animation frames
-      if ((window as any).__flowResizeRafId) {
-        cancelAnimationFrame((window as any).__flowResizeRafId);
-      }
-      
-      // Schedule update with double RAF for layout stability
-      (window as any).__flowResizeRafId = requestAnimationFrame(() => {
-        (window as any).__flowResizeRafId = requestAnimationFrame(triggerFlowUpdate);
-      });
-    };
+    if (!flowContainerRef.current) return;
     
-    // Handle both custom events and window resize
-    window.addEventListener('flow-resize', handleFlowResize);
-    
-    // Add a delayed resize handler for initial render with multiple attempts
-    // to ensure ReactFlow properly initializes
-    const initTimers: number[] = [];
-    
-    // Try multiple times with increasing delays to ensure proper initialization
-    [500, 1000, 2000].forEach(delay => {
-      const timer = window.setTimeout(() => {
-        flowInitializedRef.current = true;
-        handleFlowResize();
-      }, delay);
-      initTimers.push(timer);
-    });
+    // Apply safer resize behavior
+    const resetTimeout = setTimeout(() => {
+      resetReactFlowRendering(flowContainerRef);
+    }, 1000);
     
     return () => {
-      window.removeEventListener('flow-resize', handleFlowResize);
-      initTimers.forEach(timer => clearTimeout(timer));
-      
-      if ((window as any).__flowResizeRafId) {
-        cancelAnimationFrame((window as any).__flowResizeRafId);
-      }
+      clearTimeout(resetTimeout);
     };
   }, []);
   
@@ -763,22 +711,10 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
           
           {/* Flow visualization */}
           <div 
-            ref={(el) => {
-              // Set both refs to the same element
-              if (typeof flowContainerRef === 'function') {
-                flowContainerRef(el);
-              } else if (flowContainerRef) {
-                flowContainerRef.current = el;
-              }
-              
-              if (typeof wrapperRef === 'function') {
-                wrapperRef(el);
-              } else if (wrapperRef) {
-                wrapperRef.current = el;
-              }
-            }}
-            className="border border-border rounded-md overflow-hidden" 
+            ref={flowContainerRef}
+            className="border border-border rounded-md overflow-hidden"
             style={{ height: '400px' }}
+          >
           >
             <ReactFlowProvider>
               <ReactFlow

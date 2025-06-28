@@ -271,26 +271,139 @@ export function setupReactFlowErrorHandling() {
   // Only set up once
   if ((window as any).__reactFlowErrorHandlerAdded) return;
   
-  // Flag ReactFlow errors differently to allow selective handling
-  const originalHandleError = window.onerror;
+  // Add specific error handler for ReactFlow-related problems
+  const originalOnError = window.onerror;
   window.onerror = function(message, source, lineno, colno, error) {
-    // Handle all ResizeObserver errors, not just from ReactFlow
+    // Specifically handle ResizeObserver errors
     if (typeof message === 'string' && 
         (message.includes('ResizeObserver') || 
          message.includes('loop limit exceeded') ||
          message.includes('undelivered notifications'))) {
       
+      // Special handling for ReactFlow-related errors
+      if (source && (
+          source.includes('react-flow') || 
+          source.includes('ReactFlow') ||
+          source.includes('visualization') ||
+          source.includes('PatternDemo')
+      )) {
+        // Stabilize ReactFlow by requesting a clean layout calculation
+        if (!(window as any).__reactFlowLayoutFixAttempted) {
+          (window as any).__reactFlowLayoutFixAttempted = true;
+          
+          // Create an exponential backoff strategy to fix layout
+          const attemptLayoutFix = (attempt = 1) => {
+            setTimeout(() => {
+              try {
+                // Trigger layout recalculation
+                window.dispatchEvent(new Event('resize'));
+                
+                // Reset flag after substantial delay
+                if (attempt >= 3) {
+                  setTimeout(() => {
+                    (window as any).__reactFlowLayoutFixAttempted = false;
+                  }, 5000);
+                } else {
+                  // Progressive backoff
+                  attemptLayoutFix(attempt + 1);
+                }
+              } catch (e) {
+                // Silent error - don't make things worse
+              }
+            }, Math.min(100 * Math.pow(2, attempt), 2000));
+          };
+          
+          attemptLayoutFix();
+        }
+      }
+      
       // Always suppress ResizeObserver errors
-      return true; // Prevents default handling
+      return true;
     }
     
     // Forward to original handler
-    if (originalHandleError) {
-      return originalHandleError.call(window, message, source, lineno, colno, error);
+    if (originalOnError) {
+      return originalOnError.call(window, message, source, lineno, colno, error);
     }
     
     return false;
   };
+  
+  // Apply patches to ReactFlow to make it more resilient
+  const patchReactFlow = () => {
+    // Check if ReactFlow is loaded (via looking for specific elements)
+    const isReactFlowLoaded = () => {
+      return document.querySelector('.react-flow') !== null || 
+             document.querySelector('[data-reactflow]') !== null;
+    };
+    
+    // If ReactFlow is loaded, or wait until it's present
+    if (isReactFlowLoaded()) {
+      applyReactFlowPatches();
+    } else {
+      // Wait for ReactFlow elements to appear
+      const observer = new MutationObserver((mutations) => {
+        if (isReactFlowLoaded()) {
+          applyReactFlowPatches();
+          observer.disconnect();
+        }
+      });
+      
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+      
+      // Set timeout to stop observing if ReactFlow never loads
+      setTimeout(() => observer.disconnect(), 10000);
+    }
+  };
+  
+  // Apply patches to make ReactFlow more resilient
+  const applyReactFlowPatches = () => {
+    try {
+      // Find ReactFlow elements
+      const flowElements = document.querySelectorAll('.react-flow, [data-reactflow]');
+      
+      // Apply stability patches
+      flowElements.forEach(el => {
+        if (el && !el.hasAttribute('data-rf-patched')) {
+          // Mark as patched
+          el.setAttribute('data-rf-patched', 'true');
+          
+          // Apply more stable style rendering
+          (el as HTMLElement).style.contain = 'layout paint';
+          (el as HTMLElement).style.willChange = 'transform';
+          
+          // Set up specific ResizeObserver config for ReactFlow elements
+          const setupFlowResize = () => {
+            // Wait for parent to have dimensions
+            if (el.parentElement && el.parentElement.offsetWidth > 0) {
+              // Fix sizing issues
+              if (el.parentElement.style.minHeight === '') {
+                el.parentElement.style.minHeight = '200px';
+              }
+              
+              // Ensure container has a size
+              if ((el as HTMLElement).style.height === '') {
+                (el as HTMLElement).style.height = '100%';
+              }
+            } else {
+              // Try again later
+              setTimeout(setupFlowResize, 100);
+            }
+          };
+          
+          setupFlowResize();
+        }
+      });
+    } catch (e) {
+      // Silent error - don't break the app
+    }
+  };
+  
+  // Run the patcher
+  patchReactFlow();
   
   (window as any).__reactFlowErrorHandlerAdded = true;
 }

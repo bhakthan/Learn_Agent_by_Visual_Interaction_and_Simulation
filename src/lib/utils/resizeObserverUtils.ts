@@ -18,9 +18,10 @@ export function setupResizeObserverErrorHandling() {
   let inResizeObserverCallback = false;
   let pendingResizeObserverErrors = 0;
   let lastResizeErrorTime = 0;
+  let isResizeThrottled = false;
   
-  // Add error event listener specifically for ResizeObserver errors
-  window.addEventListener('error', (e) => {
+  // More aggressive error handling for ResizeObserver
+  const handleResizeObserverError = (e: ErrorEvent) => {
     if (
       e.message === 'ResizeObserver loop limit exceeded' || 
       e.message.includes('ResizeObserver loop completed with undelivered notifications') ||
@@ -32,170 +33,216 @@ export function setupResizeObserverErrorHandling() {
       
       const now = Date.now();
       
+      // If we're already throttled, just prevent the error
+      if (isResizeThrottled) {
+        return false;
+      }
+      
       // Track how many errors we've suppressed in a row
       pendingResizeObserverErrors++;
       
-      // If we're seeing a cascade of errors or frequent errors, use different mitigation strategies
-      if (pendingResizeObserverErrors > 3 || (now - lastResizeErrorTime < 300)) {
-        // For frequent errors, use a more aggressive approach
-        if (pendingResizeObserverErrors > 10) {
-          // Reset the counter to prevent infinite handling
-          pendingResizeObserverErrors = 0;
-          
-          // Last resort: temporarily freeze all ResizeObservers by replacing the observe method
-          if (!(window as any).__originalResizeObserverObserve && window.ResizeObserver) {
+      // If we're seeing cascading errors, use more aggressive mitigation
+      if (pendingResizeObserverErrors > 5 || (now - lastResizeErrorTime < 200)) {
+        // Throttle all resize operations
+        isResizeThrottled = true;
+        
+        // Reset counter to prevent escalation
+        pendingResizeObserverErrors = 0;
+        
+        // Last resort: temporarily freeze all ResizeObservers
+        if (!(window as any).__originalResizeObserverObserve && window.ResizeObserver) {
+          try {
+            // Backup original methods
             (window as any).__originalResizeObserverObserve = window.ResizeObserver.prototype.observe;
             (window as any).__originalResizeObserverUnobserve = window.ResizeObserver.prototype.unobserve;
             
-            // Create no-op methods temporarily
+            // Replace with no-op methods temporarily
             window.ResizeObserver.prototype.observe = function() { return; };
             window.ResizeObserver.prototype.unobserve = function() { return; };
             
-            // Restore after a delay
+            // Force a style recalculation to flush pending layout changes
+            document.body.style.minHeight = document.body.style.minHeight;
+            
+            // Restore after a meaningful delay
             setTimeout(() => {
-              if ((window as any).__originalResizeObserverObserve) {
-                window.ResizeObserver.prototype.observe = (window as any).__originalResizeObserverObserve;
-                window.ResizeObserver.prototype.unobserve = (window as any).__originalResizeObserverUnobserve;
-                delete (window as any).__originalResizeObserverObserve;
-                delete (window as any).__originalResizeObserverUnobserve;
+              try {
+                if ((window as any).__originalResizeObserverObserve) {
+                  window.ResizeObserver.prototype.observe = (window as any).__originalResizeObserverObserve;
+                  window.ResizeObserver.prototype.unobserve = (window as any).__originalResizeObserverUnobserve;
+                  delete (window as any).__originalResizeObserverObserve;
+                  delete (window as any).__originalResizeObserverUnobserve;
+                }
+              } catch (err) {
+                // Silent catch - worst case resizes won't work for a while
+              } finally {
+                isResizeThrottled = false;
               }
-            }, 1000);
+            }, 1500); // Increased delay to ensure all animations and transitions complete
+          } catch (err) {
+            // Silent catch - can't modify ResizeObserver prototype
+            isResizeThrottled = false;
           }
         } else {
-          // Standard approach for moderate frequency errors
-          pendingResizeObserverErrors = 0;
-          lastResizeErrorTime = now;
-          
-          // Use RAF to break the loop without causing visible flicker
-          const delay = Math.min(pendingResizeObserverErrors * 50, 500);
-          
-          // Briefly pause layout calculations without hiding content
-          document.body.style.overflow = 'hidden';
-          
+          // If we can't replace the methods, at least throttle for a while
           setTimeout(() => {
-            document.body.style.overflow = '';
-            
-            // Schedule multiple RAF cycles to ensure layout is complete
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                  // Use a third RAF to ensure we're well clear of the current frame
-                });
-              });
-            });
-          }, delay);
+            isResizeThrottled = false;
+          }, 1000);
         }
+      } else {
+        // Standard approach for infrequent errors
+        lastResizeErrorTime = now;
+        
+        // Use RAF to break the loop without causing visible flicker
+        requestAnimationFrame(() => {
+          // Force a layout calculation
+          document.body.getBoundingClientRect();
+          
+          // Schedule a second RAF to ensure we're in a new cycle
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              // Everything should be stable by now
+            });
+          });
+        });
       }
       
       lastResizeErrorTime = now;
       return false;
     }
-  }, true);
+  };
+  
+  // Add the error handler
+  window.addEventListener('error', handleResizeObserverError, true);
 
-  // Patch ResizeObserver to throttle notifications if needed
-  const OriginalResizeObserver = window.ResizeObserver;
-  if (OriginalResizeObserver && typeof OriginalResizeObserver === 'function') {
-    window.ResizeObserver = class EnhancedResizeObserver extends OriginalResizeObserver {
-      private observerCallbackTimeout: ReturnType<typeof setTimeout> | null = null;
-      private lastCallbackTime: number = 0;
+  // Patch ResizeObserver with a more resilient implementation
+  if (window.ResizeObserver && !window.ResizeObserver.__patched) {
+    // Store original constructor
+    const OriginalResizeObserver = window.ResizeObserver;
+    
+    window.ResizeObserver = class SafeResizeObserver extends OriginalResizeObserver {
+      private throttleTimeout: ReturnType<typeof setTimeout> | null = null;
+      private lastProcessTime: number = 0;
       private pendingEntries: ResizeObserverEntry[] = [];
-      private currentRAF: number | null = null;
+      private frameId: number | null = null;
+      private observing: Set<Element> = new Set();
+      private static THROTTLE_DELAY = 100; // ms
       
-      constructor(callback: ResizeObserverCallback) {
-        // Create a wrapped callback with additional safety measures
+      constructor(originalCallback: ResizeObserverCallback) {
+        // Wrap the callback with safety measures
         const safeCallback: ResizeObserverCallback = (entries, observer) => {
           const now = Date.now();
           
-          // Update pending entries with latest values
+          // Add latest entries to pending entries
           this.pendingEntries = entries;
           
-          // If we're already in a callback or called recently, throttle
-          if (inResizeObserverCallback || (now - this.lastCallbackTime < 50)) {
-            // Cancel any existing timeouts/animations
-            if (this.observerCallbackTimeout) {
-              clearTimeout(this.observerCallbackTimeout);
+          // If called too frequently, throttle
+          if (now - this.lastProcessTime < SafeResizeObserver.THROTTLE_DELAY) {
+            // Clear existing timeout
+            if (this.throttleTimeout) {
+              clearTimeout(this.throttleTimeout);
+            }
+            if (this.frameId) {
+              cancelAnimationFrame(this.frameId);
             }
             
-            if (this.currentRAF) {
-              cancelAnimationFrame(this.currentRAF);
-            }
-            
-            // Schedule for later with increasing delay based on frequency
-            const delay = Math.min(100, Math.max(16, now - this.lastCallbackTime));
-            
-            this.observerCallbackTimeout = setTimeout(() => {
-              // Use RAF to ensure we're in a good spot in the render cycle
-              this.currentRAF = requestAnimationFrame(() => {
+            // Schedule for next safe time
+            this.throttleTimeout = setTimeout(() => {
+              this.frameId = requestAnimationFrame(() => {
                 try {
-                  const entriesCopy = [...this.pendingEntries]; // Create a copy of entries
-                  this.pendingEntries = []; // Clear pending entries
-                  
-                  inResizeObserverCallback = true;
-                  this.lastCallbackTime = Date.now();
-                  callback(entriesCopy, observer);
-                } catch (error) {
-                  // Silently handle errors in callback
-                } finally {
-                  inResizeObserverCallback = false;
-                  this.currentRAF = null;
-                  this.observerCallbackTimeout = null;
+                  this.lastProcessTime = Date.now();
+                  originalCallback([...this.pendingEntries], observer);
+                  this.pendingEntries = [];
+                } catch (e) {
+                  // Silent error
                 }
+                this.throttleTimeout = null;
+                this.frameId = null;
               });
-            }, delay);
+            }, SafeResizeObserver.THROTTLE_DELAY);
             return;
           }
           
+          // Otherwise, execute normally
+          this.lastProcessTime = now;
           try {
-            inResizeObserverCallback = true;
-            this.lastCallbackTime = now;
-            callback(entries, observer);
-          } catch (error) {
-            // Silently handle errors in callback
-          } finally {
-            inResizeObserverCallback = false;
+            originalCallback(entries, observer);
+          } catch (e) {
+            // Silent error
           }
         };
         
         super(safeCallback);
       }
       
-      // Override disconnect to clean up resources
-      disconnect() {
-        if (this.observerCallbackTimeout) {
-          clearTimeout(this.observerCallbackTimeout);
+      // Override observe to keep track of observed elements
+      observe(target: Element, options?: ResizeObserverOptions): void {
+        // Check if already observing to prevent duplicate observations
+        if (this.observing.has(target)) return;
+        
+        this.observing.add(target);
+        try {
+          super.observe(target, options);
+        } catch (e) {
+          // Silent error
+          this.observing.delete(target);
         }
-        if (this.currentRAF) {
-          cancelAnimationFrame(this.currentRAF);
-        }
-        super.disconnect();
       }
-    } as any;
-
-    // Copy over static properties
+      
+      // Override unobserve to update tracking set
+      unobserve(target: Element): void {
+        this.observing.delete(target);
+        try {
+          super.unobserve(target);
+        } catch (e) {
+          // Silent error
+        }
+      }
+      
+      // Override disconnect to clean up resources
+      disconnect(): void {
+        if (this.throttleTimeout) {
+          clearTimeout(this.throttleTimeout);
+          this.throttleTimeout = null;
+        }
+        if (this.frameId) {
+          cancelAnimationFrame(this.frameId);
+          this.frameId = null;
+        }
+        this.observing.clear();
+        this.pendingEntries = [];
+        try {
+          super.disconnect();
+        } catch (e) {
+          // Silent error
+        }
+      }
+    };
+    
+    // Copy static properties
     Object.keys(OriginalResizeObserver).forEach(key => {
       (window.ResizeObserver as any)[key] = (OriginalResizeObserver as any)[key];
     });
+    
+    // Mark as patched
+    (window.ResizeObserver as any).__patched = true;
   }
   
-  // Patch console.error to filter out ResizeObserver warnings
+  // Filter out ResizeObserver console errors
   const originalConsoleError = console.error;
   console.error = function(...args: any[]) {
-    // Check if the error is related to ResizeObserver
-    if (args.length > 0 && 
-        typeof args[0] === 'string' && 
-        (args[0].includes('ResizeObserver loop') || 
-         args[0].includes('ResizeObserver was created') ||
-         args[0].includes('ResizeObserver loop completed with undelivered notifications') ||
-         args[0].includes('undelivered notifications') ||
-         args[0].includes('ResizeObserver'))) {
-      // Suppress these specific errors
-      return;
+    if (args.length > 0 && typeof args[0] === 'string') {
+      const errorMsg = args[0];
+      if (
+        errorMsg.includes('ResizeObserver') || 
+        errorMsg.includes('undelivered notifications')
+      ) {
+        return; // Suppress ResizeObserver related errors
+      }
     }
-    // Pass through all other errors
     return originalConsoleError.apply(console, args);
   };
-
-  // Mark that we've added the handler
+  
+  // Mark as handled
   (window as any).__resizeObserverErrorHandlerAdded = true;
 }
 

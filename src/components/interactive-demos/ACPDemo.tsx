@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { Play, ArrowsCounterClockwise } from "@phosphor-icons/react";
+import { setupSafeReactFlowResize, resetReactFlowRendering } from '@/lib/utils/visualizationUtils';
 
 // Visualization components
 import ReactFlow, {
@@ -53,6 +54,26 @@ const ACPDemo = () => {
         label: (
           <div className="bg-muted/50 p-1 rounded-md">
             <div className="font-semibold">ACP Server</div>
+  // Reference for flow containers
+  const flowContainerRef1 = useRef<HTMLDivElement>(null);
+  const flowContainerRef2 = useRef<HTMLDivElement>(null);
+  
+  // Setup safe resize handling for ReactFlow instances
+  useEffect(() => {
+    // Apply to both flow containers with a delay between them
+    if (flowContainerRef1.current) {
+      resetReactFlowRendering(flowContainerRef1);
+    }
+    
+    // Delay the second container's initialization to prevent conflicts
+    const timeout = setTimeout(() => {
+      if (flowContainerRef2.current) {
+        resetReactFlowRendering(flowContainerRef2);
+      }
+    }, 500);
+    
+    return () => clearTimeout(timeout);
+  }, []);
           </div>
         )
       },
@@ -387,6 +408,7 @@ const ACPDemo = () => {
                 edges={singleAgentEdges}
                 onNodeClick={onNodeClick}
                 fitView
+                key="single-agent-flow"
               >
                 <Background />
                 <Controls />

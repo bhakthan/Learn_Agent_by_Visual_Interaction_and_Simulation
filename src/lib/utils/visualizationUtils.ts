@@ -1,6 +1,7 @@
 /**
  * Utility functions for visualizing agent pattern data flows
  */
+import { useEffect } from 'react';
 
 /**
  * Get animation style parameters based on message type
@@ -114,3 +115,108 @@ export const getNodeDataFlowParams = (
       return defaultParams;
   }
 };
+
+/**
+ * Utility for safely handling ReactFlow resize operations
+ * This prevents ResizeObserver errors and ensures proper layout
+ */
+export function setupSafeReactFlowResize(containerRef: React.RefObject<HTMLElement>, delay = 300) {
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    let isResizing = false;
+    let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
+    let animationFrameId: number | null = null;
+
+    // Create a safer observer
+    const observer = new ResizeObserver((entries) => {
+      if (isResizing) return;
+      
+      isResizing = true;
+      
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+      }
+      
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      
+      // Use substantial debouncing
+      resizeTimeout = setTimeout(() => {
+        animationFrameId = requestAnimationFrame(() => {
+          try {
+            // Force layout recalculation but in a more gentle way
+            if (containerRef.current) {
+              // Trigger a custom event that ReactFlow can listen to
+              const event = new CustomEvent('flow-resize', { 
+                detail: { timestamp: Date.now() }
+              });
+              containerRef.current.dispatchEvent(event);
+            }
+          } catch (error) {
+            // Silently handle errors
+          } finally {
+            // Reset state after completion
+            setTimeout(() => {
+              isResizing = false;
+              animationFrameId = null;
+              resizeTimeout = null;
+            }, 100);
+          }
+        });
+      }, delay);
+    });
+    
+    // Start observing
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+    
+    // Clean up
+    return () => {
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+      }
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      observer.disconnect();
+    };
+  }, [containerRef, delay]);
+  
+  return null;
+}
+
+/**
+ * Reset rendering of React Flow to fix layout issues
+ */
+export function resetReactFlowRendering(containerRef: React.RefObject<HTMLElement>) {
+  if (!containerRef.current) return;
+  
+  try {
+    // Apply temporary styles that force a reflow
+    const container = containerRef.current;
+    const originalDisplay = container.style.display;
+    const originalVisibility = container.style.visibility;
+    
+    // Hide temporarily (1ms) to trigger reflow without visual disruption
+    container.style.visibility = 'hidden';
+    
+    // Force reflow
+    container.getBoundingClientRect();
+    
+    // Restore original visibility with slight delay
+    requestAnimationFrame(() => {
+      container.style.visibility = originalVisibility;
+      container.style.display = originalDisplay;
+      
+      // Trigger flow resize event
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 50);
+    });
+  } catch (e) {
+    // Silently handle errors
+  }
+}
