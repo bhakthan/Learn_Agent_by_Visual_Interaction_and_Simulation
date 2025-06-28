@@ -371,9 +371,7 @@ const ACPMCPComparison = () => {
           <TabsTrigger value="walkthrough">Interactive Walkthrough</TabsTrigger>
         </TabsList>
         
-        {/* TabsContent is now conditionally rendered only when active */}
-        {activeTab === 'comparison' && (
-          <TabsContent value="comparison" className="mt-6 space-y-6">
+        <TabsContent value="comparison" className="mt-6 space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               {/* ACP Card */}
               <Card>
@@ -503,8 +501,7 @@ const ACPMCPComparison = () => {
           </TabsContent>
         )}
         
-        {activeTab === 'walkthrough' && (
-          <TabsContent value="walkthrough" className="mt-6 space-y-6">
+        <TabsContent value="walkthrough" className="mt-6 space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-medium">Protocol Message Exchange Patterns</h3>
@@ -705,10 +702,11 @@ const ACPMCPComparison = () => {
               </CardContent>
             </Card>
           </TabsContent>
-        )}
-      </Tabs>
-    </div>
-  );
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    );
 };
 
 export default ACPMCPComparison;

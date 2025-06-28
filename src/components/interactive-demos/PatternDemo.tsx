@@ -715,7 +715,6 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
             className="border border-border rounded-md overflow-hidden"
             style={{ height: '400px' }}
           >
-          >
             <ReactFlowProvider>
               <ReactFlow
                 nodes={nodes}
@@ -744,19 +743,19 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
               >
                 <Background color={theme === 'dark' ? '#ffffff20' : '#aaa'} gap={16} />
                 <Controls className={theme === 'dark' ? 'dark-controls' : ''} />
-                  <MiniMap 
-                    style={{ 
-                      backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.6)' : undefined,
-                      maskColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.7)' : undefined
-                    }} 
-                  />
-                  <DataFlowVisualizer 
-                    flows={dataFlows} 
-                    edges={edges}
-                    getEdgePoints={getEdgePoints}
-                    onFlowComplete={onFlowComplete}
-                    speed={animationSpeed}
-                  />
+                <MiniMap 
+                  style={{ 
+                    backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.6)' : undefined,
+                    maskColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.7)' : undefined
+                  }} 
+                />
+                <DataFlowVisualizer 
+                  flows={dataFlows} 
+                  edges={edges}
+                  getEdgePoints={getEdgePoints}
+                  onFlowComplete={onFlowComplete}
+                  speed={animationSpeed}
+                />
                 </ReactFlow>
             </ReactFlowProvider>
           </div>
