@@ -161,7 +161,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
   const [showDetails, setShowDetails] = useState(false)
   const [queryInput, setQueryInput] = useState<string>("Tell me about agent patterns")
   const [animationState, setAnimationState] = useState<AnimationState>({
-    speed: 'normal', // Already set to normal by default
+    speed: 'normal', // Set to normal by default
     mode: 'auto',
     isPaused: false,
     step: 0
@@ -288,9 +288,17 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       if (nextStep) {
         nextStep();
         setAnimationState(prev => ({ ...prev, step: prev.step + 1 }));
+        
+        // Immediately execute any non-visual steps that are just state updates
+        // This prevents the UI from getting stuck between node activations
+        setTimeout(() => {
+          if (stepQueueRef.current.length > 0 && !isAnimating) {
+            executeNextStep();
+          }
+        }, 50);
       }
     }
-  }, []);
+  }, [isAnimating]);
   
   const startSimulation = useCallback(() => {
     resetVisualization();
@@ -327,6 +335,10 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     const handleAddStep = (stepFn: () => void) => {
       if (animationState.mode === 'step-by-step') {
         stepQueueRef.current.push(stepFn);
+        // If this is the first step, execute it immediately to start the visualization
+        if (stepQueueRef.current.length === 1) {
+          setTimeout(() => executeNextStep(), 100);
+        }
         return null; // Return null for step-by-step mode as timeouts are not used
       } else {
         // In auto mode, execute based on speed factor
@@ -349,7 +361,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       handleDataFlow,
       queryInput,
       handleAddStep,
-      animationState.mode === 'auto' ? speedFactor : undefined
+      animationState.mode === 'auto' ? speedFactor : 1
     );
     
     // Store the cleanup function
@@ -359,15 +371,15 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     if (animationState.mode === 'auto') {
       simulationRef.current = setTimeout(() => {}, 100);
     } else {
-      // In step mode, wait for user to trigger steps
-      console.log('Started in step-by-step mode. Click Next Step to proceed.');
+      // In step mode, we've already triggered the first step above
+      console.log('Started in step-by-step mode. Click Next Step to proceed after the first automatic step.');
     }
     
     // Clean up the simulation when component unmounts or resets
     return () => {
       if (cleanup) cleanup();
     };
-  }, [nodes, edges, setNodes, setEdges, resetVisualization, animationState.mode, animationState.isPaused, speedFactor]);
+  }, [nodes, edges, setNodes, setEdges, resetVisualization, animationState.mode, animationState.isPaused, speedFactor, executeNextStep, queryInput]);
   
   const onInit = useCallback((instance: ReactFlowInstance) => {
     flowInstanceRef.current = instance;
@@ -449,7 +461,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
                 <Button 
                   size="sm" 
                   variant="default"
-                  className="h-8"
+                  className="h-8 bg-primary hover:bg-primary/80 font-semibold pulse-animation"
                   onClick={executeNextStep}
                   disabled={!isAnimating || stepQueueRef.current.length === 0}
                 >

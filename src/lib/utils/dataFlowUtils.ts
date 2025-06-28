@@ -341,7 +341,11 @@ export const simulatePatternFlow = (
       const outEdges = edges.filter(e => e.source === nodeId);
       
       // If there are no outgoing edges, we're done with this branch
-      if (outEdges.length === 0) return;
+      if (outEdges.length === 0) {
+        // Set node as completed
+        handleNodeStatus(nodeId, 'success');
+        return;
+      }
       
       // Send data along each edge
       outEdges.forEach((edge, index) => {
@@ -354,6 +358,9 @@ export const simulatePatternFlow = (
         // Send data along this edge
         const sendData = () => {
           if (cancelled) return;
+          
+          // Set source node to success state
+          handleNodeStatus(nodeId, 'success');
           
           // Animate the edge
           handleEdgeStatus(edge.id, true);

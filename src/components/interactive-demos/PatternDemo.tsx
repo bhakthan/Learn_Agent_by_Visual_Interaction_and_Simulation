@@ -455,7 +455,7 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
   };
   
   // Animation speeds
-  const [animationSpeed, setAnimationSpeed] = useState<number>(1); // Default to normal speed (explicitly "Normal" for user clarity)
+  const [animationSpeed, setAnimationSpeed] = useState<number>(1); // Default to normal speed (1x)
   // Increment iterations counter
   const [iterations, setIterations] = useState<number>(0); // Track number of steps in the execution
   

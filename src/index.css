@@ -222,3 +222,20 @@ h1, h2, h3, h4, h5, h6,
 code, pre {
   font-family: 'Fira Mono', 'Fira Code', monospace;
 }
+
+/* Add pulse animation for step-by-step button */
+.pulse-animation {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 163, 127, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(16, 163, 127, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 163, 127, 0);
+  }
+}

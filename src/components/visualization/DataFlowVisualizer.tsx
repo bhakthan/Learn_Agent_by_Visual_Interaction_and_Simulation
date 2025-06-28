@@ -103,9 +103,10 @@ const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete, speed
     const style = dataFlowUtils.getDataFlowAnimationStyle(flow.type, typeParams);
     
     // Enhance visibility in dark mode
-    const textColor = isDarkMode ? 'rgba(255, 255, 255, 0.9)' : style.stroke;
-    const textStroke = isDarkMode ? 'rgba(0, 0, 0, 0.5)' : 'none';
-    const dotFill = isDarkMode && flow.type !== 'error' ? 'rgba(255, 255, 255, 0.9)' : style.stroke;
+    const textColor = isDarkMode ? 'rgba(255, 255, 255, 0.95)' : style.stroke;
+    const textStroke = isDarkMode ? 'rgba(0, 0, 0, 0.6)' : 'none';
+    const dotFill = isDarkMode && flow.type !== 'error' ? 'rgba(255, 255, 255, 0.95)' : style.stroke;
+    const dotSize = style.strokeWidth * 1.5; // Make dots larger for better visibility
     
     return (
       <motion.g 
@@ -118,7 +119,7 @@ const DataFlowVisualizer = ({ flows, edges, getEdgePoints, onFlowComplete, speed
         <circle
           cx={x}
           cy={y}
-          r={style.strokeWidth / 2}
+          r={dotSize || 4}
           fill={dotFill}
           stroke={style.stroke}
           strokeWidth={1}
