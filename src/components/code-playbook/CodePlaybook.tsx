@@ -24,6 +24,9 @@ import { getAlgorithmVisualization, AlgorithmVisualizationData } from '@/lib/uti
 import { getDebugExample } from '@/lib/utils/codeDebugExamples'
 import { useSidebarCollapse } from '@/hooks/use-sidebar-collapse'
 import { cn } from '@/lib/utils'
+import { TutorialButton } from '../tutorial/TutorialButton'
+import { useTutorialContext } from '../tutorial/TutorialProvider'
+import { codePlaybookTutorial } from '@/lib/tutorial'
 
 interface CodePlaybookProps {
   patternData: PatternData
@@ -34,6 +37,13 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
   const [language, setLanguage] = useState<'python' | 'typescript'>('python')
   const [visualizationMode, setVisualizationMode] = useState<'static' | 'interactive'>('static')
   const { isCollapsed } = useSidebarCollapse();
+  
+  const { startTutorial, registerTutorial, hasCompletedTutorial } = useTutorialContext();
+  
+  // Register the code playbook tutorial
+  useEffect(() => {
+    registerTutorial(codePlaybookTutorial.id, codePlaybookTutorial);
+  }, [registerTutorial]);
   
   // Listen to sidebar state changes to trigger resize/layout adjustments
   useEffect(() => {
@@ -118,6 +128,15 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
   
   return (
     <div className="space-y-6 w-full">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-lg font-medium">Code Playbook</h3>
+        <TutorialButton
+          hasCompleted={hasCompletedTutorial(codePlaybookTutorial.id)}
+          onClick={() => startTutorial(codePlaybookTutorial.id)}
+          tooltip="Learn about Code Playbook"
+        />
+      </div>
+      
       <Card className={cn("w-full transition-all duration-300", isCollapsed ? "ml-0 max-w-full" : "")}>
         <CardHeader className="p-4 sm:p-6">
           <CardTitle>{patternData.name} Implementation</CardTitle>
@@ -126,9 +145,9 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
-          <Tabs defaultValue="general" className="w-full">
+          <Tabs defaultValue="general" className="w-full" data-section="code-playbook">
             <div className="overflow-x-auto pb-2 w-full">
-              <TabsList className="flex w-full flex-nowrap gap-0.5">
+              <TabsList className="flex w-full flex-nowrap gap-0.5" role="tablist">
                 <TabsTrigger value="general" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]">
                   <ListChecks size={12} /> <span className="hidden sm:inline">General Guide</span><span className="sm:hidden">Guide</span>
                 </TabsTrigger>
@@ -138,7 +157,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                 <TabsTrigger value="code" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]">
                   <Code size={12} /> <span className="hidden sm:inline">Complete Code</span><span className="sm:hidden">Code</span>
                 </TabsTrigger>
-                <TabsTrigger value="visualizer" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]">
+                <TabsTrigger value="visualizer" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]" data-tab="code-visualizer">
                   <FileCode size={12} /> <span className="hidden sm:inline">Code Visualizer</span><span className="sm:hidden">Visualizer</span>
                 </TabsTrigger>
                 <TabsTrigger value="interactive" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]">
@@ -153,7 +172,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                 <TabsTrigger value="security" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]">
                   <ShieldCheck size={12} /> <span className="hidden sm:inline">Security Controls</span><span className="sm:hidden">Security</span>
                 </TabsTrigger>
-                <TabsTrigger value="practices" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]">
+                <TabsTrigger value="practices" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]" data-tab="best-practices">
                   <Check size={12} /> <span className="hidden sm:inline">Best Practices</span><span className="sm:hidden">Practices</span>
                 </TabsTrigger>
               </TabsList>
@@ -187,7 +206,7 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                   <h3 className="text-base font-medium mb-2">Implementation Overview</h3>
                   <p className="text-sm text-muted-foreground mb-3">This pattern can be implemented using the following components:</p>
                   
-                  <div className="space-y-2">
+                  <div className="space-y-2" data-section="steps">
                     {patternData.implementation && patternData.implementation.length > 0 ? patternData.implementation.map((step, index) => (
                       <div key={index} className="flex items-start">
                         <span className="flex items-center justify-center bg-primary/10 text-primary rounded-full w-5 h-5 text-xs font-medium mr-2 mt-0.5">
@@ -279,44 +298,46 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
             <TabsContent value="visualizer" className="py-4">
               <LanguageSelector />
               
-              {executionSteps ? (
-                <EnhancedCodeVisualizer 
-                  code={getCodeExample()} 
-                  language={language}
-                  steps={executionSteps}
-                  title={`${patternData.name} Pattern Execution`}
-                />
-              ) : interactiveExecution && interactiveExecution.blocks ? (
-                <InteractiveCodeExecution
-                  codeBlocks={interactiveExecution.blocks}
-                  description={interactiveExecution.description}
-                  showConsole={true}
-                />
-              ) : (
-                <div className="border rounded-md p-6 text-center text-muted-foreground">
-                  <FileCode size={32} className="mx-auto mb-2" />
-                  <p>Step-by-step visualization not available for this pattern in {language}.</p>
-                  {language === 'python' ? (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setLanguage('typescript')}
-                      className="mt-2"
-                    >
-                      Try TypeScript Version
-                    </Button>
-                  ) : (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setLanguage('python')}
-                      className="mt-2"
-                    >
-                      Try Python Version
-                    </Button>
-                  )}
-                </div>
-              )}
+              <div data-section="visualizer">
+                {executionSteps ? (
+                  <EnhancedCodeVisualizer 
+                    code={getCodeExample()} 
+                    language={language}
+                    steps={executionSteps}
+                    title={`${patternData.name} Pattern Execution`}
+                  />
+                ) : interactiveExecution && interactiveExecution.blocks ? (
+                  <InteractiveCodeExecution
+                    codeBlocks={interactiveExecution.blocks}
+                    description={interactiveExecution.description}
+                    showConsole={true}
+                  />
+                ) : (
+                  <div className="border rounded-md p-6 text-center text-muted-foreground">
+                    <FileCode size={32} className="mx-auto mb-2" />
+                    <p>Step-by-step visualization not available for this pattern in {language}.</p>
+                    {language === 'python' ? (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setLanguage('typescript')}
+                        className="mt-2"
+                      >
+                        Try TypeScript Version
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setLanguage('python')}
+                        className="mt-2"
+                      >
+                        Try Python Version
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
               
               <Alert className="mt-6">
                 <AlertDescription>

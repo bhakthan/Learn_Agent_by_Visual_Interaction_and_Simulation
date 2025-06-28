@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -10,6 +10,9 @@ import ACPMCPComparison from "../interactive-demos/ACPMCPComparison"
 import ConceptDetails from "./ConceptDetails"
 import { BookOpen, BookmarkSimple, ArrowsHorizontal } from "@phosphor-icons/react"
 import ReferenceSection from "../references/ReferenceSection"
+import { TutorialButton } from "../tutorial/TutorialButton"
+import { useTutorialContext } from "../tutorial/TutorialProvider"
+import { conceptsExplorerTutorial } from "@/lib/tutorial"
 
 const ConceptsExplorer = () => {
   const [showDetails, setShowDetails] = useState({
@@ -19,6 +22,13 @@ const ConceptsExplorer = () => {
     acp: false
   })
 
+  const { startTutorial, registerTutorial, hasCompletedTutorial } = useTutorialContext();
+
+  // Register the concepts tutorial
+  useEffect(() => {
+    registerTutorial(conceptsExplorerTutorial.id, conceptsExplorerTutorial);
+  }, [registerTutorial]);
+
   const toggleDetails = (concept: 'agents' | 'a2a' | 'mcp' | 'acp') => {
     setShowDetails(prev => ({
       ...prev,
@@ -27,6 +37,15 @@ const ConceptsExplorer = () => {
   }
   return (
     <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Core Concepts</h1>
+        <TutorialButton
+          hasCompleted={hasCompletedTutorial(conceptsExplorerTutorial.id)}
+          onClick={() => startTutorial(conceptsExplorerTutorial.id)}
+          tooltip="Learn about Core Concepts"
+        />
+      </div>
+
       <Tabs defaultValue="agents" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="agents">AI Agents</TabsTrigger>

@@ -13,11 +13,21 @@ import { ChartLine, Code, Info, Swap } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Toggle } from '@/components/ui/toggle'
 import { PatternSidebar } from './PatternSidebar'
+import { TutorialButton } from '../tutorial/TutorialButton'
+import { useTutorialContext } from '../tutorial/TutorialProvider'
+import { agentPatternsTutorial } from '@/lib/tutorial'
 
 const PatternExplorer = () => {
   const [selectedPattern, setSelectedPattern] = useState(agentPatterns[0] || null)
   const [viewMode, setViewMode] = useState<'single' | 'compare'>('single')
   const [useAdvancedVisualizer, setUseAdvancedVisualizer] = useState<boolean>(true)
+  
+  const { startTutorial, registerTutorial, hasCompletedTutorial } = useTutorialContext();
+  
+  // Register the agent patterns tutorial
+  useEffect(() => {
+    registerTutorial(agentPatternsTutorial.id, agentPatternsTutorial);
+  }, [registerTutorial]);
   
   // Ensure agentPatterns is loaded with the new patterns
   useEffect(() => {
@@ -43,6 +53,11 @@ const PatternExplorer = () => {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Agent Patterns</h2>
         <div className="flex items-center gap-2">
+          <TutorialButton
+            hasCompleted={hasCompletedTutorial(agentPatternsTutorial.id)}
+            onClick={() => startTutorial(agentPatternsTutorial.id)}
+            tooltip="Learn about Agent Patterns"
+          />
           <Toggle
             className="flex gap-2 items-center"
             pressed={useAdvancedVisualizer}
@@ -104,25 +119,27 @@ const PatternExplorer = () => {
               {/* Main Content Area */}
               <div className="flex-1 md:pl-[260px]">
                 <Tabs defaultValue="visualization" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="visualization" className="flex items-center gap-2">
+                  <TabsList className="grid w-full grid-cols-3" data-tab-list>
+                    <TabsTrigger value="visualization" className="flex items-center gap-2" data-tab="visualization">
                       <ChartLine size={16} /> Visualization
                     </TabsTrigger>
-                    <TabsTrigger value="details" className="flex items-center gap-2">
+                    <TabsTrigger value="details" className="flex items-center gap-2" data-tab="details">
                       <Info size={16} /> Educational Content
                     </TabsTrigger>
-                    <TabsTrigger value="implementation" className="flex items-center gap-2">
+                    <TabsTrigger value="implementation" className="flex items-center gap-2" data-tab="implementation">
                       <Code size={16} /> Implementation
                     </TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="visualization">
                     <ReactFlowProvider>
-                      {useAdvancedVisualizer ? (
-                        <AdvancedPatternVisualizer key={selectedPattern.id} patternData={selectedPattern} />
-                      ) : (
-                        <PatternVisualizer key={selectedPattern.id} patternData={selectedPattern} />
-                      )}
+                      <div className="flow-container" data-flow>
+                        {useAdvancedVisualizer ? (
+                          <AdvancedPatternVisualizer key={selectedPattern.id} patternData={selectedPattern} />
+                        ) : (
+                          <PatternVisualizer key={selectedPattern.id} patternData={selectedPattern} />
+                        )}
+                      </div>
                     </ReactFlowProvider>
                   </TabsContent>
                   

@@ -13,6 +13,28 @@ import AzureServicesOverview from './components/azure-services/AzureServicesOver
 import CommunitySharing from './components/community/CommunitySharing'
 import ReferencesSection from './components/references/ReferencesSection'
 import { setupResizeObserverErrorHandling, disableResizeObserverIfProblematic } from './lib/utils/resizeObserverUtils'
+import { TutorialProvider } from './components/tutorial/TutorialProvider'
+import { TutorialButton } from './components/tutorial/TutorialButton'
+import { useTutorialContext } from './components/tutorial/TutorialProvider'
+import { mainAppTutorial } from './lib/tutorial'
+
+// Wrapper component for tutorial button that connects to tutorial context
+const AppTutorialButton = () => {
+  const { startTutorial, registerTutorial, hasCompletedTutorial } = useTutorialContext();
+
+  // Register the main app tutorial
+  useEffect(() => {
+    registerTutorial(mainAppTutorial.id, mainAppTutorial);
+  }, [registerTutorial]);
+
+  return (
+    <TutorialButton 
+      hasCompleted={hasCompletedTutorial(mainAppTutorial.id)}
+      onClick={() => startTutorial(mainAppTutorial.id)}
+      tooltip="App Tour"
+    />
+  );
+};
 
 function App() {
   const [mounted, setMounted] = useState(false)
@@ -151,91 +173,94 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="light" storageKey="azure-ai-agent-theme">
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <header className="border-b border-border sticky top-0 z-10 bg-background">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Brain size={28} weight="duotone" className="text-primary" />
-              <h1 className="text-2xl font-bold">Azure AI Agent Concept Visualization & Simulation</h1>
-            </div>
-            
-            <div className="flex items-center space-x-4">
+      <TutorialProvider>
+        <div className="min-h-screen bg-background text-foreground flex flex-col">
+          <header className="border-b border-border sticky top-0 z-10 bg-background">
+            <div className="container mx-auto px-4 py-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ThemeToggle />
-                <span className="text-xs text-muted-foreground hidden md:inline-block">Theme</span>
+                <Brain size={28} weight="duotone" className="text-primary" />
+                <h1 className="text-2xl font-bold">Azure AI Agent Concept Visualization & Simulation</h1>
               </div>
-              <NavigationMenu>
-                <NavigationMenuList>
-                  <NavigationMenuItem>
-                    <NavigationMenuTrigger className="bg-transparent">Resources</NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2">
-                        <ListItem href="https://agentcommunicationprotocol.dev/" title="Agent Communication Protocol">
-                          Open protocol for agent interoperability
-                        </ListItem>
-                        <ListItem href="https://modelcontextprotocol.io/" title="Model Context Protocol">
-                          Protocol for efficient AI model interaction
-                        </ListItem>
-                        <ListItem href="https://cookbook.openai.com/" title="OpenAI Cookbook">
-                          Code examples and guides for OpenAI APIs
-                        </ListItem>
-                        <ListItem href="https://learn.microsoft.com/azure/ai-services/" title="Azure AI Services">
-                          Documentation for Azure AI Services
-                        </ListItem>
-                        <ListItem href="https://learn.microsoft.com/azure/machine-learning/" title="Azure AI Platform">
-                          Microsoft's comprehensive AI platform
-                        </ListItem>
-                      </ul>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                  <NavigationMenuItem>
-                    <a
-                      href="https://github.com/bhakthan/azure-ai-agent-visua"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <GithubLogo className="mr-1" size={16} /> GitHub Repo
-                    </a>
-                  </NavigationMenuItem>
-                </NavigationMenuList>
-              </NavigationMenu>
+              
+              <div className="flex items-center space-x-4">
+                <AppTutorialButton />
+                <div className="flex items-center gap-2">
+                  <ThemeToggle />
+                  <span className="text-xs text-muted-foreground hidden md:inline-block">Theme</span>
+                </div>
+                <NavigationMenu>
+                  <NavigationMenuList>
+                    <NavigationMenuItem>
+                      <NavigationMenuTrigger className="bg-transparent">Resources</NavigationMenuTrigger>
+                      <NavigationMenuContent>
+                        <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2">
+                          <ListItem href="https://agentcommunicationprotocol.dev/" title="Agent Communication Protocol">
+                            Open protocol for agent interoperability
+                          </ListItem>
+                          <ListItem href="https://modelcontextprotocol.io/" title="Model Context Protocol">
+                            Protocol for efficient AI model interaction
+                          </ListItem>
+                          <ListItem href="https://cookbook.openai.com/" title="OpenAI Cookbook">
+                            Code examples and guides for OpenAI APIs
+                          </ListItem>
+                          <ListItem href="https://learn.microsoft.com/azure/ai-services/" title="Azure AI Services">
+                            Documentation for Azure AI Services
+                          </ListItem>
+                          <ListItem href="https://learn.microsoft.com/azure/machine-learning/" title="Azure AI Platform">
+                            Microsoft's comprehensive AI platform
+                          </ListItem>
+                        </ul>
+                      </NavigationMenuContent>
+                    </NavigationMenuItem>
+                    <NavigationMenuItem>
+                      <a
+                        href="https://github.com/bhakthan/azure-ai-agent-visua"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+                      >
+                        <GithubLogo className="mr-1" size={16} /> GitHub Repo
+                      </a>
+                    </NavigationMenuItem>
+                  </NavigationMenuList>
+                </NavigationMenu>
+              </div>
             </div>
-          </div>
 
-          {/* Navigation tabs */}
-          <div className="container mx-auto px-4 pb-1">
-            <ScrollArea className="w-full" orientation="horizontal">
-              <div className="flex space-x-1">
-                <TabLink to="/" icon={<Brain size={16} weight="duotone" />} label="Core Concepts" />
-                <TabLink to="/patterns" icon={<PuzzlePiece size={16} weight="duotone" />} label="Agent Patterns" />
-                <TabLink to="/azure-services" icon={<StackSimple size={16} weight="duotone" />} label="Azure Services" />
-                <TabLink to="/references" icon={<Books size={16} weight="duotone" />} label="References" />
-                <TabLink to="/community" icon={<Users size={16} weight="duotone" />} label="Community" />
-              </div>
-            </ScrollArea>
-          </div>
-        </header>
-        
-        <main className="flex-1 container mx-auto px-4 py-6">
-          <Routes>
-            <Route path="/" element={<ConceptsExplorer />} />
-            <Route path="/patterns" element={<PatternExplorer />} />
-            <Route path="/azure-services" element={<AzureServicesOverview />} />
-            <Route path="/references" element={<ReferencesSection />} />
-            <Route path="/community" element={<CommunitySharing />} />
-            {/* Fallback route to redirect to home page */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-          <Outlet />
-        </main>
-        
-        <footer className="border-t border-border py-6 bg-muted transition-colors duration-300">
-          <div className="container mx-auto px-4 text-center text-muted-foreground">
-            <p>Azure AI Agent Visualization - Interactive learning resource for AI agent patterns and concepts</p>
-          </div>
-        </footer>
-      </div>
+            {/* Navigation tabs */}
+            <div className="container mx-auto px-4 pb-1">
+              <ScrollArea className="w-full" orientation="horizontal">
+                <div className="flex space-x-1">
+                  <TabLink to="/" icon={<Brain size={16} weight="duotone" />} label="Core Concepts" />
+                  <TabLink to="/patterns" icon={<PuzzlePiece size={16} weight="duotone" />} label="Agent Patterns" />
+                  <TabLink to="/azure-services" icon={<StackSimple size={16} weight="duotone" />} label="Azure Services" />
+                  <TabLink to="/references" icon={<Books size={16} weight="duotone" />} label="References" />
+                  <TabLink to="/community" icon={<Users size={16} weight="duotone" />} label="Community" />
+                </div>
+              </ScrollArea>
+            </div>
+          </header>
+          
+          <main className="flex-1 container mx-auto px-4 py-6">
+            <Routes>
+              <Route path="/" element={<ConceptsExplorer />} />
+              <Route path="/patterns" element={<PatternExplorer />} />
+              <Route path="/azure-services" element={<AzureServicesOverview />} />
+              <Route path="/references" element={<ReferencesSection />} />
+              <Route path="/community" element={<CommunitySharing />} />
+              {/* Fallback route to redirect to home page */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+            <Outlet />
+          </main>
+          
+          <footer className="border-t border-border py-6 bg-muted transition-colors duration-300">
+            <div className="container mx-auto px-4 text-center text-muted-foreground">
+              <p>Azure AI Agent Visualization - Interactive learning resource for AI agent patterns and concepts</p>
+            </div>
+          </footer>
+        </div>
+      </TutorialProvider>
     </ThemeProvider>
   );
 }

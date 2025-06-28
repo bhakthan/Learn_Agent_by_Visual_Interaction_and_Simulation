@@ -1,126 +1,138 @@
-# Product Requirements Document: Azure AI Agent Visualization Platform
+# Tutorial Mode for Azure AI Agent Visualization
 
 ## Core Purpose & Success
-- **Mission Statement**: To provide an interactive, educational visualization platform that helps users understand Azure AI agent concepts, patterns, and implementation details through visual exploration and code examples.
-- **Success Indicators**: Increased user comprehension of agent patterns, higher engagement with interactive demos, and successful implementation of patterns in users' own projects.
-- **Experience Qualities**: Educational, Interactive, Comprehensive
+
+- **Mission Statement**: Create an interactive tutorial mode for first-time users of the Azure AI Agent Visualization tool that guides them through key features and functionality.
+- **Success Indicators**: Increased user engagement, reduced confusion for new users, and higher completion rates of first-time interactions with complex features.
+- **Experience Qualities**: Intuitive, educational, and non-intrusive.
 
 ## Project Classification & Approach
-- **Complexity Level**: Complex Application (multiple features with advanced state management for visualizations, interactive demos, and educational content)
-- **Primary User Activity**: Consuming (learning content) and Interacting (with visualizations and demos)
+
+- **Complexity Level**: Light Application (interactive tutorial with state management)
+- **Primary User Activity**: Acting (following guided steps through the application)
 
 ## Thought Process for Feature Selection
-- **Core Problem Analysis**: Understanding AI agent patterns and implementations can be challenging due to their abstract nature and complex interactions. Visual representation and interactive exploration can significantly enhance comprehension.
-- **User Context**: Users will primarily be developers, architects, and technical decision-makers looking to understand and implement AI agent patterns in their Azure-based applications.
-- **Critical Path**: User explores core concepts → browses agent patterns → interacts with visualizations → examines implementation details → applies knowledge in their own projects
+
+- **Core Problem Analysis**: First-time users of the Azure AI Agent visualization tool may be overwhelmed by the complexity and abundance of features, leading to confusion and reduced engagement.
+- **User Context**: Users will engage with tutorials during their initial exploration of the platform, when they need help understanding specific sections, or when they want to learn about newly added features.
+- **Critical Path**: User enters site → Sees tutorial prompt → Follows step-by-step guidance → Completes tutorial → Explores application independently with newfound knowledge.
 - **Key Moments**: 
-  1. Interactive visualization of agent patterns showing data flow
-  2. Code playbook exploration with implementation details
-  3. Azure AI service integration guidance
+  1. The initial welcome tutorial that orients users to the application
+  2. Section-specific tutorials that explain specialized features (patterns, concepts, code playbook)
+  3. Tutorial completion with clear call-to-action for next steps
 
 ## Essential Features
 
-### Core Concepts Section
-- **Functionality**: Educational content explaining fundamental agent concepts including Agent-to-Agent (A2A) and Model Context Protocol (MCP)
-- **Purpose**: Establish baseline understanding before exploring more complex patterns
-- **Success Criteria**: Clear explanations with visual aids that users can easily comprehend
+1. **Tutorial Step System**
+   - Functionality: Guide users through app features with sequenced, highlighted steps
+   - Purpose: Reduce learning curve and orient users to the application's capabilities
+   - Success Criteria: Users can complete tutorials without getting stuck or confused
 
-### Agent Pattern Explorer
-- **Functionality**: Browse and select from various agent patterns with visual representations of their components and interactions
-- **Purpose**: Allow users to understand the structure and flow of different agent patterns
-- **Success Criteria**: Comprehensive library of patterns with accurate, interactive visualizations
+2. **Contextual Help Overlays**
+   - Functionality: Display information bubbles that explain specific UI elements
+   - Purpose: Provide just-in-time education about components as users encounter them
+   - Success Criteria: Tooltips correctly target relevant UI elements with accurate descriptions
 
-### Interactive Demos
-- **Functionality**: Run simulations of agent patterns in action with visualizations of data flow and component interactions
-- **Purpose**: Provide hands-on experience of how agents work in practice
-- **Success Criteria**: Functional demos that accurately represent real-world agent behavior
+3. **Tutorial State Management**
+   - Functionality: Track tutorial completion status and progress across sessions
+   - Purpose: Allow users to resume tutorials and prevent repeated tutorials for returning users
+   - Success Criteria: Tutorial state correctly persists across browser sessions using localStorage
 
-### Code Playbook
-- **Functionality**: View implementation details, best practices, and code examples for each pattern
-- **Purpose**: Bridge the gap between conceptual understanding and practical implementation
-- **Success Criteria**: Clear, usable code examples that follow Azure AI best practices
-
-### Azure Services Integration
-- **Functionality**: Documentation on integrating patterns with Azure AI services
-- **Purpose**: Provide practical guidance for implementing patterns in Azure environments
-- **Success Criteria**: Comprehensive coverage of relevant Azure services with integration examples
-
-### Community Sharing
-- **Functionality**: Allow users to share and discover community-created pattern implementations
-- **Purpose**: Foster community learning and innovation
-- **Success Criteria**: Active sharing of patterns and implementations
+4. **Section-specific Tutorials**
+   - Functionality: Provide dedicated tutorials for different application areas (Concepts, Patterns, Code Playbook)
+   - Purpose: Target education to specific user needs and contexts
+   - Success Criteria: Each major section has its own dedicated, contextually relevant tutorial flow
 
 ## Design Direction
 
 ### Visual Tone & Identity
-- **Emotional Response**: Clarity, confidence, and inspiration
-- **Design Personality**: Modern, professional, and technical while remaining approachable
-- **Visual Metaphors**: Flow diagrams, connected nodes representing agents, and information pathways
-- **Simplicity Spectrum**: Balanced interface that simplifies complex concepts without oversimplification
+
+- **Emotional Response**: The tutorial should evoke a sense of clarity and confidence, reducing anxiety about using complex features.
+- **Design Personality**: Approachable and professional, aligning with the main application's clean, modern aesthetic.
+- **Visual Metaphors**: Light bulb for tutorials, guiding spotlight for highlighted elements.
+- **Simplicity Spectrum**: Balanced interface with clear, concise instructions while maintaining visual richness for highlighting important elements.
 
 ### Color Strategy
-- **Color Scheme Type**: Primary Azure-inspired palette with complementary accents
-- **Primary Color**: Azure blue-green tone (oklch(0.60 0.15 180)) representing trustworthy AI technology
-- **Secondary Colors**: Neutral grays for UI structure and readability
-- **Accent Color**: Bright highlights (amber for important details, green for success states) to guide attention
-- **Color Psychology**: Cool, professional colors instill trust and technical competence
-- **Color Accessibility**: High contrast ratios ensuring WCAG AA compliance
+
+- **Color Scheme Type**: Using the existing application's color scheme with subtle highlights for tutorial elements.
+- **Primary Color**: The application's primary color (#10a37f - OpenAI green) for tutorial buttons and highlights.
+- **Secondary Colors**: Neutral background overlays that don't distract from the highlighted components.
+- **Accent Color**: Subtle pulse animations in the primary color to draw attention to interactive elements.
+- **Color Psychology**: Using the familiar primary green to maintain brand consistency while creating a sense of guidance.
+- **Color Accessibility**: Maintaining WCAG AA compliance with sufficient contrast for all tutorial elements.
 - **Foreground/Background Pairings**: 
-  - Background/Foreground: oklch(0.98 0.005 240)/oklch(0.23 0.02 240) - Ratio: 15.8:1
-  - Primary/Primary Foreground: oklch(0.60 0.15 180)/oklch(0.98 0.005 240) - Ratio: 4.6:1
-  - Card/Card Foreground: oklch(0.97 0.005 240)/oklch(0.23 0.02 240) - Ratio: 14.5:1
-  - Secondary/Secondary Foreground: oklch(0.95 0.02 240)/oklch(0.23 0.02 240) - Ratio: 13.1:1
+  - Tutorial overlay text (foreground: #2d333a) on light background (background: rgba(255, 255, 255, 0.95))
+  - Button text (foreground: white) on primary action color (background: #10a37f)
 
 ### Typography System
-- **Font Pairing Strategy**: Professional sans-serif for headings paired with highly readable body text
-- **Typographic Hierarchy**: Clear differentiation between headings, subheadings, body text, and UI elements
-- **Font Personality**: Clean, modern, and technical but approachable
-- **Readability Focus**: Optimized line length, generous line height, and proper spacing
-- **Typography Consistency**: Consistent typographic scale across the application
-- **Which fonts**: Inter for headings and UI elements, Source Sans Pro for body text, and Fira Mono for code examples
-- **Legibility Check**: All fonts chosen have excellent legibility across different sizes and weights
+
+- **Font Pairing Strategy**: Continuing the application's existing font pairing of 'Inter' for headings and 'Source Sans Pro' for body text.
+- **Typographic Hierarchy**: Clear distinction between tutorial titles, instructions, and navigation elements.
+- **Font Personality**: Professional but friendly, matching the educational nature of the application.
+- **Readability Focus**: Short, concise tutorial messages with clear calls to action.
+- **Typography Consistency**: Maintaining consistent font sizes and weights with the main application.
+- **Which fonts**: Using existing Inter and Source Sans Pro from Google Fonts.
+- **Legibility Check**: All tutorial text will be at least 14px in size with sufficient line spacing for optimal readability.
 
 ### Visual Hierarchy & Layout
-- **Attention Direction**: Clear visual flow guides users through the learning process
-- **White Space Philosophy**: Generous spacing to create rhythm and focus on important content
-- **Grid System**: Responsive grid that adapts to different screen sizes
-- **Responsive Approach**: Mobile-first design with appropriate breakpoints
-- **Content Density**: Moderate density balancing information richness with clarity
+
+- **Attention Direction**: Tutorial overlays use spotlights and borders to guide attention to the relevant UI elements.
+- **White Space Philosophy**: Adequate spacing around tutorial messages to avoid visual clutter.
+- **Grid System**: Tutorial components align with the application's existing grid for visual consistency.
+- **Responsive Approach**: Tutorial overlays adjust position and size based on screen dimensions, ensuring visibility on all devices.
+- **Content Density**: Concise instructions with progressive disclosure for additional details.
 
 ### Animations
-- **Purposeful Meaning**: Subtle animations to show agent interactions and data flow
-- **Hierarchy of Movement**: Primary animation for agent pattern visualization, secondary for UI interactions
-- **Contextual Appropriateness**: More dynamic animations for interactive demos, subtle transitions for navigation
+
+- **Purposeful Meaning**: Subtle animations indicate which elements are interactive and guide user attention.
+- **Hierarchy of Movement**: Primary focus elements (like highlighted UI components) receive more prominent animations.
+- **Contextual Appropriateness**: Gentle fade transitions for tutorial steps to avoid jarring visual changes.
 
 ### UI Elements & Component Selection
-- **Component Usage**: Cards for pattern selection, tabs for content organization, accordions for detailed information
-- **Component Customization**: Tailwind modifications to align with Azure-inspired design
-- **Component States**: Clear hover, active, and focus states for interactive elements
-- **Icon Selection**: Phosphor icons for clarity and consistency
-- **Component Hierarchy**: Primary action buttons in brand color, secondary actions with outline style
-- **Spacing System**: Consistent spacing using Tailwind's scale
-- **Mobile Adaptation**: Stack layout on smaller screens, collapsible sidebar
+
+- **Component Usage**: Using Cards for tutorial content, with clear progression indicators.
+- **Component Customization**: Adding a pulsing highlight effect for target elements.
+- **Component States**: Clearly indicating current, completed, and upcoming tutorial steps.
+- **Icon Selection**: Using the Lightbulb icon from Phosphor Icons to represent tutorial functionality.
+- **Component Hierarchy**: Primary buttons for step progression, secondary buttons for optional actions.
+- **Spacing System**: Consistent padding using Tailwind's spacing scale throughout tutorial elements.
+- **Mobile Adaptation**: Adjusted positioning and sizing of tutorial overlays for smaller screens.
 
 ### Visual Consistency Framework
-- **Design System Approach**: Component-based design with consistent patterns
-- **Style Guide Elements**: Color palette, typography, spacing, and component styles
-- **Visual Rhythm**: Consistent spacing and alignment throughout the interface
-- **Brand Alignment**: Azure-inspired design language
+
+- **Design System Approach**: Using component-based design that integrates with the existing Shadcn UI components.
+- **Style Guide Elements**: Consistent use of colors, typography, and spacing across all tutorial elements.
+- **Visual Rhythm**: Creating predictable patterns for tutorial navigation and progression.
+- **Brand Alignment**: Maintaining the clean, professional aesthetic of the main application.
 
 ### Accessibility & Readability
-- **Contrast Goal**: WCAG AA compliance for all text and UI elements
+
+- **Contrast Goal**: All text and UI elements meet WCAG AA standards for color contrast.
 
 ## Edge Cases & Problem Scenarios
-- **Potential Obstacles**: Complex visualizations may be difficult to render on mobile devices
-- **Edge Case Handling**: Simplified visualizations for mobile with option to view full version
-- **Technical Constraints**: Interactive demos need to work without actual Azure backend services
+
+- **Potential Obstacles**: 
+  - Users accessing deeply nested routes directly (bypassing main tutorials)
+  - UI changes affecting tutorial target elements
+  - Users on very small screens where positioning overlays is challenging
+- **Edge Case Handling**: 
+  - Allow tutorials to be started from any section
+  - Use robust selectors for UI elements that can handle minor changes
+  - Implement fallback positioning for tutorial overlays on small screens
+- **Technical Constraints**: 
+  - Tutorial performance on low-end devices
+  - Browser compatibility for localStorage persistence
 
 ## Implementation Considerations
-- **Scalability Needs**: Support for adding new agent patterns and Azure services over time
-- **Testing Focus**: Validate interactive visualizations across different browsers
-- **Critical Questions**: How to effectively simulate agent behavior without actual backend services?
+
+- **Scalability Needs**: The tutorial system should be easily extendable to add new tutorials for future features.
+- **Testing Focus**: Test tutorial flows on various screen sizes and browsers to ensure consistent experience.
+- **Critical Questions**: 
+  - How can we balance comprehensive guidance with avoiding tutorial fatigue?
+  - Should tutorials be mandatory for first-time users or entirely optional?
 
 ## Reflection
-- This approach uniquely combines visual learning with code examples to bridge the gap between conceptual understanding and practical implementation.
-- We've assumed users have some technical background - this may need adjustment if targeting broader audiences.
-- Including community contributions and real-world case studies would make this solution truly exceptional.
+
+- The strength of this tutorial mode lies in its contextual relevance, guiding users when and where they need help rather than overwhelming them with a single comprehensive onboarding.
+- We've assumed users want guided tutorials rather than discovering features through exploration, which should be validated with user testing.
+- To make this solution exceptional, we could add intelligent adaptive behavior that adjusts tutorial content based on user interaction patterns and previous experience levels.
