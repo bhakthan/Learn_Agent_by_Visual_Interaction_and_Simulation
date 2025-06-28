@@ -505,33 +505,20 @@ const PatternDemo = ({ patternData }: PatternDemoProps) => {
     }
     return '';
   };
-  
-  // Animation speeds
-  const [animationSpeed, setAnimationSpeed] = useState<number>(1); // Default to normal speed (1x)
-  // Animation mode (auto/step-by-step)
-  const [animationMode, setAnimationMode] = useState<'auto' | 'step-by-step'>('auto'); 
-  // Track number of steps in the execution
-  const [iterations, setIterations] = useState<number>(0);
-  // Track if we're waiting for user to advance to next step
-  const [waitingForNextStep, setWaitingForNextStep] = useState<boolean>(false);
-  
-  // Step controller for managing execution flow
-  const stepControllerRef = useRef<StepController | null>(null);
 
-  // Initialize step controller
-  useEffect(() => {
-    stepControllerRef.current = new StepController((isWaiting) => {
-      setWaitingForNextStep(isWaiting);
-    });
-    
-    return () => {
-      // Clean up on unmount
-      if (stepControllerRef.current) {
-        stepControllerRef.current.stop();
-      }
-    };
-  }, []);
-      <CardContent>
+  // Define nodeTypes for ReactFlow
+  const nodeTypes: NodeTypes = {
+    demoNode: CustomDemoNode
+  };
+  
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>{patternData.name} Pattern Demo</CardTitle>
+        <CardDescription>
+          Interactive demonstration of the {patternData.name} agent pattern with step-by-step visualization
+        </CardDescription>
+      </CardHeader>
         <div className="space-y-6">
           <div className="flex gap-2 items-center">
             <Input
