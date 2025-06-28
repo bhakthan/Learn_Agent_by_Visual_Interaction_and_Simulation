@@ -82,6 +82,7 @@ const CustomDemoNode = React.memo(({ data, id }: { data: any, id: string }) => {
       transition: 'all 0.2s ease',
       width: '180px',
       color: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)',
+      cursor: 'grab',
     }
     
     // Add status-specific styling
@@ -233,8 +234,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
         ...node.data,
         status: 'idle',
       },
-      draggable: false,
-      selectable: false,
+      draggable: true,
+      selectable: true,
     }));
   }, [patternData?.nodes]);
   
@@ -623,6 +624,15 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     demoNode: CustomDemoNode
   };
   
+  // Function to handle node drag events
+  const onNodeDragStop = useCallback(() => {
+    // Recalculate data flow paths after nodes are moved
+    setDataFlows(prevFlows => {
+      if (prevFlows.length === 0) return prevFlows;
+      return [...prevFlows]; // Force update of flow paths
+    });
+  }, []);
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -708,6 +718,9 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
             <div className="text-sm text-muted-foreground">
               Switch between <span className="font-bold text-primary">Auto</span> and <span className="font-bold text-primary">Step-by-Step</span> modes to analyze how agents interact. Auto mode runs automatically, while Step-by-Step lets you control the pace to understand each agent communication in detail.
             </div>
+            <div className="text-sm text-muted-foreground mt-1">
+              <span className="font-bold text-primary">Tip:</span> You can drag and interact with the nodes to better understand the pattern structure. Use the mouse wheel to zoom in/out and drag the background to pan.
+            </div>
             {animationMode === 'step-by-step' && (
               <div className="text-sm flex items-center text-primary-foreground bg-primary/10 px-3 py-2 rounded-md">
                 <span className="mr-2">•</span> Click <span className="mx-1 font-semibold">Next Step</span> to advance through each interaction in the workflow
@@ -773,9 +786,16 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                 edges={edges}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
+                onNodeDragStop={onNodeDragStop}
                 nodeTypes={nodeTypes}
                 fitView
                 panOnScroll
+                panOnDrag
+                zoomOnScroll
+                selectionOnDrag
+                nodesDraggable={true}
+                nodesConnectable={true}
+                elementsSelectable={true}
                 minZoom={0.5}
                 maxZoom={1.5}
                 defaultEdgeOptions={{
