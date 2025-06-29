@@ -111,3 +111,6 @@ export const disableResizeObserverIfProblematic = () => {
     // Silent recovery
   }
 };
+
+// Re-export from stableResizeObserver for backwards compatibility
+export { createStableResizeObserver } from './stableResizeObserver';

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { createStableResizeObserver } from '../utils/resizeObserverUtils';
+import { createStableResizeObserver } from '../utils/stableResizeObserver';
 
 /**
  * Hook for safely using ResizeObserver 
@@ -50,7 +50,7 @@ export function useResizeObserver<T extends HTMLElement = HTMLDivElement>(
         sizeRef.current = { width: newWidth, height: newHeight };
         callback(entry);
       }
-    }, { debounce, disabled });
+    });
     
     // Start observing
     observer.observe(ref.current);
