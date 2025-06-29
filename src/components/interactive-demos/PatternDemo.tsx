@@ -37,6 +37,7 @@ import { useFlowContainer } from '@/lib/hooks/useFlowContainer'
 import { useResizeObserver } from '@/lib/hooks/useResizeObserver'
 
 import DataFlowVisualizer from '../visualization/DataFlowVisualizer'
+
 // Mock response generation to simulate LLM calls
 const generateMockResponse = (text: string, patternId: string) => {
   return new Promise<string>((resolve) => {
@@ -202,6 +203,10 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   const [steps, setSteps] = useState<Record<string, StepState>>({});
   const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
   const [dataFlows, setDataFlows] = useState<DataFlowMessage[]>([]);
+  const [waitingForNextStep, setWaitingForNextStep] = useState<boolean>(false);
+  const [iterations, setIterations] = useState<number>(0);
+  const [animationSpeed, setAnimationSpeed] = useState<number>(1); // Default to normal speed (1x)
+  const [animationMode, setAnimationMode] = useState<'auto' | 'step-by-step'>('auto'); 
 
   // Step controller for managing execution flow
   const stepControllerRef = useRef<StepController | null>(null);
@@ -219,16 +224,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       }
     };
   }, []);
-  
-  // Animation speeds
-  const [animationSpeed, setAnimationSpeed] = useState<number>(1); // Default to normal speed (1x)
-  // Animation mode (auto/step-by-step)
-  const [animationMode, setAnimationMode] = useState<'auto' | 'step-by-step'>('auto'); 
-  // Track number of steps in the execution
-  const [iterations, setIterations] = useState<number>(0);
-  // Track if we're waiting for user to advance to next step
-  const [waitingForNextStep, setWaitingForNextStep] = useState<boolean>(false);
-  
+
   // Create demo nodes for visualization - memoize them based on patternData
   const initialDemoNodes = useMemo(() => {
     if (!patternData || !Array.isArray(patternData.nodes)) {
@@ -351,6 +347,18 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       setOutput(`Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
     }
   };
+
+  // Helper function for step-by-step control
+  const waitForNextStep = useCallback(async () => {
+    if (!stepControllerRef.current) return;
+    
+    setWaitingForNextStep(true);
+    return new Promise<void>(resolve => {
+      stepControllerRef.current?.waitForNextStep(() => {
+        resolve();
+      });
+    });
+  }, []);
   
   const processNode = async (nodeId: string) => {
     if (!patternData || !Array.isArray(patternData.nodes) || !Array.isArray(patternData.edges)) {
@@ -461,16 +469,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
         await new Promise(resolve => setTimeout(resolve, 800 / animationSpeed));
         
         // If step-by-step mode is active, wait for user to click "Next Step" button
-        if (animationMode === 'step-by-step') {
-          setWaitingForNextStep(true);
-          await new Promise<void>(resolve => {
-            const checkInterval = setInterval(() => {
-              if (!waitingForNextStep) {
-                clearInterval(checkInterval);
-                resolve();
-              }
-            }, 100);
-          });
+        if (animationMode === 'step-by-step' && stepControllerRef.current) {
+          await waitForNextStep();
         }
         
         // Process target node
@@ -530,16 +530,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
         await new Promise(resolve => setTimeout(resolve, 500));
         
         // If step-by-step mode is active, wait for user to click "Next Step" button
-        if (animationMode === 'step-by-step') {
-          setWaitingForNextStep(true);
-          await new Promise<void>(resolve => {
-            const checkInterval = setInterval(() => {
-              if (!waitingForNextStep) {
-                clearInterval(checkInterval);
-                resolve();
-              }
-            }, 100);
-          });
+        if (animationMode === 'step-by-step' && stepControllerRef.current) {
+          await waitForNextStep();
         }
         
         // Process failure path
@@ -551,7 +543,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     }
   };
   
-  // Calculate execution time for a step with memoization
+  // Calculate execution time for a step
   const getExecutionTime = useCallback((step: StepState) => {
     if (step.startTime && step.endTime) {
       return `${((step.endTime - step.startTime) / 1000).toFixed(1)}s`;
@@ -562,17 +554,9 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   // Reference for the flow container
   const flowContainerRef = useRef<HTMLDivElement>(null);
   
-  // Use custom hooks for improved stability
-  const reactFlowInstance = useReactFlow();
-  const handleResize = useCallback(() => {
-    if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
-      reactFlowInstance.fitView({ padding: 0.2, duration: 200 });
-    }
-  }, [reactFlowInstance]);
-  
-  // Use the flow container hook
+  // Use flow hooks for visualization
   const { triggerResize } = useFlowContainer(flowContainerRef);
-  
+
   // Setup safe resize handling with improved monitoring
   useEffect(() => {
     if (!flowContainerRef.current) return;
@@ -604,16 +588,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   
   // Define nodeTypes for ReactFlow with memoization
   const nodeTypes = useMemo<NodeTypes>(() => ({
-    demoNode: React.memo(CustomDemoNode, (prevProps, nextProps) => {
-      // Skip re-renders when node status hasn't changed
-      if (prevProps.data.status !== nextProps.data.status) return false;
-      if (prevProps.data.result !== nextProps.data.result) return false;
-      if (prevProps.data.label !== nextProps.data.label) return false;
-      if (prevProps.selected !== nextProps.selected) return false;
-      
-      // Otherwise, skip re-rendering
-      return true;
-    })
+    demoNode: CustomDemoNode
   }), []);
   
   // Function to handle node drag events
@@ -669,8 +644,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                 onClick={() => {
                   setAnimationMode('auto');
                   // Resume execution if we were waiting for next step
-                  if (waitingForNextStep) {
-                    setWaitingForNextStep(false);
+                  if (waitingForNextStep && stepControllerRef.current) {
+                    stepControllerRef.current.advanceToNextStep();
                   }
                 }}
                 disabled={isRunning && !waitingForNextStep}
@@ -695,8 +670,6 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                   onClick={() => {
                     if (stepControllerRef.current) {
                       stepControllerRef.current.advanceToNextStep();
-                    } else {
-                      setWaitingForNextStep(false);
                     }
                   }}
                 >
@@ -773,7 +746,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                 zoomOnScroll
                 selectionOnDrag
                 nodesDraggable={true}
-                nodesConnectable={true}
+                nodesConnectable={false}
                 elementsSelectable={true}
                 minZoom={0.5}
                 maxZoom={1.5}
@@ -817,45 +790,45 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                     if (!step) return null;
                     
                     return (
-                        <div 
-                          key={node.id} 
-                          className={`p-3 rounded-md border ${
-                            node.id === currentNodeId ? 'border-primary bg-primary/5' :
-                            step.status === 'complete' ? 'border-green-500/20 bg-green-500/5' :
-                            step.status === 'failed' ? 'border-destructive/20 bg-destructive/5' :
-                            step.status === 'running' ? 'border-amber-500/20 bg-amber-500/5' :
-                            'border-border'
-                          } ${theme === 'dark' ? 'text-foreground' : ''}`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              {step.status === 'running' && <Clock className="text-amber-500" size={16} />}
-                              {step.status === 'complete' && <CheckCircle className="text-green-500" size={16} />}
-                              {step.status === 'failed' && <WarningCircle className="text-destructive" size={16} />}
-                              
-                              <span className="font-medium">{node.data?.label || 'Unknown Node'}</span>
-                              
-                              <Badge variant="outline" className="ml-1">
-                                {node.data?.nodeType || 'node'}
-                              </Badge>
-                            </div>
+                      <div 
+                        key={node.id} 
+                        className={`p-3 rounded-md border ${
+                          node.id === currentNodeId ? 'border-primary bg-primary/5' :
+                          step.status === 'complete' ? 'border-green-500/20 bg-green-500/5' :
+                          step.status === 'failed' ? 'border-destructive/20 bg-destructive/5' :
+                          step.status === 'running' ? 'border-amber-500/20 bg-amber-500/5' :
+                          'border-border'
+                        } ${theme === 'dark' ? 'text-foreground' : ''}`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            {step.status === 'running' && <Clock className="text-amber-500" size={16} />}
+                            {step.status === 'complete' && <CheckCircle className="text-green-500" size={16} />}
+                            {step.status === 'failed' && <WarningCircle className="text-destructive" size={16} />}
                             
-                            {step.status !== 'idle' && (
-                              <span className="text-xs text-muted-foreground">
-                                {getExecutionTime(step)}
-                              </span>
-                            )}
+                            <span className="font-medium">{node.data?.label || 'Unknown Node'}</span>
+                            
+                            <Badge variant="outline" className="ml-1">
+                              {node.data?.nodeType || 'node'}
+                            </Badge>
                           </div>
                           
-                          {step.result && (
-                            <div className="text-sm mt-1">
-                              <div className="flex items-start gap-1 text-muted-foreground">
-                                <ArrowBendDownRight size={14} className="mt-1" />
-                                <span>{step.result}</span>
-                              </div>
-                            </div>
+                          {step.status !== 'idle' && (
+                            <span className="text-xs text-muted-foreground">
+                              {getExecutionTime(step)}
+                            </span>
                           )}
                         </div>
+                        
+                        {step.result && (
+                          <div className="text-sm mt-1">
+                            <div className="flex items-start gap-1 text-muted-foreground">
+                              <ArrowBendDownRight size={14} className="mt-1" />
+                              <span>{step.result}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -881,23 +854,6 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       </CardContent>
     </Card>
   );
-}, (prevProps, nextProps) => {
-  // Only re-render when pattern data has changed in a meaningful way
-  if (prevProps.patternData.id !== nextProps.patternData.id) return false;
-  
-  // Deep compare important pattern data properties that would affect rendering
-  const prevNodes = prevProps.patternData.nodes || [];
-  const nextNodes = nextProps.patternData.nodes || [];
-  
-  if (prevNodes.length !== nextNodes.length) return false;
-  
-  // Check if edges have changed significantly
-  if (!prevProps.patternData.edges || !nextProps.patternData.edges || 
-      prevProps.patternData.edges.length !== nextProps.patternData.edges.length) return false;
-  
-  // If we got here, pattern data is similar enough to skip re-rendering
-  // The component will handle its own state changes internally
-  return true;
 });
 
 export default PatternDemo;

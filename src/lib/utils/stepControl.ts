@@ -4,6 +4,7 @@
 
 export type StepFunction = () => void;
 export type StepMode = 'auto' | 'step-by-step';
+export type StepCallback = () => void;
 
 /**
  * Step controller for agent workflow visualizations
@@ -11,11 +12,12 @@ export type StepMode = 'auto' | 'step-by-step';
 export class StepController {
   private steps: StepFunction[] = [];
   private currentStepIndex: number = 0;
-  private isWaiting: boolean = false;
+  private isWaitingFlag: boolean = false;
   private isRunning: boolean = false;
   private mode: StepMode = 'auto';
   private speedFactor: number = 1;
   private onWaitChange: (isWaiting: boolean) => void;
+  private waitingCallbacks: StepCallback[] = [];
 
   constructor(onWaitChange: (isWaiting: boolean) => void) {
     this.onWaitChange = onWaitChange;
@@ -36,7 +38,7 @@ export class StepController {
     this.mode = mode;
     
     // If switching to auto and we're currently waiting, continue execution
-    if (mode === 'auto' && this.isWaiting) {
+    if (mode === 'auto' && this.isWaitingFlag) {
       this.advanceToNextStep();
     }
   }
@@ -46,6 +48,22 @@ export class StepController {
    */
   setSpeedFactor(factor: number) {
     this.speedFactor = factor;
+  }
+
+  /**
+   * Check if controller is currently waiting for user input
+   */
+  isWaiting(): boolean {
+    return this.isWaitingFlag;
+  }
+
+  /**
+   * Wait for the next step (returns a Promise that resolves when user advances)
+   */
+  waitForNextStep(callback: StepCallback): void {
+    this.isWaitingFlag = true;
+    this.onWaitChange(true);
+    this.waitingCallbacks.push(callback);
   }
 
   /**
@@ -65,8 +83,9 @@ export class StepController {
   reset() {
     this.steps = [];
     this.currentStepIndex = 0;
-    this.isWaiting = false;
+    this.isWaitingFlag = false;
     this.isRunning = false;
+    this.waitingCallbacks = [];
   }
 
   /**
@@ -93,7 +112,7 @@ export class StepController {
     
     // In step-by-step mode, wait for user to advance
     if (this.mode === 'step-by-step') {
-      this.isWaiting = true;
+      this.isWaitingFlag = true;
       this.onWaitChange(true);
     } else {
       // In auto mode, continue to next step after a delay
@@ -107,13 +126,27 @@ export class StepController {
    * Advance to the next step (called when user clicks "Next Step")
    */
   advanceToNextStep() {
-    if (!this.isWaiting || !this.isRunning) return;
+    if (!this.isWaitingFlag) return;
     
-    this.isWaiting = false;
+    this.isWaitingFlag = false;
     this.onWaitChange(false);
     
-    // Continue execution
-    this.executeNextStep();
+    // Execute all waiting callbacks
+    const callbacks = [...this.waitingCallbacks];
+    this.waitingCallbacks = [];
+    
+    callbacks.forEach(callback => {
+      try {
+        callback();
+      } catch (e) {
+        console.error('Error in step callback:', e);
+      }
+    });
+    
+    // Continue execution if we're in sequence mode
+    if (this.isRunning && this.currentStepIndex < this.steps.length) {
+      this.executeNextStep();
+    }
   }
 
   /**
@@ -121,7 +154,10 @@ export class StepController {
    */
   stop() {
     this.isRunning = false;
-    this.isWaiting = false;
+    this.isWaitingFlag = false;
     this.onWaitChange(false);
+    
+    // Clear any waiting callbacks to prevent memory leaks
+    this.waitingCallbacks = [];
   }
 }
