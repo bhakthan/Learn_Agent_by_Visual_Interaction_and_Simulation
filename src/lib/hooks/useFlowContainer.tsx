@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { useReactFlow } from 'reactflow';
 
 /**
  * Hook to properly handle ReactFlow container resizing to avoid ResizeObserver errors
@@ -7,9 +6,8 @@ import { useReactFlow } from 'reactflow';
 export function useFlowContainer(containerRef: React.RefObject<HTMLDivElement>) {
   const prevSizeRef = useRef({ width: 0, height: 0 });
   const resizeTimeoutRef = useRef<number | null>(null);
-  const reactFlow = useReactFlow();
   
-  // Initialize a debounced resize handler
+  // Initialize a debounced resize handler - no useReactFlow here
   const handleResize = useCallback(() => {
     if (!containerRef.current) return;
     
@@ -31,14 +29,13 @@ export function useFlowContainer(containerRef: React.RefObject<HTMLDivElement>) 
         window.clearTimeout(resizeTimeoutRef.current);
       }
       
-      // Safely update ReactFlow with debouncing
+      // Safely update with debouncing
       resizeTimeoutRef.current = window.setTimeout(() => {
         try {
           // Use requestAnimationFrame to ensure DOM has stabilized
           requestAnimationFrame(() => {
-            if (reactFlow && typeof reactFlow.fitView === 'function') {
-              reactFlow.fitView({ padding: 0.2, duration: 200 });
-            }
+            // Dispatch an event that components can listen for
+            window.dispatchEvent(new CustomEvent('flow-resize'));
           });
         } catch (err) {
           console.error('Error updating flow view:', err);
@@ -47,7 +44,7 @@ export function useFlowContainer(containerRef: React.RefObject<HTMLDivElement>) 
         }
       }, 250);
     }
-  }, [containerRef, reactFlow]);
+  }, [containerRef]);
   
   // Set up resize observer with error handling
   useEffect(() => {

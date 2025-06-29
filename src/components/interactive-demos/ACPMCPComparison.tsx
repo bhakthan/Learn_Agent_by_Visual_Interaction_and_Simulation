@@ -702,16 +702,7 @@ const ACPMCPComparison = () => {
             </Card>
         </TabsContent>
         
-        <TabsContent value="walkthrough" className="mt-6 space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-medium">Protocol Message Exchange Patterns</h3>
-                <p className="text-sm text-muted-foreground">
-                  Interactive demonstrations of how ACP and MCP handle different communication scenarios.
-                </p>
-              </div>
-            </div>
-        </TabsContent>
+
       </Tabs>
     </div>
   );

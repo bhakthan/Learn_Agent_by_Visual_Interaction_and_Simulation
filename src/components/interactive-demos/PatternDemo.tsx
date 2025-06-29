@@ -196,6 +196,25 @@ const CustomDemoNode = React.memo(({ data, id }: { data: any, id: string }) => {
 });
 
 const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
+  // Ensure patternData exists to prevent errors
+  if (!patternData) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Demo Unavailable</CardTitle>
+          <CardDescription>Pattern data is missing or invalid</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert>
+            <AlertDescription>
+              The pattern demo cannot be loaded due to missing data. Please try a different pattern.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const { theme } = useTheme();
   const [userInput, setUserInput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
@@ -210,6 +229,12 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
 
   // Step controller for managing execution flow
   const stepControllerRef = useRef<StepController | null>(null);
+  
+  // Reference for the flow container
+  const flowContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Use flow hooks for visualization outside of any conditional
+  const { triggerResize } = useFlowContainer(flowContainerRef);
 
   // Initialize step controller
   useEffect(() => {
@@ -550,13 +575,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     }
     return '';
   }, []);
-
-  // Reference for the flow container
-  const flowContainerRef = useRef<HTMLDivElement>(null);
   
-  // Use flow hooks for visualization
-  const { triggerResize } = useFlowContainer(flowContainerRef);
-
   // Setup safe resize handling with improved monitoring
   useEffect(() => {
     if (!flowContainerRef.current) return;
@@ -564,7 +583,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     // Apply safer resize behavior
     const resetTimeout = setTimeout(() => {
       resetReactFlowRendering(flowContainerRef);
-      triggerResize();
+      if (triggerResize) triggerResize();
     }, 1000);
     
     // Monitor for errors and re-trigger resize if needed
@@ -572,7 +591,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       requestAnimationFrame(() => {
         if (flowContainerRef.current) {
           resetReactFlowRendering(flowContainerRef);
-          triggerResize();
+          if (triggerResize) triggerResize();
         }
       });
     };

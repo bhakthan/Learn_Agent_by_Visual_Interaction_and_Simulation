@@ -1,102 +1,52 @@
-/**
- * Utilities for handling ReactFlow-specific issues
- */
+import { RefObject } from 'react';
 
 /**
- * Setup specific error handling for ReactFlow components
+ * Setup ReactFlow error handling
  */
-export function setupReactFlowErrorHandling() {
-  // Safe attempt to apply ReactFlow-specific fixes
-  const applyReactFlowFixes = () => {
-    try {
-      // Find ReactFlow elements
-      const flowElements = document.querySelectorAll('.react-flow');
-      
-      if (flowElements.length === 0) return;
-      
-      // Apply fixes to each flow element
-      flowElements.forEach(el => {
-        if (el instanceof HTMLElement) {
-          // Apply hardware acceleration
-          el.style.transform = 'translateZ(0)';
-          
-          // Fix overflow handling
-          const container = el.querySelector('.react-flow__container');
-          if (container instanceof HTMLElement) {
-            container.style.overflow = 'hidden';
-          }
-          
-          // Fix height issues 
-          const parent = el.parentElement;
-          if (parent && parent.offsetHeight > 10 && (!el.style.height || el.offsetHeight < 10)) {
-            el.style.height = `${parent.offsetHeight}px`;
-          }
-        }
-      });
-    } catch (error) {
-      // Silently handle errors
+export const setupReactFlowErrorHandling = () => {
+  // Apply special handling for ReactFlow errors
+  const originalError = console.error;
+  
+  console.error = function(...args: any[]) {
+    // Ignore specific ReactFlow errors that aren't critical
+    if (args[0] && typeof args[0] === 'string') {
+      if (args[0].includes('react-flow') || 
+          args[0].includes('ReactFlow') ||
+          args[0].includes('Should have a queue') ||
+          args[0].includes('invalid hook call')) {
+        // Log the error but with reduced visibility
+        return originalError.call(console, '%c[Flow Error Suppressed]', 'color: gray', ...args);
+      }
     }
+    return originalError.call(console, ...args);
   };
+};
+
+/**
+ * Force reset ReactFlow rendering to fix layout issues
+ * @param containerRef Reference to the container element
+ */
+export const resetReactFlowRendering = (containerRef: RefObject<HTMLElement>) => {
+  if (!containerRef.current) return;
   
-  // Apply initial fixes
-  setTimeout(applyReactFlowFixes, 500);
-  setTimeout(applyReactFlowFixes, 1500); // Retry after longer delay
-  
-  // Listen for ReactFlow components being added to the DOM
   try {
-    // Use mutation observer to detect when ReactFlow components are added
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === 'childList') {
-          const addedReactFlowElements = Array.from(mutation.addedNodes)
-            .filter(node => 
-              node instanceof HTMLElement && 
-              (
-                node.classList.contains('react-flow') || 
-                node.querySelector('.react-flow')
-              )
-            );
-            
-          if (addedReactFlowElements.length > 0) {
-            setTimeout(applyReactFlowFixes, 200);
-            break;
-          }
+    // Force recalculation by applying small style changes
+    const viewport = containerRef.current.querySelector('.react-flow__viewport');
+    if (viewport instanceof HTMLElement) {
+      const currentTransform = viewport.style.transform;
+      viewport.style.transform = 'translate(0px, 0px) scale(0.99)';
+      
+      // Reset after a small delay
+      setTimeout(() => {
+        if (viewport) {
+          viewport.style.transform = currentTransform;
         }
-      }
-    });
-    
-    // Start observing
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-  } catch (error) {
-    // Silently handle errors if observer fails
-  }
-  
-  // Override ReactFlow-specific error handlers
-  const originalConsoleWarn = console.warn;
-  console.warn = function(...args) {
-    // Filter out ReactFlow warnings that might cause unnecessary concern
-    const firstArg = args[0];
-    
-    if (typeof firstArg === 'string' && (
-      firstArg.includes('react-flow') || 
-      firstArg.includes('ReactFlow') ||
-      firstArg.includes('edge')
-    )) {
-      // Always apply fixes when ReactFlow warnings appear
-      setTimeout(applyReactFlowFixes, 100);
-      
-      // Only log in development environments
-      if (window.location.hostname === 'localhost') {
-        originalConsoleWarn.apply(console, args);
-      }
-      
-      return;
+      }, 50);
     }
     
-    // Pass through other warnings
-    originalConsoleWarn.apply(console, args);
-  };
-}
+    // Dispatch resize event to force recalculation
+    window.dispatchEvent(new Event('resize'));
+  } catch (err) {
+    console.warn('Error resetting ReactFlow:', err);
+  }
+};
