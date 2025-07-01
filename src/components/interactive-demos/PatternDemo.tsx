@@ -232,8 +232,14 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   // Reference for the flow container
   const flowContainerRef = useRef<HTMLDivElement>(null);
   
-  // Initialize flow container hook outside of any conditional
-  const flowContainerHelpers = useFlowContainer(flowContainerRef);
+  // Initialize flow container hook with proper options
+  const flowContainerHelpers = useMemo(() => ({
+    triggerResize: () => {
+      if (flowContainerRef.current) {
+        window.dispatchEvent(new Event('resize'));
+      }
+    }
+  }), []);
 
   // Initialize step controller
   useEffect(() => {
@@ -320,13 +326,13 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   };
 
   const getEdgePoints = useCallback((edgeId: string) => {
-    if (!edges || !Array.isArray(edges) || !nodes || !Array.isArray(nodes)) return null;
+    if (!memoizedEdges || !Array.isArray(memoizedEdges) || !memoizedNodes || !Array.isArray(memoizedNodes)) return null;
     
-    const edge = edges.find(e => e.id === edgeId);
+    const edge = memoizedEdges.find(e => e.id === edgeId);
     if (!edge) return null;
     
-    const sourceNode = nodes.find(n => n.id === edge.source);
-    const targetNode = nodes.find(n => n.id === edge.target);
+    const sourceNode = memoizedNodes.find(n => n.id === edge.source);
+    const targetNode = memoizedNodes.find(n => n.id === edge.target);
     
     if (!sourceNode || !targetNode) return null;
     
@@ -337,7 +343,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     const targetY = targetNode.position.y + 40;
     
     return { sourceX, sourceY, targetX, targetY };
-  }, [edges, nodes]);
+  }, [memoizedEdges, memoizedNodes]);
 
   const runDemo = async () => {
     if (!userInput.trim() || isRunning || !patternData || !Array.isArray(patternData.nodes)) return;
@@ -399,13 +405,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     // Increment iterations counter
     setIterations(prev => prev + 1);
     
-    // Update node status in visualization
-    setNodes(nodes => nodes.map(node => 
-      node.id === nodeId ? {
-        ...node,
-        data: { ...node.data, status: 'running' }
-      } : node
-    ));
+    // Update node status in visualization using memoized function
+    updateNodeStatus(nodeId, 'running');
     
     const node = patternData.nodes.find(n => n.id === nodeId);
     if (!node) throw new Error(`Node ${nodeId} not found`);
@@ -447,16 +448,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
         }
       }));
       
-      // Update node in visualization
-      setNodes(nodes => nodes.map(node => 
-        node.id === nodeId ? {
-          ...node,
-          data: { 
-            ...node.data, 
-            status: 'complete',
-            result
-          }
-        } : node
+      // Update node in visualization using memoized function
+      updateNodeStatus(nodeId, 'complete', result);
       ));
       
       // If output node, set final output
@@ -470,10 +463,9 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       
       // Process next nodes sequentially
       for (const edge of outgoingEdges) {
-        // Animate edge
-        setEdges(edges => edges.map(e => 
-          e.id === edge.id ? { ...e, animated: true } : e
-        ));
+        // Animate edge using memoized function
+        setEdgeAnimated(edge.id, true);
+        
         
         // Create data flow visualization
         const newFlow = {
@@ -514,17 +506,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
         }
       }));
       
-      // Update node in visualization
-      setNodes(nodes => nodes.map(node => 
-        node.id === nodeId ? {
-          ...node,
-          data: { 
-            ...node.data, 
-            status: 'failed',
-            result: error instanceof Error ? error.message : 'Unknown error'
-          }
-        } : node
-      ));
+      // Update node in visualization using memoized function
+      updateNodeStatus(nodeId, 'failed', error instanceof Error ? error.message : 'Unknown error');
       
       // Create error flow visualization
       const failureEdges = Array.isArray(patternData.edges) ? patternData.edges.filter(edge => 
@@ -534,9 +517,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       
       for (const edge of failureEdges) {
         // Animate edge
-        setEdges(edges => edges.map(e => 
-          e.id === edge.id ? { ...e, animated: true } : e
-        ));
+        // Animate edge using memoized function
+        setEdgeAnimated(edge.id, true);
         
         // Create error flow visualization
         const errorFlow = {
@@ -579,7 +561,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   useEffect(() => {
     if (!flowContainerRef.current) return;
     
-    // Apply safer resize behavior
+    // Apply safer resize behavior once on mount, not on every render
     const resetTimeout = setTimeout(() => {
       if (flowContainerRef.current) {
         resetReactFlowRendering(flowContainerRef);
@@ -589,6 +571,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     
     // Monitor for errors and re-trigger resize if needed
     const handleLayoutUpdate = () => {
+      if (!flowContainerRef.current) return;
+      
       requestAnimationFrame(() => {
         if (flowContainerRef.current) {
           resetReactFlowRendering(flowContainerRef);
@@ -604,12 +588,38 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       clearTimeout(resetTimeout);
       window.removeEventListener('layout-update', handleLayoutUpdate);
     };
-  }, [flowContainerHelpers]);
+  }, []); // Remove dependency on flowContainerHelpers to prevent infinite loops
+  
+  // Add proper memoization to prevent frequent rerenders
+  const memoizedEdges = useMemo(() => edges, [edges]);
+  const memoizedNodes = useMemo(() => nodes, [nodes]);
+  const memoizedFlows = useMemo(() => dataFlows, [dataFlows]);
   
   // Define nodeTypes for ReactFlow with memoization
   const nodeTypes = useMemo<NodeTypes>(() => ({
     demoNode: CustomDemoNode
   }), []);
+  
+  // Memoize the handling of node state changes to prevent infinite loops
+  const updateNodeStatus = useCallback((nodeId: string, status: 'idle' | 'running' | 'complete' | 'failed', result?: string) => {
+    setNodes(prevNodes => prevNodes.map(node => 
+      node.id === nodeId ? {
+        ...node,
+        data: { 
+          ...node.data, 
+          status,
+          result
+        }
+      } : node
+    ));
+  }, []);
+  
+  // Memoize the edge animation logic
+  const setEdgeAnimated = useCallback((edgeId: string, animated: boolean) => {
+    setEdges(prevEdges => prevEdges.map(e => 
+      e.id === edgeId ? { ...e, animated } : e
+    ));
+  }, []);
   
   // Function to handle node drag events
   const onNodeDragStop = useCallback(() => {
@@ -754,8 +764,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
           >
             <ReactFlowProvider>
               <MemoizedReactFlow
-                nodes={nodes}
-                edges={edges}
+                nodes={memoizedNodes}
+                edges={memoizedEdges}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onNodeDragStop={onNodeDragStop}
@@ -773,7 +783,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                 defaultEdgeOptions={{
                   style: { 
                     strokeWidth: 2,
-                    stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined // Enhanced edge visibility in dark mode
+                    stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined 
                   },
                   markerEnd: { type: MarkerType.Arrow }
                 }}
@@ -787,8 +797,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                   }} 
                 />
                 <DataFlowVisualizer 
-                  flows={dataFlows} 
-                  edges={edges}
+                  flows={memoizedFlows} 
+                  edges={memoizedEdges}
                   getEdgePoints={getEdgePoints}
                   onFlowComplete={onFlowComplete}
                   speed={animationSpeed || 1}

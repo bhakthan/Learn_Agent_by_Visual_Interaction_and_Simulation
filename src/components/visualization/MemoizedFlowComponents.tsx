@@ -21,17 +21,14 @@ import 'reactflow/dist/style.css';
 export const MemoizedReactFlow = memo<ReactFlowProps>((props) => {
   return <ReactFlow {...props} />;
 }, (prevProps, nextProps) => {
-  // Skip re-render for certain prop changes that don't visually affect the flow
+  // Only re-render for specific changes
   if (prevProps.nodes !== nextProps.nodes) return false;
   if (prevProps.edges !== nextProps.edges) return false;
   if (prevProps.nodesDraggable !== nextProps.nodesDraggable) return false;
   if (prevProps.zoomOnScroll !== nextProps.zoomOnScroll) return false;
   
-  // Skip re-render for some handler changes if they seem to have similar signatures
-  // (this is a heuristic that might need adjustment)
-  if (typeof prevProps.onNodeDragStart !== typeof nextProps.onNodeDragStart) return false;
-  
-  // Keep default behavior for other props (e.g., style, className, etc.)
+  // Keep default equality for other props (e.g., style, className, etc.)
+  // Return TRUE to PREVENT re-render (React memo behavior)
   return true;
 });
 
