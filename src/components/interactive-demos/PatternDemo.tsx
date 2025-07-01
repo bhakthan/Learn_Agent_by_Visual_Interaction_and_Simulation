@@ -450,7 +450,6 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       
       // Update node in visualization using memoized function
       updateNodeStatus(nodeId, 'complete', result);
-      ));
       
       // If output node, set final output
       if (node.data.nodeType === 'output') {
