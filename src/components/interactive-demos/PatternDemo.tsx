@@ -33,7 +33,7 @@ import {
 } from '../visualization/MemoizedFlowComponents'
 
 // Import custom hooks
-import { useFlowContainer } from '@/lib/hooks/useFlowContainer'
+import { useFlowContainer } from '@/lib/hooks/useFlowContainer.tsx'
 import { useResizeObserver } from '@/lib/hooks/useResizeObserver'
 
 import DataFlowVisualizer from '../visualization/DataFlowVisualizer'
@@ -571,7 +571,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   // Calculate execution time for a step
   const getExecutionTime = useCallback((step: StepState) => {
     if (step.startTime && step.endTime) {
-      return `${((step.endTime - step.startTime) / 1000).toFixed(1)}s`;
+      return ((step.endTime - step.startTime) / 1000).toFixed(1) + 's';
     }
     return '';
   }, []);
@@ -582,8 +582,10 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     
     // Apply safer resize behavior
     const resetTimeout = setTimeout(() => {
-      resetReactFlowRendering(flowContainerRef);
-      if (triggerResize) triggerResize();
+      if (flowContainerRef.current) {
+        resetReactFlowRendering(flowContainerRef);
+        if (triggerResize) triggerResize();
+      }
     }, 1000);
     
     // Monitor for errors and re-trigger resize if needed
