@@ -12,7 +12,8 @@ import ConceptsExplorer from './components/concepts/ConceptsExplorer'
 import AzureServicesOverview from './components/azure-services/AzureServicesOverview'
 import CommunitySharing from './components/community/CommunitySharing'
 import ReferencesSection from './components/references/ReferencesSection'
-import { setupResizeObserverErrorHandling, disableResizeObserverIfProblematic } from './lib/utils/resizeObserverUtils'
+import { setupResizeObserverErrorHandling } from './lib/utils/resizeObserverUtils';
+import { disableResizeObserverIfProblematic } from './lib/utils/disableResizeObserver';
 // Tutorial functionality disabled due to errors
 // import { TutorialProvider } from './components/tutorial/TutorialProvider'
 // import { TutorialButton } from './components/tutorial/TutorialButton'

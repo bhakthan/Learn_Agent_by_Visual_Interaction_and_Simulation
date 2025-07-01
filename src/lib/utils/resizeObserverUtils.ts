@@ -85,29 +85,33 @@ export const setupResizeObserverErrorHandling = () => {
 };
 
 /**
- * Function to be called when ResizeObserver is causing problems
- * This disables ResizeObserver functionality for problematic elements
+ * Create a stable resize observer that handles errors gracefully
  */
-export const disableResizeObserverIfProblematic = () => {
-  try {
-    // Find all ReactFlow elements
-    document.querySelectorAll('.react-flow').forEach(el => {
-      if (el instanceof HTMLElement) {
-        // Store existing dimensions
-        const height = el.offsetHeight || 400;
-        const width = el.offsetWidth || 800;
-        
-        // Force fixed dimensions to prevent ResizeObserver from triggering
-        el.style.height = `${height}px`;
-        el.style.width = `${width}px`;
-        el.style.minHeight = `${height}px`;
-        el.style.minWidth = `${width}px`;
-        
-        // Mark as stabilized to prevent further ResizeObserver issues
-        el.dataset.stabilized = 'true';
+export const createStableResizeObserver = (callback: ResizeObserverCallback) => {
+  let isHandlingError = false;
+  let lastCallTime = 0;
+  const MIN_TIME_BETWEEN_CALLS = 100; // ms
+  
+  const wrappedCallback: ResizeObserverCallback = (entries, observer) => {
+    // Throttle calls to avoid too many rapid updates
+    const now = Date.now();
+    if (now - lastCallTime < MIN_TIME_BETWEEN_CALLS) return;
+    lastCallTime = now;
+    
+    try {
+      if (!isHandlingError) {
+        callback(entries, observer);
       }
-    });
-  } catch (err) {
-    // Silent recovery
-  }
+    } catch (e) {
+      isHandlingError = true;
+      console.warn("Error in ResizeObserver callback, throttling to prevent loop", e);
+      
+      // Reset after a delay
+      setTimeout(() => {
+        isHandlingError = false;
+      }, 1000);
+    }
+  };
+  
+  return new ResizeObserver(wrappedCallback);
 };
