@@ -418,24 +418,36 @@ app.post('/query/response', (req, res) => {
                           Previous
                         </Button>
                         
-                        <Button 
-                          variant="default" 
-                          size="sm" 
-                          onClick={() => setIsPlaying(!isPlaying)}
-                          disabled={currentStep === steps.length - 1}
-                        >
-                          {isPlaying ? (
-                            <>
-                              <ArrowsClockwise className="mr-1 animate-spin" size={16} />
-                              Playing...
-                            </>
-                          ) : (
-                            <>
-                              <Play className="mr-1" size={16} />
-                              Play
-                            </>
-                          )}
-                        </Button>
+                        {completedSteps.length === 0 ? (
+                          <Button 
+                            variant="primary" 
+                            size="sm" 
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+                            onClick={() => setIsPlaying(true)}
+                          >
+                            <Play className="mr-2" size={16} />
+                            START
+                          </Button>
+                        ) : (
+                          <Button 
+                            variant="default" 
+                            size="sm" 
+                            onClick={() => setIsPlaying(!isPlaying)}
+                            disabled={currentStep === steps.length - 1}
+                          >
+                            {isPlaying ? (
+                              <>
+                                <ArrowsClockwise className="mr-1 animate-spin" size={16} />
+                                Playing...
+                              </>
+                            ) : (
+                              <>
+                                <Play className="mr-1" size={16} />
+                                Play
+                              </>
+                            )}
+                          </Button>
+                        )}
                         
                         <Button 
                           variant="outline" 
@@ -559,6 +571,21 @@ app.post('/query/response', (req, res) => {
                       <CaretRight className="mr-1 rotate-180" size={16} />
                       Previous
                     </Button>
+                    
+                    {completedSteps.length === 0 ? (
+                      <Button 
+                        variant="primary" 
+                        size="sm" 
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+                        onClick={() => {
+                          setActiveTab('visual');
+                          setTimeout(() => setIsPlaying(true), 100);
+                        }}
+                      >
+                        <Play className="mr-2" size={16} />
+                        START
+                      </Button>
+                    ) : null}
                     
                     <Button 
                       variant="outline" 
