@@ -95,6 +95,8 @@ const CustomDemoNode = React.memo(({ data, id }: { data: any, id: string }) => {
       width: '180px',
       color: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)',
       cursor: 'grab',
+      position: 'relative',
+      zIndex: 1
     }
     
     // Add status-specific styling
@@ -596,9 +598,47 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   // We don't need memoizedEdges and memoizedNodes since useNodesState and useEdgesState already handle this
   // Remove excessive memoization that's causing infinite loops
   
-  // Define nodeTypes for ReactFlow with memoization
+  // Define nodeTypes and edgeTypes for ReactFlow with memoization
   const nodeTypes = useMemo<NodeTypes>(() => ({
     demoNode: CustomDemoNode
+  }), []);
+  
+  // Custom edge types with arrows for better visualization
+  const edgeTypes = useMemo(() => ({
+    custom: React.memo(({ id, sourceX, sourceY, targetX, targetY, animated }: any) => {
+      const edgePath = `M${sourceX},${sourceY} C${sourceX + 50},${sourceY} ${targetX - 50},${targetY} ${targetX},${targetY}`;
+      
+      // Calculate arrow position at target end
+      const dx = targetX - sourceX;
+      const dy = targetY - sourceY;
+      const angle = Math.atan2(dy, dx);
+      const arrowLength = 10;
+      
+      // Position arrow slightly before endpoint
+      const arrowX = targetX - arrowLength * Math.cos(angle);
+      const arrowY = targetY - arrowLength * Math.sin(angle);
+      
+      return (
+        <g>
+          <path
+            id={id}
+            stroke={animated ? 'var(--primary)' : 'var(--border)'}
+            fill="none"
+            strokeWidth={animated ? 2 : 1}
+            className={animated ? 'animate-pulse' : ''}
+            d={edgePath}
+            strokeDasharray={animated ? "5,5" : ""}
+          />
+          
+          {/* Arrow marker */}
+          <polygon
+            points="-6,-4 0,0 -6,4"
+            fill={animated ? 'var(--primary)' : 'var(--border)'}
+            transform={`translate(${arrowX}, ${arrowY}) rotate(${angle * (180 / Math.PI)})`}
+          />
+        </g>
+      );
+    })
   }), []);
   
   // Fixed React error: Maximum update depth exceeded
@@ -771,6 +811,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                 onEdgesChange={onEdgesChange}
                 onNodeDragStop={onNodeDragStop}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
                 fitView
                 panOnScroll
                 panOnDrag
@@ -782,11 +823,11 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                 minZoom={0.5}
                 maxZoom={1.5}
                 defaultEdgeOptions={{
+                  type: 'custom', // Use our custom edge type with arrows
                   style: { 
                     strokeWidth: 2,
                     stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined 
-                  },
-                  markerEnd: { type: MarkerType.Arrow }
+                  }
                 }}
               >
                 <MemoizedBackground color={theme === 'dark' ? '#ffffff20' : '#aaa'} gap={16} />

@@ -39,8 +39,8 @@ const CustomNode = ({ data }: any) => {
   );
 };
 
-// Custom edge with animated marker
-const AnimatedEdge = ({ id, sourceX, sourceY, targetX, targetY, label, style, data }: any) => {
+// Custom edge with animated marker and arrow
+const AnimatedEdge = React.memo(({ id, sourceX, sourceY, targetX, targetY, label, style, data }: any) => {
   const [isAnimating, setIsAnimating] = useState(false);
   
   useEffect(() => {
@@ -55,16 +55,38 @@ const AnimatedEdge = ({ id, sourceX, sourceY, targetX, targetY, label, style, da
     }
   }, [data?.active]);
 
+  // Calculate curved path between source and target
   const edgePath = `M${sourceX},${sourceY} C${sourceX + 50},${sourceY} ${targetX - 50},${targetY} ${targetX},${targetY}`;
+  
+  // Calculate position for arrow marker
+  const dx = targetX - sourceX;
+  const dy = targetY - sourceY;
+  const angle = Math.atan2(dy, dx);
+  
+  // Position slightly before the target point to place the arrow
+  const arrowPosition = {
+    x: targetX - 12 * Math.cos(angle),
+    y: targetY - 12 * Math.sin(angle)
+  };
   
   return (
     <g>
+      {/* Path for the edge */}
       <path
         id={id}
         className={`react-flow__edge-path ${isAnimating ? 'stroke-primary stroke-2' : ''}`}
         d={edgePath}
         style={style}
       />
+      
+      {/* Arrow marker */}
+      <polygon 
+        points="0,-3 6,0 0,3"
+        transform={`translate(${arrowPosition.x}, ${arrowPosition.y}) rotate(${angle * 180 / Math.PI})`}
+        fill={isAnimating ? 'var(--primary)' : 'var(--border)'}
+      />
+      
+      {/* Edge label */}
       {label && (
         <text>
           <textPath
@@ -80,7 +102,7 @@ const AnimatedEdge = ({ id, sourceX, sourceY, targetX, targetY, label, style, da
       )}
     </g>
   );
-};
+});
 
 const nodeTypes: NodeTypes = {
   custom: CustomNode,
