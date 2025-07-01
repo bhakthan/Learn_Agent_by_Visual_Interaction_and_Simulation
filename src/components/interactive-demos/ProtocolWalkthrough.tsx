@@ -8,18 +8,12 @@ import {
   Pause,
   ArrowsCounterClockwise,
   CaretRight,
-  CaretLeft
+  CaretLeft,
+  ArrowRight
 } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
-import ReactFlow, {
-  Background,
-  Controls,
-  Edge,
-  Node,
-  Position,
-  MarkerType
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+
+// Simple implementation without ReactFlow to avoid rendering issues
 
 interface ProtocolMessage {
   id: string;
@@ -35,7 +29,7 @@ interface ProtocolStep {
   title: string;
   description: string;
   messages: ProtocolMessage[];
-  activeEdges: string[];
+  participants: string[];
 }
 
 const ProtocolWalkthrough = () => {
@@ -43,8 +37,7 @@ const ProtocolWalkthrough = () => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [displayedMessages, setDisplayedMessages] = useState<ProtocolMessage[]>([]);
-  const [highlightedNodes, setHighlightedNodes] = useState<string[]>([]);
-  const [highlightedEdges, setHighlightedEdges] = useState<string[]>([]);
+  const [activeParticipants, setActiveParticipants] = useState<string[]>([]);
   
   const steps: ProtocolStep[] = [
     {
@@ -54,14 +47,14 @@ const ProtocolWalkthrough = () => {
       messages: [
         {
           id: "msg-1",
-          from: "client",
-          to: "acpServer",
+          from: "Client",
+          to: "ACP Server",
           content: "Request: Generate a report on sales trends",
           protocolType: 'ACP',
           timestamp: 0
         }
       ],
-      activeEdges: ["client-acpServer"]
+      participants: ["Client", "ACP Server"]
     },
     {
       id: "acp_routing",
@@ -70,14 +63,14 @@ const ProtocolWalkthrough = () => {
       messages: [
         {
           id: "msg-2",
-          from: "acpServer",
-          to: "agent1",
+          from: "ACP Server",
+          to: "Coordinator Agent",
           content: "Request forwarded with ACP metadata",
           protocolType: 'ACP',
           timestamp: 1000
         }
       ],
-      activeEdges: ["acpServer-agent1"]
+      participants: ["ACP Server", "Coordinator Agent"]
     },
     {
       id: "mcp_context",
@@ -86,14 +79,14 @@ const ProtocolWalkthrough = () => {
       messages: [
         {
           id: "msg-3",
-          from: "agent1",
-          to: "agent1",
+          from: "Coordinator Agent",
+          to: "Coordinator Agent",
           content: "Processing with MCP context tracking",
           protocolType: 'MCP',
           timestamp: 2000
         }
       ],
-      activeEdges: []
+      participants: ["Coordinator Agent"]
     },
     {
       id: "agent_delegation",
@@ -102,14 +95,14 @@ const ProtocolWalkthrough = () => {
       messages: [
         {
           id: "msg-4",
-          from: "agent1",
-          to: "agent2",
+          from: "Coordinator Agent",
+          to: "Specialist Agent",
           content: "Delegated task with preserved context",
           protocolType: 'MCP',
           timestamp: 3000
         }
       ],
-      activeEdges: ["agent1-agent2"]
+      participants: ["Coordinator Agent", "Specialist Agent"]
     },
     {
       id: "agent_response",
@@ -118,14 +111,14 @@ const ProtocolWalkthrough = () => {
       messages: [
         {
           id: "msg-5",
-          from: "agent2",
-          to: "agent1",
+          from: "Specialist Agent",
+          to: "Coordinator Agent",
           content: "Task results with maintained context",
           protocolType: 'MCP',
           timestamp: 4000
         }
       ],
-      activeEdges: ["agent2-agent1"]
+      participants: ["Specialist Agent", "Coordinator Agent"]
     },
     {
       id: "acp_response",
@@ -134,176 +127,22 @@ const ProtocolWalkthrough = () => {
       messages: [
         {
           id: "msg-6",
-          from: "agent1",
-          to: "acpServer",
+          from: "Coordinator Agent",
+          to: "ACP Server",
           content: "Final result compiled",
           protocolType: 'ACP',
           timestamp: 5000
         },
         {
           id: "msg-7",
-          from: "acpServer",
-          to: "client",
+          from: "ACP Server",
+          to: "Client",
           content: "HTTP response with results",
           protocolType: 'ACP',
           timestamp: 6000
         }
       ],
-      activeEdges: ["agent1-acpServer", "acpServer-client"]
-    }
-  ];
-  
-  const nodes: Node[] = [
-    {
-      id: 'client',
-      type: 'default',
-      data: { 
-        label: (
-          <div>
-            <div className="font-semibold">Client</div>
-            <div className="text-xs text-muted-foreground">Application</div>
-          </div>
-        )
-      },
-      position: { x: 50, y: 100 },
-      className: `border-2 border-border bg-background rounded-md px-2 py-1 transition-all duration-300 ${
-        highlightedNodes.includes('client') ? 'border-primary shadow-lg shadow-primary/20' : ''
-      }`,
-    },
-    {
-      id: 'acpServer',
-      type: 'default',
-      data: { 
-        label: (
-          <div>
-            <div className="font-semibold">ACP Server</div>
-            <div className="text-xs text-muted-foreground">Protocol Handler</div>
-          </div>
-        )
-      },
-      position: { x: 250, y: 100 },
-      className: `border-2 border-border bg-background rounded-md px-2 py-1 transition-all duration-300 ${
-        highlightedNodes.includes('acpServer') ? 'border-primary shadow-lg shadow-primary/20' : ''
-      }`,
-    },
-    {
-      id: 'agent1',
-      type: 'default',
-      data: { 
-        label: (
-          <div>
-            <div className="font-semibold">Coordinator Agent</div>
-            <div className="text-xs text-muted-foreground">Request Handler</div>
-          </div>
-        )
-      },
-      position: { x: 450, y: 50 },
-      className: `border-2 border-border bg-background rounded-md px-2 py-1 transition-all duration-300 ${
-        highlightedNodes.includes('agent1') ? 'border-secondary shadow-lg shadow-secondary/20' : ''
-      }`,
-    },
-    {
-      id: 'agent2',
-      type: 'default',
-      data: { 
-        label: (
-          <div>
-            <div className="font-semibold">Specialist Agent</div>
-            <div className="text-xs text-muted-foreground">Task Processor</div>
-          </div>
-        )
-      },
-      position: { x: 450, y: 150 },
-      className: `border-2 border-border bg-background rounded-md px-2 py-1 transition-all duration-300 ${
-        highlightedNodes.includes('agent2') ? 'border-secondary shadow-lg shadow-secondary/20' : ''
-      }`,
-    }
-  ];
-  
-  const edges: Edge[] = [
-    {
-      id: 'client-acpServer',
-      source: 'client',
-      target: 'acpServer',
-      label: 'ACP Request',
-      labelBgStyle: { fill: 'var(--muted)' },
-      labelStyle: { fontSize: 10 },
-      animated: highlightedEdges.includes('client-acpServer'),
-      style: { stroke: highlightedEdges.includes('client-acpServer') ? 'var(--primary)' : 'var(--border)' },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: highlightedEdges.includes('client-acpServer') ? 'var(--primary)' : 'var(--border)',
-      },
-    },
-    {
-      id: 'acpServer-agent1',
-      source: 'acpServer',
-      target: 'agent1',
-      label: 'ACP Routing',
-      labelBgStyle: { fill: 'var(--muted)' },
-      labelStyle: { fontSize: 10 },
-      animated: highlightedEdges.includes('acpServer-agent1'),
-      style: { stroke: highlightedEdges.includes('acpServer-agent1') ? 'var(--primary)' : 'var(--border)' },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: highlightedEdges.includes('acpServer-agent1') ? 'var(--primary)' : 'var(--border)',
-      },
-    },
-    {
-      id: 'agent1-agent2',
-      source: 'agent1',
-      target: 'agent2',
-      label: 'MCP Message',
-      labelBgStyle: { fill: 'var(--muted)' },
-      labelStyle: { fontSize: 10 },
-      animated: highlightedEdges.includes('agent1-agent2'),
-      style: { stroke: highlightedEdges.includes('agent1-agent2') ? 'var(--secondary)' : 'var(--border)' },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: highlightedEdges.includes('agent1-agent2') ? 'var(--secondary)' : 'var(--border)',
-      },
-    },
-    {
-      id: 'agent2-agent1',
-      source: 'agent2',
-      target: 'agent1',
-      label: 'MCP Message',
-      labelBgStyle: { fill: 'var(--muted)' },
-      labelStyle: { fontSize: 10 },
-      animated: highlightedEdges.includes('agent2-agent1'),
-      style: { stroke: highlightedEdges.includes('agent2-agent1') ? 'var(--secondary)' : 'var(--border)' },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: highlightedEdges.includes('agent2-agent1') ? 'var(--secondary)' : 'var(--border)',
-      },
-    },
-    {
-      id: 'agent1-acpServer',
-      source: 'agent1',
-      target: 'acpServer',
-      label: 'ACP Response',
-      labelBgStyle: { fill: 'var(--muted)' },
-      labelStyle: { fontSize: 10 },
-      animated: highlightedEdges.includes('agent1-acpServer'),
-      style: { stroke: highlightedEdges.includes('agent1-acpServer') ? 'var(--primary)' : 'var(--border)' },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: highlightedEdges.includes('agent1-acpServer') ? 'var(--primary)' : 'var(--border)',
-      },
-    },
-    {
-      id: 'acpServer-client',
-      source: 'acpServer',
-      target: 'client',
-      label: 'ACP Response',
-      labelBgStyle: { fill: 'var(--muted)' },
-      labelStyle: { fontSize: 10 },
-      animated: highlightedEdges.includes('acpServer-client'),
-      style: { stroke: highlightedEdges.includes('acpServer-client') ? 'var(--primary)' : 'var(--border)' },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: highlightedEdges.includes('acpServer-client') ? 'var(--primary)' : 'var(--border)',
-      },
+      participants: ["Coordinator Agent", "ACP Server", "Client"]
     }
   ];
   
@@ -322,15 +161,12 @@ const ProtocolWalkthrough = () => {
           // Add message to display
           setDisplayedMessages(prev => [...prev, message]);
           
-          // Highlight nodes involved in this message
-          setHighlightedNodes([message.from, message.to]);
+          // Highlight active participants
+          setActiveParticipants([message.from, message.to]);
           
           // Advance to next message
           setCurrentMessageIndex(prev => prev + 1);
-        }, 1000);
-        
-        // Update active edges
-        setHighlightedEdges(currentStep.activeEdges);
+        }, 1500);
       } else {
         // We've shown all messages for this step
         
@@ -363,8 +199,7 @@ const ProtocolWalkthrough = () => {
     setCurrentStepIndex(0);
     setCurrentMessageIndex(0);
     setDisplayedMessages([]);
-    setHighlightedNodes([]);
-    setHighlightedEdges([]);
+    setActiveParticipants([]);
   };
   
   const handlePreviousStep = () => {
@@ -373,7 +208,7 @@ const ProtocolWalkthrough = () => {
       
       // Calculate messages to keep
       const messagesFromPreviousSteps = steps
-        .slice(0, currentStepIndex - 1)
+        .slice(0, currentStepIndex)
         .reduce((acc, step) => acc + step.messages.length, 0);
       
       // Keep only messages from steps before the previous step
@@ -383,16 +218,9 @@ const ProtocolWalkthrough = () => {
       setCurrentStepIndex(prev => prev - 1);
       setCurrentMessageIndex(0);
       
-      // Update highlighted elements based on previous step
+      // Update active participants based on previous step
       const previousStep = steps[currentStepIndex - 1];
-      setHighlightedEdges(previousStep.activeEdges);
-      
-      if (previousStep.messages.length > 0) {
-        const lastMessage = previousStep.messages[0]; // Start with first message of the step
-        setHighlightedNodes([lastMessage.from, lastMessage.to]);
-      } else {
-        setHighlightedNodes([]);
-      }
+      setActiveParticipants(previousStep.participants);
     }
   };
   
@@ -412,12 +240,9 @@ const ProtocolWalkthrough = () => {
       setCurrentStepIndex(prev => prev + 1);
       setCurrentMessageIndex(0);
       
-      // Update highlighted elements based on next step
+      // Update active participants based on next step
       const nextStep = steps[currentStepIndex + 1];
-      setHighlightedEdges(nextStep.activeEdges);
-      
-      // Clear highlighted nodes until next message is processed
-      setHighlightedNodes([]);
+      setActiveParticipants(nextStep.participants);
     }
   };
   
@@ -434,8 +259,8 @@ const ProtocolWalkthrough = () => {
             </div>
             
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className={currentStepIndex >= 3 && currentStepIndex <= 4 ? 'bg-secondary/10' : 'bg-primary/10'}>
-                {currentStepIndex >= 3 && currentStepIndex <= 4 ? 'MCP Phase' : 'ACP Phase'}
+              <Badge variant="outline" className={currentStepIndex >= 2 && currentStepIndex <= 4 ? 'bg-secondary/10' : 'bg-primary/10'}>
+                {currentStepIndex >= 2 && currentStepIndex <= 4 ? 'MCP Phase' : 'ACP Phase'}
               </Badge>
               <div className="text-sm">
                 Step {currentStepIndex + 1} of {steps.length}
@@ -443,16 +268,66 @@ const ProtocolWalkthrough = () => {
             </div>
           </div>
           
-          <div className="border rounded-md overflow-hidden" style={{ height: 300 }}>
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              fitView
-              attributionPosition="bottom-right"
-            >
-              <Background />
-              <Controls />
-            </ReactFlow>
+          {/* Simple static diagram */}
+          <div className="border rounded-md p-6 bg-muted/20" style={{ minHeight: 250 }}>
+            <div className="grid grid-cols-4 gap-4">
+              <div className={`p-4 border-2 rounded-lg flex flex-col items-center text-center ${
+                activeParticipants.includes("Client") ? 'border-primary bg-primary/5' : 'border-border'
+              }`}>
+                <div className="font-semibold">Client</div>
+                <div className="text-xs text-muted-foreground">Application</div>
+              </div>
+              
+              <div className={`p-4 border-2 rounded-lg flex flex-col items-center text-center ${
+                activeParticipants.includes("ACP Server") ? 'border-primary bg-primary/5' : 'border-border'
+              }`}>
+                <div className="font-semibold">ACP Server</div>
+                <div className="text-xs text-muted-foreground">Protocol Handler</div>
+              </div>
+              
+              <div className={`p-4 border-2 rounded-lg flex flex-col items-center text-center ${
+                activeParticipants.includes("Coordinator Agent") ? 'border-secondary bg-secondary/5' : 'border-border'
+              }`}>
+                <div className="font-semibold">Coordinator Agent</div>
+                <div className="text-xs text-muted-foreground">Request Handler</div>
+              </div>
+              
+              <div className={`p-4 border-2 rounded-lg flex flex-col items-center text-center ${
+                activeParticipants.includes("Specialist Agent") ? 'border-secondary bg-secondary/5' : 'border-border'
+              }`}>
+                <div className="font-semibold">Specialist Agent</div>
+                <div className="text-xs text-muted-foreground">Task Processor</div>
+              </div>
+            </div>
+            
+            {/* Simple animation for active message */}
+            {displayedMessages.length > 0 && (
+              <div className="mt-8 flex justify-center">
+                <AnimatePresence mode="wait">
+                  {isPlaying && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      key={displayedMessages.length}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-md ${
+                        displayedMessages[displayedMessages.length - 1].protocolType === 'ACP' 
+                          ? 'bg-primary/10' 
+                          : 'bg-secondary/10'
+                      }`}
+                    >
+                      <div className="font-medium text-sm">
+                        {displayedMessages[displayedMessages.length - 1].from}
+                      </div>
+                      <ArrowRight size={16} />
+                      <div className="font-medium text-sm">
+                        {displayedMessages[displayedMessages.length - 1].to}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
           
           <div className="flex justify-between items-center">
