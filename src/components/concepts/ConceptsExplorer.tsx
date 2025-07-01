@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import A2ADemo from "../interactive-demos/A2ADemo"
 import MCPDemo from "../interactive-demos/MCPDemo"
+import MCPVisualDemo from "../interactive-demos/MCPVisualDemo"
 import ACPDemo from "../interactive-demos/ACPDemo"
 import ACPMCPComparison from "../interactive-demos/ACPMCPComparison"
 import ConceptDetails from "./ConceptDetails"
@@ -300,9 +301,16 @@ const ConceptsExplorer = () => {
           
           <Separator className="my-6" />
           
-          <h2 className="text-2xl font-semibold tracking-tight mb-4">Interactive MCP Demonstration</h2>
+          <h2 className="text-2xl font-semibold tracking-tight mb-4">Interactive MCP Demonstrations</h2>
           <p className="text-muted-foreground mb-6">
             See how the ModelContextProtocol enables structured communication between agents with context preservation.
+          </p>
+          
+          <MCPVisualDemo />
+          
+          <h3 className="text-xl font-semibold tracking-tight mb-4 mt-8">Message Exchange Demo</h3>
+          <p className="text-muted-foreground mb-6">
+            Explore how MCP metadata and context tracking works in a conversational agent scenario.
           </p>
           
           <MCPDemo />
