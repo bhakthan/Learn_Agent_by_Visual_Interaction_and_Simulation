@@ -26,13 +26,16 @@ import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Play, Stop, ArrowsCounterClockwise, Info, FastForward, Pause, StepForward, Rewind, QuestionCircle, DotsSixVertical } from '@phosphor-icons/react'
 import NodeDragHint from './NodeDragHint'
-// Import necessary functions from dataFlowUtils directly
+// Import necessary functions from dataFlowUtils
 import { 
   simulatePatternFlow, 
-  FlowMessage, 
-  DataFlowState, 
-  DataFlow, 
-  getDataFlowAnimationStyle 
+  DataFlowMessage,
+  DataFlowType,
+  getDataFlowAnimationStyle,
+  resetDataFlow,
+  createDataFlow,
+  getSpeedMultiplier,
+  setSpeedMultiplier
 } from '@/lib/utils/dataFlowUtils'
 import DataFlowVisualizer from './DataFlowVisualizer'
 import { useMemoizedCallback } from '@/lib/utils'
@@ -40,20 +43,6 @@ import { useFlowContainer } from '@/lib/hooks'
 
 interface PatternVisualizerProps {
   patternData: PatternData
-}
-
-// Types for data flow visualization
-interface DataFlow {
-  id: string;
-  edgeId: string;
-  source: string;
-  target: string;
-  content: string;
-  timestamp: number;
-  type: 'message' | 'data' | 'response' | 'error';
-  progress: number;
-  label?: string;
-  complete?: boolean;
 }
 
 // Animation control state
@@ -169,7 +158,7 @@ const messageTemplates = {
 const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
   const [nodes, setNodes, onNodesChange] = useNodesState(patternData.nodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(patternData.edges)
-  const [dataFlows, setDataFlows] = useState<DataFlow[]>([])
+  const [dataFlows, setDataFlows] = useState<DataFlowMessage[]>([])
   const [isAnimating, setIsAnimating] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
   const [queryInput, setQueryInput] = useState<string>("Tell me about agent patterns")
@@ -206,6 +195,8 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       'fast': 2
     };
     setSpeedFactor(factors[animationState.speed]);
+    // Update the global speed multiplier
+    setSpeedMultiplier(factors[animationState.speed]);
   }, [animationState.speed]);
   
   // Effect to fit view whenever dimensions change significantly
@@ -377,7 +368,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       );
     };
     
-    const handleDataFlow = (flow: any) => {
+    const handleDataFlow = (flow: DataFlowMessage) => {
       setDataFlows(currentFlows => [...currentFlows, flow]);
     };
     
@@ -402,8 +393,8 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       }
     };
     
-    // Start the simulation using our utility
-    const { cleanup } = simulatePatternFlow(
+    // Start the simulation using our utility with proper parameters
+    const result = simulatePatternFlow(
       nodes,
       edges,
       handleNodeStatus,
@@ -411,11 +402,11 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       handleDataFlow,
       queryInput,
       handleAddStep,
-      animationState.mode === 'auto' ? speedFactor : 1
+      speedFactor
     );
     
     // Store the cleanup function
-    simulationCleanupRef.current = cleanup;
+    simulationCleanupRef.current = result.cleanup;
     
     // In auto mode, start simulation immediately
     if (animationState.mode === 'auto') {
@@ -425,9 +416,9 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       console.log('Started in step-by-step mode. Click Next Step to proceed after the first automatic step.');
     }
     
-    // Clean up the simulation when component unmounts or resets
+    // Return cleanup function
     return () => {
-      if (cleanup) cleanup();
+      if (result.cleanup) result.cleanup();
     };
   }, [nodes, edges, setNodes, setEdges, resetVisualization, animationState.mode, animationState.isPaused, speedFactor, executeNextStep, queryInput]);
   

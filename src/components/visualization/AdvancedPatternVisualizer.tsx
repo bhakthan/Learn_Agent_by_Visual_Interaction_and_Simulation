@@ -23,7 +23,7 @@ import {
 } from '@phosphor-icons/react'
 import NodeDragHint from './NodeDragHint'
 // Import necessary functions from dataFlowUtils
-import { simulatePatternFlow, FlowMessage, DataFlowState, DataFlow, getDataFlowAnimationStyle } from '@/lib/utils/dataFlowUtils'
+import { simulatePatternFlow, DataFlowMessage, DataFlowType, getDataFlowAnimationStyle, resetDataFlow } from '@/lib/utils/dataFlowUtils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import EnhancedDataFlowVisualizer from './EnhancedDataFlowVisualizer'
 import DataFlowControls, { DataFlowFilter } from './DataFlowControls'
@@ -35,18 +35,7 @@ interface AdvancedPatternVisualizerProps {
 }
 
 // Data flow types
-interface DataFlow {
-  id: string;
-  edgeId: string;
-  source: string;
-  target: string;
-  content: string;
-  timestamp: number;
-  type: 'message' | 'data' | 'response' | 'error';
-  progress: number;
-  label?: string;
-  complete?: boolean;
-}
+interface DataFlow extends DataFlowMessage {}
 
 // Animation control state
 type AnimationSpeed = 'slow' | 'normal' | 'fast';

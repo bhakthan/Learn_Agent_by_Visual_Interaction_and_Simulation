@@ -60,53 +60,199 @@ const activeFlows = new Map<string, {
 
 /**
  * Simulates a pattern flow by creating data flow messages
- * @param patternId Pattern identifier
+ * @param nodes Flow nodes
  * @param edges Flow edges
- * @param onCreateFlow Callback when a flow is created
+ * @param handleNodeStatus Callback to update node status
+ * @param handleEdgeStatus Callback to update edge animation state
+ * @param handleDataFlow Callback when a flow is created
+ * @param query Input query for simulation
+ * @param handleAddStep Callback for step-by-step mode
+ * @param speedFactor Speed multiplier for animation
+ * @returns Object with cleanup function
  */
 export const simulatePatternFlow = (
-  patternId: string, 
+  nodes: any[],
   edges: Edge[], 
-  onCreateFlow: (flow: DataFlowMessage) => void
+  handleNodeStatus: (nodeId: string, status: string | null) => void,
+  handleEdgeStatus: (edgeId: string, animated: boolean) => void,
+  handleDataFlow: (flow: DataFlowMessage) => void,
+  query: string = '',
+  handleAddStep?: (step: () => void) => number | null,
+  speedFactor: number = 1
 ) => {
-  if (!edges || edges.length === 0) return;
+  if (!edges || edges.length === 0) return { cleanup: () => {} };
   
   // Clear any existing flows first
   resetDataFlow();
   
-  // Create sequential flows along edges
-  const createSequentialFlows = async (index = 0) => {
-    if (index >= edges.length) return;
+  // Keep track of timeouts for cleanup
+  const timeouts: (number | null)[] = [];
+  
+  // Keep track of visited nodes for non-linear flows
+  const visitedNodes = new Set<string>();
+  const visitedEdges = new Set<string>();
+  
+  // Get starting nodes (usually input nodes)
+  const startNodes = nodes.filter(node => 
+    node.data?.nodeType === 'input' || 
+    edges.every(edge => edge.target !== node.id)
+  );
+  
+  if (startNodes.length === 0) return { cleanup: () => {} };
+  
+  // Process a node and its outgoing edges
+  const processNode = (nodeId: string, delay: number = 0) => {
+    // Skip if already processed
+    if (visitedNodes.has(nodeId)) return;
+    visitedNodes.add(nodeId);
     
-    const edge = edges[index];
-    const messageTypes: DataFlowType[] = ['message', 'data', 'response', 'query'];
-    const messageType = messageTypes[Math.floor(Math.random() * messageTypes.length)];
+    // Find outgoing edges
+    const outgoingEdges = edges.filter(edge => edge.source === nodeId);
     
-    // Create a flow message
-    const flow: DataFlowMessage = {
-      id: `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-      edgeId: edge.id,
-      source: edge.source,
-      target: edge.target,
-      content: `${messageType} from ${edge.source} to ${edge.target}`,
-      timestamp: Date.now(),
-      type: messageType,
-      progress: 0
-    };
+    // Set this node as active with a delay
+    const nodeActivationTimeout = handleAddStep ? 
+      handleAddStep(() => handleNodeStatus(nodeId, 'processing')) :
+      setTimeout(() => handleNodeStatus(nodeId, 'processing'), delay);
     
-    // Call the callback to add the flow
-    onCreateFlow(flow);
+    if (typeof nodeActivationTimeout === 'number') {
+      timeouts.push(nodeActivationTimeout);
+    }
     
-    // Wait for a delay proportional to the animation speed before creating the next flow
-    const delay = 1200 / (globalSpeedMultiplier || 1);
-    await new Promise(resolve => setTimeout(resolve, delay));
+    // Generate content based on node type
+    const node = nodes.find(n => n.id === nodeId);
+    const nodeType = node?.data?.nodeType || 'default';
     
-    // Create the next flow
-    createSequentialFlows(index + 1);
+    // Wait a bit, then process outgoing edges
+    const processEdgesTimeout = handleAddStep ? 
+      handleAddStep(() => {
+        // Complete this node after a delay
+        const nodeCompleteTimeout = handleAddStep ? 
+          handleAddStep(() => handleNodeStatus(nodeId, 'success')) :
+          setTimeout(() => handleNodeStatus(nodeId, 'success'), 800 / speedFactor);
+        
+        if (typeof nodeCompleteTimeout === 'number') {
+          timeouts.push(nodeCompleteTimeout);
+        }
+        
+        // Process each outgoing edge
+        outgoingEdges.forEach((edge, index) => {
+          if (visitedEdges.has(edge.id)) return;
+          visitedEdges.add(edge.id);
+          
+          const targetNodeDelay = 1000 / speedFactor + (index * 500 / speedFactor);
+          
+          // Animate edge
+          const animateEdgeTimeout = handleAddStep ? 
+            handleAddStep(() => handleEdgeStatus(edge.id, true)) :
+            setTimeout(() => handleEdgeStatus(edge.id, true), 100);
+          
+          if (typeof animateEdgeTimeout === 'number') {
+            timeouts.push(animateEdgeTimeout);
+          }
+          
+          // Create flow message
+          const messageTypes: DataFlowType[] = ['message', 'data', 'response', 'query'];
+          const messageType = messageTypes[Math.floor(Math.random() * messageTypes.length)];
+          
+          const flow: DataFlowMessage = {
+            id: `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            edgeId: edge.id,
+            source: edge.source,
+            target: edge.target,
+            content: `${messageType} from ${edge.source} to ${edge.target}`,
+            timestamp: Date.now(),
+            type: messageType,
+            progress: 0
+          };
+          
+          // Add flow with a delay
+          const addFlowTimeout = handleAddStep ? 
+            handleAddStep(() => handleDataFlow(flow)) :
+            setTimeout(() => handleDataFlow(flow), 200);
+          
+          if (typeof addFlowTimeout === 'number') {
+            timeouts.push(addFlowTimeout);
+          }
+          
+          // Process target node
+          const processTargetTimeout = handleAddStep ? 
+            handleAddStep(() => processNode(edge.target, 0)) :
+            setTimeout(() => processNode(edge.target, 0), targetNodeDelay);
+          
+          if (typeof processTargetTimeout === 'number') {
+            timeouts.push(processTargetTimeout);
+          }
+        });
+      }) :
+      setTimeout(() => {
+        // Complete this node after a delay
+        const nodeCompleteTimeout = setTimeout(() => handleNodeStatus(nodeId, 'success'), 800 / speedFactor);
+        timeouts.push(nodeCompleteTimeout);
+        
+        // Process each outgoing edge
+        outgoingEdges.forEach((edge, index) => {
+          if (visitedEdges.has(edge.id)) return;
+          visitedEdges.add(edge.id);
+          
+          const targetNodeDelay = 1000 / speedFactor + (index * 500 / speedFactor);
+          
+          // Animate edge
+          const animateEdgeTimeout = setTimeout(() => handleEdgeStatus(edge.id, true), 100);
+          timeouts.push(animateEdgeTimeout);
+          
+          // Create flow message
+          const messageTypes: DataFlowType[] = ['message', 'data', 'response', 'query'];
+          const messageType = messageTypes[Math.floor(Math.random() * messageTypes.length)];
+          
+          const flow: DataFlowMessage = {
+            id: `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            edgeId: edge.id,
+            source: edge.source,
+            target: edge.target,
+            content: `${messageType} from ${edge.source} to ${edge.target}`,
+            timestamp: Date.now(),
+            type: messageType,
+            progress: 0
+          };
+          
+          // Add flow with a delay
+          const addFlowTimeout = setTimeout(() => handleDataFlow(flow), 200);
+          timeouts.push(addFlowTimeout);
+          
+          // Process target node
+          const processTargetTimeout = setTimeout(() => processNode(edge.target, 0), targetNodeDelay);
+          timeouts.push(processTargetTimeout);
+        });
+      }, delay + 500 / speedFactor);
+    
+    if (typeof processEdgesTimeout === 'number') {
+      timeouts.push(processEdgesTimeout);
+    }
   };
   
-  // Start creating flows
-  createSequentialFlows();
+  // Start processing from all start nodes
+  startNodes.forEach((node, index) => {
+    const startDelay = index * 500 / speedFactor;
+    const startNodeTimeout = handleAddStep ? 
+      handleAddStep(() => processNode(node.id, 0)) :
+      setTimeout(() => processNode(node.id, 0), startDelay);
+    
+    if (typeof startNodeTimeout === 'number') {
+      timeouts.push(startNodeTimeout);
+    }
+  });
+  
+  // Return cleanup function to cancel all timeouts
+  const cleanup = () => {
+    timeouts.forEach(timeoutId => {
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
+    });
+    resetDataFlow();
+  };
+  
+  return { cleanup };
 };
 
 /**
