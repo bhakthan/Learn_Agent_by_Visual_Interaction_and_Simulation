@@ -13,28 +13,14 @@ import AzureServicesOverview from './components/azure-services/AzureServicesOver
 import CommunitySharing from './components/community/CommunitySharing'
 import ReferencesSection from './components/references/ReferencesSection'
 import { setupResizeObserverErrorHandling, disableResizeObserverIfProblematic } from './lib/utils/resizeObserverUtils'
-import { TutorialProvider } from './components/tutorial/TutorialProvider'
-import { TutorialButton } from './components/tutorial/TutorialButton'
-import { useTutorialContext } from './components/tutorial/TutorialProvider'
-import { mainAppTutorial } from './lib/tutorial'
+// Tutorial functionality disabled due to errors
+// import { TutorialProvider } from './components/tutorial/TutorialProvider'
+// import { TutorialButton } from './components/tutorial/TutorialButton'
+// import { useTutorialContext } from './components/tutorial/TutorialProvider'
+// import { mainAppTutorial } from './lib/tutorial'
 
-// Wrapper component for tutorial button that connects to tutorial context
-const AppTutorialButton = () => {
-  const { startTutorial, registerTutorial, hasCompletedTutorial } = useTutorialContext();
-
-  // Register the main app tutorial
-  useEffect(() => {
-    registerTutorial(mainAppTutorial.id, mainAppTutorial);
-  }, [registerTutorial]);
-
-  return (
-    <TutorialButton 
-      hasCompleted={hasCompletedTutorial(mainAppTutorial.id)}
-      onClick={() => startTutorial(mainAppTutorial.id)}
-      tooltip="App Tour"
-    />
-  );
-};
+// Placeholder component (disabled)
+const AppTutorialButton = () => null;
 
 function App() {
   const [mounted, setMounted] = useState(false)
@@ -173,8 +159,7 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="light" storageKey="azure-ai-agent-theme">
-      <TutorialProvider>
-        <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
           <header className="border-b border-border sticky top-0 z-10 bg-background">
             <div className="container mx-auto px-4 py-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -260,7 +245,6 @@ function App() {
             </div>
           </footer>
         </div>
-      </TutorialProvider>
     </ThemeProvider>
   );
 }

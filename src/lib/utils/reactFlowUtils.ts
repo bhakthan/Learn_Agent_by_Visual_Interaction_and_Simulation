@@ -1,52 +1,113 @@
-import { RefObject } from 'react';
-
 /**
- * Setup ReactFlow error handling
+ * Setup specific error handling for ReactFlow components
  */
 export const setupReactFlowErrorHandling = () => {
-  // Apply special handling for ReactFlow errors
+  // Add enhanced error handling for common ReactFlow errors
   const originalError = console.error;
-  
   console.error = function(...args: any[]) {
-    // Ignore specific ReactFlow errors that aren't critical
+    // Check for common ReactFlow errors that can be safely ignored
     if (args[0] && typeof args[0] === 'string') {
-      if (args[0].includes('react-flow') || 
-          args[0].includes('ReactFlow') ||
-          args[0].includes('Should have a queue') ||
-          args[0].includes('invalid hook call')) {
-        // Log the error but with reduced visibility
-        return originalError.call(console, '%c[Flow Error Suppressed]', 'color: gray', ...args);
+      // Suppress zustand provider errors that happen during development
+      if (args[0].includes('[React Flow]: Seems like you have not used zustand provider') ||
+          args[0].includes('Visit https://reactflow.dev/error#001')) {
+        // Just log a simpler message in development
+        console.warn('ReactFlow: Suppressed zustand provider warning');
+        return;
+      }
+      
+      // Suppress ReactFlow style warnings
+      if (args[0].includes('The style prop expects a mapping from style properties to values') && 
+          args[0].includes('ReactFlow')) {
+        return;
       }
     }
-    return originalError.call(console, ...args);
+    
+    // Pass through all other errors
+    return originalError.apply(console, args);
+  };
+  
+  // Apply stabilization fixes to ReactFlow components on mount
+  const stabilizeReactFlow = () => {
+    try {
+      document.querySelectorAll('.react-flow').forEach(el => {
+        if (el instanceof HTMLElement && !el.dataset.stabilized) {
+          // Apply hardware acceleration
+          el.style.transform = 'translateZ(0)';
+          el.style.backfaceVisibility = 'hidden';
+          
+          // Force layout containment 
+          el.style.contain = 'layout paint';
+          
+          // Mark as stabilized
+          el.dataset.stabilized = 'true';
+        }
+      });
+    } catch (e) {
+      // Silent recovery
+    }
+  };
+  
+  // Apply stabilization periodically
+  const stabilizationInterval = setInterval(stabilizeReactFlow, 2000);
+  
+  // Clean up interval when page unloads
+  window.addEventListener('beforeunload', () => {
+    clearInterval(stabilizationInterval);
+  });
+  
+  // Monitor for ReactFlow elements added to the DOM
+  const observer = new MutationObserver(mutations => {
+    for (const mutation of mutations) {
+      if (mutation.addedNodes.length) {
+        // Check if any ReactFlow components were added
+        let hasReactFlow = false;
+        mutation.addedNodes.forEach(node => {
+          if (node instanceof HTMLElement) {
+            if (node.classList?.contains('react-flow') || node.querySelector('.react-flow')) {
+              hasReactFlow = true;
+            }
+          }
+        });
+        
+        // If ReactFlow components were added, apply stabilization
+        if (hasReactFlow) {
+          setTimeout(stabilizeReactFlow, 100);
+        }
+      }
+    }
+  });
+  
+  // Start observing the document body
+  observer.observe(document.body, { 
+    childList: true, 
+    subtree: true 
+  });
+  
+  // Return cleanup function
+  return () => {
+    clearInterval(stabilizationInterval);
+    observer.disconnect();
   };
 };
 
 /**
- * Force reset ReactFlow rendering to fix layout issues
- * @param containerRef Reference to the container element
+ * Fix ReactFlow rendering issues when dimensions change
  */
-export const resetReactFlowRendering = (containerRef: RefObject<HTMLElement>) => {
-  if (!containerRef.current) return;
-  
-  try {
-    // Force recalculation by applying small style changes
-    const viewport = containerRef.current.querySelector('.react-flow__viewport');
-    if (viewport instanceof HTMLElement) {
-      const currentTransform = viewport.style.transform;
-      viewport.style.transform = 'translate(0px, 0px) scale(0.99)';
+export const triggerReactFlowRerender = () => {
+  document.querySelectorAll('.react-flow').forEach(el => {
+    if (el instanceof HTMLElement) {
+      // Force a repaint by temporarily adjusting a style property
+      const originalDisplay = el.style.display;
+      el.style.display = 'none';
       
-      // Reset after a small delay
-      setTimeout(() => {
-        if (viewport) {
-          viewport.style.transform = currentTransform;
-        }
-      }, 50);
+      // Force browser to acknowledge the change
+      void el.offsetHeight;
+      
+      // Restore the original display value
+      el.style.display = originalDisplay;
+      
+      // Dispatch a custom event for components that listen for size changes
+      el.dispatchEvent(new CustomEvent('flow-resize'));
     }
-    
-    // Dispatch resize event to force recalculation
-    window.dispatchEvent(new Event('resize'));
-  } catch (err) {
-    console.warn('Error resetting ReactFlow:', err);
-  }
+  });
 };

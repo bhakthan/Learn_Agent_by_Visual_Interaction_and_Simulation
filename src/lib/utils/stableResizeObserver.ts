@@ -14,6 +14,7 @@ export function createStableResizeObserver(callback: ResizeObserverCallback): Re
   let isProcessing = false;
   let queuedEntries: ResizeObserverEntry[] = [];
   let frameId: number | null = null;
+  let throttleTimeout: ReturnType<typeof setTimeout> | null = null;
   
   // Create the actual observer with error prevention
   const observer = new ResizeObserver((entries: ResizeObserverEntry[]) => {
@@ -22,6 +23,26 @@ export function createStableResizeObserver(callback: ResizeObserverCallback): Re
       queuedEntries = [...queuedEntries, ...entries];
       return;
     }
+    
+    // Throttle processing to prevent rapid successive callbacks
+    if (throttleTimeout) {
+      clearTimeout(throttleTimeout);
+      queuedEntries = [...queuedEntries, ...entries];
+      
+      throttleTimeout = setTimeout(() => {
+        throttleTimeout = null;
+        processEntries([...queuedEntries]);
+        queuedEntries = [];
+      }, 100);
+      
+      return;
+    }
+    
+    processEntries(entries);
+  });
+  
+  function processEntries(entries: ResizeObserverEntry[]) {
+    if (entries.length === 0) return;
     
     isProcessing = true;
     
@@ -34,34 +55,34 @@ export function createStableResizeObserver(callback: ResizeObserverCallback): Re
       try {
         // Call the callback with the current entries
         callback(entries);
-        
-        // If we have queued entries, process them next frame
-        if (queuedEntries.length > 0) {
-          const nextEntries = [...queuedEntries];
-          queuedEntries = [];
-          
-          // Use another rAF to stagger processing
-          frameId = requestAnimationFrame(() => {
-            callback(nextEntries);
-            isProcessing = false;
-            frameId = null;
-          });
-        } else {
-          isProcessing = false;
-          frameId = null;
-        }
       } catch (error) {
         // Recover from errors
-        console.warn('ResizeObserver callback error (handled)');
+        console.warn('ResizeObserver callback error (handled)', error);
+      } finally {
         isProcessing = false;
-        queuedEntries = [];
         frameId = null;
       }
     });
-  });
+  }
   
   // Track this observer for potential future fixes
   problematicObservers.add(observer);
   
   return observer;
+}
+
+// Helper function to check if an element has a ResizeObserver loop issue
+export function hasResizeObserverIssue(element: Element): boolean {
+  if (!(element instanceof HTMLElement)) return false;
+  
+  // Check for very small dimensions that often cause issues
+  const rect = element.getBoundingClientRect();
+  if (rect.width < 1 || rect.height < 1) return true;
+  
+  // Check for scrolling regions that cause infinite ResizeObserver loops
+  if (element.scrollHeight > element.clientHeight && element.scrollWidth > element.clientWidth) {
+    return true;
+  }
+  
+  return false;
 }
