@@ -102,7 +102,14 @@ const DataFlowVisualizer = React.memo(({ flows, edges, getEdgePoints, onFlowComp
     // Get animation style based on flow type
     const sourceNodeType = edge.sourceHandle ? edge.sourceHandle : 'default';
     const typeParams = getNodeDataFlowParams(sourceNodeType);
-    const style = getDataFlowAnimationStyle(flow.type, typeParams);
+    const flowStyle = getDataFlowAnimationStyle(flow.type, typeParams);
+    
+    // Create style object with needed properties for rendering
+    const style = {
+      stroke: typeParams.stroke || flowStyle.color,
+      strokeWidth: typeParams.strokeWidth || 4,
+      fill: typeParams.fill || `${flowStyle.color}33`
+    };
     
     // Enhance visibility in dark mode
     const textColor = isDarkMode ? 'rgba(255, 255, 255, 0.95)' : style.stroke;

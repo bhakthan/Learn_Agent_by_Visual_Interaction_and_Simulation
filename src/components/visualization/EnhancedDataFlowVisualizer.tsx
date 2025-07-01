@@ -178,7 +178,14 @@ const EnhancedDataFlowVisualizer = ({
     // Get animation style based on flow type
     const sourceNodeType = edge.sourceHandle ? edge.sourceHandle : 'default';
     const typeParams = dataFlowUtils.getNodeDataFlowParams(sourceNodeType);
-    const style = dataFlowUtils.getDataFlowAnimationStyle(flow.type, typeParams);
+    const flowStyle = dataFlowUtils.getDataFlowAnimationStyle(flow.type, typeParams);
+    
+    // Create style object with needed properties for rendering
+    const style = {
+      stroke: typeParams.stroke || flowStyle.color,
+      strokeWidth: typeParams.strokeWidth || 4,
+      fill: typeParams.fill || `${flowStyle.color}33`
+    };
     
     return (
       <motion.g 
@@ -191,7 +198,7 @@ const EnhancedDataFlowVisualizer = ({
         <circle
           cx={x}
           cy={y}
-          r={style.strokeWidth / 2}
+          r={style.strokeWidth ? style.strokeWidth / 2 : 2}
           fill={style.stroke}
           stroke={style.stroke}
           strokeWidth={1}
@@ -234,7 +241,14 @@ const EnhancedDataFlowVisualizer = ({
     // Get animation style based on flow type
     const sourceNodeType = edge.sourceHandle ? edge.sourceHandle : 'default';
     const typeParams = dataFlowUtils.getNodeDataFlowParams(sourceNodeType);
-    const style = dataFlowUtils.getDataFlowAnimationStyle(flow.type, typeParams);
+    const flowStyle = dataFlowUtils.getDataFlowAnimationStyle(flow.type, typeParams);
+    
+    // Create style object with needed properties for rendering
+    const style = {
+      stroke: typeParams.stroke || flowStyle.color,
+      strokeWidth: typeParams.strokeWidth || 4,
+      fill: typeParams.fill || `${flowStyle.color}33`
+    };
 
     // Get nodes for additional info
     const sourceNode = nodes.find(n => n.id === flow.source);
@@ -274,7 +288,7 @@ const EnhancedDataFlowVisualizer = ({
         <circle
           cx={x}
           cy={y}
-          r={style.strokeWidth}
+          r={style.strokeWidth || 4}
           fill={style.stroke}
           stroke={style.stroke}
           strokeWidth={2}
@@ -311,7 +325,13 @@ const EnhancedDataFlowVisualizer = ({
                 
                 // Get style based on flow type
                 const typeParams = dataFlowUtils.getNodeDataFlowParams('default');
-                const style = dataFlowUtils.getDataFlowAnimationStyle(flow.type, typeParams);
+                const flowStyle = dataFlowUtils.getDataFlowAnimationStyle(flow.type, typeParams);
+                
+                // Create style object with needed properties for rendering
+                const style = {
+                  stroke: typeParams.stroke || flowStyle.color,
+                  fill: typeParams.fill || `${flowStyle.color}33`
+                };
                 
                 return (
                   <div 

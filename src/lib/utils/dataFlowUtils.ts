@@ -241,6 +241,90 @@ export const getDataFlowAnimationStyle = (
 };
 
 /**
+ * Get animation parameters for node data flow
+ * @param nodeType Type of node
+ * @returns Animation parameters
+ */
+export const getNodeDataFlowParams = (nodeType: string) => {
+  // Define colors for different node types
+  switch (nodeType) {
+    case 'user':
+      return { 
+        color: 'rgba(59, 130, 246, 0.9)', // Blue
+        pulseSpeed: 1.2,
+        stroke: 'rgba(59, 130, 246, 0.9)',
+        strokeWidth: 4,
+        fill: 'rgba(59, 130, 246, 0.2)'
+      };
+    case 'agent':
+      return { 
+        color: 'rgba(16, 185, 129, 0.9)', // Green
+        pulseSpeed: 1,
+        stroke: 'rgba(16, 185, 129, 0.9)',
+        strokeWidth: 4,
+        fill: 'rgba(16, 185, 129, 0.2)'
+      };
+    case 'tool':
+      return { 
+        color: 'rgba(245, 158, 11, 0.9)', // Amber
+        pulseSpeed: 1.5,
+        stroke: 'rgba(245, 158, 11, 0.9)',
+        strokeWidth: 4,
+        fill: 'rgba(245, 158, 11, 0.2)'
+      };
+    case 'reflection':
+      return { 
+        color: 'rgba(236, 72, 153, 0.9)', // Pink
+        pulseSpeed: 0.7,
+        stroke: 'rgba(236, 72, 153, 0.9)',
+        strokeWidth: 4,
+        fill: 'rgba(236, 72, 153, 0.2)'
+      };
+    case 'environment':
+      return { 
+        color: 'rgba(139, 92, 246, 0.9)', // Purple
+        pulseSpeed: 0.9,
+        stroke: 'rgba(139, 92, 246, 0.9)',
+        strokeWidth: 4,
+        fill: 'rgba(139, 92, 246, 0.2)'
+      };
+    case 'planner':
+      return { 
+        color: 'rgba(22, 163, 74, 0.9)', // Emerald
+        pulseSpeed: 1,
+        stroke: 'rgba(22, 163, 74, 0.9)',
+        strokeWidth: 4,
+        fill: 'rgba(22, 163, 74, 0.2)'
+      };
+    case 'evaluator':
+      return { 
+        color: 'rgba(234, 179, 8, 0.9)', // Yellow
+        pulseSpeed: 1.1,
+        stroke: 'rgba(234, 179, 8, 0.9)',
+        strokeWidth: 4,
+        fill: 'rgba(234, 179, 8, 0.2)'
+      };
+    case 'error':
+      return { 
+        color: 'rgba(239, 68, 68, 0.9)', // Red
+        pulseSpeed: 1.8,
+        stroke: 'rgba(239, 68, 68, 0.9)',
+        strokeWidth: 4,
+        fill: 'rgba(239, 68, 68, 0.2)'
+      };
+    default:
+      // Default node style
+      return { 
+        color: 'rgba(59, 130, 246, 0.9)', // Blue
+        pulseSpeed: 1,
+        stroke: 'rgba(59, 130, 246, 0.9)',
+        strokeWidth: 4,
+        fill: 'rgba(59, 130, 246, 0.2)'
+      };
+  }
+};
+
+/**
  * Truncate flow content to a specific length
  * @param content Content to truncate
  * @param maxLength Maximum length
