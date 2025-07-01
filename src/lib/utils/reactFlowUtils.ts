@@ -3,7 +3,7 @@
  */
 
 import { monitorReactFlowErrors } from './monitorReactFlowErrors';
-import { createStableResizeObserver, resetReactFlowRendering } from './resizeObserverUtils';
+import { throttleResizeObserver, resetReactFlowRendering } from './resizeObserverUtils';
 
 /**
  * Sets up error handling specifically for ReactFlow components

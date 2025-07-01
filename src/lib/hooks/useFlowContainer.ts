@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { createStableResizeObserver } from '../utils/resizeObserverUtils';
+import { throttleResizeObserver } from '../utils/resizeObserverUtils';
 
 /**
  * Hook for better handling of ReactFlow container resizing with enhanced stability
@@ -135,10 +135,10 @@ export function useFlowContainer(options: {
     
     // Set up stable resize observer with error handling
     try {
-      // Use our custom stable resize observer
-      const observer = createStableResizeObserver(() => {
+      // Use standard ResizeObserver with our throttling wrapper
+      const observer = new ResizeObserver(throttleResizeObserver(() => {
         handleResize();
-      });
+      }));
       
       observer.observe(containerRef.current);
       

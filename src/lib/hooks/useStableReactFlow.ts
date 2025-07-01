@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ReactFlowInstance } from 'reactflow';
 import { optimizeReactFlowContainer } from '../utils/optimizeReactFlow';
 import { resetReactFlowRendering } from '../utils/visualizationUtils';
-import { createStableResizeObserver } from '../utils/resizeObserverUtils';
+import { throttleResizeObserver } from '../utils/resizeObserverUtils';
 
 /**
  * Options for the useStableReactFlow hook
@@ -91,7 +91,7 @@ export function useStableReactFlow(options: UseStableReactFlowOptions = {}) {
     
     // Create stable resize observer
     try {
-      resizeObserver = createStableResizeObserver(() => {
+      resizeObserver = new ResizeObserver(throttleResizeObserver(() => {
         if (resizeTimeout) {
           window.cancelAnimationFrame(resizeTimeout);
         }
@@ -102,7 +102,7 @@ export function useStableReactFlow(options: UseStableReactFlowOptions = {}) {
             handleResize.current();
           }, debounceTime);
         });
-      });
+      }));
       
       // Start observing
       resizeObserver.observe(containerRef.current);

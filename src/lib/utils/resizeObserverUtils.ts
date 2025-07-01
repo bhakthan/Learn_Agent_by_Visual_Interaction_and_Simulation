@@ -249,33 +249,16 @@ export const resetReactFlowRendering = (containerRef: React.RefObject<HTMLElemen
 };
 
 /**
- * Create a stable resize observer that handles errors gracefully
+ * Additional utility to handle resize observer throttling
  */
-export const createStableResizeObserver = (callback: ResizeObserverCallback) => {
-  let isHandlingError = false;
+export const throttleResizeObserver = (callback: ResizeObserverCallback, delay = 100) => {
   let lastCallTime = 0;
-  const MIN_TIME_BETWEEN_CALLS = 100; // ms
   
-  const wrappedCallback: ResizeObserverCallback = (entries, observer) => {
-    // Throttle calls to avoid too many rapid updates
+  return (entries: ResizeObserverEntry[], observer: ResizeObserver) => {
     const now = Date.now();
-    if (now - lastCallTime < MIN_TIME_BETWEEN_CALLS) return;
+    if (now - lastCallTime < delay) return;
     lastCallTime = now;
     
-    try {
-      if (!isHandlingError) {
-        callback(entries, observer);
-      }
-    } catch (e) {
-      isHandlingError = true;
-      console.warn("Error in ResizeObserver callback, throttling to prevent loop", e);
-      
-      // Reset after a delay
-      setTimeout(() => {
-        isHandlingError = false;
-      }, 1000);
-    }
+    callback(entries, observer);
   };
-  
-  return new ResizeObserver(wrappedCallback);
 };

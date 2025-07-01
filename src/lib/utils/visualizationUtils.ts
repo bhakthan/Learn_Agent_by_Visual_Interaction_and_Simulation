@@ -1,5 +1,5 @@
 import React from 'react';
-import { createStableResizeObserver } from './resizeObserverUtils';
+import { throttleResizeObserver } from './resizeObserverUtils';
 
 /**
  * Resets ReactFlow rendering to fix visual glitches and layout issues
@@ -103,8 +103,8 @@ export const createFlowContainerObserver = (
     });
   };
   
-  // Create stable observer with our enhanced implementation
-  const observer = createStableResizeObserver(() => processResize());
+  // Create ResizeObserver with our throttling utility
+  const observer = new ResizeObserver(throttleResizeObserver(() => processResize()));
   
   // Start observing
   observer.observe(containerRef.current);

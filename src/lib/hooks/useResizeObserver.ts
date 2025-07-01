@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { createStableResizeObserver } from '../utils/resizeObserverUtils';
+import { throttleResizeObserver } from '../utils/resizeObserverUtils';
 
 /**
  * Hook for safely using ResizeObserver with enhanced stability
@@ -98,8 +98,8 @@ export function useResizeObserver<T extends HTMLElement = HTMLDivElement>(
         observerRef.current.disconnect();
       }
       
-      // Create a stable resize observer with debounce handling built-in
-      observerRef.current = createStableResizeObserver(handleResize);
+      // Create a standard resize observer with our throttling wrapper
+      observerRef.current = new ResizeObserver(throttleResizeObserver(handleResize, debounce));
       
       // Start observing
       if (ref.current) {
