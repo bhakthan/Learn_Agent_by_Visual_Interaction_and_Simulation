@@ -10,6 +10,29 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Sans+Pro:wght@400;600&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="/src/main.css" rel="stylesheet" />
+    <style>
+        /* Enhanced ReactFlow element stability */
+        .react-flow,
+        .react-flow__container,
+        .react-flow__viewport,
+        .react-flow__renderer,
+        [data-reactflow] {
+            transform: translateZ(0);
+            will-change: transform;
+            backface-visibility: hidden;
+        }
+        
+        /* Ensure sane minimums to prevent size bugs */
+        .react-flow {
+            min-height: 200px;
+            min-width: 200px;
+        }
+        
+        /* Optimize animations to reduce jank */
+        .react-flow__edge-path {
+            will-change: transform;
+        }
+    </style>
     <script>
         // Initialize recovery variables 
         window.__resizeRecoveryScheduled = false;

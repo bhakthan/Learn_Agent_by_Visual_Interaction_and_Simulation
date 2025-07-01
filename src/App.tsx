@@ -13,6 +13,7 @@ import AzureServicesOverview from './components/azure-services/AzureServicesOver
 import CommunitySharing from './components/community/CommunitySharing'
 import ReferencesSection from './components/references/ReferencesSection'
 import { setupResizeObserverErrorHandling } from './lib/utils/resizeObserverUtils';
+import { setupReactFlowErrorHandling } from './lib/utils/reactFlowUtils';
 import { disableResizeObserverIfProblematic } from './lib/utils/disableResizeObserver';
 // Tutorial functionality disabled due to errors
 // import { TutorialProvider } from './components/tutorial/TutorialProvider'
@@ -33,20 +34,8 @@ function App() {
     // Set up global ResizeObserver error handling with improved prevention
     setupResizeObserverErrorHandling();
     
-    // Set up specific handling for ReactFlow components with additional monitoring
-    const importReactFlowUtils = async () => {
-      try {
-        const { setupReactFlowErrorHandling } = await import('./lib/utils/reactFlowUtils');
-        setupReactFlowErrorHandling();
-        
-        // Add comprehensive monitoring for ResizeObserver errors with advanced error buffering
-        const { monitorReactFlowErrors } = await import('./lib/utils/monitorReactFlowErrors');
-        monitorReactFlowErrors();
-      } catch (err) {
-        // Silently handle import errors
-      }
-    };
-    importReactFlowUtils();
+    // Set up specific handling for ReactFlow components
+    setupReactFlowErrorHandling();
     
     // Advanced error handler with improved blocking of ResizeObserver errors
     const handleError = (event: ErrorEvent) => {

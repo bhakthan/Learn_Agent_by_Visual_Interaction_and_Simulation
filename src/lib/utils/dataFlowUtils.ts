@@ -1,499 +1,252 @@
-import { Node, Edge } from 'reactflow';
-import { PatternData } from '../data/patterns';
+/**
+ * Utilities for managing data flow visualization animations
+ */
 
-// The speed at which flow animations happen
-export type FlowSpeed = 'slow' | 'normal' | 'fast';
+import { Edge } from 'reactflow';
 
-export interface FlowMessage {
+// Data flow animation types
+export type DataFlowType = 'query' | 'response' | 'tool_call' | 'observation' | 'reflection' | 'plan' | 'message' | 'data' | 'error';
+
+// Message animation speed control
+let globalSpeedMultiplier = 1; // Default normal speed
+
+/**
+ * Set the global animation speed multiplier
+ * @param speed Speed multiplier (0.5 = slow, 1 = normal, 2 = fast)
+ */
+export const setSpeedMultiplier = (speed: number) => {
+  globalSpeedMultiplier = Math.max(0.1, Math.min(5, speed)); // Clamp between 0.1 and 5
+};
+
+/**
+ * Get the current animation speed multiplier
+ */
+export const getSpeedMultiplier = () => globalSpeedMultiplier;
+
+/**
+ * Interface for data flow messages
+ */
+export interface DataFlowMessage {
   id: string;
+  edgeId: string;
   source: string;
   target: string;
   content: string;
+  timestamp: number;
+  type: DataFlowType;
+  progress: number;
+  complete?: boolean;
+}
+
+/**
+ * Interface for edge points
+ */
+export interface EdgePoints {
+  sourceX: number;
+  sourceY: number;
+  targetX: number;
+  targetY: number;
+}
+
+/**
+ * Map of active data flows
+ */
+const activeFlows = new Map<string, { 
+  message: DataFlowMessage;
   startTime: number;
-  endTime?: number;
-  delivered: boolean;
-  type?: 'query' | 'response' | 'tool_call' | 'observation' | 'reflection' | 'plan' | 'message' | 'data' | 'error';
-}
-
-export interface DataFlowState {
-  messages: FlowMessage[];
-  activeNodes: Set<string>;
-  activeEdges: Set<string>;
-  isPlaying: boolean;
-  isPaused: boolean;
-  currentTime: number;
   duration: number;
-  selectedMessage: FlowMessage | null;
-  speed: FlowSpeed;
-  stepMode: boolean;
-  hasSimulationRun: boolean;
-}
-
-export interface DataFlow {
-  id: string;
-  source: string;
-  target: string;
-  content: string;
-  type?: 'query' | 'response' | 'tool_call' | 'observation' | 'reflection' | 'plan' | 'message' | 'data' | 'error';
-  delay?: number;
-  duration?: number;
-}
-
-// Initial state for the flow visualization
-export const initialDataFlowState: DataFlowState = {
-  messages: [],
-  activeNodes: new Set(),
-  activeEdges: new Set(),
-  isPlaying: false,
-  isPaused: false,
-  currentTime: 0,
-  duration: 0,
-  selectedMessage: null,
-  speed: 'normal',
-  stepMode: false,
-  hasSimulationRun: false
-};
+  animationFrameId?: number;
+}>();
 
 /**
- * Create a new data flow message
+ * Simulates a pattern flow by creating data flow messages
+ * @param patternId Pattern identifier
+ * @param edges Flow edges
+ * @param onCreateFlow Callback when a flow is created
  */
-export const createDataFlow = (
-  source: string,
-  target: string,
-  content: string,
-  type?: 'query' | 'response' | 'tool_call' | 'observation' | 'reflection' | 'plan' | 'message' | 'data' | 'error',
-  delay: number = 0,
-  duration: number = 1000
-): DataFlow => {
-  return {
-    id: `flow-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    source,
-    target,
-    content,
-    type: type || 'message',
-    delay,
-    duration
-  };
-};
-
-/**
- * Get speed multiplier based on speed setting
- */
-export const getSpeedMultiplier = (speed: 'slow' | 'normal' | 'fast'): number => {
-  switch (speed) {
-    case 'slow': return 0.5;
-    case 'fast': return 2;
-    case 'normal':
-    default: return 1;
-  }
-};
-
-/**
- * Filter messages to those that should be visible at the current time
- */
-export const getVisibleMessages = (messages: FlowMessage[], currentTime: number): FlowMessage[] => {
-  return messages.filter(msg => msg.startTime <= currentTime && (!msg.endTime || msg.endTime > currentTime));
-};
-
-/**
- * Calculate which nodes and edges should be active based on visible messages
- */
-export const calculateActiveElements = (messages: FlowMessage[], patternNodes: { id: string }[], patternEdges: { id: string, source: string, target: string }[]): { activeNodes: Set<string>, activeEdges: Set<string> } => {
-  const activeNodes = new Set<string>();
-  const activeEdges = new Set<string>();
-
-  messages.forEach(msg => {
-    activeNodes.add(msg.source);
-    activeNodes.add(msg.target);
-
-    // Find the edge that corresponds to this message
-    const edge = patternEdges.find(e => e.source === msg.source && e.target === msg.target);
-    if (edge) {
-      activeEdges.add(edge.id);
-    }
-  });
-
-  return { activeNodes, activeEdges };
-};
-
-/**
- * Get the latest message for each edge
- */
-export const getLatestMessages = (messages: FlowMessage[]): FlowMessage[] => {
-  // Map to store the latest message for each edge (source -> target)
-  const edgeLatestMessage = new Map<string, FlowMessage>();
+export const simulatePatternFlow = (
+  patternId: string, 
+  edges: Edge[], 
+  onCreateFlow: (flow: DataFlowMessage) => void
+) => {
+  if (!edges || edges.length === 0) return;
   
-  // Process messages from oldest to newest
-  [...messages].sort((a, b) => a.startTime - b.startTime).forEach(msg => {
-    const edgeKey = `${msg.source}-${msg.target}`;
-    edgeLatestMessage.set(edgeKey, msg);
-  });
+  // Clear any existing flows first
+  resetDataFlow();
   
-  // Return only the latest message for each edge
-  return Array.from(edgeLatestMessage.values());
-};
-
-/**
- * Truncate flow message content for display
- */
-export const truncateFlowContent = (content: string, maxLength: number = 30): string => {
-  if (content.length <= maxLength) return content;
-  return `${content.substring(0, maxLength)}...`;
-};
-
-/**
- * Generate sample flow data for a pattern
- */
-export const generateSampleFlowData = (pattern: any): FlowMessage[] => {
-  const messages: FlowMessage[] = [];
-  
-  // Simple flow generation based on edges
-  pattern.edges.forEach((edge: any, index: number) => {
-    messages.push({
-      id: `sample-${index}`,
+  // Create sequential flows along edges
+  const createSequentialFlows = async (index = 0) => {
+    if (index >= edges.length) return;
+    
+    const edge = edges[index];
+    const messageTypes: DataFlowType[] = ['message', 'data', 'response', 'query'];
+    const messageType = messageTypes[Math.floor(Math.random() * messageTypes.length)];
+    
+    // Create a flow message
+    const flow: DataFlowMessage = {
+      id: `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      edgeId: edge.id,
       source: edge.source,
       target: edge.target,
-      content: `Sample ${edge.label || 'message'} ${index + 1}`,
-      startTime: (index + 1) * 1000,
-      delivered: true,
-      type: index % 3 === 0 ? 'query' : index % 3 === 1 ? 'response' : 'tool_call'
-    });
-  });
+      content: `${messageType} from ${edge.source} to ${edge.target}`,
+      timestamp: Date.now(),
+      type: messageType,
+      progress: 0
+    };
+    
+    // Call the callback to add the flow
+    onCreateFlow(flow);
+    
+    // Wait for a delay proportional to the animation speed before creating the next flow
+    const delay = 1200 / (globalSpeedMultiplier || 1);
+    await new Promise(resolve => setTimeout(resolve, delay));
+    
+    // Create the next flow
+    createSequentialFlows(index + 1);
+  };
   
-  return messages;
+  // Start creating flows
+  createSequentialFlows();
 };
 
 /**
- * Reset flow to initial state
+ * Creates a data flow
+ * @param message Flow message data
+ * @param duration Animation duration in ms
+ * @param onComplete Callback when animation completes
  */
-export const resetDataFlow = (): DataFlowState => {
-  return {
-    ...initialDataFlowState,
-    currentTime: 0,
-    isPlaying: false
+export const createDataFlow = (
+  message: DataFlowMessage, 
+  duration: number = 2000,
+  onComplete?: (id: string) => void
+) => {
+  // Scale duration based on speed multiplier
+  const adjustedDuration = duration / (globalSpeedMultiplier || 1);
+  
+  // Store flow data
+  activeFlows.set(message.id, {
+    message,
+    startTime: performance.now(),
+    duration: adjustedDuration
+  });
+  
+  // Set up animation loop
+  const animate = (timestamp: number) => {
+    const flowData = activeFlows.get(message.id);
+    if (!flowData) return;
+    
+    const elapsed = timestamp - flowData.startTime;
+    const progress = Math.min(1, elapsed / flowData.duration);
+    
+    // Update message progress
+    message.progress = progress;
+    
+    if (progress < 1) {
+      // Continue animation
+      flowData.animationFrameId = requestAnimationFrame(animate);
+    } else {
+      // Animation complete
+      message.complete = true;
+      
+      // Call completion callback after a short delay
+      setTimeout(() => {
+        if (onComplete) onComplete(message.id);
+        activeFlows.delete(message.id);
+      }, 500); // Leave complete state visible briefly
+    }
   };
+  
+  // Start animation
+  activeFlows.get(message.id)!.animationFrameId = requestAnimationFrame(animate);
+  
+  return message.id;
+};
+
+/**
+ * Reset all data flows
+ */
+export const resetDataFlow = () => {
+  // Cancel all active animations
+  activeFlows.forEach(flow => {
+    if (flow.animationFrameId) {
+      cancelAnimationFrame(flow.animationFrameId);
+    }
+  });
+  
+  // Clear all flows
+  activeFlows.clear();
 };
 
 /**
  * Get animation style parameters based on message type
+ * @param type Message type
+ * @param params Optional style parameters
+ * @returns Style object for the animation
  */
 export const getDataFlowAnimationStyle = (
-  type?: 'query' | 'response' | 'tool_call' | 'observation' | 'reflection' | 'plan' | 'message' | 'data' | 'error',
+  type: DataFlowType = 'message',
   params?: { color: string; pulseSpeed: number }
 ) => {
   // Default values
-  const defaultStyle = {
-    stroke: '#10a37f',
-    fill: '#10a37f',
-    strokeWidth: 2,
-    strokeDasharray: '10,5',
-    animationDuration: '3s',
-  };
-
-  if (!type || !params) {
-    return defaultStyle;
+  let color = 'rgba(59, 130, 246, 0.9)'; // Blue
+  let pulseSpeed = 1;
+  
+  // Override with params if provided
+  if (params) {
+    color = params.color;
+    pulseSpeed = params.pulseSpeed;
+  } else {
+    // Set defaults based on type
+    switch (type) {
+      case 'query':
+        color = 'rgba(59, 130, 246, 0.9)'; // Blue
+        pulseSpeed = 1.2;
+        break;
+      case 'response':
+        color = 'rgba(16, 185, 129, 0.9)'; // Green
+        pulseSpeed = 0.8;
+        break;
+      case 'tool_call':
+        color = 'rgba(245, 158, 11, 0.9)'; // Amber
+        pulseSpeed = 1.5;
+        break;
+      case 'observation':
+        color = 'rgba(139, 92, 246, 0.9)'; // Purple
+        pulseSpeed = 0.9;
+        break;
+      case 'reflection':
+        color = 'rgba(236, 72, 153, 0.9)'; // Pink
+        pulseSpeed = 0.7;
+        break;
+      case 'plan':
+        color = 'rgba(22, 163, 74, 0.9)'; // Emerald
+        pulseSpeed = 1;
+        break;
+      case 'error':
+        color = 'rgba(239, 68, 68, 0.9)'; // Red
+        pulseSpeed = 1.8;
+        break;
+      case 'data':
+        color = 'rgba(234, 179, 8, 0.9)'; // Yellow
+        pulseSpeed = 1.1;
+        break;
+      default:
+        // Default message style
+        color = 'rgba(59, 130, 246, 0.9)'; // Blue
+        pulseSpeed = 1;
+    }
   }
-
-  // Customize based on message type
-  switch (type) {
-    case 'query':
-      return {
-        stroke: params.color || '#3b82f6', // Blue
-        fill: params.color || '#3b82f6',
-        strokeWidth: 2,
-        strokeDasharray: '5,5',
-        animationDuration: params.pulseSpeed ? `${params.pulseSpeed}s` : '2s',
-      };
-    case 'response':
-      return {
-        stroke: params.color || '#10b981', // Green
-        fill: params.color || '#10b981', 
-        strokeWidth: 2,
-        strokeDasharray: '5,3',
-        animationDuration: params.pulseSpeed ? `${params.pulseSpeed}s` : '1.5s',
-      };
-    case 'tool_call':
-      return {
-        stroke: params.color || '#8b5cf6', // Purple
-        fill: params.color || '#8b5cf6',
-        strokeWidth: 2,
-        strokeDasharray: '5,2,2,2',
-        animationDuration: params.pulseSpeed ? `${params.pulseSpeed}s` : '1.8s',
-      };
-    default:
-      return defaultStyle;
-  }
-};
-
-export const getNodeDataFlowParams = (
-  nodeType: string | undefined
-): { 
-  color: string; 
-  icon?: string;
-  pulseSpeed: number;
-} => {
-  // Default values
-  const defaultParams = {
-    color: '#64748b',
-    pulseSpeed: 1.5
-  };
-
-  // No specific type
-  if (!nodeType) {
-    return defaultParams;
-  }
-
-  // Customize based on node type
-  switch (nodeType) {
-    case 'input':
-      return { color: '#3b82f6', pulseSpeed: 1.2 }; // Blue
-    case 'llm':
-      return { color: '#10a37f', pulseSpeed: 1.5 }; // Green
-    case 'tool':
-      return { color: '#8b5cf6', pulseSpeed: 1.8 }; // Purple
-    case 'output':
-      return { color: '#ef4444', pulseSpeed: 2.0 }; // Red
-    case 'router':
-      return { color: '#f97316', pulseSpeed: 1.2 }; // Orange
-    case 'evaluator':
-      return { color: '#06b6d4', pulseSpeed: 1.8 }; // Cyan
-    case 'planner':
-      return { color: '#ec4899', pulseSpeed: 1.5 }; // Pink
-    case 'executor':
-      return { color: '#84cc16', pulseSpeed: 1.8 }; // Lime
-    case 'aggregator':
-      return { color: '#f59e0b', pulseSpeed: 2.0 }; // Amber
-    default:
-      return defaultParams;
-  }
+  
+  return { color, pulseSpeed };
 };
 
 /**
- * Simulate the flow of data through a pattern
+ * Truncate flow content to a specific length
+ * @param content Content to truncate
+ * @param maxLength Maximum length
+ * @returns Truncated content
  */
-export const simulatePatternFlow = (
-  nodes: Node[],
-  edges: Edge[] | any[],
-  handleNodeStatus: (nodeId: string, status: string | null) => void,
-  handleEdgeStatus: (edgeId: string, animated: boolean) => void,
-  handleDataFlow: (flow: any) => void,
-  queryInput: string,
-  handleAddStep: (stepFn: () => void) => number | null,
-  speedFactor?: number
-) => {
-  const timeouts: (number | null)[] = [];
-  let cancelled = false;
-  const speedMultiplier = speedFactor || 1;
-  let currentTime = 0;
-  
-  // Find nodes and edges in the simulation
-  const getNode = (id: string) => nodes.find(n => n.id === id);
-  
-  // New messages array for the simulation
-  const messages: FlowMessage[] = [];
-  
-  // Core simulation functions
-  const startSimulation = () => {
-    // No need for a reset state as we'll handle this in the component
-    
-    // Find the input node(s)
-    const inputNodes = nodes.filter(node => 
-      (node.type === 'input' || (node.data?.nodeType === 'input')) ||
-      // Safely check if edges is an array before using some()
-      (Array.isArray(edges) && !edges.some(e => e.target === node.id))
-    );
-    
-    if (inputNodes.length === 0) {
-      console.error('No input nodes found in the pattern');
-      return;
-    }
-    
-    // Start with the input nodes
-    inputNodes.forEach(node => {
-      simulateNodeProcessing(node.id, 0);
-    });
-  };
-  
-  // Process a node and its outgoing edges
-  const simulateNodeProcessing = (nodeId: string, startTime: number) => {
-    const node = getNode(nodeId);
-    if (!node || cancelled) return;
-    
-    // Calculate node processing time
-    const processingTime = calculateNodeProcessingTime(node);
-    const processedTime = startTime + processingTime;
-    
-    // Activate the node with a delay
-    const activateNode = () => {
-      if (cancelled) return;
-      
-      // Update node status
-      handleNodeStatus(nodeId, 'processing');
-      
-      // Schedule the node to finish processing and send data to connected nodes
-      timeouts.push(handleAddStep(processNode) || null);
-    };
-    
-    // Process outgoing edges from this node
-    const processNode = () => {
-      if (cancelled) return;
-      
-      const outEdges = edges.filter(e => e.source === nodeId);
-      
-      // If there are no outgoing edges, we're done with this branch
-      if (outEdges.length === 0) {
-        // Set node as completed
-        handleNodeStatus(nodeId, 'success');
-        return;
-      }
-      
-      // Send data along each edge
-      outEdges.forEach((edge, index) => {
-        const targetNode = getNode(edge.target);
-        if (!targetNode) return;
-        
-        // Calculate delay for this edge based on index (for visual effect)
-        const edgeDelay = 300 * index;
-        
-        // Send data along this edge
-        const sendData = () => {
-          if (cancelled) return;
-          
-          // Set source node to success state
-          handleNodeStatus(nodeId, 'success');
-          
-          // Animate the edge
-          handleEdgeStatus(edge.id, true);
-          
-          // Create and send a data flow message
-          const flowData = {
-            id: `flow-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            edgeId: edge.id,
-            source: nodeId,
-            target: edge.target,
-            content: generateMessageContent(nodeId, edge.target),
-            type: determineMessageType(node, targetNode),
-            timestamp: Date.now(),
-            progress: 0
-          };
-          
-          // Send the flow data to handler
-          handleDataFlow(flowData);
-          
-          // Process the target node after the message is delivered
-          const processTarget = () => {
-            if (cancelled) return;
-            
-            // Stop animating the edge
-            handleEdgeStatus(edge.id, false);
-            
-            // Mark the target node as active
-            handleNodeStatus(edge.target, 'processing');
-            
-            // Process the next node 
-            simulateNodeProcessing(edge.target, processedTime + edgeDelay + 1000);
-          };
-          
-          // Schedule the next node to process using the handler
-          timeouts.push(handleAddStep(processTarget) || null);
-        };
-        
-        // Schedule sending data with the edge delay using the handler
-        timeouts.push(handleAddStep(sendData) || null);
-      });
-    };
-    
-    // Start activating this node immediately using the handler
-    timeouts.push(handleAddStep(activateNode) || null);
-  };
-  
-  // Helper to calculate node processing time based on node type
-  const calculateNodeProcessingTime = (node: Node): number => {
-    const nodeType = node.data?.nodeType || node.type;
-    
-    // Different processing times for different types of nodes
-    switch (nodeType) {
-      case 'llm': return 2000; // LLM nodes take longer to process
-      case 'tool': return 1500; // Tool calls take a medium amount of time
-      case 'evaluator': return 1800; // Evaluators take a bit more time
-      case 'router': return 1000; // Routers are relatively quick
-      case 'aggregator': return 1500; // Aggregators take a medium amount of time
-      default: return 800; // Default processing time
-    }
-  };
-  
-  // Generate content for messages between nodes
-  const generateMessageContent = (sourceId: string, targetId: string): string => {
-    const sourceNode = getNode(sourceId);
-    const targetNode = getNode(targetId);
-    
-    if (!sourceNode || !targetNode) return 'Data';
-    
-    const sourceType = sourceNode.data?.nodeType || sourceNode.type;
-    const targetType = targetNode.data?.nodeType || targetNode.type;
-    
-    // Generate different content based on node types
-    if (sourceType === 'input' && targetType === 'llm') {
-      return 'User query';
-    } else if (sourceType === 'llm' && targetType === 'tool') {
-      return 'Tool request';
-    } else if (sourceType === 'tool' && targetType === 'llm') {
-      return 'Tool response';
-    } else if (sourceType === 'llm' && targetType === 'output') {
-      return 'Final response';
-    } else if (sourceType === 'router') {
-      return 'Routing decision';
-    } else if (targetType === 'evaluator') {
-      return 'Evaluation request';
-    } else if (sourceType === 'evaluator') {
-      return 'Evaluation result';
-    } else if (sourceType === 'planner' && targetType === 'executor') {
-      return 'Execution plan';
-    } else if (sourceType === 'executor') {
-      return 'Execution result';
-    }
-    
-    return 'Data transfer';
-  };
-  
-  // Determine the message type based on source and target nodes
-  const determineMessageType = (
-    sourceNode: Node,
-    targetNode: Node
-  ): 'query' | 'response' | 'tool_call' | 'observation' | 'reflection' | 'plan' | 'message' | 'data' | 'error' => {
-    const sourceType = sourceNode.data?.nodeType || sourceNode.type;
-    const targetType = targetNode.data?.nodeType || targetNode.type;
-    
-    if (sourceType === 'input' || sourceNode.id === 'input') {
-      return 'query';
-    } else if (targetType === 'output' || targetNode.id === 'output' || targetNode.id === 'result') {
-      return 'response';
-    } else if (sourceType === 'llm' && targetType === 'tool') {
-      return 'tool_call';
-    } else if (sourceType === 'tool' && targetType === 'llm') {
-      return 'observation';
-    } else if (targetType === 'evaluator' || sourceType === 'evaluator') {
-      return 'reflection';
-    } else if (sourceType === 'planner') {
-      return 'plan';
-    }
-    
-    return 'message';
-  };
-  
-  // Start the simulation
-  startSimulation();
-  
-  // Return a cleanup function
-  return {
-    cleanup: () => {
-      cancelled = true;
-      // Clear all timeouts
-      timeouts.forEach(timeout => {
-        if (timeout !== null && typeof window !== 'undefined') {
-          window.clearTimeout(timeout);
-        }
-      });
-    }
-  };
+export const truncateFlowContent = (content: string, maxLength: number = 30): string => {
+  if (content.length <= maxLength) return content;
+  return `${content.substring(0, maxLength)}...`;
 };
