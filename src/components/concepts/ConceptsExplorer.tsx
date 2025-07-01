@@ -8,6 +8,8 @@ import MCPDemo from "../interactive-demos/MCPDemo"
 import MCPVisualDemo from "../interactive-demos/MCPVisualDemo"
 import ACPDemo from "../interactive-demos/ACPDemo"
 import ACPMCPComparison from "../interactive-demos/ACPMCPComparison"
+import Agent2AgentProtocolDemo from "../interactive-demos/Agent2AgentProtocolDemo"
+import Agent2AgentProtocolExplainer from "./Agent2AgentProtocolExplainer"
 import ConceptDetails from "./ConceptDetails"
 import { BookOpen, BookmarkSimple, ArrowsHorizontal } from "@phosphor-icons/react"
 import ReferenceSection from "../references/ReferenceSection"
@@ -236,7 +238,25 @@ const ConceptsExplorer = () => {
           
           <Separator className="my-6" />
           
-          <h2 className="text-2xl font-semibold tracking-tight mb-4">Interactive A2A Demonstration</h2>
+          <h2 className="text-2xl font-semibold tracking-tight mb-4">Agent2Agent (A2A) Protocol In-Depth</h2>
+          <p className="text-muted-foreground mb-6">
+            Comprehensive understanding of how A2A protocol enables agent communication and collaboration.
+          </p>
+          
+          <Agent2AgentProtocolExplainer />
+          
+          <Separator className="my-6" />
+          
+          <h2 className="text-2xl font-semibold tracking-tight mb-4">Interactive A2A Protocol Visualization</h2>
+          <p className="text-muted-foreground mb-6">
+            Step through the complete flow from user query to final answer, exploring how A2A and MCP protocols work together.
+          </p>
+          
+          <Agent2AgentProtocolDemo />
+          
+          <Separator className="my-6" />
+          
+          <h2 className="text-2xl font-semibold tracking-tight mb-4">Agent Collaboration Demo</h2>
           <p className="text-muted-foreground mb-6">
             See how multiple specialized agents work together to complete complex tasks through structured communication.
           </p>
