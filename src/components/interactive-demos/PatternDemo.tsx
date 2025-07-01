@@ -17,7 +17,6 @@ import {
   NodeTypes,
   useNodesState,
   useEdgesState,
-  useReactFlow,
   MarkerType
 } from 'reactflow'
 import { StepController } from '@/lib/utils/stepControl'
@@ -32,8 +31,8 @@ import {
   MemoizedMiniMap
 } from '../visualization/MemoizedFlowComponents'
 
-// Import custom hooks
-import { useFlowContainer } from '@/lib/hooks/useFlowContainer.tsx'
+// Use custom hooks for improved stability 
+import { useFlowContainer } from '@/lib/hooks/useFlowContainer'
 import { useResizeObserver } from '@/lib/hooks/useResizeObserver'
 
 import DataFlowVisualizer from '../visualization/DataFlowVisualizer'
@@ -233,8 +232,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   // Reference for the flow container
   const flowContainerRef = useRef<HTMLDivElement>(null);
   
-  // Use flow hooks for visualization outside of any conditional
-  const { triggerResize } = useFlowContainer(flowContainerRef);
+  // Initialize flow container hook outside of any conditional
+  const flowContainerHelpers = useFlowContainer(flowContainerRef);
 
   // Initialize step controller
   useEffect(() => {
@@ -584,7 +583,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     const resetTimeout = setTimeout(() => {
       if (flowContainerRef.current) {
         resetReactFlowRendering(flowContainerRef);
-        if (triggerResize) triggerResize();
+        if (flowContainerHelpers) flowContainerHelpers.triggerResize();
       }
     }, 1000);
     
@@ -593,7 +592,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       requestAnimationFrame(() => {
         if (flowContainerRef.current) {
           resetReactFlowRendering(flowContainerRef);
-          if (triggerResize) triggerResize();
+          if (flowContainerHelpers) flowContainerHelpers.triggerResize();
         }
       });
     };
@@ -605,7 +604,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       clearTimeout(resetTimeout);
       window.removeEventListener('layout-update', handleLayoutUpdate);
     };
-  }, [triggerResize]);
+  }, [flowContainerHelpers]);
   
   // Define nodeTypes for ReactFlow with memoization
   const nodeTypes = useMemo<NodeTypes>(() => ({
