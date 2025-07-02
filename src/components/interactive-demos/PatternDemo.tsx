@@ -873,8 +873,6 @@ const DragHint = React.memo(() => {
               <Button 
                 size="sm"
                 variant={animationSpeed === 1 ? "default" : "outline"}
-                {/* Add the drag hint component */}
-                <DragHint />
                 onClick={() => setAnimationSpeed(1)}
                 disabled={isRunning && animationMode === 'auto'}
               >
