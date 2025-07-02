@@ -244,6 +244,55 @@
             }
         }, true);
     </script>
+    <script>
+        // Add global ReactFlow troubleshooting function
+        window.fixReactFlow = function() {
+            // Force all nodes to be visible
+            document.querySelectorAll('.react-flow__node').forEach(node => {
+                if (node instanceof HTMLElement) {
+                    node.style.opacity = '1';
+                    node.style.visibility = 'visible';
+                    node.style.display = 'block';
+                    node.style.transform = 'translateZ(0)';
+                }
+            });
+            
+            // Force all edges to be visible
+            document.querySelectorAll('.react-flow__edge').forEach(edge => {
+                if (edge instanceof HTMLElement) {
+                    edge.style.opacity = '1';
+                    edge.style.visibility = 'visible';
+                }
+                
+                // Ensure edge paths are visible
+                const paths = edge.querySelectorAll('path');
+                paths.forEach(path => {
+                    path.setAttribute('stroke-width', '1.5');
+                    path.setAttribute('opacity', '1');
+                    path.setAttribute('visibility', 'visible');
+                });
+            });
+            
+            // Apply hardware acceleration to viewport
+            document.querySelectorAll('.react-flow__viewport').forEach(el => {
+                if (el instanceof HTMLElement) {
+                    el.style.transform = 'translateZ(0)';
+                    el.style.backfaceVisibility = 'hidden';
+                    el.style.webkitBackfaceVisibility = 'hidden';
+                }
+            });
+            
+            console.log("ReactFlow visibility fix applied");
+        };
+        
+        // Run the fix after page loads and periodically
+        window.addEventListener('load', function() {
+            // Apply fixes with increasing delays
+            setTimeout(window.fixReactFlow, 1000);
+            setTimeout(window.fixReactFlow, 2500);
+            setTimeout(window.fixReactFlow, 5000);
+        });
+    </script>
 </head>
 
 <body>

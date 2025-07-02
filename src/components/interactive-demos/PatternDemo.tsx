@@ -25,6 +25,7 @@ import 'reactflow/dist/style.css'
 
 // Import stability utilities
 import { setupErrorSuppression, stabilizeReactFlow } from '@/lib/utils/stabilizeVisualization'
+import { forceNodesVisible, fixReactFlowRendering } from '@/lib/utils/reactFlowFixUtils'
 
 // Import custom memoized components
 import {
@@ -101,13 +102,19 @@ const CustomDemoNode = React.memo(({ data, id }: { data: any, id: string }) => {
       color: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)',
       cursor: 'grab',
       position: 'relative',
-      zIndex: 1
+      zIndex: 1,
+      display: 'block',
+      visibility: 'visible',
+      transform: 'translateZ(0)',
+      boxShadow: '0 0 0 1px var(--border)',
+      backgroundColor: isDarkMode ? 'var(--card)' : 'white',
+      opacity: 1,
     }
     
     // Add status-specific styling
     const statusStyle = data.status === 'running' ? {
       boxShadow: `0 0 0 2px var(--primary), 0 0 15px ${isDarkMode ? 'rgba(66, 153, 225, 0.3)' : 'rgba(66, 153, 225, 0.5)'}`,
-      transform: 'scale(1.02)'
+      transform: 'scale(1.02) translateZ(0)'
     } : data.status === 'complete' ? {
       boxShadow: `0 0 0 2px ${isDarkMode ? 'rgba(16, 185, 129, 0.8)' : 'rgba(16, 185, 129, 0.6)'}`,
     } : data.status === 'failed' ? {
@@ -169,9 +176,24 @@ const CustomDemoNode = React.memo(({ data, id }: { data: any, id: string }) => {
   
   const nodeStyle = useMemo(() => getNodeStyle(), [getNodeStyle]);
   
+  // Use effect to ensure the node is visible after render
+  useEffect(() => {
+    // Force node to be visible after a small delay
+    const timer = setTimeout(() => {
+      const nodeElement = document.querySelector(`[data-id="${id}"]`);
+      if (nodeElement instanceof HTMLElement) {
+        nodeElement.style.opacity = '1';
+        nodeElement.style.visibility = 'visible';
+        nodeElement.style.display = 'block';
+      }
+    }, 200);
+    
+    return () => clearTimeout(timer);
+  }, [id]);
+  
   return (
     <div style={nodeStyle}>
-      <Handle type="target" position={Position.Left} />
+      <Handle type="target" position={Position.Left} style={{ visibility: 'visible', opacity: 1 }} />
       <div>
         <div className="flex items-center gap-2">
           {data.status === 'running' && <Clock className="text-amber-500" size={16} />}
@@ -186,7 +208,7 @@ const CustomDemoNode = React.memo(({ data, id }: { data: any, id: string }) => {
           </div>
         )}
       </div>
-      <Handle type="source" position={Position.Right} />
+      <Handle type="source" position={Position.Right} style={{ visibility: 'visible', opacity: 1 }} />
     </div>
   );
 }, (prevProps, nextProps) => {
@@ -274,12 +296,25 @@ const DragHint = React.memo(() => {
       if (stableFlowContainerRef.current) {
         stabilizeReactFlow(stableFlowContainerRef.current);
       }
+      
+      // Force nodes visibility after initial load
+      forceNodesVisible('.react-flow', 3);
     }, 300);
+    
+    // Apply another round of fixes after a longer delay
+    const timer2 = setTimeout(() => {
+      forceNodesVisible('.react-flow', 3);
+      
+      if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
+        fixReactFlowRendering(reactFlowInstance);
+      }
+    }, 1500);
     
     return () => {
       clearTimeout(timer1);
+      clearTimeout(timer2);
     };
-  }, []);
+  }, [reactFlowInstance]);
   
   // Initialize reactFlowInstance first
   // Moved below and will be used after its definition
@@ -392,14 +427,35 @@ const DragHint = React.memo(() => {
         ...node.data,
         status: 'idle',
         result: undefined
+      },
+      style: {
+        ...node.style,
+        opacity: 1,
+        visibility: 'visible',
+        display: 'block',
+        transform: 'translateZ(0)'
       }
     })));
     
     // Reset edges (remove animation)
     setEdges((patternData?.edges || []).map(edge => ({
       ...edge,
-      animated: false
+      animated: false,
+      style: {
+        strokeWidth: 1.5,
+        opacity: 1,
+        visibility: 'visible'
+      }
     })));
+    
+    // Force a redraw of the flow after a delay
+    setTimeout(() => {
+      if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
+        // Use our specialized fix functions
+        fixReactFlowRendering(reactFlowInstance);
+        forceNodesVisible('.react-flow', 3);
+      }
+    }, 300);
   };
 
   // Apply custom getEdgePoints function to work with MemoizedDataFlowVisualizer
@@ -652,15 +708,36 @@ const DragHint = React.memo(() => {
     
     // Apply second stabilization after a delay
     const timer2 = setTimeout(() => {
-      if (typeof reactFlowInstance.fitView === 'function') {
+      if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
         reactFlowInstance.fitView({ padding: 0.2 });
       }
+      
+      // Force render nodes and make them visible
+      const forceNodeVisibility = () => {
+        setNodes(prevNodes => {
+          return prevNodes.map(node => ({
+            ...node,
+            style: {
+              ...node.style,
+              opacity: 1,
+              visibility: 'visible',
+              display: 'block',
+              transform: 'translateZ(0)'
+            }
+          }));
+        });
+      };
+      
+      // Call once immediately and once after a delay
+      forceNodeVisibility();
+      setTimeout(forceNodeVisibility, 300);
+      
     }, 800);
     
     return () => {
       clearTimeout(timer2);
     };
-  }, [reactFlowInstance]);
+  }, [reactFlowInstance, setNodes]);
 
   // Use a different reference to trigger the resize safely
   const stableResetFlow = useCallback(() => {
@@ -710,6 +787,14 @@ const DragHint = React.memo(() => {
   // Custom edge types with arrows for better visualization
   const edgeTypes = useMemo(() => ({
     custom: React.memo(({ id, sourceX, sourceY, targetX, targetY, animated }: any) => {
+      // Ensure coordinates have valid values to prevent SVG errors
+      if (isNaN(sourceX) || isNaN(sourceY) || isNaN(targetX) || isNaN(targetY)) {
+        sourceX = 0;
+        sourceY = 0;
+        targetX = 100;
+        targetY = 100;
+      }
+      
       const edgePath = `M${sourceX},${sourceY} C${sourceX + 50},${sourceY} ${targetX - 50},${targetY} ${targetX},${targetY}`;
       
       // Calculate arrow position at target end
@@ -727,11 +812,17 @@ const DragHint = React.memo(() => {
           <path
             id={id}
             stroke={animated ? 'var(--primary)' : 'var(--border)'}
+            strokeOpacity={1}
             fill="none"
-            strokeWidth={animated ? 2 : 1}
+            strokeWidth={animated ? 2 : 1.5}
             className={animated ? 'animate-pulse' : ''}
             d={edgePath}
             strokeDasharray={animated ? "5,5" : ""}
+            style={{
+              strokeWidth: animated ? 2 : 1.5,
+              opacity: 1,
+              visibility: 'visible'
+            }}
           />
           
           {/* Arrow marker */}
@@ -739,6 +830,10 @@ const DragHint = React.memo(() => {
             points="-6,-4 0,0 -6,4"
             fill={animated ? 'var(--primary)' : 'var(--border)'}
             transform={`translate(${arrowX}, ${arrowY}) rotate(${angle * (180 / Math.PI)})`}
+            style={{
+              opacity: 1,
+              visibility: 'visible'
+            }}
           />
         </g>
       );
@@ -906,7 +1001,15 @@ const DragHint = React.memo(() => {
             <StableFlowContainer
               ref={stableFlowContainerRef}
               className="border border-border rounded-md overflow-hidden relative"
-              style={{ height: '400px', minHeight: '400px' }}
+              style={{ 
+                height: '400px', 
+                minHeight: '400px', 
+                position: 'relative',
+                transform: 'translateZ(0)',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                boxShadow: '0 0 0 1px var(--border)'
+              }}
               fitViewOnResize={true}
             >
               <DragHint />
@@ -923,19 +1026,32 @@ const DragHint = React.memo(() => {
                 maxZoom={2}
                 defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
                 proOptions={{ hideAttribution: true }}
-                className="h-full"
+                className="h-full bg-background"
                 onInit={(instance) => {
-                  // Safely schedule a fit view operation after render
-                  setTimeout(() => {
-                    if (instance && typeof instance.fitView === 'function') {
-                      instance.fitView({ padding: 0.2 });
-                    }
-                  }, 300);
+                  // Apply specialized fix for ReactFlow rendering
+                  fixReactFlowRendering(instance);
+                  
+                  // Force all nodes to be visible with multiple attempts
+                  forceNodesVisible('.react-flow', 5);
+                  
+                  // Schedule additional visibility fixes
+                  const visibilityTimer1 = setTimeout(() => forceNodesVisible('.react-flow', 3), 500);
+                  const visibilityTimer2 = setTimeout(() => forceNodesVisible('.react-flow', 3), 1500);
+                  
+                  // Clean up timers
+                  return () => {
+                    clearTimeout(visibilityTimer1);
+                    clearTimeout(visibilityTimer2);
+                  };
+                }}
+                style={{
+                  background: theme === 'dark' ? 'var(--background)' : 'white'
                 }}
               >
                 <MemoizedBackground 
                   color={theme === 'dark' ? '#ffffff20' : '#aaa'} 
                   gap={16} 
+                  size={1}
                   style={{ 
                     backgroundColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.1)' : 'transparent'
                   }}
@@ -944,6 +1060,14 @@ const DragHint = React.memo(() => {
                   className={theme === 'dark' ? 'dark-controls' : ''} 
                 />
                 <MemoizedMiniMap 
+                  nodeStrokeWidth={3}
+                  nodeColor={(n) => {
+                    const node = nodes.find(node => node.id === n.id);
+                    if (node?.data?.status === 'running') return '#f59e0b';
+                    if (node?.data?.status === 'complete') return '#10b981';
+                    if (node?.data?.status === 'failed') return '#ef4444';
+                    return theme === 'dark' ? '#ffffff80' : '#000000';
+                  }}
                   style={{ 
                     backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.6)' : undefined,
                     maskColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.7)' : undefined

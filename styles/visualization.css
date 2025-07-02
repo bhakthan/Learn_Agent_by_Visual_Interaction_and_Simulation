@@ -11,7 +11,11 @@
   transform: translateZ(0);
   will-change: transform;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   contain: layout style;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
 }
 
 /* Ensure minimum dimensions for visualization containers */
@@ -23,6 +27,7 @@
   position: relative;
   display: block !important; /* Force display to fix visibility issues */
   overflow: visible !important; /* Ensure container is visible */
+  visibility: visible !important;
 }
 
 /* Critical fix for React Flow visibility */
@@ -38,6 +43,15 @@
 .react-flow__edge {
   animation-fill-mode: both;
   contain: paint layout;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Ensure edges are visible */
+.react-flow__edge-path {
+  stroke-width: 1.5px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* Prevent layout thrashing during animations */
@@ -84,11 +98,16 @@
   height: 8px;
   background-color: var(--primary);
   border: 1px solid var(--background);
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* Fix z-index stacking for node interactions */
 .react-flow__node {
   z-index: 1;
+  opacity: 1 !important; 
+  visibility: visible !important;
+  display: block !important;
 }
 
 .react-flow__node.selected {
@@ -114,4 +133,39 @@
   display: block !important;
   visibility: visible !important;
   transform-origin: 0 0;
+}
+
+/* More aggressive fix for node visibility issues */
+.react-flow__node-demoNode {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  transform: translateZ(0);
+  min-width: 100px;
+  min-height: 50px;
+}
+
+/* Fix for panzoom behavior */
+.react-flow__pane {
+  cursor: grab;
+}
+
+.react-flow__pane.dragging {
+  cursor: grabbing;
+}
+
+/* Enhance node animations */
+@keyframes node-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateZ(0);
+  }
+}
+
+.react-flow__node {
+  animation: node-appear 0.3s ease-out forwards;
 }
