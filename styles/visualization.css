@@ -21,6 +21,17 @@
   min-height: 300px;
   min-width: 300px;
   position: relative;
+  display: block !important; /* Force display to fix visibility issues */
+  overflow: visible !important; /* Ensure container is visible */
+}
+
+/* Critical fix for React Flow visibility */
+.react-flow {
+  display: block !important;
+  visibility: visible !important;
+  min-height: 300px;
+  min-width: 100%;
+  z-index: 0;
 }
 
 /* Optimize edge animations to prevent jank */
@@ -86,4 +97,21 @@
 
 .react-flow__edge.selected {
   z-index: 3;
+}
+
+/* Fixed position and visibility for flow components */
+.react-flow__container {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Ensure viewport is visible */
+.react-flow__viewport {
+  display: block !important;
+  visibility: visible !important;
+  transform-origin: 0 0;
 }

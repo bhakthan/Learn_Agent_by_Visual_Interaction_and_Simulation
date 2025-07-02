@@ -638,15 +638,13 @@ const DragHint = React.memo(() => {
   const { 
     containerRef: stableFlowContainerRef, 
     resetFlow, 
-    fitView: fitViewFlow 
+    fitView: fitViewFlow,
+    reactFlowInstance
   } = useStableFlow({
     fitViewOnResize: true,
     fitViewPadding: 0.2,
     stabilizationDelay: 300
   });
-  
-  // Exposed reactFlowInstance from useStableFlow hook
-  const reactFlowInstance = useReactFlow();
   
   // Apply stabilization after reactFlowInstance is properly defined
   useEffect(() => {
@@ -904,14 +902,14 @@ const DragHint = React.memo(() => {
           </div>
           
           {/* Flow visualization with stabilized container */}
-          <div 
-            ref={stableFlowContainerRef}
-            className="border border-border rounded-md overflow-hidden relative"
-            style={{ height: '400px' }}
-            data-flow-container="true"
-          >
-            <DragHint />
-            <ReactFlowProvider>
+          <ReactFlowProvider>
+            <StableFlowContainer
+              ref={stableFlowContainerRef}
+              className="border border-border rounded-md overflow-hidden relative"
+              style={{ height: '400px', minHeight: '400px' }}
+              fitViewOnResize={true}
+            >
+              <DragHint />
               <MemoizedReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -960,8 +958,8 @@ const DragHint = React.memo(() => {
                   speed={animationSpeed || 1}
                 />
               </MemoizedReactFlow>
-            </ReactFlowProvider>
-          </div>
+            </StableFlowContainer>
+          </ReactFlowProvider>
           
           {Object.keys(steps).length > 0 && (
             <>

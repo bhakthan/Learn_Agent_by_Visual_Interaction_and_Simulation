@@ -55,6 +55,76 @@ export const throttleResizeObserver = (callback: Function, delay: number = 100) 
 };
 
 /**
+ * Creates a stable resize detector that works around ResizeObserver issues
+ * @param element - Element to observe
+ * @param callback - Function to call on resize
+ * @param options - Configuration options
+ */
+export function createStableResizeDetector(
+  element: HTMLElement,
+  callback: () => void,
+  options: { 
+    throttle?: number;
+    useRAF?: boolean;
+    disconnectOnError?: boolean;
+  } = {}
+): () => void {
+  // Default options
+  const {
+    throttle = 100,
+    useRAF = true,
+    disconnectOnError = true
+  } = options;
+  
+  // Error counter to help disable problematic observers
+  let errorCount = 0;
+  
+  // Throttled callback
+  const throttledCallback = throttleResizeObserver(() => {
+    if (useRAF) {
+      requestAnimationFrame(callback);
+    } else {
+      callback();
+    }
+  }, throttle);
+  
+  // Create stable observer
+  const observer = createStableResizeObserver((entries) => {
+    try {
+      throttledCallback();
+    } catch (e) {
+      errorCount++;
+      console.debug('Resize detector error (suppressed)');
+      
+      // Disconnect if we're encountering repeated errors
+      if (disconnectOnError && errorCount > 3) {
+        try {
+          observer.disconnect();
+        } catch (err) {
+          // Silent handling
+        }
+      }
+    }
+  });
+  
+  // Start observing
+  try {
+    observer.observe(element);
+  } catch (e) {
+    console.warn('Failed to observe element', e);
+  }
+  
+  // Return cleanup function
+  return () => {
+    try {
+      observer.disconnect();
+    } catch (e) {
+      // Silent cleanup error handling
+    }
+  };
+}
+
+/**
  * Sets up global error handling for ResizeObserver errors
  */
 export const setupResizeObserverErrorHandling = () => {

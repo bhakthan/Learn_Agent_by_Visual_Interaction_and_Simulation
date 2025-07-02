@@ -1,6 +1,6 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
 import { useReactFlow } from 'reactflow';
-import { createStableResizeDetector } from '../utils/resizeObserverUtil';
+import { createStableResizeDetector } from '../utils/resizeObserverUtils';
 
 /**
  * Hook providing stability enhancements for ReactFlow
@@ -31,10 +31,17 @@ export function useStableFlow(options: {
   // Track stabilization state
   const stabilizationAppliedRef = useRef<boolean>(false);
   
+  // Store the reactFlowInstance
+  const [flowInstance, setFlowInstance] = useState<any>(null);
+  
   // Get ReactFlow instance (will be undefined if outside provider)
   let reactFlowInstance: ReturnType<typeof useReactFlow> | undefined;
   try {
     reactFlowInstance = useReactFlow();
+    // Store the instance when available
+    if (reactFlowInstance && !flowInstance) {
+      setFlowInstance(reactFlowInstance);
+    }
   } catch (e) {
     // Handle gracefully if used outside ReactFlowProvider
     reactFlowInstance = undefined;
@@ -92,12 +99,13 @@ export function useStableFlow(options: {
    * Handle view fitting for ReactFlow
    */
   const fitView = useCallback(() => {
-    if (!reactFlowInstance || typeof reactFlowInstance.fitView !== 'function') return;
+    const instance = reactFlowInstance || flowInstance;
+    if (!instance || typeof instance.fitView !== 'function') return;
     
     // Use timeout to ensure nodes are properly positioned
     const timeoutId = setTimeout(() => {
       try {
-        reactFlowInstance?.fitView({
+        instance.fitView({
           padding: fitViewPadding,
           includeHiddenNodes: false,
           duration: 200
@@ -108,7 +116,7 @@ export function useStableFlow(options: {
     }, fitViewDelay);
     
     return () => clearTimeout(timeoutId);
-  }, [reactFlowInstance, fitViewPadding, fitViewDelay]);
+  }, [reactFlowInstance, flowInstance, fitViewPadding, fitViewDelay]);
   
   /**
    * Reset and re-render the flow
@@ -143,13 +151,13 @@ export function useStableFlow(options: {
       applyStabilization();
       
       // Initial fit view if enabled
-      if (fitViewOnResize && reactFlowInstance) {
+      if (fitViewOnResize && (reactFlowInstance || flowInstance)) {
         fitView();
       }
     }, stabilizationDelay);
     
     return () => clearTimeout(timer);
-  }, [applyStabilization, fitView, fitViewOnResize, reactFlowInstance, stabilizationDelay]);
+  }, [applyStabilization, fitView, fitViewOnResize, reactFlowInstance, flowInstance, stabilizationDelay]);
   
   // Set up resize detection with our stable handler
   useEffect(() => {
@@ -179,6 +187,6 @@ export function useStableFlow(options: {
     resetFlow,
     fitView,
     applyStabilization,
-    reactFlowInstance
+    reactFlowInstance: reactFlowInstance || flowInstance
   };
 }
