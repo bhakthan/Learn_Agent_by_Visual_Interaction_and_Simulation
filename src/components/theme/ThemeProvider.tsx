@@ -10,12 +10,14 @@ type ThemeProviderProps = {
 
 type ThemeProviderState = {
   theme: Theme;
+  isDarkMode: boolean;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
 };
 
 const initialState: ThemeProviderState = {
   theme: "light",
+  isDarkMode: false,
   setTheme: () => null,
   toggleTheme: () => null,
 };
@@ -80,7 +82,6 @@ export function ThemeProvider({
   useEffect(() => {
     syncTheme(theme);
     localStorage.setItem(storageKey, theme);
-    console.log("Theme set to: " + theme);
   }, [theme, storageKey]);
 
   // Initialize theme on mount
@@ -117,6 +118,7 @@ export function ThemeProvider({
 
   const value = {
     theme,
+    isDarkMode: theme === "dark",
     setTheme: (newTheme: Theme) => {
       setTheme(newTheme);
       syncTheme(newTheme);
