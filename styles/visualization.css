@@ -1,0 +1,89 @@
+/* 
+ * Visualization styles to improve ReactFlow performance and prevent ResizeObserver errors
+ */
+
+/* Apply hardware acceleration consistently */
+.react-flow,
+.react-flow__container,
+.react-flow__viewport,
+.react-flow__node,
+.react-flow__edge {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  contain: layout style;
+}
+
+/* Ensure minimum dimensions for visualization containers */
+.visualization-container,
+.flow-container,
+[data-flow-container] {
+  min-height: 300px;
+  min-width: 300px;
+  position: relative;
+}
+
+/* Optimize edge animations to prevent jank */
+.react-flow__edge {
+  animation-fill-mode: both;
+  contain: paint layout;
+}
+
+/* Prevent layout thrashing during animations */
+.react-flow__edge-path {
+  stroke-dasharray: 5;
+  animation-duration: 0.5s;
+  animation-timing-function: ease;
+  animation-iteration-count: 1;
+  contain: strict;
+}
+
+/* Flow stabilization styles to fix common ReactFlow issues */
+.react-flow__renderer {
+  overflow: visible !important;
+  contain: layout style;
+}
+
+/* Dark mode improvements */
+.dark .react-flow__edge-path {
+  stroke: rgba(255, 255, 255, 0.5);
+}
+
+.dark .react-flow__controls {
+  background-color: var(--card);
+  border-color: var(--border);
+  color: var(--card-foreground);
+}
+
+/* Add more padding to prevent edge clipping */
+.react-flow__edges {
+  pointer-events: none;
+  padding: 10px;
+}
+
+/* Fix for minimap rendering in dark mode */
+.dark .react-flow__minimap {
+  background-color: var(--card);
+  border-color: var(--border);
+}
+
+/* Ensure handles are consistently visible */
+.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  background-color: var(--primary);
+  border: 1px solid var(--background);
+}
+
+/* Fix z-index stacking for node interactions */
+.react-flow__node {
+  z-index: 1;
+}
+
+.react-flow__node.selected {
+  z-index: 2;
+}
+
+.react-flow__edge.selected {
+  z-index: 3;
+}

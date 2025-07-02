@@ -1,6 +1,5 @@
 /**
  * Utility functions for handling ResizeObserver-related errors and optimizations
- * Note: throttleResizeObserver has been moved to resizeObserverUtil.ts to avoid circular dependencies
  */
 
 /**
@@ -9,11 +8,17 @@
 export const createStableResizeObserver = (callback: ResizeObserverCallback): ResizeObserver => {
   try {
     return new ResizeObserver((entries, observer) => {
-      try {
-        callback(entries, observer);
-      } catch (e) {
-        console.error('Error in ResizeObserver callback:', e);
-      }
+      // Use requestAnimationFrame to avoid synchronous layout triggers
+      window.requestAnimationFrame(() => {
+        try {
+          // Check if we're still in a valid state to execute callback
+          if (entries.length && document.body.contains(entries[0]?.target as Element)) {
+            callback(entries, observer);
+          }
+        } catch (e) {
+          console.error('Error in ResizeObserver callback:', e);
+        }
+      });
     });
   } catch (e) {
     console.error('Error creating ResizeObserver:', e);
@@ -27,6 +32,29 @@ export const createStableResizeObserver = (callback: ResizeObserverCallback): Re
 };
 
 /**
+ * Throttle function for ResizeObserver callbacks
+ */
+export const throttleResizeObserver = (callback: Function, delay: number = 100) => {
+  let lastCall = 0;
+  let timeout: number | null = null;
+  
+  return (...args: any[]) => {
+    const now = Date.now();
+    
+    if (now - lastCall < delay) {
+      if (timeout) clearTimeout(timeout);
+      timeout = window.setTimeout(() => {
+        lastCall = now;
+        callback(...args);
+      }, delay);
+    } else {
+      lastCall = now;
+      callback(...args);
+    }
+  };
+};
+
+/**
  * Sets up global error handling for ResizeObserver errors
  */
 export const setupResizeObserverErrorHandling = () => {
@@ -37,27 +65,6 @@ export const setupResizeObserverErrorHandling = () => {
   let errorCount = 0;
   let lastErrorTime = 0;
   let recoveryInProgress = false;
-  
-  // Improved throttling function for resize events
-  const throttle = (fn: Function, delay: number) => {
-    let lastCall = 0;
-    let timeout: number | null = null;
-    
-    return (...args: any[]) => {
-      const now = Date.now();
-      
-      if (now - lastCall < delay) {
-        if (timeout) clearTimeout(timeout);
-        timeout = window.setTimeout(() => {
-          lastCall = now;
-          fn(...args);
-        }, delay);
-      } else {
-        lastCall = now;
-        fn(...args);
-      }
-    };
-  };
   
   // Handle ResizeObserver errors specifically
   const handleResizeObserverError = (e: Event | string) => {
@@ -77,7 +84,7 @@ export const setupResizeObserverErrorHandling = () => {
         recoveryInProgress = true;
         
         // Throttled recovery function
-        const stabilizeFlow = throttle(() => {
+        const stabilizeFlow = () => {
           // Find and stabilize ReactFlow elements
           document.querySelectorAll('.react-flow, .react-flow__container, .react-flow__viewport').forEach(el => {
             if (el instanceof HTMLElement) {
@@ -100,10 +107,10 @@ export const setupResizeObserverErrorHandling = () => {
             recoveryInProgress = false;
             errorCount = Math.max(0, errorCount - 2);
           }, 2000);
-        }, 500);
+        };
         
         // Apply stabilization
-        stabilizeFlow();
+        requestAnimationFrame(stabilizeFlow);
       }
       
       lastErrorTime = now;
@@ -132,6 +139,3 @@ export const setupResizeObserverErrorHandling = () => {
     }
   }, true);
 };
-
-// Note: disableResizeObserverIfProblematic is imported from ./disableResizeObserver.ts
-// to prevent duplicate exports

@@ -20,17 +20,21 @@
             transform: translateZ(0);
             will-change: transform;
             backface-visibility: hidden;
+            contain: layout;
         }
         
         /* Ensure sane minimums to prevent size bugs */
         .react-flow {
             min-height: 200px;
             min-width: 200px;
+            contain: strict;
+            z-index: 0;
         }
         
         /* Optimize animations to reduce jank */
         .react-flow__edge-path {
             will-change: transform;
+            contain: strict;
         }
         
         /* Enhanced visualization container for data transforms */
@@ -38,12 +42,14 @@
             position: relative;
             overflow: hidden;
             transform: translateZ(0);
+            contain: layout size;
         }
         
         /* Transformation effects */
         .transform-effect {
             filter: drop-shadow(0 0 2px rgba(0, 120, 255, 0.5));
             transition: all 0.3s ease;
+            contain: layout style;
         }
         
         /* Ensure tooltips appear above SVG elements */
@@ -55,6 +61,13 @@
         .react-flow__node {
             min-width: 50px;
             min-height: 30px;
+            contain: layout style;
+        }
+        
+        /* Prevent layout shifts during animation */
+        .react-flow__edges {
+            pointer-events: none;
+            contain: layout style;
         }
     </style>
     <script>
@@ -125,24 +138,29 @@
                                 try {
                                     // Apply fixes to ReactFlow elements with enhanced stability
                                     document.querySelectorAll('.react-flow, .react-flow__container, .react-flow__viewport').forEach(el => {
-                                        // Force hardware acceleration with better compositing
-                                        el.style.transform = 'translateZ(0)';
-                                        el.style.webkitBackfaceVisibility = 'hidden';
-                                        el.style.webkitPerspective = '1000';
-                                        el.style.contain = 'layout paint';
-                                        
-                                        // Set explicit height to prevent layout shifts
-                                        const parent = el.parentElement;
-                                        if (parent && parent.offsetHeight > 10 && (!el.style.height || el.offsetHeight < 10)) {
-                                            el.style.height = `${parent.offsetHeight}px`;
-                                        } else if (!el.style.height || el.offsetHeight < 10) {
-                                            el.style.height = '300px';
+                                        if (el instanceof HTMLElement) {
+                                            // Force hardware acceleration with better compositing
+                                            el.style.transform = 'translateZ(0)';
+                                            el.style.webkitBackfaceVisibility = 'hidden';
+                                            el.style.webkitPerspective = '1000';
+                                            el.style.contain = 'layout paint';
+                                            
+                                            // Set explicit height to prevent layout shifts
+                                            const parent = el.parentElement;
+                                            if (parent && parent.offsetHeight > 10 && (!el.style.height || el.offsetHeight < 10)) {
+                                                el.style.height = `${parent.offsetHeight}px`;
+                                            } else if (!el.style.height || el.offsetHeight < 10) {
+                                                el.style.height = '300px';
+                                            }
                                         }
                                     });
                                     
                                     // Apply fixes to flow visualization elements
                                     document.querySelectorAll('[data-flow], [data-visualization], .flow-container').forEach(el => {
-                                        el.style.transform = 'translateZ(0)';
+                                        if (el instanceof HTMLElement) {
+                                            el.style.transform = 'translateZ(0)';
+                                            el.style.contain = 'layout style';
+                                        }
                                     });
                                     
                                     // Trigger a recalculation with RAF for smoother handling
@@ -150,26 +168,12 @@
                                         window.dispatchEvent(new CustomEvent('flow-force-stabilize', { 
                                             detail: { timestamp: Date.now(), recovery: true, attempt } 
                                         }));
-                                        
-                                        // Force layout recalculation
-                                        document.body.style.opacity = '0.99';
-                                        setTimeout(() => {
-                                            document.body.style.opacity = '1';
-                                        }, 50);
                                     });
                                     
                                     // Reset recovery state after a delay with progressive approach
                                     setTimeout(() => {
                                         window.__resizeRecoveryScheduled = false;
                                         window.__resizeObserverErrorCount = Math.max(0, window.__resizeObserverErrorCount - 2);
-                                        
-                                        // Only clean up styles after significant recovery time
-                                        if (attempt >= 3) {
-                                            document.querySelectorAll('.react-flow').forEach(el => {
-                                                el.style.transform = '';
-                                                el.style.webkitBackfaceVisibility = '';
-                                            });
-                                        }
                                     }, 2000);
                                     
                                 } catch (e) {
@@ -191,6 +195,8 @@
             // Always suppress these errors
             return true;
         }
+        
+        // Override console.error to suppress ResizeObserver errors
         const originalConsoleError = console.error;
         console.error = function(msg, ...args) {
             // More comprehensive check for ResizeObserver related messages
@@ -237,43 +243,6 @@
                 return false;
             }
         }, true);
-        // Add advanced monitoring for performance issues
-        if ('PerformanceObserver' in window) {
-            try {
-                // Monitor layout shifts that might cause ResizeObserver issues
-                const layoutObserver = new PerformanceObserver((list) => {
-                    for (const entry of list.getEntries()) {
-                        // Large layout shifts can trigger ResizeObserver loops
-                        if (entry.value > 0.1) {
-                            // Delay resize events during layout shifts
-                            if (!window.__layoutShiftProtection) {
-                                window.__layoutShiftProtection = true;
-                                setTimeout(() => {
-                                    window.__layoutShiftProtection = false;
-                                }, 500);
-                            }
-                            break;
-                        }
-                    }
-                });
-                layoutObserver.observe({ type: 'layout-shift', buffered: true });
-                
-                // Monitor long tasks that might block the main thread
-                const longTaskObserver = new PerformanceObserver((list) => {
-                    for (const entry of list.getEntries()) {
-                        if (entry.duration > 100) { // Tasks longer than 100ms
-                            // Log for diagnostics but don't interfere
-                            if (window.location.hostname === 'localhost') {
-                                console.warn('Long task detected:', entry.duration.toFixed(2) + 'ms');
-                            }
-                        }
-                    }
-                });
-                longTaskObserver.observe({ type: 'longtask', buffered: true });
-            } catch (err) {
-                // Silently fail if observers aren't supported
-            }
-        }
     </script>
 </head>
 

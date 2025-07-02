@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { createStableResizeObserver } from '../utils/resizeObserverUtils';
 
 interface ResizeObserverOptions {
   onResize?: (entry: ResizeObserverEntry) => void;
@@ -24,6 +25,7 @@ export function useResizeObserver<T extends HTMLElement = HTMLElement>(
   const timeoutRef = useRef<number | null>(null);
   const lastSizeRef = useRef<{ width: number; height: number } | null>(null);
   const errorCountRef = useRef<number>(0);
+  const frameRef = useRef<number | null>(null);
   
   // Create a debounced resize handler
   const handleResize = useCallback((entries: ResizeObserverEntry[]) => {
@@ -31,6 +33,12 @@ export function useResizeObserver<T extends HTMLElement = HTMLElement>(
     if (timeoutRef.current !== null) {
       window.clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
+    }
+    
+    // Cancel any pending animation frame
+    if (frameRef.current !== null) {
+      window.cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
     }
     
     // Check if we have an entry for our element
@@ -55,11 +63,16 @@ export function useResizeObserver<T extends HTMLElement = HTMLElement>(
     
     // Debounce the callback
     timeoutRef.current = window.setTimeout(() => {
-      // Call the callback in a requestAnimationFrame for smoother updates
-      requestAnimationFrame(() => {
+      // Use requestAnimationFrame for smoother updates
+      frameRef.current = window.requestAnimationFrame(() => {
         if (onResize && entry) {
-          onResize(entry);
+          try {
+            onResize(entry);
+          } catch (error) {
+            // Silent catch to prevent cascading errors
+          }
         }
+        frameRef.current = null;
       });
       timeoutRef.current = null;
     }, debounceMs);
@@ -69,44 +82,20 @@ export function useResizeObserver<T extends HTMLElement = HTMLElement>(
   useEffect(() => {
     if (disabled || !elementRef.current) return;
     
-    // Create an observer with error tracking
-    try {
-      observerRef.current = new ResizeObserver((entries) => {
-        try {
-          handleResize(entries);
-        } catch (error) {
-          errorCountRef.current += 1;
-          console.warn('Error in ResizeObserver callback:', error);
-          
-          // If we get multiple errors, disable the observer temporarily
-          if (errorCountRef.current > 3) {
-            const observer = observerRef.current;
-            if (observer && elementRef.current) {
-              observer.unobserve(elementRef.current);
-              
-              // Try to re-observe after a delay
-              setTimeout(() => {
-                errorCountRef.current = 0;
-                if (observer && elementRef.current && !disabled) {
-                  observer.observe(elementRef.current);
-                }
-              }, 2000);
-            }
-          }
-        }
-      });
-      
-      // Start observing
+    // Create an observer with our stable wrapper
+    observerRef.current = createStableResizeObserver((entries) => {
+      handleResize(entries);
+    });
+    
+    // Start observing
+    if (observerRef.current && elementRef.current) {
       observerRef.current.observe(elementRef.current);
-    } catch (error) {
-      console.error('Error creating ResizeObserver:', error);
     }
     
     return () => {
       // Cleanup
-      const observer = observerRef.current;
-      if (observer) {
-        observer.disconnect();
+      if (observerRef.current) {
+        observerRef.current.disconnect();
         observerRef.current = null;
       }
       
@@ -114,25 +103,40 @@ export function useResizeObserver<T extends HTMLElement = HTMLElement>(
         window.clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
+      
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
     };
   }, [disabled, handleResize]);
   
   // Function to manually trigger a resize calculation
   const forceUpdate = useCallback(() => {
-    if (!elementRef.current || !lastSizeRef.current) return;
+    if (!elementRef.current) return;
     
     const { width, height } = elementRef.current.getBoundingClientRect();
     lastSizeRef.current = { width, height };
     
     if (onResize) {
-      const entry = {
-        target: elementRef.current,
-        contentRect: { width, height } as DOMRectReadOnly,
-        borderBoxSize: [] as ReadonlyArray<ResizeObserverSize>,
-        contentBoxSize: [] as ReadonlyArray<ResizeObserverSize>
-      } as ResizeObserverEntry;
-      
-      onResize(entry);
+      // Use requestAnimationFrame for smoother updates
+      frameRef.current = window.requestAnimationFrame(() => {
+        if (elementRef.current && onResize) {
+          const entry = {
+            target: elementRef.current,
+            contentRect: { width, height } as DOMRectReadOnly,
+            borderBoxSize: [] as ReadonlyArray<ResizeObserverSize>,
+            contentBoxSize: [] as ReadonlyArray<ResizeObserverSize>
+          } as ResizeObserverEntry;
+          
+          try {
+            onResize(entry);
+          } catch (error) {
+            // Silent catch to prevent cascading errors
+          }
+        }
+        frameRef.current = null;
+      });
     }
   }, [onResize]);
   

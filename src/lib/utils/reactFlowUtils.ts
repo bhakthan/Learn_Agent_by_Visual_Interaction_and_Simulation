@@ -58,22 +58,25 @@ export const setupReactFlowErrorHandling = () => {
 export const resetReactFlowRendering = (ref: React.RefObject<HTMLDivElement>) => {
   if (!ref.current) return;
   
-  // Force reflow
-  const container = ref.current;
-  const displayValue = container.style.display;
-  
-  // Apply minimal changes to force reflow
-  container.style.display = 'none';
-  setTimeout(() => {
-    container.style.display = displayValue;
+  // Use requestAnimationFrame for smoother handling
+  requestAnimationFrame(() => {
+    // Force reflow with minimal DOM manipulation
+    const container = ref.current;
+    if (!container) return;
+    
+    // Cache current size
+    const currentWidth = container.offsetWidth;
+    const currentHeight = container.offsetHeight;
     
     // Dispatch custom event that components can listen for
     container.dispatchEvent(new CustomEvent('flow-rerender', { 
       bubbles: true,
-      detail: { timestamp: Date.now() }
+      detail: { timestamp: Date.now(), width: currentWidth, height: currentHeight }
     }));
     
-    // Dispatch global resize event to trigger ReactFlow's internal resize handlers
-    window.dispatchEvent(new Event('resize'));
-  }, 10);
+    // Dispatch a gentle resize event with RAF for smoother handling
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event('resize'));
+    });
+  });
 };

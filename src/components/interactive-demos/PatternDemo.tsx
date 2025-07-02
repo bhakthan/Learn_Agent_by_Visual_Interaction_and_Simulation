@@ -830,8 +830,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
               nodeTypes={nodeTypes}
               className="h-full"
               style={{ 
-                strokeWidth: 2,
-                stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined 
+                backgroundColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.2)' : 'transparent'
               }}
             >
               <MemoizedBackground color={theme === 'dark' ? '#ffffff20' : '#aaa'} gap={16} />

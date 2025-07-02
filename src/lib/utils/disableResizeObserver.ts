@@ -13,49 +13,47 @@ export const disableResizeObserverIfProblematic = () => {
   if ((window as any).__resizeObserverFixed) return;
   (window as any).__resizeObserverFixed = true;
   
-  // Find ReactFlow elements
-  const reactFlowElements = document.querySelectorAll('.react-flow, .react-flow__viewport, .react-flow__renderer');
-  
-  reactFlowElements.forEach(el => {
-    if (el instanceof HTMLElement) {
-      try {
-        // Apply optimizations to reduce resize observer activity
-        el.style.transform = 'translateZ(0)';
-        el.style.contain = 'paint layout';
-        el.style.willChange = 'transform';
-        
-        // Set explicit dimensions to reduce size changes
-        if (!el.style.height || el.offsetHeight < 50) {
-          const container = el.closest('[data-flow-container]') || el.parentElement;
-          if (container) {
-            el.style.height = `${Math.max(300, container.offsetHeight)}px`;
-          } else {
-            el.style.height = '400px';
-          }
-        }
-      } catch (e) {
-        // Silent catch - this is a recovery function
-      }
-    }
-  });
-  
-  // Apply a more drastic fix after multiple errors
-  if (errorCount > 5) {
+  // Use requestAnimationFrame for smoother handling
+  requestAnimationFrame(() => {
     try {
-      // Force all animations to complete
-      document.querySelectorAll('.react-flow__edge-path').forEach(el => {
-        if (el instanceof SVGElement) {
-          el.style.animation = 'none';
+      // Find ReactFlow elements
+      const reactFlowElements = document.querySelectorAll('.react-flow, .react-flow__viewport, .react-flow__renderer');
+      
+      reactFlowElements.forEach(el => {
+        if (el instanceof HTMLElement) {
+          // Apply optimizations to reduce resize observer activity
+          el.style.transform = 'translateZ(0)';
+          el.style.contain = 'paint layout';
+          el.style.willChange = 'transform';
+          
+          // Set explicit dimensions to reduce size changes
+          if (!el.style.height || el.offsetHeight < 50) {
+            const container = el.closest('[data-flow-container]') || el.parentElement;
+            if (container) {
+              el.style.height = `${Math.max(300, container.offsetHeight)}px`;
+            } else {
+              el.style.height = '400px';
+            }
+          }
         }
       });
       
-      // Force a reflow
-      document.body.style.opacity = '0.99';
-      setTimeout(() => {
-        document.body.style.opacity = '1';
-      }, 0);
+      // Apply a more drastic fix after multiple errors
+      if (errorCount > 5) {
+        // Force all animations to complete
+        document.querySelectorAll('.react-flow__edge-path').forEach(el => {
+          if (el instanceof SVGElement) {
+            el.style.animation = 'none';
+          }
+        });
+        
+        // Dispatch a custom event that our components can listen for
+        window.dispatchEvent(new CustomEvent('flow-force-stabilize', {
+          detail: { timestamp: Date.now(), recovery: true }
+        }));
+      }
     } catch (e) {
       // Silent catch - this is a recovery function
     }
-  }
+  });
 };
