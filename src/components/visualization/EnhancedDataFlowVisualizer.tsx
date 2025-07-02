@@ -5,6 +5,7 @@ import * as dataFlowUtils from '@/lib/utils/dataFlowUtils';
 import { DataFlowFilter } from './DataFlowControls';
 import { Button } from '@/components/ui/button';
 import { ChartLine } from '@phosphor-icons/react';
+import { useTheme } from '@/components/theme/ThemeProvider';
 
 // Using the same DataFlow interface as the base component
 interface DataFlow {
@@ -47,6 +48,7 @@ const EnhancedDataFlowVisualizer = ({
   const [activeFlows, setActiveFlows] = useState<DataFlow[]>([]);
   const [flowHistory, setFlowHistory] = useState<DataFlow[]>([]);
   const [showTimeline, setShowTimeline] = useState(false);
+  const { isDarkMode } = useTheme();
 
   // Apply filters to the flows
   const filteredFlows = useMemo(() => {
@@ -187,6 +189,11 @@ const EnhancedDataFlowVisualizer = ({
       fill: typeParams.fill || `${flowStyle.color}33`
     };
     
+    // Enhance visibility in dark mode
+    const textColor = isDarkMode ? 'rgba(255, 255, 255, 0.95)' : style.stroke;
+    const textStroke = isDarkMode ? 'rgba(0, 0, 0, 0.6)' : 'none';
+    const dotFill = isDarkMode && flow.type !== 'error' ? 'rgba(255, 255, 255, 0.95)' : style.stroke;
+    
     return (
       <motion.g 
         key={flow.id}
@@ -199,7 +206,7 @@ const EnhancedDataFlowVisualizer = ({
           cx={x}
           cy={y}
           r={style.strokeWidth ? style.strokeWidth / 2 : 2}
-          fill={style.stroke}
+          fill={dotFill}
           stroke={style.stroke}
           strokeWidth={1}
           className="flow-indicator"
@@ -211,16 +218,19 @@ const EnhancedDataFlowVisualizer = ({
             x={x}
             y={y - 10}
             textAnchor="middle"
-            fill={style.stroke}
+            fill={textColor}
+            stroke={textStroke}
+            strokeWidth={isDarkMode ? 0.3 : 0}
             fontSize={10}
             fontWeight={500}
+            paintOrder="stroke"
           >
             {flow.label}
           </text>
         )}
       </motion.g>
     );
-  }, [edges, getEdgePoints]);
+  }, [edges, getEdgePoints, isDarkMode]);
 
   // Render a detailed flow indicator with message content
   const renderDetailedFlowIndicator = useCallback((flow: DataFlow) => {
@@ -250,6 +260,12 @@ const EnhancedDataFlowVisualizer = ({
       fill: typeParams.fill || `${flowStyle.color}33`
     };
 
+    // Enhance visibility in dark mode
+    const textColor = isDarkMode ? 'rgba(255, 255, 255, 0.95)' : style.stroke;
+    const textBgColor = isDarkMode ? `rgba(30, 41, 59, 0.85)` : `${style.fill}99`;
+    const textBorderColor = isDarkMode ? 'rgba(255, 255, 255, 0.2)' : style.stroke;
+    const dotFill = isDarkMode && flow.type !== 'error' ? 'rgba(255, 255, 255, 0.95)' : style.stroke;
+
     // Get nodes for additional info
     const sourceNode = nodes.find(n => n.id === flow.source);
     const targetNode = nodes.find(n => n.id === flow.target);
@@ -271,8 +287,9 @@ const EnhancedDataFlowVisualizer = ({
           <div 
             className="rounded-md p-2 text-xs overflow-hidden border shadow-sm"
             style={{ 
-              backgroundColor: `${style.fill}99`, 
-              borderColor: style.stroke, 
+              backgroundColor: textBgColor,
+              borderColor: textBorderColor,
+              color: textColor,
               maxHeight: '100%',
               overflow: 'hidden'
             }}
@@ -289,14 +306,14 @@ const EnhancedDataFlowVisualizer = ({
           cx={x}
           cy={y}
           r={style.strokeWidth || 4}
-          fill={style.stroke}
+          fill={dotFill}
           stroke={style.stroke}
           strokeWidth={2}
           className="flow-indicator"
         />
       </motion.g>
     );
-  }, [edges, nodes, getEdgePoints]);
+  }, [edges, nodes, getEdgePoints, isDarkMode]);
 
   // Render the timeline of flow history
   const renderTimelineVisualization = useCallback(() => {
@@ -367,7 +384,7 @@ const EnhancedDataFlowVisualizer = ({
         </div>
       </foreignObject>
     );
-  }, [showTimeline, flowHistory, activeFlows, nodes]);
+  }, [showTimeline, flowHistory, activeFlows, nodes, isDarkMode]);
 
   // Choose the appropriate visualization based on mode
   const renderFlowByVisualizationMode = useCallback((flow: DataFlow) => {

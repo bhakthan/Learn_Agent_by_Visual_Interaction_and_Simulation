@@ -40,8 +40,8 @@ const DataFlowVisualizer = React.memo(({
   speed = 1,
   colorMap = {} 
 }: DataFlowVisualizerProps) => {
-  const { theme } = useTheme();
-  const isDarkMode = theme === 'dark';
+  // Get theme from the ThemeProvider context
+  const { theme, isDarkMode } = useTheme();
   const [activeFlows, setActiveFlows] = useState<DataFlow[]>([]);
   
   // Update flow progress values
