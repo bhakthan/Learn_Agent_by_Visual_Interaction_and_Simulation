@@ -829,26 +829,24 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
               autoFitView={true}
               nodeTypes={nodeTypes}
               className="h-full"
-            />
-          </div>
-                  style: { 
-                    strokeWidth: 2,
-                    stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined 
-                  }
-                }}
-              >
-                <MemoizedBackground color={theme === 'dark' ? '#ffffff20' : '#aaa'} gap={16} />
-                <MemoizedControls className={theme === 'dark' ? 'dark-controls' : ''} />
-                <MemoizedMiniMap 
-                  style={{ 
-                    backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.6)' : undefined,
-                    maskColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.7)' : undefined
-                  }} 
-                />
-                <MemoizedDataFlowVisualizer 
-                  flows={dataFlows} 
-                  edges={edges}
-
+              style={{ 
+                strokeWidth: 2,
+                stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined 
+              }}
+            >
+              <MemoizedBackground color={theme === 'dark' ? '#ffffff20' : '#aaa'} gap={16} />
+              <MemoizedControls className={theme === 'dark' ? 'dark-controls' : ''} />
+              <MemoizedMiniMap 
+                style={{ 
+                  backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.6)' : undefined,
+                  maskColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.7)' : undefined
+                }} 
+              />
+              <MemoizedDataFlowVisualizer 
+                flows={dataFlows} 
+                edges={edges}
+              />
+            </StandardFlowVisualizerWithProvider>
           </div>
           
           {Object.keys(steps).length > 0 && (
