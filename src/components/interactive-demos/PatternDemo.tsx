@@ -22,7 +22,9 @@ import {
 } from 'reactflow'
 import { StepController } from '@/lib/utils/stepControl'
 import 'reactflow/dist/style.css'
-import { resetReactFlowRendering } from '@/lib/utils/visualizationUtils';
+
+// Import stability utilities
+import { setupErrorSuppression, stabilizeReactFlow } from '@/lib/utils/stabilizeVisualization'
 
 // Import custom memoized components
 import {
@@ -32,12 +34,12 @@ import {
   MemoizedMiniMap
 } from '../visualization/MemoizedFlowComponents'
 
+// Import stable flow components
+import { StableFlowContainer, StableFlowProvider } from '../visualization/StableFlowContainer';
+import { useStableFlow } from '@/lib/hooks/useStableFlow';
+
 // Import StandardFlowVisualizer
 import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from '../visualization/StandardFlowVisualizer'
-
-// Use custom hooks for improved stability 
-import { useFlowContainer } from '@/lib/hooks/useFlowContainer'
-import { useResizeObserver } from '@/lib/hooks/useResizeObserver'
 
 import DataFlowVisualizer from '../visualization/DataFlowVisualizer'
 
@@ -261,6 +263,27 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       if (stepControllerRef.current) {
         stepControllerRef.current.stop();
       }
+    };
+  }, []);
+
+  // Set up error suppression for ResizeObserver errors
+  useEffect(() => {
+    // Set up error suppression 
+    const cleanup = setupErrorSuppression();
+    
+    // Apply stabilization to any existing ReactFlow elements
+    const stabilizeTimeout = setTimeout(() => {
+      const flowContainers = document.querySelectorAll('[data-flow-container="true"]');
+      flowContainers.forEach(container => {
+        if (container instanceof HTMLElement) {
+          stabilizeReactFlow(container);
+        }
+      });
+    }, 500);
+    
+    return () => {
+      cleanup();
+      clearTimeout(stabilizeTimeout);
     };
   }, []);
 
@@ -564,28 +587,29 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     return '';
   }, []);
   
+  // Use our stable flow hook instead of multiple hooks
+  const { 
+    containerRef: flowContainerRef, 
+    resetFlow, 
+    fitView: fitViewFlow 
+  } = useStableFlow({
+    fitViewOnResize: true,
+    fitViewPadding: 0.2,
+    stabilizationDelay: 300
+  });
+  
   // Setup safe resize handling with improved monitoring
   useEffect(() => {
     if (!flowContainerRef.current) return;
     
     // Apply safer resize behavior once on mount, not on every render
     const resetTimeout = setTimeout(() => {
-      if (flowContainerRef.current) {
-        resetReactFlowRendering(flowContainerRef);
-        flowContainerHelpers.triggerResize();
-      }
+      resetFlow();
     }, 1000);
     
     // Monitor for errors and re-trigger resize if needed
     const handleLayoutUpdate = () => {
-      if (!flowContainerRef.current) return;
-      
-      requestAnimationFrame(() => {
-        if (flowContainerRef.current) {
-          resetReactFlowRendering(flowContainerRef);
-          flowContainerHelpers.triggerResize();
-        }
-      });
+      requestAnimationFrame(resetFlow);
     };
     
     // Listen for layout update events
@@ -595,7 +619,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       clearTimeout(resetTimeout);
       window.removeEventListener('layout-update', handleLayoutUpdate);
     };
-  }, []); // Empty dependency array to run only once on mount
+  }, [resetFlow]); // Only depend on resetFlow function
   
   // Add proper memoization to prevent frequent rerenders
   // We don't need memoizedEdges and memoizedNodes since useNodesState and useEdgesState already handle this
@@ -800,11 +824,16 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
             </div>
           </div>
           
-          {/* Flow visualization */}
-          <div 
+          {/* Flow visualization with stabilized container */}
+          <StableFlowContainer 
             ref={flowContainerRef}
             className="border border-border rounded-md overflow-hidden"
             style={{ height: '400px' }}
+            fitViewOnResize={true}
+            onReady={() => {
+              // Trigger a delayed fit view
+              setTimeout(resetFlow, 200);
+            }}
           >
             <StandardFlowVisualizerWithProvider
               nodes={nodes}
