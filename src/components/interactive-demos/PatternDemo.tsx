@@ -589,7 +589,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   
   // Use our stable flow hook instead of multiple hooks
   const { 
-    containerRef: flowContainerRef, 
+    containerRef: stableFlowContainerRef, 
     resetFlow, 
     fitView: fitViewFlow 
   } = useStableFlow({
@@ -600,7 +600,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   
   // Setup safe resize handling with improved monitoring
   useEffect(() => {
-    if (!flowContainerRef.current) return;
+    if (!stableFlowContainerRef.current) return;
     
     // Apply safer resize behavior once on mount, not on every render
     const resetTimeout = setTimeout(() => {
@@ -826,7 +826,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
           
           {/* Flow visualization with stabilized container */}
           <StableFlowContainer 
-            ref={flowContainerRef}
+            ref={stableFlowContainerRef}
             className="border border-border rounded-md overflow-hidden"
             style={{ height: '400px' }}
             fitViewOnResize={true}
