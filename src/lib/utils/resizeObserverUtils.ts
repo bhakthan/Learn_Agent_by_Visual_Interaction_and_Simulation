@@ -1,264 +1,161 @@
 /**
- * Setup error handling for ResizeObserver to prevent unhandled errors
+ * Utility functions for handling ResizeObserver-related errors and optimizations
+ */
+
+/**
+ * Sets up global error handling for ResizeObserver errors
  */
 export const setupResizeObserverErrorHandling = () => {
-  // Track errors to limit how often we apply fixes
-  const errorCounts = {
-    count: 0,
-    lastError: 0,
-    throttled: false,
-    recovering: false
-  };
-
-  // Store original ResizeObserver to restore it later if needed
-  const OriginalResizeObserver = window.ResizeObserver;
+  // Only run in browser environment
+  if (typeof window === 'undefined') return;
   
-  // Create handler for common ResizeObserver errors
-  const handleResizeObserverError = (msg: string) => {
-    // Track errors with throttling
-    const now = Date.now();
-    if (now - errorCounts.lastError > 5000) {
-      // Reset counter after 5 seconds
-      errorCounts.count = 0;
-    }
-    
-    errorCounts.count++;
-    errorCounts.lastError = now;
-    
-    // Apply fixes with progressive strategy based on error frequency
-    if (errorCounts.count > 2 && !errorCounts.throttled) {
-      errorCounts.throttled = true;
-      
-      // Apply immediate RAF for smoother handling
-      requestAnimationFrame(() => {
+  // Track error counts to apply adaptive solutions
+  let errorCount = 0;
+  let lastErrorTime = 0;
+  let recoveryInProgress = false;
+  
+  // Create a stable version of ResizeObserver that suppresses errors
+  const createStableResizeObserver = (callback: ResizeObserverCallback): ResizeObserver => {
+    try {
+      return new ResizeObserver((entries, observer) => {
         try {
-          // Disable any active ResizeObservers temporarily
-          if (errorCounts.count > 5 && !errorCounts.recovering) {
-            errorCounts.recovering = true;
-            
-            // Force stabilize ReactFlow components
-            document.querySelectorAll('.react-flow__viewport, .react-flow__container, .react-flow, [data-reactflow]').forEach(el => {
-              if (el instanceof HTMLElement) {
-                // Apply hardware acceleration and set explicit size
-                el.style.transform = 'translateZ(0)';
-                el.style.webkitBackfaceVisibility = 'hidden';
-                el.style.contain = 'layout paint';
-                
-                // Ensure elements have valid dimensions to prevent ResizeObserver loops
-                const parent = el.parentElement;
-                if (parent && parent.offsetHeight > 20 && (!el.style.height || el.offsetHeight < 20)) {
-                  el.style.height = `${parent.offsetHeight}px`;
-                } else if (!el.style.height || el.offsetHeight < 20) {
-                  el.style.height = '400px';
-                }
-              }
-            });
-            
-            // Force layout recalculation with minimal reflow
-            document.body.style.opacity = '0.99';
-            setTimeout(() => {
-              document.body.style.opacity = '1';
-              
-              // Reset recovery mode after delay
-              setTimeout(() => {
-                errorCounts.recovering = false;
-              }, 2000);
-            }, 50);
-          }
-          
-          // Reset throttling after delay
-          setTimeout(() => {
-            errorCounts.throttled = false;
-            errorCounts.count = Math.max(0, errorCounts.count - 2);
-          }, 2000);
+          callback(entries, observer);
         } catch (e) {
-          // Silent recovery with automatic reset
-          setTimeout(() => {
-            errorCounts.throttled = false;
-            errorCounts.recovering = false;
-          }, 3000);
+          console.error('Error in ResizeObserver callback:', e);
         }
       });
+    } catch (e) {
+      console.error('Error creating ResizeObserver:', e);
+      // Return a dummy observer if creation fails
+      return {
+        observe: () => {},
+        unobserve: () => {},
+        disconnect: () => {},
+      } as ResizeObserver;
     }
-    
-    // Return true to indicate we've handled the error
-    return true;
   };
   
-  // Override console.error to handle ResizeObserver errors
-  const originalError = console.error;
-  console.error = function(...args: any[]) {
-    // Check if this is a ResizeObserver error
-    if (args[0] && typeof args[0] === 'string' && (
-      args[0].includes('ResizeObserver loop') || 
-      args[0].includes('ResizeObserver was created') ||
-      args[0].includes('undelivered notifications') ||
-      args[0].includes('ResizeObserver completed') ||
-      args[0].includes('ResizeObserver')
-    )) {
-      return handleResizeObserverError(args[0]);
-    }
+  // Improved throttling function for resize events
+  const throttle = (fn: Function, delay: number) => {
+    let lastCall = 0;
+    let timeout: number | null = null;
     
-    // Pass through all other errors
-    return originalError.apply(console, args);
+    return (...args: any[]) => {
+      const now = Date.now();
+      
+      if (now - lastCall < delay) {
+        if (timeout) clearTimeout(timeout);
+        timeout = window.setTimeout(() => {
+          lastCall = now;
+          fn(...args);
+        }, delay);
+      } else {
+        lastCall = now;
+        fn(...args);
+      }
+    };
   };
   
-  // Add global error handler for uncaught errors with better matching
+  // Handle ResizeObserver errors specifically
+  const handleResizeObserverError = (e: Event | string) => {
+    const errorMsg = typeof e === 'string' ? e : (e as any).message || '';
+    
+    if (
+      errorMsg.includes('ResizeObserver') || 
+      errorMsg.includes('loop') ||
+      errorMsg.includes('undelivered notifications')
+    ) {
+      // Track errors for adaptive handling
+      const now = Date.now();
+      errorCount++;
+      
+      // If we're getting lots of errors in a short time, be more aggressive in recovery
+      if (now - lastErrorTime < 2000 && errorCount > 3 && !recoveryInProgress) {
+        recoveryInProgress = true;
+        
+        // Throttled recovery function
+        const stabilizeFlow = throttle(() => {
+          // Find and stabilize ReactFlow elements
+          document.querySelectorAll('.react-flow, .react-flow__container, .react-flow__viewport').forEach(el => {
+            if (el instanceof HTMLElement) {
+              // Apply stabilization techniques
+              el.style.transform = 'translateZ(0)';
+              el.style.backfaceVisibility = 'hidden';
+              
+              // Ensure elements have reasonable sizes
+              const parent = el.parentElement;
+              if (parent && parent.offsetHeight > 10 && (!el.style.height || el.offsetHeight < 10)) {
+                el.style.height = `${parent.offsetHeight}px`;
+              } else if (!el.style.height || el.offsetHeight < 10) {
+                el.style.height = '300px';
+              }
+            }
+          });
+          
+          // Reset recovery state after a delay
+          setTimeout(() => {
+            recoveryInProgress = false;
+            errorCount = Math.max(0, errorCount - 2);
+          }, 2000);
+        }, 500);
+        
+        // Apply stabilization
+        stabilizeFlow();
+      }
+      
+      lastErrorTime = now;
+      return true;
+    }
+    return false;
+  };
+  
+  // Intercept console errors
+  const originalConsoleError = console.error;
+  console.error = function(msg, ...args) {
+    if (typeof msg === 'string' && handleResizeObserverError(msg)) {
+      return; // Suppress error
+    }
+    
+    // Pass through other errors
+    return originalConsoleError.apply(console, [msg, ...args]);
+  };
+  
+  // Add global error event listener
   window.addEventListener('error', (e) => {
-    if (e.message && (
-      e.message.includes('ResizeObserver loop') || 
-      e.message.includes('ResizeObserver completed') ||
-      e.message.includes('undelivered notifications') ||
-      e.message.includes('ResizeObserver')
-    )) {
+    if (e.message && handleResizeObserverError(e.message)) {
       e.preventDefault();
       e.stopPropagation();
-      handleResizeObserverError(e.message);
       return false;
     }
   }, true);
 };
 
 /**
- * Creates a stable resize observer that won't crash with loop errors
+ * Disables problematic ResizeObserver instances if they're causing repeated errors
  */
-export const createStableResizeObserver = (callback: ResizeObserverCallback): ResizeObserver => {
-  let isHandlingResize = false;
-  let lastCallTime = 0;
-  const throttleTime = 150; // ms between calls
-  let pendingEntries: ResizeObserverEntry[] = [];
-  let rafId: number | null = null;
+export const disableResizeObserverIfProblematic = () => {
+  // Apply only in emergency situations - this is a last resort
+  const rfElements = document.querySelectorAll('.react-flow, [data-flow], .flow-container');
   
-  // Create wrapper callback with enhanced stability
-  const stableCallback: ResizeObserverCallback = (entries, observer) => {
-    const now = Date.now();
-    
-    // Store entries for throttled processing
-    pendingEntries = [...pendingEntries, ...entries];
-    
-    // Don't process if we're throttling or already handling
-    if (isHandlingResize || now - lastCallTime < throttleTime) {
-      if (!rafId) {
-        // Schedule processing
-        rafId = requestAnimationFrame(() => {
-          rafId = null;
-          processEntries();
-        });
-      }
-      return;
-    }
-    
-    processEntries();
-  };
-  
-  const processEntries = () => {
-    if (isHandlingResize || pendingEntries.length === 0) return;
-    
-    isHandlingResize = true;
-    lastCallTime = Date.now();
-    
-    try {
-      // Use the most recent entries and clear the queue
-      const entriesToProcess = pendingEntries;
-      pendingEntries = [];
+  rfElements.forEach(el => {
+    if (el instanceof HTMLElement) {
+      // Mark as having problematic observers
+      el.dataset.observerDisabled = 'true';
       
-      // Call the original callback
-      callback(entriesToProcess, observer);
-    } catch (err) {
-      console.warn('Error in ResizeObserver callback', err);
-    } finally {
-      // Reset handling flag with a small delay to prevent rapid recalculations
-      setTimeout(() => {
-        isHandlingResize = false;
-        
-        // If we have more entries waiting, process them
-        if (pendingEntries.length > 0) {
-          requestAnimationFrame(() => processEntries());
-        }
-      }, 100);
-    }
-  };
-  
-  // Create observer with our stabilized callback
-  const observer = new ResizeObserver(stableCallback);
-  
-  return observer;
-};
-
-/**
- * Utility to create a stable element resize handler with automatic cleanup
- */
-export const useStableResizeObserver = (
-  element: Element | null, 
-  handler: (entry: ResizeObserverEntry) => void,
-  options?: ResizeObserverOptions
-): () => void => {
-  if (!element) return () => {}; // No-op if no element
-  
-  // Create stable observer
-  const observer = createStableResizeObserver((entries) => {
-    // Only call handler for matching element
-    const entry = entries.find(e => e.target === element);
-    if (entry) {
-      handler(entry);
+      // Force stable dimensions
+      el.style.height = `${el.offsetHeight || 400}px`;
+      el.style.width = `${el.offsetWidth || 600}px`;
+      el.style.overflow = 'visible';
+      
+      // Apply containment optimizations
+      el.style.contain = 'layout size';
+      el.style.willChange = 'transform';
     }
   });
   
-  // Start observing
-  observer.observe(element, options);
-  
-  // Return disconnect function for cleanup
-  return () => observer.disconnect();
-};
-
-/**
- * Resets rendering for ReactFlow components to fix visual glitches
- */
-export const resetReactFlowRendering = (containerRef: React.RefObject<HTMLElement>) => {
-  if (!containerRef.current) return;
-  
-  // Use RAF for smoother handling
-  requestAnimationFrame(() => {
-    try {
-      const container = containerRef.current;
-      if (!container) return;
-      
-      // Temporarily force a reflow by toggling a style
-      container.style.transform = 'translateZ(0)';
-      
-      // Schedule style removal after reflow
-      requestAnimationFrame(() => {
-        // Trigger another reflow
-        container.style.opacity = '0.99';
-        
-        requestAnimationFrame(() => {
-          // Clean up
-          container.style.opacity = '';
-          
-          // Dispatch an event that can be listened for to handle post-render actions
-          container.dispatchEvent(new CustomEvent('flow-render-reset', { 
-            bubbles: true,
-            detail: { timestamp: Date.now() }
-          }));
-        });
-      });
-    } catch (e) {
-      // Silent recovery - don't break the app if this fails
-    }
-  });
-};
-
-/**
- * Additional utility to handle resize observer throttling
- */
-export const throttleResizeObserver = (callback: ResizeObserverCallback, delay = 100) => {
-  let lastCallTime = 0;
-  
-  return (entries: ResizeObserverEntry[], observer: ResizeObserver) => {
-    const now = Date.now();
-    if (now - lastCallTime < delay) return;
-    lastCallTime = now;
-    
-    callback(entries, observer);
-  };
+  // Force a reflow
+  document.body.style.opacity = '0.99';
+  setTimeout(() => {
+    document.body.style.opacity = '1';
+  }, 0);
 };

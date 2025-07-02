@@ -11,12 +11,13 @@ import ACPMCPComparison from "../interactive-demos/ACPMCPComparison"
 import Agent2AgentProtocolDemo from "../interactive-demos/Agent2AgentProtocolDemo"
 import Agent2AgentProtocolExplainer from "./Agent2AgentProtocolExplainer"
 import ConceptDetails from "./ConceptDetails"
-import { BookOpen, BookmarkSimple, ArrowsHorizontal, Palette } from "@phosphor-icons/react"
+import { BookOpen, BookmarkSimple, ArrowsHorizontal, Palette, MagicWand } from "@phosphor-icons/react"
 import ReferenceSection from "../references/ReferenceSection"
 import { TutorialButton } from "../tutorial/TutorialButton"
 import { useTutorialContext } from "../tutorial/TutorialProvider"
 import { conceptsExplorerTutorial } from "@/lib/tutorial"
 import CustomizableFlowDemo from "../visualization/CustomizableFlowDemo"
+import TransformSequenceDemo from "../visualization/TransformSequenceDemo"
 
 const ConceptsExplorer = () => {
   const [showDetails, setShowDetails] = useState({
@@ -51,12 +52,13 @@ const ConceptsExplorer = () => {
       </div>
 
       <Tabs defaultValue="agents" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="agents">AI Agents</TabsTrigger>
           <TabsTrigger value="a2a">Agent-to-Agent (A2A)</TabsTrigger>
           <TabsTrigger value="mcp">ModelContextProtocol (MCP)</TabsTrigger>
           <TabsTrigger value="acp">ACP</TabsTrigger>
           <TabsTrigger value="visualization">Flow Visualization</TabsTrigger>
+          <TabsTrigger value="transformation">Data Transformation</TabsTrigger>
         </TabsList>
         <TabsContent value="agents" className="space-y-6 pt-6">
           <Card>
@@ -512,6 +514,122 @@ const ConceptsExplorer = () => {
                     </li>
                   </ul>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="transformation" className="space-y-6 pt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MagicWand size={24} className="text-primary" weight="fill" />
+                Data Transformation Between Agents
+              </CardTitle>
+              <CardDescription>
+                Visualize how data is transformed as it flows between different agents and components
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-6">
+                As data moves between agents in a multi-agent system, it undergoes various transformations based on
+                the agent's role, capabilities, and the communication protocol. This interactive visualization 
+                demonstrates these transformations across different agent interaction patterns.
+              </p>
+            </CardContent>
+          </Card>
+          
+          <TransformSequenceDemo />
+          
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Data Transformation Types</CardTitle>
+              <CardDescription>Common transformations that occur between agents</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Input Transformations</h3>
+                  <ul className="space-y-2">
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-500 dark:text-blue-400">•</span> 
+                      <div>
+                        <span className="font-medium">Query Parsing:</span> 
+                        <span className="text-sm text-muted-foreground ml-2">Converting natural language to structured intent</span>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-500 dark:text-green-400">•</span> 
+                      <div>
+                        <span className="font-medium">Protocol Formatting:</span> 
+                        <span className="text-sm text-muted-foreground ml-2">Wrapping data in protocol-specific structures</span>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-amber-500 dark:text-amber-400">•</span> 
+                      <div>
+                        <span className="font-medium">Task Decomposition:</span> 
+                        <span className="text-sm text-muted-foreground ml-2">Breaking complex requests into subtasks</span>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Output Transformations</h3>
+                  <ul className="space-y-2">
+                    <li className="flex items-start gap-2">
+                      <span className="text-pink-500 dark:text-pink-400">•</span> 
+                      <div>
+                        <span className="font-medium">Result Synthesis:</span> 
+                        <span className="text-sm text-muted-foreground ml-2">Combining outputs from multiple sources</span>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-500 dark:text-emerald-400">•</span> 
+                      <div>
+                        <span className="font-medium">Format Conversion:</span> 
+                        <span className="text-sm text-muted-foreground ml-2">Changing data structure (JSON to text, etc.)</span>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-yellow-500 dark:text-yellow-400">•</span> 
+                      <div>
+                        <span className="font-medium">Summarization:</span> 
+                        <span className="text-sm text-muted-foreground ml-2">Condensing complex data into key points</span>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-500 dark:text-purple-400">•</span> 
+                      <div>
+                        <span className="font-medium">Enhancement:</span> 
+                        <span className="text-sm text-muted-foreground ml-2">Adding context, examples, or visualizations</span>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div className="mt-6 bg-muted p-4 rounded-md">
+                <h3 className="text-lg font-medium mb-2">Key Benefits of Data Transformation Visualization</h3>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">•</span> 
+                    <span>Improved understanding of how agents process and modify information</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">•</span> 
+                    <span>Debugging tool to identify where transformations may cause information loss</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">•</span> 
+                    <span>Design aid for planning complex agent interactions and workflows</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">•</span> 
+                    <span>Educational resource for understanding multi-agent systems</span>
+                  </li>
+                </ul>
               </div>
             </CardContent>
           </Card>

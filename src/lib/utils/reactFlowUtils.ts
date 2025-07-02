@@ -1,149 +1,79 @@
 /**
- * Utilities for ReactFlow error handling and performance optimization
+ * Utility functions for handling ReactFlow-specific errors and optimizations
  */
 
-import { monitorReactFlowErrors } from './monitorReactFlowErrors';
-import { throttleResizeObserver, resetReactFlowRendering } from './resizeObserverUtils';
-
 /**
- * Sets up error handling specifically for ReactFlow components
+ * Sets up global error handling specifically for ReactFlow components
  */
 export const setupReactFlowErrorHandling = () => {
-  // Skip if already initialized
-  if ((window as any).__reactFlowErrorHandlingInitialized) {
-    return;
-  }
-  
-  (window as any).__reactFlowErrorHandlingInitialized = true;
-  
-  // Replace ReactFlow's error handling with our own
-  document.addEventListener('DOMContentLoaded', () => {
+  // Only run in browser environment
+  if (typeof window === 'undefined') return;
+
+  // Set up stable references for ReactFlow's built-in classes
+  window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
-      patchReactFlowClasses();
-      monitorReactFlowPerformance();
-    }, 100);
-  });
-  
-  // Set up error handling for ResizeObserver issues in ReactFlow
-  monitorReactFlowErrors();
-  
-  // Listen for resize events to trigger React Flow stabilization
-  const handleResize = debounce(() => {
-    setTimeout(() => stabilizeAllReactFlows(), 100);
-  }, 200);
-  
-  window.addEventListener('resize', handleResize);
-  
-  // Listen for visibility changes that might cause layout issues
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
-      setTimeout(() => stabilizeAllReactFlows(), 300);
-    }
-  });
-  
-  // Return cleanup function
-  return () => {
-    window.removeEventListener('resize', handleResize);
-  };
-};
-
-/**
- * Debounce utility to prevent too many calls in rapid succession
- */
-const debounce = <F extends (...args: any[]) => any>(func: F, wait: number): ((...args: Parameters<F>) => void) => {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  
-  return function(...args: Parameters<F>) {
-    const context = this;
-    
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func.apply(context, args), wait);
-  };
-};
-
-/**
- * Attempt to patch ReactFlow's classes to improve stability
- */
-const patchReactFlowClasses = () => {
-  // Add classes to control hardware acceleration
-  document.querySelectorAll('.react-flow').forEach(el => {
-    if (el instanceof HTMLElement) {
-      // Apply hardware acceleration by default
-      el.classList.add('gpu-accelerated');
+      // Find ReactFlow elements
+      const rfElements = document.querySelectorAll('.react-flow');
       
-      // Set explicit styles
-      el.style.transform = 'translateZ(0)';
-      el.style.backfaceVisibility = 'hidden';
-      
-      // Ensure container has explicit height
-      if (!el.style.height || parseInt(el.style.height) < 20) {
-        const parent = el.parentElement;
-        if (parent && parent.offsetHeight > 20) {
-          el.style.height = `${parent.offsetHeight}px`;
-        } else {
-          el.style.height = '400px'; // Fallback size
-        }
-      }
-    }
-  });
-};
-
-/**
- * Optimize and stabilize all ReactFlow instances on the page
- */
-export const stabilizeAllReactFlows = () => {
-  document.querySelectorAll('.react-flow').forEach(el => {
-    if (el instanceof HTMLElement) {
-      const containerRef = { current: el };
-      resetReactFlowRendering(containerRef);
-    }
-  });
-  
-  // Dispatch custom event for components to listen for
-  window.dispatchEvent(new CustomEvent('reactflow-stabilized', {
-    detail: { timestamp: Date.now() }
-  }));
-};
-
-/**
- * Set up performance monitoring for ReactFlow
- */
-const monitorReactFlowPerformance = () => {
-  try {
-    // Use PerformanceObserver to monitor for long tasks
-    if ('PerformanceObserver' in window) {
-      const longTaskObserver = new PerformanceObserver((entryList) => {
-        for (const entry of entryList.getEntries()) {
-          // Look for particularly long tasks that might be causing jank
-          if (entry.duration > 150) { // 150ms is considered very slow
-            // Check if ReactFlow is being rendered during this time
-            const reactFlowElements = document.querySelectorAll('.react-flow:not([data-stabilized])');
-            
-            if (reactFlowElements.length > 0) {
-              // Mark as stabilized to prevent multiple fixes
-              reactFlowElements.forEach(el => {
-                if (el instanceof HTMLElement) {
-                  el.setAttribute('data-stabilized', 'true');
-                  
-                  // Apply aggressive optimizations
-                  const containerRef = { current: el };
-                  resetReactFlowRendering(containerRef);
-                  
-                  // Remove stabilized flag after a delay
-                  setTimeout(() => {
-                    el.removeAttribute('data-stabilized');
-                  }, 5000);
-                }
-              });
-            }
+      // Apply performance optimizations to ReactFlow elements
+      rfElements.forEach(el => {
+        if (el instanceof HTMLElement) {
+          // Force hardware acceleration
+          el.style.transform = 'translateZ(0)';
+          el.style.backfaceVisibility = 'hidden';
+          
+          // Ensure sensible minimums for dimensions
+          if (!el.style.height || parseInt(el.style.height) < 100) {
+            el.style.minHeight = '200px';
           }
+          
+          // Mark as optimized
+          el.dataset.optimized = 'true';
         }
       });
-      
-      // Start observing long tasks
-      longTaskObserver.observe({ type: 'longtask', buffered: true });
+    }, 500);
+  });
+  
+  // Special handler for ReactFlow errors
+  const originalConsoleWarn = console.warn;
+  console.warn = function(msg, ...args) {
+    // Suppress common ReactFlow warnings about pane ready
+    if (
+      typeof msg === 'string' && 
+      (msg.includes('react-flow') || msg.includes('React Flow')) &&
+      msg.includes('pane is not ready')
+    ) {
+      return; // Suppress warning
     }
-  } catch (e) {
-    // Silently handle errors - this is just optimization
-  }
+    
+    // Pass through all other warnings
+    return originalConsoleWarn.apply(console, [msg, ...args]);
+  };
+};
+
+/**
+ * Trigger a recalculation of ReactFlow viewport
+ * @param ref Ref to the ReactFlow container
+ */
+export const resetReactFlowRendering = (ref: React.RefObject<HTMLDivElement>) => {
+  if (!ref.current) return;
+  
+  // Force reflow
+  const container = ref.current;
+  const displayValue = container.style.display;
+  
+  // Apply minimal changes to force reflow
+  container.style.display = 'none';
+  setTimeout(() => {
+    container.style.display = displayValue;
+    
+    // Dispatch custom event that components can listen for
+    container.dispatchEvent(new CustomEvent('flow-rerender', { 
+      bubbles: true,
+      detail: { timestamp: Date.now() }
+    }));
+    
+    // Dispatch global resize event to trigger ReactFlow's internal resize handlers
+    window.dispatchEvent(new Event('resize'));
+  }, 10);
 };

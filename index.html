@@ -32,6 +32,30 @@
         .react-flow__edge-path {
             will-change: transform;
         }
+        
+        /* Enhanced visualization container for data transforms */
+        .transform-visualization {
+            position: relative;
+            overflow: hidden;
+            transform: translateZ(0);
+        }
+        
+        /* Transformation effects */
+        .transform-effect {
+            filter: drop-shadow(0 0 2px rgba(0, 120, 255, 0.5));
+            transition: all 0.3s ease;
+        }
+        
+        /* Ensure tooltips appear above SVG elements */
+        [role="tooltip"] {
+            z-index: 100;
+        }
+        
+        /* Ensure all flow nodes are visible with minimum dimensions */
+        .react-flow__node {
+            min-width: 50px;
+            min-height: 30px;
+        }
     </style>
     <script>
         // Initialize recovery variables 
