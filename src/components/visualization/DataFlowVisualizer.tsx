@@ -24,6 +24,7 @@ interface DataFlowVisualizerProps {
   getEdgePoints?: (edgeId: string) => { sourceX: number; sourceY: number; targetX: number; targetY: number } | null;
   onFlowComplete?: (flowId: string) => void;
   speed?: number; // Speed factor to control animation speed
+  colorMap?: Record<string, { color: string; fill?: string; strokeWidth?: number }>; // Custom colors for different flow types
 }
 
 
@@ -31,7 +32,14 @@ interface DataFlowVisualizerProps {
 /**
  * Component to visualize data flowing between nodes on the ReactFlow canvas
  */
-const DataFlowVisualizer = React.memo(({ flows, edges, getEdgePoints, onFlowComplete, speed = 1 }: DataFlowVisualizerProps) => {
+const DataFlowVisualizer = React.memo(({ 
+  flows, 
+  edges, 
+  getEdgePoints, 
+  onFlowComplete, 
+  speed = 1,
+  colorMap = {} 
+}: DataFlowVisualizerProps) => {
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
   const [activeFlows, setActiveFlows] = useState<DataFlow[]>([]);
@@ -104,11 +112,14 @@ const DataFlowVisualizer = React.memo(({ flows, edges, getEdgePoints, onFlowComp
     const typeParams = getNodeDataFlowParams(sourceNodeType);
     const flowStyle = getDataFlowAnimationStyle(flow.type, typeParams);
     
+    // Use custom color if provided in colorMap, otherwise use default
+    const customStyle = colorMap[flow.type];
+    
     // Create style object with needed properties for rendering
     const style = {
-      stroke: typeParams.stroke || flowStyle.color,
-      strokeWidth: typeParams.strokeWidth || 4,
-      fill: typeParams.fill || `${flowStyle.color}33`
+      stroke: customStyle?.color || typeParams.stroke || flowStyle.color,
+      strokeWidth: customStyle?.strokeWidth || typeParams.strokeWidth || 4,
+      fill: customStyle?.fill || typeParams.fill || `${flowStyle.color}33`
     };
     
     // Enhance visibility in dark mode
@@ -166,6 +177,7 @@ const DataFlowVisualizer = React.memo(({ flows, edges, getEdgePoints, onFlowComp
   if (prevProps.speed !== nextProps.speed) return false;
   if (prevProps.edges.length !== nextProps.edges.length) return false;
   if (prevProps.flows.length !== nextProps.flows.length) return false;
+  if (prevProps.colorMap !== nextProps.colorMap) return false;
   
   // Check if flows array has changed significantly
   const prevFlowIds = new Set(prevProps.flows.map(f => f.id));

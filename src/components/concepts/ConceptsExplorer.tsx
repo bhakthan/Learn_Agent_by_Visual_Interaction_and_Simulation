@@ -11,11 +11,12 @@ import ACPMCPComparison from "../interactive-demos/ACPMCPComparison"
 import Agent2AgentProtocolDemo from "../interactive-demos/Agent2AgentProtocolDemo"
 import Agent2AgentProtocolExplainer from "./Agent2AgentProtocolExplainer"
 import ConceptDetails from "./ConceptDetails"
-import { BookOpen, BookmarkSimple, ArrowsHorizontal } from "@phosphor-icons/react"
+import { BookOpen, BookmarkSimple, ArrowsHorizontal, Palette } from "@phosphor-icons/react"
 import ReferenceSection from "../references/ReferenceSection"
 import { TutorialButton } from "../tutorial/TutorialButton"
 import { useTutorialContext } from "../tutorial/TutorialProvider"
 import { conceptsExplorerTutorial } from "@/lib/tutorial"
+import CustomizableFlowDemo from "../visualization/CustomizableFlowDemo"
 
 const ConceptsExplorer = () => {
   const [showDetails, setShowDetails] = useState({
@@ -50,11 +51,12 @@ const ConceptsExplorer = () => {
       </div>
 
       <Tabs defaultValue="agents" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="agents">AI Agents</TabsTrigger>
           <TabsTrigger value="a2a">Agent-to-Agent (A2A)</TabsTrigger>
           <TabsTrigger value="mcp">ModelContextProtocol (MCP)</TabsTrigger>
           <TabsTrigger value="acp">ACP</TabsTrigger>
+          <TabsTrigger value="visualization">Flow Visualization</TabsTrigger>
         </TabsList>
         <TabsContent value="agents" className="space-y-6 pt-6">
           <Card>
@@ -412,6 +414,107 @@ const ConceptsExplorer = () => {
           </p>
           
           <ACPMCPComparison />
+        </TabsContent>
+        
+        <TabsContent value="visualization" className="space-y-6 pt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Palette size={24} className="text-primary" />
+                Customizable Flow Visualization
+              </CardTitle>
+              <CardDescription>
+                Customize and experiment with data flow visualization between agents
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-6">
+                Flow visualization helps understand the communication patterns between agents, tools, and other components.
+                This interactive demo allows you to customize colors for different message types and see how data flows
+                through the agent system in real-time.
+              </p>
+            </CardContent>
+          </Card>
+          
+          <CustomizableFlowDemo />
+          
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Understanding Flow Types</CardTitle>
+              <CardDescription>Different types of communication in agent systems</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Information Flow Types</h3>
+                  <ul className="space-y-2">
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-500 dark:text-blue-400">•</span> 
+                      <div>
+                        <span className="font-medium">Query:</span> 
+                        <span className="text-sm text-muted-foreground ml-2">Requests for information or action from user or agent</span>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-green-500 dark:text-green-400">•</span> 
+                      <div>
+                        <span className="font-medium">Response:</span> 
+                        <span className="text-sm text-muted-foreground ml-2">Information returned after processing a query</span>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-amber-500 dark:text-amber-400">•</span> 
+                      <div>
+                        <span className="font-medium">Tool Call:</span> 
+                        <span className="text-sm text-muted-foreground ml-2">Requests to external tools or APIs</span>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-500 dark:text-purple-400">•</span> 
+                      <div>
+                        <span className="font-medium">Observation:</span> 
+                        <span className="text-sm text-muted-foreground ml-2">Data collected from environment or tools</span>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Cognitive Flow Types</h3>
+                  <ul className="space-y-2">
+                    <li className="flex items-start gap-2">
+                      <span className="text-pink-500 dark:text-pink-400">•</span> 
+                      <div>
+                        <span className="font-medium">Reflection:</span> 
+                        <span className="text-sm text-muted-foreground ml-2">Agent's internal analysis and self-critique</span>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-500 dark:text-emerald-400">•</span> 
+                      <div>
+                        <span className="font-medium">Plan:</span> 
+                        <span className="text-sm text-muted-foreground ml-2">Strategic steps created by the agent</span>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-yellow-500 dark:text-yellow-400">•</span> 
+                      <div>
+                        <span className="font-medium">Data:</span> 
+                        <span className="text-sm text-muted-foreground ml-2">Raw information passed between components</span>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-500 dark:text-red-400">•</span> 
+                      <div>
+                        <span className="font-medium">Error:</span> 
+                        <span className="text-sm text-muted-foreground ml-2">Problems or exceptions during processing</span>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
