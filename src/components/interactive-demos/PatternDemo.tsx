@@ -276,15 +276,24 @@ const DragHint = React.memo(() => {
       }
     }, 300);
     
+    return () => {
+      clearTimeout(timer1);
+    };
+  }, []);
+  
+  // Separate effect for reactFlowInstance to avoid the reference before initialization error
+  useEffect(() => {
+    // Only run this effect when reactFlowInstance is available
+    if (!reactFlowInstance) return;
+    
     // Apply second stabilization after a delay
     const timer2 = setTimeout(() => {
-      if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
+      if (typeof reactFlowInstance.fitView === 'function') {
         reactFlowInstance.fitView({ padding: 0.2 });
       }
     }, 800);
     
     return () => {
-      clearTimeout(timer1);
       clearTimeout(timer2);
     };
   }, [reactFlowInstance]);
@@ -899,6 +908,7 @@ const DragHint = React.memo(() => {
             style={{ height: '400px' }}
             data-flow-container="true"
           >
+            <DragHint />
             <ReactFlowProvider>
               <MemoizedReactFlow
                 nodes={nodes}
