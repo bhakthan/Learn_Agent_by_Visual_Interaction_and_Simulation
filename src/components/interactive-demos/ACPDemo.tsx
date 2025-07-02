@@ -6,6 +6,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Play, ArrowsCounterClockwise } from "@phosphor-icons/react";
 import { setupSafeReactFlowResize, resetReactFlowRendering } from '@/lib/utils/visualizationUtils';
 
+// Import the StandardFlowVisualizer
+import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from '../visualization/StandardFlowVisualizer';
+
 // Visualization components
 import ReactFlow, {
   Background,
@@ -29,7 +32,23 @@ const ACPDemo = () => {
   const [isSimulationRunning, setIsSimulationRunning] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [flowMessages, setFlowMessages] = useState<StandardFlowMessage[]>([]);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  
+  // Function to convert messages to flow messages
+  const convertToFlowMessages = (messages: Message[], nodeMap: Record<string, string>) => {
+    return messages.map((msg, index) => ({
+      id: `flow-${msg.id}`,
+      edgeId: `${msg.from}-${msg.to}`,
+      source: nodeMap[msg.from] || msg.from,
+      target: nodeMap[msg.to] || msg.to,
+      content: msg.content,
+      type: 'message' as any,
+      progress: index / (messages.length - 1), // Progress from 0 to 1
+      label: msg.content.split('\n')[0],
+      complete: false
+    }));
+  };
   
   // Reference for flow containers
   const flowContainerRef1 = useRef<HTMLDivElement>(null);
@@ -326,9 +345,16 @@ const ACPDemo = () => {
       const messageSet = activeDemo === 'single' ? singleAgentMessages : multiAgentMessages;
       let step = 0;
       
+      // Define node mapping based on active demo
+      const nodeMap = activeDemo === 'single' 
+        ? { client: 'client', server: 'server' } 
+        : { client: 'client', server: 'server', agent1: 'agent1', agent2: 'agent2', agent3: 'agent3' };
+      
       interval = setInterval(() => {
         if (step < messageSet.length) {
           setMessages(prev => [...prev, messageSet[step]]);
+          // Update flow messages with current set of messages plus the new one
+          setFlowMessages(convertToFlowMessages([...messages, messageSet[step]], nodeMap));
           setCurrentStep(prev => prev + 1);
           step++;
         } else {
@@ -342,13 +368,14 @@ const ACPDemo = () => {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isSimulationRunning, activeDemo]);
+  }, [isSimulationRunning, activeDemo, messages]);
   
   // Reset the simulation
   const resetSimulation = () => {
     setIsSimulationRunning(false);
     setCurrentStep(0);
     setMessages([]);
+    setFlowMessages([]);
   };
 
   // Handle node click
@@ -404,21 +431,16 @@ const ACPDemo = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2 border rounded-md overflow-hidden h-[350px]" ref={flowContainerRef1}>
-              <ReactFlow
+              <StandardFlowVisualizerWithProvider
                 nodes={singleAgentNodes}
                 edges={singleAgentEdges}
+                flows={activeDemo === 'single' ? flowMessages : []}
                 onNodeClick={onNodeClick}
-                fitView
-                key="single-agent-flow"
-                onInit={(instance) => {
-                  if (flowContainerRef1.current) {
-                    setTimeout(() => instance.fitView(), 100);
-                  }
-                }}
-              >
-                <Background />
-                <Controls />
-              </ReactFlow>
+                autoFitView={true}
+                showLabels={true}
+                showControls={true}
+                className="h-full"
+              />
             </div>
             
             <div className="border rounded-md overflow-hidden">
@@ -515,20 +537,16 @@ const ACPDemo = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2 border rounded-md overflow-hidden h-[350px]" ref={flowContainerRef2}>
-              <ReactFlow
+              <StandardFlowVisualizerWithProvider
                 nodes={multiAgentNodes}
                 edges={multiAgentEdges}
+                flows={activeDemo === 'multi' ? flowMessages : []}
                 onNodeClick={onNodeClick}
-                fitView
-                onInit={(instance) => {
-                  if (flowContainerRef2.current) {
-                    setTimeout(() => instance.fitView(), 100);
-                  }
-                }}
-              >
-                <Background />
-                <Controls />
-              </ReactFlow>
+                autoFitView={true}
+                showLabels={true}
+                showControls={true}
+                className="h-full"
+              />
             </div>
             
             <div className="border rounded-md overflow-hidden">

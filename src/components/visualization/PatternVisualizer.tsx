@@ -38,6 +38,7 @@ import {
   setSpeedMultiplier
 } from '@/lib/utils/dataFlowUtils'
 import DataFlowVisualizer from './DataFlowVisualizer'
+import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from './StandardFlowVisualizer'
 import { useMemoizedCallback } from '@/lib/utils'
 import { useFlowContainer } from '@/lib/hooks'
 
@@ -586,41 +587,40 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
           )}
         </div>
         <div style={{ height: 400 }} ref={containerRef}>
-          <ReactFlow
+          <StandardFlowVisualizerWithProvider
             nodes={nodes}
             edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
+            flows={dataFlows.map(flow => ({
+              id: flow.id,
+              edgeId: flow.edgeId,
+              source: flow.source,
+              target: flow.target,
+              content: flow.content,
+              type: flow.type,
+              progress: flow.progress,
+              label: flow.label,
+              complete: flow.complete
+            }))}
+            onNodesChange={(updatedNodes) => setNodes(updatedNodes)}
+            onEdgesChange={(updatedEdges) => setEdges(updatedEdges)}
+            onFlowComplete={onFlowComplete}
+            animationSpeed={speedFactor}
+            showLabels={true}
+            showControls={true}
+            autoFitView={true}
             nodeTypes={nodeTypes}
-            fitView
-            onInit={onInit}
-            nodesDraggable={true}
-            nodesConnectable={false}
-            elementsSelectable={true}
-            key={`flow-${dimensions.width}-${dimensions.height}`}
-          >
-            <Background />
-            <Controls />
-            <MiniMap />
-            {/* NodeDragHint disabled to avoid pop-up message */}
-            <DataFlowVisualizer 
-              flows={dataFlows} 
-              edges={edges}
-              getEdgePoints={getEdgePoints}
-              onFlowComplete={onFlowComplete}
-              speed={speedFactor}
-            />
-            <Panel position="bottom-center">
-              <div className="bg-card p-2 rounded shadow-sm text-xs text-muted-foreground flex items-center gap-2">
-                <DotsSixVertical size={12} />
-                {isAnimating ? 
-                  animationState.mode === 'step-by-step' ? 
-                    `Step by step mode: ${animationState.step} steps completed` : 
-                    'Visualizing data flow between agents...' 
-                  : 'Click "Start Simulation" to see data flow between agents'}
-              </div>
-            </Panel>
-          </ReactFlow>
+            className="h-full"
+          />
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+            <div className="bg-card p-2 rounded shadow-sm text-xs text-muted-foreground flex items-center gap-2">
+              <DotsSixVertical size={12} />
+              {isAnimating ? 
+                animationState.mode === 'step-by-step' ? 
+                  `Step by step mode: ${animationState.step} steps completed` : 
+                  'Visualizing data flow between agents...' 
+                : 'Click "Start Simulation" to see data flow between agents'}
+            </div>
+          </div>
         </div>
         <div className="p-4 border-t border-border">
           <h4 className="font-medium mb-2">Best Suited For:</h4>

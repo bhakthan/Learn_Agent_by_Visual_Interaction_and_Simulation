@@ -32,6 +32,9 @@ import {
   MemoizedMiniMap
 } from '../visualization/MemoizedFlowComponents'
 
+// Import StandardFlowVisualizer
+import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from '../visualization/StandardFlowVisualizer'
+
 // Use custom hooks for improved stability 
 import { useFlowContainer } from '@/lib/hooks/useFlowContainer'
 import { useResizeObserver } from '@/lib/hooks/useResizeObserver'
@@ -803,27 +806,31 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
             className="border border-border rounded-md overflow-hidden"
             style={{ height: '400px' }}
           >
-            <ReactFlowProvider>
-              <MemoizedReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onNodeDragStop={onNodeDragStop}
-                nodeTypes={nodeTypes}
-                edgeTypes={edgeTypes}
-                fitView
-                panOnScroll
-                panOnDrag
-                zoomOnScroll
-                selectionOnDrag
-                nodesDraggable={true}
-                nodesConnectable={false}
-                elementsSelectable={true}
-                minZoom={0.5}
-                maxZoom={1.5}
-                defaultEdgeOptions={{
-                  type: 'custom', // Use our custom edge type with arrows
+            <StandardFlowVisualizerWithProvider
+              nodes={nodes}
+              edges={edges}
+              flows={dataFlows.map(flow => ({
+                id: flow.id,
+                edgeId: flow.edgeId,
+                source: flow.source,
+                target: flow.target,
+                content: flow.content,
+                type: flow.type,
+                progress: flow.progress,
+                label: flow.label,
+                complete: flow.complete
+              }))}
+              onNodesChange={(updatedNodes) => setNodes(updatedNodes)}
+              onEdgesChange={(updatedEdges) => setEdges(updatedEdges)}
+              onFlowComplete={onFlowComplete}
+              animationSpeed={animationSpeed || 1}
+              showLabels={true}
+              showControls={true}
+              autoFitView={true}
+              nodeTypes={nodeTypes}
+              className="h-full"
+            />
+          </div>
                   style: { 
                     strokeWidth: 2,
                     stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined 
@@ -841,12 +848,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                 <MemoizedDataFlowVisualizer 
                   flows={dataFlows} 
                   edges={edges}
-                  getEdgePoints={getEdgePoints}
-                  onFlowComplete={onFlowComplete}
-                  speed={animationSpeed || 1}
-                />
-              </MemoizedReactFlow>
-            </ReactFlowProvider>
+
           </div>
           
           {Object.keys(steps).length > 0 && (
