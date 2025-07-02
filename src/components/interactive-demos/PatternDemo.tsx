@@ -875,7 +875,6 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
                 edges={edges}
               />
             </StandardFlowVisualizerWithProvider>
-          </div>
           </StableFlowContainer>
           
           {Object.keys(steps).length > 0 && (
