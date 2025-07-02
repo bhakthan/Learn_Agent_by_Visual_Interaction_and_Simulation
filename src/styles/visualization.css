@@ -1,0 +1,255 @@
+/**
+ * Standardized visualization styles to ensure consistency across the application
+ */
+
+/* Enhanced node styling for consistency */
+.react-flow__node {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease, border-color 0.3s ease;
+  will-change: transform, filter;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Node type styling classes */
+.node-user,
+.node-input {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.7);
+}
+
+.node-agent {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.7);
+}
+
+.node-tool {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.7);
+}
+
+.node-reflection {
+  background-color: rgba(236, 72, 153, 0.1);
+  border-color: rgba(236, 72, 153, 0.7);
+}
+
+.node-environment,
+.node-output {
+  background-color: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.7);
+}
+
+.node-planner {
+  background-color: rgba(22, 163, 74, 0.1);
+  border-color: rgba(22, 163, 74, 0.7);
+}
+
+.node-evaluator {
+  background-color: rgba(234, 179, 8, 0.1);
+  border-color: rgba(234, 179, 8, 0.7);
+}
+
+/* Dark mode node styles */
+.dark .node-user,
+.dark .node-input {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+.dark .node-agent {
+  background-color: rgba(16, 185, 129, 0.2);
+}
+
+.dark .node-tool {
+  background-color: rgba(245, 158, 11, 0.2);
+}
+
+.dark .node-reflection {
+  background-color: rgba(236, 72, 153, 0.2);
+}
+
+.dark .node-environment,
+.dark .node-output {
+  background-color: rgba(139, 92, 246, 0.2);
+}
+
+.dark .node-planner {
+  background-color: rgba(22, 163, 74, 0.2);
+}
+
+.dark .node-evaluator {
+  background-color: rgba(234, 179, 8, 0.2);
+}
+
+/* Edge styling for consistency */
+.react-flow__edge-path {
+  transition: stroke 0.3s ease, stroke-width 0.3s ease;
+  stroke-linecap: round;
+}
+
+.react-flow__edge.animated .react-flow__edge-path {
+  stroke-dasharray: 5;
+  animation: dashdraw 1s linear infinite;
+}
+
+.react-flow__edge.edge-query .react-flow__edge-path {
+  stroke: rgba(59, 130, 246, 0.9);
+}
+
+.react-flow__edge.edge-response .react-flow__edge-path {
+  stroke: rgba(16, 185, 129, 0.9);
+}
+
+.react-flow__edge.edge-tool_call .react-flow__edge-path {
+  stroke: rgba(245, 158, 11, 0.9);
+}
+
+.react-flow__edge.edge-observation .react-flow__edge-path {
+  stroke: rgba(139, 92, 246, 0.9);
+}
+
+.react-flow__edge.edge-reflection .react-flow__edge-path {
+  stroke: rgba(236, 72, 153, 0.9);
+}
+
+.react-flow__edge.edge-plan .react-flow__edge-path {
+  stroke: rgba(22, 163, 74, 0.9);
+}
+
+.react-flow__edge.edge-message .react-flow__edge-path {
+  stroke: rgba(59, 130, 246, 0.9);
+}
+
+.react-flow__edge.edge-data .react-flow__edge-path {
+  stroke: rgba(234, 179, 8, 0.9);
+}
+
+.react-flow__edge.edge-error .react-flow__edge-path {
+  stroke: rgba(239, 68, 68, 0.9);
+}
+
+/* Flow animation */
+@keyframes dashdraw {
+  0% {
+    stroke-dashoffset: 10;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Handle styling based on node type */
+.handle-user,
+.handle-input {
+  background-color: rgba(59, 130, 246, 0.9);
+  border: 1px solid rgba(59, 130, 246, 0.9);
+}
+
+.handle-agent {
+  background-color: rgba(16, 185, 129, 0.9);
+  border: 1px solid rgba(16, 185, 129, 0.9);
+}
+
+.handle-tool {
+  background-color: rgba(245, 158, 11, 0.9);
+  border: 1px solid rgba(245, 158, 11, 0.9);
+}
+
+.handle-reflection {
+  background-color: rgba(236, 72, 153, 0.9);
+  border: 1px solid rgba(236, 72, 153, 0.9);
+}
+
+.handle-environment,
+.handle-output {
+  background-color: rgba(139, 92, 246, 0.9);
+  border: 1px solid rgba(139, 92, 246, 0.9);
+}
+
+.handle-planner {
+  background-color: rgba(22, 163, 74, 0.9);
+  border: 1px solid rgba(22, 163, 74, 0.9);
+}
+
+.handle-evaluator {
+  background-color: rgba(234, 179, 8, 0.9);
+  border: 1px solid rgba(234, 179, 8, 0.9);
+}
+
+/* Data flow animation effects */
+.data-flow-indicator {
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.2));
+}
+
+.dark .data-flow-indicator {
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+}
+
+/* Flow dots */
+.flow-dot {
+  transition: r 0.2s ease;
+}
+
+.flow-dot:hover {
+  r: 8;
+}
+
+/* Status indicators */
+.status-active,
+.status-processing {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 163, 127, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(16, 163, 127, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 163, 127, 0);
+  }
+}
+
+/* Data transform effects */
+.transform-effect {
+  filter: brightness(1.2) drop-shadow(0 0 4px rgba(59, 130, 246, 0.6));
+  transition: filter 0.3s ease;
+}
+
+.dark .transform-effect {
+  filter: brightness(1.5) drop-shadow(0 0 4px rgba(59, 130, 246, 0.8));
+}
+
+/* Ensure the react-flow canvas has a proper background */
+.react-flow {
+  background-color: var(--background);
+}
+
+/* Better contrast for edges in dark mode */
+.dark .react-flow__edge-path {
+  stroke-opacity: 0.8;
+  stroke-width: 1.5;
+}
+
+.dark .react-flow__controls {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+}
+
+.dark .react-flow__controls button {
+  background-color: var(--card);
+  color: var(--card-foreground);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Better visibility for node labels in dark mode */
+.dark .react-flow__node-default .react-flow__node-label {
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+/* Consistent font styling */
+.flow-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+}

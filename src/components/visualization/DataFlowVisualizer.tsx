@@ -3,6 +3,7 @@ import { Edge } from 'reactflow';
 import { motion } from 'framer-motion';
 import { getNodeDataFlowParams, getDataFlowAnimationStyle, simulatePatternFlow } from '@/lib/utils/dataFlowUtils';
 import { useTheme } from '@/components/theme/ThemeProvider';
+import { useVisualizationTheme } from '@/lib/utils/visualizationTheme';
 
 // Updated the interface with all required properties
 interface DataFlow {
@@ -40,8 +41,9 @@ const DataFlowVisualizer = React.memo(({
   speed = 1,
   colorMap = {} 
 }: DataFlowVisualizerProps) => {
-  // Get theme from the ThemeProvider context
-  const { theme, isDarkMode } = useTheme();
+  // Get theme from the ThemeProvider context and visualization theme
+  const { theme } = useTheme();
+  const { isDarkMode, getFlowStyle } = useVisualizationTheme();
   const [activeFlows, setActiveFlows] = useState<DataFlow[]>([]);
   
   // Update flow progress values
@@ -107,26 +109,24 @@ const DataFlowVisualizer = React.memo(({
     const x = sourceX + (targetX - sourceX) * flow.progress;
     const y = sourceY + (targetY - sourceY) * flow.progress;
     
-    // Get animation style based on flow type
-    const sourceNodeType = edge.sourceHandle ? edge.sourceHandle : 'default';
-    const typeParams = getNodeDataFlowParams(sourceNodeType);
-    const flowStyle = getDataFlowAnimationStyle(flow.type, typeParams);
+    // Get standardized style based on flow type
+    const flowStyleParams = getFlowStyle(flow.type);
     
     // Use custom color if provided in colorMap, otherwise use default
     const customStyle = colorMap[flow.type];
     
     // Create style object with needed properties for rendering
     const style = {
-      stroke: customStyle?.color || typeParams.stroke || flowStyle.color,
-      strokeWidth: customStyle?.strokeWidth || typeParams.strokeWidth || 4,
-      fill: customStyle?.fill || typeParams.fill || `${flowStyle.color}33`
+      stroke: customStyle?.color || flowStyleParams.color,
+      strokeWidth: customStyle?.strokeWidth || flowStyleParams.strokeWidth,
+      fill: customStyle?.fill || flowStyleParams.fill
     };
     
     // Enhance visibility in dark mode
-    const textColor = isDarkMode ? 'rgba(255, 255, 255, 0.95)' : style.stroke;
+    const textColor = flowStyleParams.textColor || (isDarkMode ? 'rgba(255, 255, 255, 0.95)' : style.stroke);
     const textStroke = isDarkMode ? 'rgba(0, 0, 0, 0.6)' : 'none';
     const dotFill = isDarkMode && flow.type !== 'error' ? 'rgba(255, 255, 255, 0.95)' : style.stroke;
-    const dotSize = style.strokeWidth * 1.5; // Make dots larger for better visibility
+    const dotSize = flowStyleParams.dotSize || 6;
     
     return (
       <motion.g 
@@ -139,7 +139,7 @@ const DataFlowVisualizer = React.memo(({
         <circle
           cx={x}
           cy={y}
-          r={dotSize || 4}
+          r={dotSize}
           fill={dotFill}
           stroke={style.stroke}
           strokeWidth={1}
@@ -165,7 +165,7 @@ const DataFlowVisualizer = React.memo(({
         )}
       </motion.g>
     );
-  }, [edges, getEdgePoints, isDarkMode]);
+  }, [edges, getEdgePoints, isDarkMode, getFlowStyle, colorMap]);
 
   return (
     <>

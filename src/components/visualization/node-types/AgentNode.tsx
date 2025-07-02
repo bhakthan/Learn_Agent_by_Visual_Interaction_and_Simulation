@@ -3,6 +3,7 @@ import { Handle, NodeProps, Position } from 'reactflow';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { cn } from '@/lib/utils';
+import { useVisualizationTheme, NodeType } from '@/lib/utils/visualizationTheme';
 
 interface AgentNodeData {
   label: string;
@@ -15,52 +16,21 @@ interface AgentNodeData {
  */
 export const AgentNode = memo(({ id, data, selected }: NodeProps<AgentNodeData>) => {
   const { theme } = useTheme();
-  const isDarkMode = theme === 'dark';
+  const { isDarkMode, getNodeStyle, animations } = useVisualizationTheme();
   
-  // Map node types to styles
+  // Map node types to styles using our standardized theme
   const getNodeStyles = useCallback((nodeType: string | undefined, status: string | null | undefined) => {
+    // Get standardized style for this node type
+    const nodeStyleParams = getNodeStyle(nodeType as NodeType || 'default');
+    
     // Default style
     let style = {
-      backgroundColor: 'var(--card)',
-      color: 'var(--card-foreground)',
-      borderColor: 'var(--border)',
+      backgroundColor: nodeStyleParams.backgroundColor,
+      color: nodeStyleParams.color,
+      borderColor: nodeStyleParams.borderColor,
       borderWidth: '1px',
       boxShadow: selected ? '0 0 0 2px var(--ring)' : 'none'
     };
-
-    // Node type specific styles
-    switch (nodeType) {
-      case 'user':
-        style.backgroundColor = isDarkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)';
-        style.borderColor = 'rgba(59, 130, 246, 0.7)';
-        break;
-      case 'agent':
-        style.backgroundColor = isDarkMode ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.1)';
-        style.borderColor = 'rgba(16, 185, 129, 0.7)';
-        break;
-      case 'tool':
-        style.backgroundColor = isDarkMode ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.1)';
-        style.borderColor = 'rgba(245, 158, 11, 0.7)';
-        break;
-      case 'reflection':
-        style.backgroundColor = isDarkMode ? 'rgba(236, 72, 153, 0.2)' : 'rgba(236, 72, 153, 0.1)';
-        style.borderColor = 'rgba(236, 72, 153, 0.7)';
-        break;
-      case 'environment':
-        style.backgroundColor = isDarkMode ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)';
-        style.borderColor = 'rgba(139, 92, 246, 0.7)';
-        break;
-      case 'planner':
-        style.backgroundColor = isDarkMode ? 'rgba(22, 163, 74, 0.2)' : 'rgba(22, 163, 74, 0.1)';
-        style.borderColor = 'rgba(22, 163, 74, 0.7)';
-        break;
-      case 'evaluator':
-        style.backgroundColor = isDarkMode ? 'rgba(234, 179, 8, 0.2)' : 'rgba(234, 179, 8, 0.1)';
-        style.borderColor = 'rgba(234, 179, 8, 0.7)';
-        break;
-      default:
-        // Default - no change from base style
-    }
     
     // Add status-specific styles
     if (status) {
@@ -84,56 +54,21 @@ export const AgentNode = memo(({ id, data, selected }: NodeProps<AgentNodeData>)
     }
     
     return style;
-  }, [isDarkMode, selected]);
+  }, [selected, getNodeStyle]);
   
   // Get appropriate handle styles based on node type
   const getHandleStyles = useCallback((nodeType: string | undefined) => {
+    // Get standardized style for this node type
+    const nodeStyleParams = getNodeStyle(nodeType as NodeType || 'default');
+    
     // Default handle style
-    let style = {
-      backgroundColor: 'var(--border)',
-      border: '1px solid var(--border)',
+    return {
+      backgroundColor: nodeStyleParams.handleColor,
+      border: `1px solid ${nodeStyleParams.handleColor}`,
       width: '8px',
       height: '8px'
     };
-    
-    // Node type specific styles
-    switch (nodeType) {
-      case 'user':
-        style.backgroundColor = 'rgba(59, 130, 246, 0.9)';
-        style.border = '1px solid rgba(59, 130, 246, 0.9)';
-        break;
-      case 'agent':
-        style.backgroundColor = 'rgba(16, 185, 129, 0.9)';
-        style.border = '1px solid rgba(16, 185, 129, 0.9)';
-        break;
-      case 'tool':
-        style.backgroundColor = 'rgba(245, 158, 11, 0.9)';
-        style.border = '1px solid rgba(245, 158, 11, 0.9)';
-        break;
-      case 'reflection':
-        style.backgroundColor = 'rgba(236, 72, 153, 0.9)';
-        style.border = '1px solid rgba(236, 72, 153, 0.9)';
-        break;
-      case 'environment':
-        style.backgroundColor = 'rgba(139, 92, 246, 0.9)';
-        style.border = '1px solid rgba(139, 92, 246, 0.9)';
-        break;
-      case 'planner':
-        style.backgroundColor = 'rgba(22, 163, 74, 0.9)';
-        style.border = '1px solid rgba(22, 163, 74, 0.9)';
-        break;
-      case 'evaluator':
-        style.backgroundColor = 'rgba(234, 179, 8, 0.9)';
-        style.border = '1px solid rgba(234, 179, 8, 0.9)';
-        break;
-      default:
-        // Default style for unknown types
-        style.backgroundColor = 'var(--muted)';
-        style.border = '1px solid var(--muted-foreground)';
-    }
-    
-    return style;
-  }, []);
+  }, [getNodeStyle]);
   
   const nodeStyles = getNodeStyles(data.nodeType, data.status);
   const handleStyles = getHandleStyles(data.nodeType);
@@ -151,9 +86,7 @@ export const AgentNode = memo(({ id, data, selected }: NodeProps<AgentNodeData>)
       animate={{
         boxShadow: nodeStyles.boxShadow
       }}
-      transition={{
-        duration: 0.3,
-      }}
+      transition={animations.smooth}
     >
       <Handle
         type="target"
@@ -183,7 +116,7 @@ export const AgentNode = memo(({ id, data, selected }: NodeProps<AgentNodeData>)
           )}
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+          transition={animations.spring}
         />
       )}
       
