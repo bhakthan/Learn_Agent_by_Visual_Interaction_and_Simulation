@@ -281,22 +281,8 @@ const DragHint = React.memo(() => {
     };
   }, []);
   
-  // Separate effect for reactFlowInstance to avoid the reference before initialization error
-  useEffect(() => {
-    // Only run this effect when reactFlowInstance is available
-    if (!reactFlowInstance) return;
-    
-    // Apply second stabilization after a delay
-    const timer2 = setTimeout(() => {
-      if (typeof reactFlowInstance.fitView === 'function') {
-        reactFlowInstance.fitView({ padding: 0.2 });
-      }
-    }, 800);
-    
-    return () => {
-      clearTimeout(timer2);
-    };
-  }, [reactFlowInstance]);
+  // Initialize reactFlowInstance first
+  // Moved below and will be used after its definition
   // Step controller for managing execution flow
   const stepControllerRef = useRef<StepController | null>(null);
   
@@ -661,6 +647,22 @@ const DragHint = React.memo(() => {
   
   // Exposed reactFlowInstance from useStableFlow hook
   const reactFlowInstance = useReactFlow();
+  
+  // Apply stabilization after reactFlowInstance is properly defined
+  useEffect(() => {
+    if (!reactFlowInstance) return;
+    
+    // Apply second stabilization after a delay
+    const timer2 = setTimeout(() => {
+      if (typeof reactFlowInstance.fitView === 'function') {
+        reactFlowInstance.fitView({ padding: 0.2 });
+      }
+    }, 800);
+    
+    return () => {
+      clearTimeout(timer2);
+    };
+  }, [reactFlowInstance]);
 
   // Use a different reference to trigger the resize safely
   const stableResetFlow = useCallback(() => {
