@@ -1,5 +1,5 @@
 import React from 'react';
-import { throttleResizeObserver } from './resizeObserverUtils';
+import { throttleResizeObserver } from './resizeObserverUtil';
 
 /**
  * Resets ReactFlow rendering to fix visual glitches and layout issues

@@ -1,37 +1,7 @@
 /**
  * Utility functions for handling ResizeObserver-related errors and optimizations
+ * Note: throttleResizeObserver has been moved to resizeObserverUtil.ts to avoid circular dependencies
  */
-
-/**
- * Throttles ResizeObserver callbacks to improve performance
- * @param callback ResizeObserver callback function
- * @param delay Throttle delay in ms
- */
-export const throttleResizeObserver = (callback: ResizeObserverCallback, delay: number = 100): ResizeObserverCallback => {
-  let timeout: number | null = null;
-  let queuedEntries: ResizeObserverEntry[] | null = null;
-  let queuedObserver: ResizeObserver | null = null;
-  
-  return (entries, observer) => {
-    queuedEntries = entries;
-    queuedObserver = observer;
-    
-    if (!timeout) {
-      timeout = window.setTimeout(() => {
-        if (queuedEntries && queuedObserver) {
-          try {
-            callback(queuedEntries, queuedObserver);
-          } catch (e) {
-            console.error('Error in throttled ResizeObserver callback:', e);
-          }
-        }
-        timeout = null;
-        queuedEntries = null;
-        queuedObserver = null;
-      }, delay);
-    }
-  };
-};
 
 /**
  * Creates a stable ResizeObserver that doesn't throw loop errors
@@ -163,32 +133,5 @@ export const setupResizeObserverErrorHandling = () => {
   }, true);
 };
 
-/**
- * Disables problematic ResizeObserver instances if they're causing repeated errors
- */
-export const disableResizeObserverIfProblematic = () => {
-  // Apply only in emergency situations - this is a last resort
-  const rfElements = document.querySelectorAll('.react-flow, [data-flow], .flow-container');
-  
-  rfElements.forEach(el => {
-    if (el instanceof HTMLElement) {
-      // Mark as having problematic observers
-      el.dataset.observerDisabled = 'true';
-      
-      // Force stable dimensions
-      el.style.height = `${el.offsetHeight || 400}px`;
-      el.style.width = `${el.offsetWidth || 600}px`;
-      el.style.overflow = 'visible';
-      
-      // Apply containment optimizations
-      el.style.contain = 'layout size';
-      el.style.willChange = 'transform';
-    }
-  });
-  
-  // Force a reflow
-  document.body.style.opacity = '0.99';
-  setTimeout(() => {
-    document.body.style.opacity = '1';
-  }, 0);
-};
+// Note: disableResizeObserverIfProblematic is imported from ./disableResizeObserver.ts
+// to prevent duplicate exports

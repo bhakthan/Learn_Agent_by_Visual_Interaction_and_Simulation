@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { throttleResizeObserver } from '../utils/resizeObserverUtils';
+import { throttleResizeObserver } from '../utils/resizeObserverUtil';
 
 /**
  * Hook for safely using ResizeObserver with enhanced stability

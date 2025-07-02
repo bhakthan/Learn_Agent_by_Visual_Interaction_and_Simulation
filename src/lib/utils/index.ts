@@ -26,6 +26,9 @@ import {
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
+// Import throttleResizeObserver from the specific util file to avoid circular dependencies
+import { throttleResizeObserver } from './resizeObserverUtil';
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -54,3 +57,6 @@ export {
   AlgorithmStep,
   AlgorithmVisualizationData
 };
+
+// Export throttleResizeObserver from the util file
+export { throttleResizeObserver };

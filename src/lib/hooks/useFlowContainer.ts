@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { throttleResizeObserver } from '../utils/resizeObserverUtils';
+import { throttleResizeObserver } from '../utils/resizeObserverUtil';
 
 /**
  * Hook for better handling of ReactFlow container resizing with enhanced stability

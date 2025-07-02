@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ReactFlowInstance } from 'reactflow';
 import { optimizeReactFlowContainer } from '../utils/optimizeReactFlow';
 import { resetReactFlowRendering } from '../utils/visualizationUtils';
-import { throttleResizeObserver } from '../utils/resizeObserverUtils';
+import { throttleResizeObserver } from '../utils/resizeObserverUtil';
 
 /**
  * Options for the useStableReactFlow hook
