@@ -116,9 +116,9 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
     const targetNode = nodes.find(n => n.id === edge.target);
     if (!sourceNode || !targetNode) return null;
     
-    // Get node positions and dimensions
-    const sourcePosition = reactFlowInstance.getNodePositionById(sourceNode.id) || sourceNode.position;
-    const targetPosition = reactFlowInstance.getNodePositionById(targetNode.id) || targetNode.position;
+    // Use direct node positions since getNodePositionById is not available
+    const sourcePosition = sourceNode.position;
+    const targetPosition = targetNode.position;
     
     // Get node dimensions
     const sourceWidth = (sourceNode as any).width || 150;
