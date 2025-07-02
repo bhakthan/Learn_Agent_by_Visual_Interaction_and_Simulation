@@ -206,6 +206,36 @@ const CustomDemoNode = React.memo(({ data, id }: { data: any, id: string }) => {
 });
 
 const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
+// Create a DragHint component that shows a helpful message when nodes are dragged
+const DragHint = React.memo(() => {
+  const [showDragHint, setShowDragHint] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowDragHint(false);
+    }, 6000); // Auto-hide after 6 seconds
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!showDragHint) return null;
+
+  return (
+    <div 
+      className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-background/90 border border-border px-4 py-2 rounded-full shadow-md z-10 animate-fade-in flex items-center"
+      style={{ backdropFilter: 'blur(4px)' }}
+    >
+      <div className="mr-2 text-primary">👆</div>
+      <div className="text-sm">Nodes are draggable! Try moving them around</div>
+      <button 
+        className="ml-2 text-muted-foreground hover:text-foreground"
+        onClick={() => setShowDragHint(false)}
+      >
+        ✕
+      </button>
+    </div>
+  );
+});
   // Ensure patternData exists to prevent errors
   if (!patternData) {
     return (
@@ -237,6 +267,27 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   const [animationSpeed, setAnimationSpeed] = useState<number>(1); // Default to normal speed (1x)
   const [animationMode, setAnimationMode] = useState<'auto' | 'step-by-step'>('auto'); 
 
+  // Apply additional stabilization on initial load
+  useEffect(() => {
+    // Apply initial stabilization
+    const timer1 = setTimeout(() => {
+      if (stableFlowContainerRef.current) {
+        stabilizeReactFlow(stableFlowContainerRef.current);
+      }
+    }, 300);
+    
+    // Apply second stabilization after a delay
+    const timer2 = setTimeout(() => {
+      if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
+        reactFlowInstance.fitView({ padding: 0.2 });
+      }
+    }, 800);
+    
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, [reactFlowInstance]);
   // Step controller for managing execution flow
   const stepControllerRef = useRef<StepController | null>(null);
   
@@ -356,6 +407,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     })));
   };
 
+  // Apply custom getEdgePoints function to work with MemoizedDataFlowVisualizer
   const getEdgePoints = useCallback((edgeId: string) => {
     if (!edges || !Array.isArray(edges) || !nodes || !Array.isArray(nodes)) return null;
     
@@ -598,18 +650,34 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     stabilizationDelay: 300
   });
   
+  // Exposed reactFlowInstance from useStableFlow hook
+  const reactFlowInstance = useReactFlow();
+
+  // Use a different reference to trigger the resize safely
+  const stableResetFlow = useCallback(() => {
+    // Check if reactFlowInstance is available
+    if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
+      reactFlowInstance.fitView({ padding: 0.2 });
+    }
+    
+    // Also use our stable reset as backup
+    if (resetFlow) {
+      resetFlow();
+    }
+  }, [reactFlowInstance, resetFlow]);
+  
   // Setup safe resize handling with improved monitoring
   useEffect(() => {
     if (!stableFlowContainerRef.current) return;
     
     // Apply safer resize behavior once on mount, not on every render
     const resetTimeout = setTimeout(() => {
-      resetFlow();
+      stableResetFlow();
     }, 1000);
     
     // Monitor for errors and re-trigger resize if needed
     const handleLayoutUpdate = () => {
-      requestAnimationFrame(resetFlow);
+      requestAnimationFrame(stableResetFlow);
     };
     
     // Listen for layout update events
@@ -619,7 +687,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       clearTimeout(resetTimeout);
       window.removeEventListener('layout-update', handleLayoutUpdate);
     };
-  }, [resetFlow]); // Only depend on resetFlow function
+  }, [stableResetFlow, stableFlowContainerRef]); // Only depend on stable functions
   
   // Add proper memoization to prevent frequent rerenders
   // We don't need memoizedEdges and memoizedNodes since useNodesState and useEdgesState already handle this
@@ -805,6 +873,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
               <Button 
                 size="sm"
                 variant={animationSpeed === 1 ? "default" : "outline"}
+                {/* Add the drag hint component */}
+                <DragHint />
                 onClick={() => setAnimationSpeed(1)}
                 disabled={isRunning && animationMode === 'auto'}
               >
@@ -825,57 +895,63 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
           </div>
           
           {/* Flow visualization with stabilized container */}
-          <StableFlowContainer 
+          <div 
             ref={stableFlowContainerRef}
-            className="border border-border rounded-md overflow-hidden"
+            className="border border-border rounded-md overflow-hidden relative"
             style={{ height: '400px' }}
-            fitViewOnResize={true}
-            onReady={() => {
-              // Trigger a delayed fit view
-              setTimeout(resetFlow, 200);
-            }}
+            data-flow-container="true"
           >
-            <StandardFlowVisualizerWithProvider
-              nodes={nodes}
-              edges={edges}
-              flows={dataFlows.map(flow => ({
-                id: flow.id,
-                edgeId: flow.edgeId,
-                source: flow.source,
-                target: flow.target,
-                content: flow.content,
-                type: flow.type,
-                progress: flow.progress,
-                label: flow.label,
-                complete: flow.complete
-              }))}
-              onNodesChange={(updatedNodes) => setNodes(updatedNodes)}
-              onEdgesChange={(updatedEdges) => setEdges(updatedEdges)}
-              onFlowComplete={onFlowComplete}
-              animationSpeed={animationSpeed || 1}
-              showLabels={true}
-              showControls={true}
-              autoFitView={true}
-              nodeTypes={nodeTypes}
-              className="h-full"
-              style={{ 
-                backgroundColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.2)' : 'transparent'
-              }}
-            >
-              <MemoizedBackground color={theme === 'dark' ? '#ffffff20' : '#aaa'} gap={16} />
-              <MemoizedControls className={theme === 'dark' ? 'dark-controls' : ''} />
-              <MemoizedMiniMap 
-                style={{ 
-                  backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.6)' : undefined,
-                  maskColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.7)' : undefined
-                }} 
-              />
-              <MemoizedDataFlowVisualizer 
-                flows={dataFlows} 
+            <ReactFlowProvider>
+              <MemoizedReactFlow
+                nodes={nodes}
                 edges={edges}
-              />
-            </StandardFlowVisualizerWithProvider>
-          </StableFlowContainer>
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
+                onNodeDragStop={onNodeDragStop}
+                fitView
+                minZoom={0.2}
+                maxZoom={2}
+                defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+                proOptions={{ hideAttribution: true }}
+                className="h-full"
+                onInit={(instance) => {
+                  // Safely schedule a fit view operation after render
+                  setTimeout(() => {
+                    if (instance && typeof instance.fitView === 'function') {
+                      instance.fitView({ padding: 0.2 });
+                    }
+                  }, 300);
+                }}
+              >
+                <MemoizedBackground 
+                  color={theme === 'dark' ? '#ffffff20' : '#aaa'} 
+                  gap={16} 
+                  style={{ 
+                    backgroundColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.1)' : 'transparent'
+                  }}
+                />
+                <MemoizedControls 
+                  className={theme === 'dark' ? 'dark-controls' : ''} 
+                />
+                <MemoizedMiniMap 
+                  style={{ 
+                    backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.6)' : undefined,
+                    maskColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.7)' : undefined
+                  }} 
+                />
+                <MemoizedDataFlowVisualizer 
+                  flows={dataFlows} 
+                  edges={edges}
+                  onFlowComplete={onFlowComplete}
+                  animationSpeed={animationSpeed || 1}
+                  getEdgePoints={getEdgePoints}
+                  speed={animationSpeed || 1}
+                />
+              </MemoizedReactFlow>
+            </ReactFlowProvider>
+          </div>
           
           {Object.keys(steps).length > 0 && (
             <>
