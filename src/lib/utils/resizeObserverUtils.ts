@@ -3,6 +3,60 @@
  */
 
 /**
+ * Throttles ResizeObserver callbacks to improve performance
+ * @param callback ResizeObserver callback function
+ * @param delay Throttle delay in ms
+ */
+export const throttleResizeObserver = (callback: ResizeObserverCallback, delay: number = 100): ResizeObserverCallback => {
+  let timeout: number | null = null;
+  let queuedEntries: ResizeObserverEntry[] | null = null;
+  let queuedObserver: ResizeObserver | null = null;
+  
+  return (entries, observer) => {
+    queuedEntries = entries;
+    queuedObserver = observer;
+    
+    if (!timeout) {
+      timeout = window.setTimeout(() => {
+        if (queuedEntries && queuedObserver) {
+          try {
+            callback(queuedEntries, queuedObserver);
+          } catch (e) {
+            console.error('Error in throttled ResizeObserver callback:', e);
+          }
+        }
+        timeout = null;
+        queuedEntries = null;
+        queuedObserver = null;
+      }, delay);
+    }
+  };
+};
+
+/**
+ * Creates a stable ResizeObserver that doesn't throw loop errors
+ */
+export const createStableResizeObserver = (callback: ResizeObserverCallback): ResizeObserver => {
+  try {
+    return new ResizeObserver((entries, observer) => {
+      try {
+        callback(entries, observer);
+      } catch (e) {
+        console.error('Error in ResizeObserver callback:', e);
+      }
+    });
+  } catch (e) {
+    console.error('Error creating ResizeObserver:', e);
+    // Return a dummy observer if creation fails
+    return {
+      observe: () => {},
+      unobserve: () => {},
+      disconnect: () => {},
+    } as ResizeObserver;
+  }
+};
+
+/**
  * Sets up global error handling for ResizeObserver errors
  */
 export const setupResizeObserverErrorHandling = () => {
@@ -13,27 +67,6 @@ export const setupResizeObserverErrorHandling = () => {
   let errorCount = 0;
   let lastErrorTime = 0;
   let recoveryInProgress = false;
-  
-  // Create a stable version of ResizeObserver that suppresses errors
-  const createStableResizeObserver = (callback: ResizeObserverCallback): ResizeObserver => {
-    try {
-      return new ResizeObserver((entries, observer) => {
-        try {
-          callback(entries, observer);
-        } catch (e) {
-          console.error('Error in ResizeObserver callback:', e);
-        }
-      });
-    } catch (e) {
-      console.error('Error creating ResizeObserver:', e);
-      // Return a dummy observer if creation fails
-      return {
-        observe: () => {},
-        unobserve: () => {},
-        disconnect: () => {},
-      } as ResizeObserver;
-    }
-  };
   
   // Improved throttling function for resize events
   const throttle = (fn: Function, delay: number) => {

@@ -104,7 +104,8 @@ export const createFlowContainerObserver = (
   };
   
   // Create ResizeObserver with our throttling utility
-  const observer = new ResizeObserver(throttleResizeObserver(() => processResize()));
+  const callback = throttleResizeObserver(() => processResize());
+  const observer = new ResizeObserver(callback);
   
   // Start observing
   observer.observe(containerRef.current);
