@@ -937,7 +937,7 @@ const FlowWithDataTransform = ({ scenario }: { scenario: DemoScenario }) => {
               size={1}
               className={cn(
                 "bg-background transition-all duration-300",
-                isDarkMode ? "bg-opacity-40" : "bg-opacity-100"
+                theme === "dark" ? "bg-opacity-40" : "bg-opacity-100"
               )}
             />
             <Controls className="bg-card border border-border text-foreground" />
