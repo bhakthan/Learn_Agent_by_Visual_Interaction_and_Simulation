@@ -19,6 +19,16 @@ import {
   getAlgorithmSpeedMultiplier
 } from './algorithmVisualization';
 
+// Import adaptive positioning utilities
+import {
+  calculateAdaptivePositions,
+  optimizeEdgePaths,
+  calculateOptimalViewport,
+  calculateOptimalZoom,
+  adaptLayoutToContainerSize,
+  AdaptiveLayoutManager
+} from './adaptiveNodePositioning';
+
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -48,6 +58,16 @@ export {
   AlgorithmStep,
   AlgorithmVisualizationData,
   getAlgorithmSpeedMultiplier
+};
+
+// Named exports from adaptiveNodePositioning
+export {
+  calculateAdaptivePositions,
+  optimizeEdgePaths,
+  calculateOptimalViewport,
+  calculateOptimalZoom,
+  adaptLayoutToContainerSize,
+  AdaptiveLayoutManager
 };
 
 // Export throttleResizeObserver from the util file

@@ -9,6 +9,8 @@ export { default as DataFlowVisualizer } from './DataFlowVisualizer';
 export { default as StandardFlowVisualizer } from './StandardFlowVisualizer';
 export { StableFlowContainer } from './StableFlowContainer';
 export { StableFlowProvider } from './StableFlowContainer';
+export { default as AdaptiveFlowContainer } from './AdaptiveFlowContainer';
+export { AdaptiveFlowProvider } from './AdaptiveFlowContainer';
 
 // Specialized visualization components
 export { default as PatternVisualizer } from './PatternVisualizer';

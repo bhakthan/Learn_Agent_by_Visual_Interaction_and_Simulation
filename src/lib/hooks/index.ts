@@ -1,6 +1,23 @@
-// Export all hooks from this barrel file for easier imports
+/**
+ * Hook exports for visualization components
+ */
 
-export { useFlowContainer } from './useFlowContainer';
-export { useResizeObserver } from './useResizeObserver';
-export { useStableResizeObserver } from './useStableResizeObserver';
-export { useTutorial } from './useTutorial';
+// Import hooks from their respective files
+import { useStableFlow } from './useStableFlow';
+import { useFlowContainer } from './useFlowContainer';
+import { useResizeObserver } from './useResizeObserver';
+import { useOptimizedReactFlow } from './useOptimizedReactFlow';
+import { useFlowColors } from './useFlowColors';
+import { useReactFlowMemo } from './useReactFlowMemo';
+import { useAdaptiveFlow } from './useAdaptiveFlow';
+
+// Export all hooks
+export {
+  useStableFlow,
+  useFlowContainer,
+  useResizeObserver,
+  useOptimizedReactFlow,
+  useFlowColors,
+  useReactFlowMemo,
+  useAdaptiveFlow
+};

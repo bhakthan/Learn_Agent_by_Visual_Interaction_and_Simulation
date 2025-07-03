@@ -1,36 +1,71 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import StandardFlowVisualizerWithProvider from '../visualization/StandardFlowVisualizer'
+import AdaptiveFlowProvider from '../visualization/AdaptiveFlowContainer'
 import { Button } from '@/components/ui/button'
-import { Play, Stop, ArrowsCounterClockwise } from '@phosphor-icons/react'
+import { Play, Stop, ArrowsCounterClockwise, ToggleRight } from '@phosphor-icons/react'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 
 // Simple test nodes
-const initialNodes = [
-  {
-    id: 'node1',
-    data: { label: 'User Input', nodeType: 'input' },
-    position: { x: 100, y: 100 },
-    type: 'agent',
-  },
-  {
-    id: 'node2',
-    data: { label: 'Agent', nodeType: 'llm' },
-    position: { x: 350, y: 100 },
-    type: 'agent',
-  },
-  {
-    id: 'node3',
-    data: { label: 'Tool', nodeType: 'tool' },
-    position: { x: 600, y: 100 },
-    type: 'agent',
-  },
-  {
-    id: 'node4',
-    data: { label: 'Response', nodeType: 'output' },
-    position: { x: 350, y: 250 },
-    type: 'agent',
+const getInitialNodes = (randomize = false) => {
+  if (!randomize) {
+    return [
+      {
+        id: 'node1',
+        data: { label: 'User Input', nodeType: 'input' },
+        position: { x: 100, y: 100 },
+        type: 'agent',
+      },
+      {
+        id: 'node2',
+        data: { label: 'Agent', nodeType: 'llm' },
+        position: { x: 350, y: 100 },
+        type: 'agent',
+      },
+      {
+        id: 'node3',
+        data: { label: 'Tool', nodeType: 'tool' },
+        position: { x: 600, y: 100 },
+        type: 'agent',
+      },
+      {
+        id: 'node4',
+        data: { label: 'Response', nodeType: 'output' },
+        position: { x: 350, y: 250 },
+        type: 'agent',
+      }
+    ];
+  } else {
+    // Return nodes with random positions
+    return [
+      {
+        id: 'node1',
+        data: { label: 'User Input', nodeType: 'input' },
+        position: { x: Math.random() * 500, y: Math.random() * 300 },
+        type: 'agent',
+      },
+      {
+        id: 'node2',
+        data: { label: 'Agent', nodeType: 'llm' },
+        position: { x: Math.random() * 500, y: Math.random() * 300 },
+        type: 'agent',
+      },
+      {
+        id: 'node3',
+        data: { label: 'Tool', nodeType: 'tool' },
+        position: { x: Math.random() * 500, y: Math.random() * 300 },
+        type: 'agent',
+      },
+      {
+        id: 'node4',
+        data: { label: 'Response', nodeType: 'output' },
+        position: { x: Math.random() * 500, y: Math.random() * 300 },
+        type: 'agent',
+      }
+    ];
   }
-];
+};
 
 // Simple test edges
 const initialEdges = [
@@ -43,6 +78,8 @@ const initialEdges = [
 const TestFlow = () => {
   const [isSimulating, setIsSimulating] = useState(false);
   const [flows, setFlows] = useState<any[]>([]);
+  const [useAdaptiveFlow, setUseAdaptiveFlow] = useState(true);
+  const [randomizePositions, setRandomizePositions] = useState(false);
   const simulationTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Reset flows and animation
@@ -53,6 +90,11 @@ const TestFlow = () => {
       clearTimeout(simulationTimer.current);
       simulationTimer.current = null;
     }
+  }, []);
+
+  // Randomize positions
+  const toggleRandomPositions = useCallback(() => {
+    setRandomizePositions(prev => !prev);
   }, []);
 
   // Start the simulation
@@ -141,59 +183,91 @@ const TestFlow = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Optimized Flow Visualization Test</CardTitle>
-        <p className="text-muted-foreground">Test the optimized flow visualization with stable rendering</p>
+        <CardTitle>Adaptive Flow Visualization Test</CardTitle>
+        <p className="text-muted-foreground">Test the optimized flow visualization with adaptive node positioning</p>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center gap-2 mb-4">
-          <Button
-            onClick={isSimulating ? resetSimulation : startSimulation}
-            disabled={isSimulating && !simulationTimer.current}
-          >
-            {isSimulating ? (
-              <>
-                <Stop className="mr-2" size={16} />
-                Stop
-              </>
-            ) : (
-              <>
-                <Play className="mr-2" size={16} />
-                Start Simulation
-              </>
-            )}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={resetSimulation}
-            disabled={!flows.length}
-          >
-            <ArrowsCounterClockwise className="mr-2" size={16} />
-            Reset
-          </Button>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={isSimulating ? resetSimulation : startSimulation}
+              disabled={isSimulating && !simulationTimer.current}
+            >
+              {isSimulating ? (
+                <>
+                  <Stop className="mr-2" size={16} />
+                  Stop
+                </>
+              ) : (
+                <>
+                  <Play className="mr-2" size={16} />
+                  Start Simulation
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={resetSimulation}
+              disabled={!flows.length}
+            >
+              <ArrowsCounterClockwise className="mr-2" size={16} />
+              Reset
+            </Button>
+            <Button
+              variant="outline"
+              onClick={toggleRandomPositions}
+            >
+              <ToggleRight className="mr-2" size={16} />
+              {randomizePositions ? 'Use Ordered Layout' : 'Randomize Positions'}
+            </Button>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="use-adaptive"
+                checked={useAdaptiveFlow}
+                onCheckedChange={setUseAdaptiveFlow}
+              />
+              <Label htmlFor="use-adaptive">Use Adaptive Flow</Label>
+            </div>
+          </div>
         </div>
         
-        <div style={{ height: 400 }} className="optimized-flow-container">
-          <StandardFlowVisualizerWithProvider
-            nodes={initialNodes}
-            edges={initialEdges}
-            flows={flows}
-            onFlowComplete={handleFlowComplete}
-            animationSpeed={1}
-            showLabels={true}
-            showControls={true}
-            autoFitView={true}
-            className="h-full w-full"
-          />
+        <div style={{ height: 400 }} className="optimized-flow-container border rounded-md">
+          {useAdaptiveFlow ? (
+            <AdaptiveFlowProvider
+              nodes={getInitialNodes(randomizePositions)}
+              edges={initialEdges}
+              fitViewOnInit={true}
+              fitViewOnResize={true}
+              minHeight="400px"
+              style={{ height: "400px" }}
+            />
+          ) : (
+            <StandardFlowVisualizerWithProvider
+              nodes={getInitialNodes(randomizePositions)}
+              edges={initialEdges}
+              flows={flows}
+              onFlowComplete={handleFlowComplete}
+              animationSpeed={1}
+              showLabels={true}
+              showControls={true}
+              autoFitView={true}
+              className="h-full w-full"
+            />
+          )}
         </div>
         
         <div className="mt-4 p-4 border rounded-md bg-muted/30">
-          <h3 className="font-medium mb-2">Flow Visualizer Features</h3>
+          <h3 className="font-medium mb-2">Adaptive Flow Container Features</h3>
           <ul className="list-disc ml-6 space-y-1 text-sm">
-            <li>Hardware-accelerated rendering for smooth animations</li>
-            <li>Built-in error prevention for ResizeObserver issues</li>
-            <li>Optimized rendering that preserves node and edge visibility</li>
-            <li>Consistent flow animations across all visualizations</li>
-            <li>Dark/Light mode support with optimized contrast</li>
+            <li>Automatically optimizes node positions to prevent layout shifts</li>
+            <li>Adapts layout to container size changes without jumps or glitches</li>
+            <li>Properly handles window resize events with adaptive positioning</li>
+            <li>Prevents ResizeObserver loop errors with enhanced error handling</li>
+            <li>Maintains optimal view of all nodes regardless of viewport size</li>
+            <li>Hardware-accelerated rendering with visual stability enhancements</li>
           </ul>
         </div>
       </CardContent>
