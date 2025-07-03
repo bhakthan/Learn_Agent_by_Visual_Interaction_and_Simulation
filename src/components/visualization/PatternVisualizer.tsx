@@ -29,7 +29,8 @@ import {
   createDataFlow,
   getSpeedMultiplier
 } from '@/lib/utils/dataFlowUtils'
-import { processNodes, processEdges, normalizeFlowMessage } from '@/lib/utils/visualizationUtils'
+import visualizationUtils from '@/lib/utils/visualizationUtils'
+const { processNodes, processEdges, normalizeFlowMessage } = visualizationUtils
 import DataFlowVisualizer from './DataFlowVisualizer'
 import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from './StandardFlowVisualizer'
 import { useMemoizedCallback } from '@/lib/utils'

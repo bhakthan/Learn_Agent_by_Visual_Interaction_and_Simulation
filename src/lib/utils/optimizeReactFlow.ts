@@ -3,7 +3,7 @@
  * Combines all optimization techniques in one place
  */
 
-import { setupReactFlowErrorHandling } from './reactFlowUtils';
+import { setupReactFlowErrorHandling } from './reactFlowFixUtils';
 import { setupResizeObserverErrorHandling } from './resizeObserverUtils';
 import { monitorReactFlowErrors } from './monitorReactFlowErrors';
 import { disableResizeObserverIfProblematic } from './disableResizeObserver';

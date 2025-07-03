@@ -3,6 +3,50 @@
  */
 
 import { Node, Edge } from 'reactflow';
+import { useEffect } from 'react';
+
+/**
+ * Set up global error handling for ReactFlow
+ * This helps suppress common ReactFlow errors and prevents them from breaking the app
+ */
+export function setupReactFlowErrorHandling() {
+  // Set up error handler for ResizeObserver errors
+  const errorHandler = (event: ErrorEvent) => {
+    if (
+      event.message &&
+      (event.message.includes('ResizeObserver') ||
+      event.message.includes('react-flow') ||
+      event.message.includes('ReactFlow'))
+    ) {
+      // Prevent the error from propagating
+      event.preventDefault();
+      event.stopPropagation();
+      return false;
+    }
+  };
+
+  // Apply the handler when called
+  useEffect(() => {
+    window.addEventListener('error', errorHandler, true);
+    
+    // Periodically check for invisible nodes and make them visible
+    const intervalId = setInterval(() => {
+      document.querySelectorAll('.react-flow__node').forEach((node) => {
+        if (node instanceof HTMLElement) {
+          if (node.style.visibility !== 'visible' || node.style.opacity !== '1') {
+            node.style.visibility = 'visible';
+            node.style.opacity = '1';
+          }
+        }
+      });
+    }, 1000);
+    
+    return () => {
+      window.removeEventListener('error', errorHandler, true);
+      clearInterval(intervalId);
+    };
+  }, []);
+}
 
 /**
  * Force all nodes to be visible
@@ -122,5 +166,6 @@ export default {
   forceNodesVisible,
   forceEdgesVisible,
   fixReactFlowRendering,
-  resetReactFlowRendering
+  resetReactFlowRendering,
+  setupReactFlowErrorHandling
 };

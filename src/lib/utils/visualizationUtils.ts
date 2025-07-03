@@ -264,5 +264,8 @@ export default {
   resetReactFlowRendering,
   useStableFlow,
   applyEdgeAnimations,
-  applyNodeStyling
+  applyNodeStyling,
+  processNodes,
+  processEdges,
+  normalizeFlowMessage
 };
