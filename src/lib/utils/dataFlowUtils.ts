@@ -185,12 +185,16 @@ export const truncateFlowContent = (content: string, maxLength: number = 30): st
  * Simulates a pattern flow with specific messages
  */
 export const simulatePatternFlow = (
-  pattern: string,
+  nodes: any[],
+  edges: any[],
+  onNodeStatus: (nodeId: string, status: string | null) => void,
+  onEdgeStatus: (edgeId: string, animated: boolean) => void,
   onAddFlow: (flow: BaseDataFlow) => void,
-  onUpdateNodeStatus: (nodeId: string, status: string) => void,
-  speed: number = 1
+  userQuery?: string,
+  onAddStep?: (stepFn: () => void) => (NodeJS.Timeout | null),
+  speedFactor: number = 1
 ) => {
-  const timeouts: NodeJS.Timeout[] = [];
+  const timeouts: (NodeJS.Timeout | null)[] = [];
   
   // Function to create a flow
   const createFlow = (
@@ -206,7 +210,7 @@ export const simulatePatternFlow = (
     
     // Get source node ready
     const sourceTimeout = setTimeout(() => {
-      onUpdateNodeStatus(source, 'active');
+      onNodeStatus(source, 'active');
     }, delay);
     timeouts.push(sourceTimeout);
     
@@ -228,8 +232,8 @@ export const simulatePatternFlow = (
       
       // Activate target node after flow completes
       const targetTimeout = setTimeout(() => {
-        onUpdateNodeStatus(target, 'active');
-      }, 2000 / speed);
+        onNodeStatus(target, 'active');
+      }, 2000 / speedFactor);
       timeouts.push(targetTimeout);
       
     }, delay + 200);
@@ -237,14 +241,17 @@ export const simulatePatternFlow = (
   };
   
   // Reset all flows and timeouts
-  const resetDataFlow = () => {
-    timeouts.forEach(clearTimeout);
+  const cleanup = () => {
+    timeouts.forEach(timeout => {
+      if (timeout) clearTimeout(timeout);
+    });
   };
   
   // Return flow control functions
   return {
     createDataFlow: createFlow,
-    resetDataFlow
+    resetDataFlow: cleanup,
+    cleanup
   };
 };
 

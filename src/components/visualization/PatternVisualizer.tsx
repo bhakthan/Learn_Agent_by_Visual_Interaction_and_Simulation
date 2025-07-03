@@ -36,6 +36,7 @@ import DataFlowVisualizer from './DataFlowVisualizer'
 import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from './StandardFlowVisualizer'
 import { useMemoizedCallback } from '@/lib/utils'
 import { useTheme } from '@/components/theme/ThemeProvider'
+import { useFlowContainer } from '@/lib/utils/flows/StableFlowUtils'
 
 interface PatternVisualizerProps {
   patternData: PatternData
@@ -232,8 +233,8 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     stepQueueRef.current = [];
     
     // Reset all nodes (remove active state and status)
+    const { theme } = useTheme();
     setNodes(currentNodes => {
-      const { theme } = useTheme();
       return processNodes(
         currentNodes.map(node => ({
           ...node,
