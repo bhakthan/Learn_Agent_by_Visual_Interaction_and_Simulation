@@ -1,13 +1,13 @@
 // Test importing dataFlowUtils directly (not through index)
 import { 
   simulatePatternFlow, 
-  FlowMessage, 
-  DataFlowState, 
-  DataFlow, 
+  BaseDataFlow, 
+  DataFlowType, 
   getDataFlowAnimationStyle, 
   createDataFlow, 
   resetDataFlow, 
-  getSpeedMultiplier 
+  getSpeedMultiplier,
+  setSpeedMultiplier
 } from '@/lib/utils/dataFlowUtils';
 
 console.log("Import test successful!");

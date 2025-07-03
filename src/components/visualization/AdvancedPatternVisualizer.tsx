@@ -23,7 +23,7 @@ import {
 } from '@phosphor-icons/react'
 import NodeDragHint from './NodeDragHint'
 // Import necessary functions from dataFlowUtils
-import { simulatePatternFlow, DataFlowMessage, DataFlowType, getDataFlowAnimationStyle, resetDataFlow } from '@/lib/utils/dataFlowUtils'
+import { simulatePatternFlow, BaseDataFlow as DataFlowMessage, DataFlowType, getDataFlowAnimationStyle, resetDataFlow } from '@/lib/utils/dataFlowUtils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import EnhancedDataFlowVisualizer from './EnhancedDataFlowVisualizer'
 import DataFlowControls, { DataFlowFilter } from './DataFlowControls'

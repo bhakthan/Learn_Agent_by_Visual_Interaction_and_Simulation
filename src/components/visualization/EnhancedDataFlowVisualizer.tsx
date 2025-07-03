@@ -1,23 +1,14 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { Edge, Node } from 'reactflow';
 import { motion } from 'framer-motion';
-import * as dataFlowUtils from '@/lib/utils/dataFlowUtils';
+import { getDataFlowAnimationStyle, BaseDataFlow, DataFlowType, getNodeDataFlowParams } from '@/lib/utils/dataFlowUtils';
 import { DataFlowFilter } from './DataFlowControls';
 import { Button } from '@/components/ui/button';
 import { ChartLine } from '@phosphor-icons/react';
 import { useTheme } from '@/components/theme/ThemeProvider';
 
-// Using the same DataFlow interface as the base component
-interface DataFlow {
-  id: string;
-  edgeId: string;
-  source: string;
-  target: string;
-  content: string;
-  timestamp: number;
-  type: 'query' | 'response' | 'tool_call' | 'observation' | 'reflection' | 'plan' | 'message' | 'data' | 'error';
-  progress: number;
-  label?: string;
+// Use the BaseDataFlow interface from dataFlowUtils
+type DataFlow = BaseDataFlow & {
   complete?: boolean;
 }
 
@@ -179,8 +170,8 @@ const EnhancedDataFlowVisualizer = ({
     
     // Get animation style based on flow type
     const sourceNodeType = edge.sourceHandle ? edge.sourceHandle : 'default';
-    const typeParams = dataFlowUtils.getNodeDataFlowParams(sourceNodeType);
-    const flowStyle = dataFlowUtils.getDataFlowAnimationStyle(flow.type, typeParams);
+    const typeParams = getNodeDataFlowParams(sourceNodeType);
+    const flowStyle = getDataFlowAnimationStyle(flow.type, typeParams);
     
     // Create style object with needed properties for rendering
     const style = {
@@ -250,8 +241,8 @@ const EnhancedDataFlowVisualizer = ({
     
     // Get animation style based on flow type
     const sourceNodeType = edge.sourceHandle ? edge.sourceHandle : 'default';
-    const typeParams = dataFlowUtils.getNodeDataFlowParams(sourceNodeType);
-    const flowStyle = dataFlowUtils.getDataFlowAnimationStyle(flow.type, typeParams);
+    const typeParams = getNodeDataFlowParams(sourceNodeType);
+    const flowStyle = getDataFlowAnimationStyle(flow.type, typeParams);
     
     // Create style object with needed properties for rendering
     const style = {
@@ -341,8 +332,8 @@ const EnhancedDataFlowVisualizer = ({
                 const targetNode = nodes.find(n => n.id === flow.target);
                 
                 // Get style based on flow type
-                const typeParams = dataFlowUtils.getNodeDataFlowParams('default');
-                const flowStyle = dataFlowUtils.getDataFlowAnimationStyle(flow.type, typeParams);
+                const typeParams = getNodeDataFlowParams('default');
+                const flowStyle = getDataFlowAnimationStyle(flow.type, typeParams);
                 
                 // Create style object with needed properties for rendering
                 const style = {

@@ -284,7 +284,8 @@ print(result)`,
 /**
  * Calculate speed multiplier based on animation settings
  */
-export function getSpeedMultiplier(speed: 'slow' | 'normal' | 'fast' | number): number {
+// Get animation speed multiplier with a different name to avoid conflicts
+export function getAlgorithmSpeedMultiplier(speed: 'slow' | 'normal' | 'fast' | number): number {
   if (typeof speed === 'number') {
     return speed;
   }

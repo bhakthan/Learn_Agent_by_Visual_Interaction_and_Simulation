@@ -79,7 +79,8 @@ export const createDataFlow = (
 /**
  * Get speed multiplier based on speed setting
  */
-export const getSpeedMultiplier = (speed: 'slow' | 'normal' | 'fast'): number => {
+// Use a different name to avoid conflicts
+export const getFixedSpeedMultiplier = (speed: 'slow' | 'normal' | 'fast'): number => {
   switch (speed) {
     case 'slow': return 0.5;
     case 'fast': return 2;
@@ -281,7 +282,7 @@ export const simulatePatternFlow = (
 ) => {
   const timeouts: (number | null)[] = [];
   let cancelled = false;
-  const speedMultiplier = getSpeedMultiplier(speedSetting);
+  const speedMultiplier = getFixedSpeedMultiplier(speedSetting);
   let currentTime = 0;
   
   // Find nodes and edges in the simulation

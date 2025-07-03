@@ -1,26 +1,22 @@
 // Import and re-export from dataFlowUtils
 import {
   simulatePatternFlow,
-  FlowMessage,
-  DataFlowState,
-  DataFlow,
+  BaseDataFlow,
+  DataFlowType,
   getDataFlowAnimationStyle,
   createDataFlow,
   resetDataFlow,
   getSpeedMultiplier,
-  initialDataFlowState,
-  getVisibleMessages,
-  calculateActiveElements,
-  getLatestMessages,
-  truncateFlowContent,
-  generateSampleFlowData,
-  getNodeDataFlowParams
+  setSpeedMultiplier,
+  getNodeDataFlowParams,
+  truncateFlowContent
 } from './dataFlowUtils';
 
 // Import and re-export from algorithmVisualization
 import {
   AlgorithmStep,
-  AlgorithmVisualizationData
+  AlgorithmVisualizationData,
+  getAlgorithmSpeedMultiplier
 } from './algorithmVisualization';
 
 import { type ClassValue, clsx } from "clsx"
@@ -36,26 +32,22 @@ export function cn(...inputs: ClassValue[]) {
 // Named exports from dataFlowUtils
 export {
   simulatePatternFlow,
-  FlowMessage,
-  DataFlowState,
-  DataFlow,
+  BaseDataFlow,
+  DataFlowType,
   getDataFlowAnimationStyle,
   createDataFlow,
   resetDataFlow,
   getSpeedMultiplier,
-  initialDataFlowState,
-  getVisibleMessages,
-  calculateActiveElements,
-  getLatestMessages,
+  setSpeedMultiplier,
   truncateFlowContent,
-  generateSampleFlowData,
   getNodeDataFlowParams
 };
 
 // Named exports from algorithmVisualization
 export {
   AlgorithmStep,
-  AlgorithmVisualizationData
+  AlgorithmVisualizationData,
+  getAlgorithmSpeedMultiplier
 };
 
 // Export throttleResizeObserver from the util file

@@ -238,8 +238,7 @@ export const simulatePatternFlow = (
   // Return flow control functions
   return {
     createDataFlow: createFlow,
-    resetDataFlow,
-    getSpeedMultiplier
+    resetDataFlow
   };
 };
 
@@ -247,7 +246,7 @@ export const simulatePatternFlow = (
 // These are already exported where they're defined
 
 // Helper to create a flow
-function createDataFlow(
+export function createDataFlow(
   source: string,
   target: string,
   content: string,
@@ -273,6 +272,12 @@ function createDataFlow(
 }
 
 // Helper to reset data flows
-function resetDataFlow(timeouts: NodeJS.Timeout[]) {
+export function resetDataFlow(timeouts: NodeJS.Timeout[]) {
   timeouts.forEach(clearTimeout);
+}
+
+// Add setSpeedMultiplier function that may be needed by components
+export function setSpeedMultiplier(speed: number | string): number {
+  // Simply use the existing getSpeedMultiplier function
+  return getSpeedMultiplier(speed);
 }

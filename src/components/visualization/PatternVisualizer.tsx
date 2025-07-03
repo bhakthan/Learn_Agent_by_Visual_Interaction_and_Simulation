@@ -29,13 +29,14 @@ import NodeDragHint from './NodeDragHint'
 // Import necessary functions from dataFlowUtils
 import { 
   simulatePatternFlow, 
-  DataFlowMessage,
   DataFlowType,
+  BaseDataFlow as DataFlowMessage,
   getDataFlowAnimationStyle,
   resetDataFlow,
   createDataFlow,
   getSpeedMultiplier,
   setSpeedMultiplier
+} from '@/lib/utils/dataFlowUtils'
 } from '@/lib/utils/dataFlowUtils'
 import DataFlowVisualizer from './DataFlowVisualizer'
 import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from './StandardFlowVisualizer'
