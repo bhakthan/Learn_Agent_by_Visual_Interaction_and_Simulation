@@ -1,103 +1,105 @@
 /**
  * Utility functions to fix common ReactFlow issues
- * These functions help ensure that nodes and edges remain visible
  */
 
 /**
- * Forces all ReactFlow nodes to be visible
- * @param containerSelector - CSS selector for the ReactFlow container
- * @param attempts - Number of attempts to try (retries with delays)
+ * Forces nodes to be visible by setting explicit styles
+ * @param selector CSS selector for ReactFlow nodes
+ * @param maxAttempts Max number of attempts to find and fix nodes
  */
-export function forceNodesVisible(containerSelector = '.react-flow', attempts = 3) {
-  let currentAttempt = 0;
+export function forceNodesVisible(selector = '.react-flow__node', maxAttempts = 1) {
+  // Use setTimeout to ensure DOM is ready
+  setTimeout(() => {
+    try {
+      // Find all nodes matching the selector
+      const nodes = document.querySelectorAll(selector);
+      
+      // Apply visibility fixes to each node
+      nodes.forEach(node => {
+        if (node instanceof HTMLElement) {
+          node.style.opacity = '1';
+          node.style.visibility = 'visible';
+          node.style.display = 'block';
+          node.style.transform = 'translateZ(0)';
+        }
+      });
+      
+      // Also force edges to be visible
+      const edges = document.querySelectorAll('.react-flow__edge');
+      edges.forEach(edge => {
+        if (edge instanceof HTMLElement) {
+          edge.style.opacity = '1';
+          edge.style.visibility = 'visible';
+        }
+      });
+      
+      // Force edge paths to be visible
+      const edgePaths = document.querySelectorAll('.react-flow__edge-path');
+      edgePaths.forEach(path => {
+        if (path instanceof SVGElement) {
+          path.style.stroke = path.style.stroke || 'currentColor';
+          path.style.strokeWidth = path.style.strokeWidth || '1.5';
+          path.style.opacity = '1';
+          path.style.visibility = 'visible';
+        }
+      });
+    } catch (e) {
+      console.debug('Error in forceNodesVisible (suppressed)', e);
+    }
+  }, 100);
+}
+
+/**
+ * Fix ReactFlow rendering issues by applying various workarounds
+ * @param reactFlowInstance The ReactFlow instance to fix
+ * @param padding Padding for fitView operations
+ */
+export function fixReactFlowRendering(reactFlowInstance: any, padding = 0.2) {
+  if (!reactFlowInstance) return;
   
-  const tryFixingNodes = () => {
-    const container = document.querySelector(containerSelector);
-    if (!container) {
-      if (currentAttempt < attempts) {
-        currentAttempt++;
-        setTimeout(tryFixingNodes, 100 * currentAttempt);
-      }
-      return;
+  try {
+    // Force a fitView operation
+    if (typeof reactFlowInstance.fitView === 'function') {
+      reactFlowInstance.fitView({ padding });
     }
     
-    // Force all nodes to be visible
-    const nodes = container.querySelectorAll('.react-flow__node');
-    nodes.forEach(node => {
-      if (node instanceof HTMLElement) {
-        node.style.opacity = '1';
-        node.style.visibility = 'visible';
-        node.style.display = 'block';
-        node.style.transform = 'translateZ(0)';
-      }
-    });
+    // Force nodes to be visible
+    forceNodesVisible();
     
-    // Force all edges to be visible
-    const edges = container.querySelectorAll('.react-flow__edge');
-    edges.forEach(edge => {
-      if (edge instanceof HTMLElement) {
-        edge.style.opacity = '1';
-        edge.style.visibility = 'visible';
-      }
-      
-      // Ensure edge paths are visible
-      const paths = edge.querySelectorAll('path');
-      paths.forEach(path => {
-        path.setAttribute('stroke-width', '1.5');
-        path.setAttribute('opacity', '1');
-        path.setAttribute('visibility', 'visible');
+    // Re-render the flow
+    if (typeof reactFlowInstance.updateNodeInternals === 'function') {
+      const nodeIds = reactFlowInstance.getNodes().map((n: any) => n.id);
+      nodeIds.forEach((id: string) => {
+        try {
+          reactFlowInstance.updateNodeInternals(id);
+        } catch (e) {
+          // Silently ignore individual node errors
+        }
       });
-    });
-  };
-  
-  // Initial attempt
-  tryFixingNodes();
-  
-  // Schedule repeated attempts
-  for (let i = 1; i <= attempts; i++) {
-    setTimeout(tryFixingNodes, 200 * i);
+    }
+  } catch (e) {
+    console.debug('Error in fixReactFlowRendering (suppressed)', e);
   }
 }
 
 /**
- * Fixes ReactFlow rendering issues by forcing a reflow
- * @param instance - ReactFlow instance
- * @param padding - Padding for fitView
+ * Setup error handling for ReactFlow
  */
-export function fixReactFlowRendering(instance: any, padding = 0.2) {
-  if (!instance || typeof instance.fitView !== 'function') return;
-  
-  // Apply initial fit view
-  instance.fitView({ padding });
-  
-  // Use RAF to smooth out the operation
-  requestAnimationFrame(() => {
-    try {
-      // Force a reflow by accessing offsetHeight
-      const container = document.querySelector('.react-flow');
-      if (container instanceof HTMLElement) {
-        container.style.opacity = '1';
-        container.style.visibility = 'visible';
-        
-        // Force reflow
-        void container.offsetHeight;
-        
-        // Apply fit view again after reflow
-        setTimeout(() => {
-          if (instance && typeof instance.fitView === 'function') {
-            instance.fitView({ padding });
-          }
-        }, 50);
-      }
-    } catch (e) {
-      console.debug('Error fixing ReactFlow rendering', e);
+export function setupReactFlowErrorHandling() {
+  // Add global handler for ResizeObserver loop errors
+  window.addEventListener('error', function(e) {
+    if (e && e.message && (
+      e.message.includes('ResizeObserver loop') || 
+      e.message.includes('ResizeObserver completed')
+    )) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
     }
-  });
+  }, true);
+  
+  // Return cleanup function
+  return () => {};
 }
 
-/**
- * Add this function to the window to enable direct debugging
- */
-if (typeof window !== 'undefined') {
-  (window as any).fixReactFlowVisibility = forceNodesVisible;
-}
+export default { forceNodesVisible, fixReactFlowRendering, setupReactFlowErrorHandling };

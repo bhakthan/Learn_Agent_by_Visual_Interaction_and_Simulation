@@ -1,6 +1,5 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { useReactFlow } from 'reactflow';
-import { stabilizeReactFlow } from '../utils/stabilizeVisualization';
 import { forceNodesVisible, fixReactFlowRendering } from '../utils/reactFlowFixUtils';
 
 interface UseStableFlowOptions {
@@ -10,8 +9,7 @@ interface UseStableFlowOptions {
 }
 
 /**
- * Custom hook for using ReactFlow with enhanced stability
- * Handles common issues like ResizeObserver errors and visibility problems
+ * A simplified hook for using ReactFlow with enhanced stability
  */
 export function useStableFlow({
   fitViewOnResize = true,
@@ -20,7 +18,6 @@ export function useStableFlow({
 }: UseStableFlowOptions = {}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const reactFlowInstance = useReactFlow();
-  const [isStabilized, setIsStabilized] = useState(false);
   
   // Function to fit view with proper error handling
   const fitView = useCallback(() => {
@@ -28,53 +25,42 @@ export function useStableFlow({
       try {
         reactFlowInstance.fitView({
           padding: fitViewPadding,
-          includeHiddenNodes: false
+          includeHiddenNodes: true
         });
       } catch (e) {
-        console.debug('Failed to fit view', e);
+        console.debug('Failed to fit view (suppressed)');
       }
     }
   }, [reactFlowInstance, fitViewPadding]);
   
   // Function to reset the flow
   const resetFlow = useCallback(() => {
-    if (containerRef.current) {
-      stabilizeReactFlow(containerRef.current);
-    }
+    // Force nodes to be visible
+    forceNodesVisible();
     
-    // Schedule multiple attempts to ensure it works
+    // Schedule a fix after a short delay
     setTimeout(() => {
       if (reactFlowInstance) {
         fixReactFlowRendering(reactFlowInstance, fitViewPadding);
       }
     }, 100);
-    
-    setTimeout(() => {
-      forceNodesVisible();
-    }, 300);
   }, [reactFlowInstance, fitViewPadding]);
   
   // Apply initial stabilization and fit view
   useEffect(() => {
-    if (!isStabilized && containerRef.current && reactFlowInstance) {
+    if (reactFlowInstance) {
       // Apply stabilization after a delay to ensure proper loading
       const timer = setTimeout(() => {
-        if (containerRef.current) {
-          stabilizeReactFlow(containerRef.current);
-        }
-        
-        // Make sure all nodes are visible
+        // Force all nodes to be visible
         forceNodesVisible();
         
         // Fit view to ensure everything is visible
         fitView();
-        
-        setIsStabilized(true);
       }, stabilizationDelay);
       
       return () => clearTimeout(timer);
     }
-  }, [reactFlowInstance, isStabilized, fitView, stabilizationDelay]);
+  }, [reactFlowInstance, fitView, stabilizationDelay]);
   
   // Handle window resize events
   useEffect(() => {
@@ -96,35 +82,19 @@ export function useStableFlow({
     
     window.addEventListener('resize', handleResize);
     
-    // Also listen for layout updates that might be triggered by other components
-    window.addEventListener('layout-update', handleResize);
-    
     return () => {
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('layout-update', handleResize);
       if (resizeTimer) {
         clearTimeout(resizeTimer);
       }
     };
   }, [fitViewOnResize, resetFlow, fitView]);
   
-  // Apply stabilization if React Flow instance changes
-  useEffect(() => {
-    if (reactFlowInstance) {
-      const timer = setTimeout(() => {
-        resetFlow();
-      }, 500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [reactFlowInstance, resetFlow]);
-  
   return {
     containerRef,
     reactFlowInstance,
     resetFlow,
-    fitView,
-    isStabilized
+    fitView
   };
 }
 

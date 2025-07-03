@@ -1,147 +1,159 @@
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { DataFlowType } from './dataFlowUtils';
 
-// Types for flow edge styles
-interface FlowStyleParams {
-  color: string;
-  textColor?: string;
-  strokeWidth?: number;
-  dotSize?: number;
-  pulseSpeed?: number;
-  fill?: string;
-}
-
 /**
- * Hook for consistent visualization theme and styling
+ * Simplified utility to provide consistent visualization theming
  */
 export function useVisualizationTheme() {
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
   
-  // Get background style parameters
+  /**
+   * Get color for a specific node type
+   */
+  const getNodeColor = (nodeType: string = 'agent') => {
+    switch(nodeType.toLowerCase()) {
+      case 'user':
+        return '#60a5fa'; // Blue
+      case 'agent':
+        return '#34d399'; // Green
+      case 'llm':
+        return '#2563eb'; // Deeper Blue
+      case 'tool':
+        return '#fbbf24'; // Yellow
+      case 'router':
+        return '#f59e0b'; // Amber
+      case 'input':
+        return '#6366f1'; // Indigo
+      case 'output':
+        return '#10b981'; // Emerald
+      case 'aggregator':
+        return '#8b5cf6'; // Purple
+      case 'environment':
+        return '#a78bfa'; // Violet
+      case 'reflection':
+        return '#f472b6'; // Pink
+      case 'planner':
+        return '#22d3ee'; // Cyan
+      case 'evaluator':
+        return '#f59e0b'; // Amber
+      default:
+        return '#94a3b8'; // Slate (default)
+    }
+  };
+  
+  /**
+   * Get styling for data flows based on type
+   */
+  const getFlowStyle = (type?: DataFlowType) => {
+    const defaults = {
+      color: '#64748b',
+      textColor: undefined,
+      strokeWidth: 1.5,
+      dotSize: 5,
+      pulseSpeed: 1,
+      fill: undefined
+    };
+    
+    switch(type) {
+      case 'query':
+        return {
+          ...defaults,
+          color: '#2563eb',
+          strokeWidth: 2,
+          dotSize: 6,
+        };
+      case 'response':
+        return {
+          ...defaults,
+          color: '#10b981',
+          strokeWidth: 2,
+          dotSize: 6,
+        };
+      case 'tool_call':
+        return {
+          ...defaults,
+          color: '#d97706',
+          strokeWidth: 1.5,
+          dotSize: 5,
+        };
+      case 'observation':
+        return {
+          ...defaults,
+          color: '#7c3aed',
+          strokeWidth: 1.5,
+          dotSize: 5,
+        };
+      case 'reflection':
+        return {
+          ...defaults,
+          color: '#db2777',
+          strokeWidth: 1.5,
+          dotSize: 5,
+        };
+      case 'plan':
+        return {
+          ...defaults,
+          color: '#06b6d4',
+          strokeWidth: 1.5,
+          dotSize: 5,
+        };
+      case 'message':
+        return {
+          ...defaults,
+          color: '#8b5cf6',
+          strokeWidth: 1.5,
+          dotSize: 5,
+        };
+      case 'data':
+        return {
+          ...defaults,
+          color: '#0284c7',
+          strokeWidth: 1.5,
+          dotSize: 5,
+        };
+      case 'error':
+        return {
+          ...defaults,
+          color: '#dc2626',
+          strokeWidth: 2,
+          dotSize: 6,
+        };
+      default:
+        return defaults;
+    }
+  };
+  
+  /**
+   * Edge styling for flow graphs
+   */
+  const edges = {
+    default: {
+      stroke: isDarkMode ? '#475569' : '#94a3b8',
+      strokeWidth: 1.5,
+    },
+    animated: {
+      stroke: '#3b82f6',
+      strokeWidth: 2,
+    }
+  };
+  
+  /**
+   * Background styling for flow graphs
+   */
   const background = {
     gap: 12,
     size: 1,
-    color: isDarkMode ? '#ffffff20' : '#aaa'
-  };
-  
-  // Get edge style parameters
-  const edges = {
-    default: {
-      stroke: isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.3)',
-      strokeWidth: 1.5
-    },
-    animated: {
-      stroke: 'var(--primary)',
-      strokeWidth: 2
-    }
-  };
-  
-  // Get flow styles based on flow type
-  const getFlowStyle = (type: DataFlowType): FlowStyleParams => {
-    switch (type) {
-      case 'query':
-        return { 
-          color: isDarkMode ? '#60a5fa' : '#2563eb',
-          strokeWidth: 2,
-          dotSize: 6,
-          pulseSpeed: 1.2
-        };
-      case 'response':
-        return { 
-          color: isDarkMode ? '#34d399' : '#10b981',
-          strokeWidth: 2,
-          dotSize: 6,
-          pulseSpeed: 1 
-        };
-      case 'tool_call':
-        return { 
-          color: isDarkMode ? '#fbbf24' : '#d97706',
-          strokeWidth: 1.5,
-          dotSize: 5,
-          pulseSpeed: 1.3 
-        };
-      case 'observation':
-        return { 
-          color: isDarkMode ? '#a78bfa' : '#7c3aed',
-          strokeWidth: 1.5,
-          dotSize: 5,
-          pulseSpeed: 0.9 
-        };
-      case 'reflection':
-        return { 
-          color: isDarkMode ? '#f472b6' : '#db2777',
-          strokeWidth: 1.5,
-          dotSize: 5,
-          pulseSpeed: 0.8 
-        };
-      case 'plan':
-        return { 
-          color: isDarkMode ? '#22d3ee' : '#06b6d4',
-          strokeWidth: 1.5,
-          dotSize: 5,
-          pulseSpeed: 1.1 
-        };
-      case 'message':
-        return { 
-          color: isDarkMode ? '#c4b5fd' : '#8b5cf6',
-          strokeWidth: 1.5,
-          dotSize: 5,
-          pulseSpeed: 1 
-        };
-      case 'data':
-        return { 
-          color: isDarkMode ? '#38bdf8' : '#0284c7',
-          strokeWidth: 1.5,
-          dotSize: 5,
-          pulseSpeed: 1.2 
-        };
-      case 'error':
-        return { 
-          color: isDarkMode ? '#f87171' : '#dc2626',
-          strokeWidth: 2,
-          dotSize: 6,
-          pulseSpeed: 1.5 
-        };
-      default:
-        return { 
-          color: isDarkMode ? '#94a3b8' : '#64748b',
-          strokeWidth: 1.5,
-          dotSize: 5,
-          pulseSpeed: 1 
-        };
-    }
-  };
-  
-  // Get node color based on node type
-  const getNodeColor = (nodeType: string): string => {
-    switch (nodeType?.toLowerCase()) {
-      case 'user':
-        return isDarkMode ? '#60a5fa' : '#2563eb';
-      case 'agent':
-        return isDarkMode ? '#34d399' : '#10b981';
-      case 'tool':
-        return isDarkMode ? '#fbbf24' : '#d97706';
-      case 'environment':
-        return isDarkMode ? '#a78bfa' : '#7c3aed';
-      case 'reflection':
-        return isDarkMode ? '#f472b6' : '#db2777';
-      case 'planner':
-        return isDarkMode ? '#22d3ee' : '#06b6d4';
-      case 'evaluator':
-        return isDarkMode ? '#f59e0b' : '#d97706';
-      default:
-        return isDarkMode ? '#94a3b8' : '#64748b';
-    }
+    color: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
   };
   
   return {
     theme,
     isDarkMode,
-    background,
-    edges,
+    getNodeColor,
     getFlowStyle,
-    getNodeColor
+    edges,
+    background
   };
 }
 

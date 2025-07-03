@@ -168,9 +168,10 @@ export function getDataFlowAnimationStyle(
 
 // Utility to truncate flow content for display
 export const truncateFlowContent = (content: string, maxLength: number = 30): string => {
+  if (!content || typeof content !== 'string') return '';
   if (content.length <= maxLength) return content;
   return `${content.substring(0, maxLength)}...`;
-}
+};
 
 /**
  * Simulates a pattern flow with specific messages
@@ -181,8 +182,7 @@ export const simulatePatternFlow = (
   onUpdateNodeStatus: (nodeId: string, status: string) => void,
   speed: number = 1
 ) => {
-  const flows: any[] = [];
-  let timeouts: NodeJS.Timeout[] = [];
+  const timeouts: NodeJS.Timeout[] = [];
   
   // Function to create a flow
   const createFlow = (
@@ -217,7 +217,6 @@ export const simulatePatternFlow = (
       };
       
       onAddFlow(flow);
-      flows.push(flow);
       
       // Activate target node after flow completes
       const targetTimeout = setTimeout(() => {
@@ -232,7 +231,6 @@ export const simulatePatternFlow = (
   // Reset all flows and timeouts
   const resetDataFlow = () => {
     timeouts.forEach(clearTimeout);
-    timeouts = [];
   };
   
   // Return flow control functions
@@ -241,9 +239,6 @@ export const simulatePatternFlow = (
     resetDataFlow
   };
 };
-
-// Export previously declared utility functions
-// These are already exported where they're defined
 
 // Helper to create a flow
 export function createDataFlow(
@@ -274,10 +269,4 @@ export function createDataFlow(
 // Helper to reset data flows
 export function resetDataFlow(timeouts: NodeJS.Timeout[]) {
   timeouts.forEach(clearTimeout);
-}
-
-// Add setSpeedMultiplier function that may be needed by components
-export function setSpeedMultiplier(speed: number | string): number {
-  // Simply use the existing getSpeedMultiplier function
-  return getSpeedMultiplier(speed);
 }

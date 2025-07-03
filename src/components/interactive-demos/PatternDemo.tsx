@@ -1,51 +1,46 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { PatternData } from '@/lib/data/patterns'
-import { Play, ArrowsClockwise, CheckCircle, Clock, WarningCircle, ArrowBendDownRight, Gauge } from "@phosphor-icons/react"
-import { useTheme } from '@/components/theme/ThemeProvider'
-import {
-  ReactFlowProvider,
-  Node,
-  Edge,
-  Handle,
-  Position,
-  NodeTypes,
-  useNodesState,
-  useEdgesState,
-  MarkerType,
-  useReactFlow
-} from 'reactflow'
-import { StepController } from '@/lib/utils/stepControl'
-import 'reactflow/dist/style.css'
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { PatternData } from '@/lib/data/patterns';
+import { Play, ArrowsClockwise, CheckCircle, Clock, WarningCircle, ArrowBendDownRight } from "@phosphor-icons/react";
+import { useTheme } from '@/components/theme/ThemeProvider';
+import { ReactFlowProvider } from 'reactflow';
+import { StableFlowContainer } from '../visualization/StableFlowContainer';
+import StandardFlowVisualizerWithProvider from '../visualization/StandardFlowVisualizer';
 
-// Import stability utilities
-import { setupErrorSuppression, stabilizeReactFlow } from '@/lib/utils/stabilizeVisualization'
-import { forceNodesVisible, fixReactFlowRendering } from '@/lib/utils/reactFlowFixUtils'
-
-// Import custom memoized components
-import {
-  MemoizedReactFlow,
-  MemoizedBackground,
-  MemoizedControls,
-  MemoizedMiniMap
-} from '../visualization/MemoizedFlowComponents'
-
-// Import stable flow components
-import { StableFlowContainer, StableFlowProvider } from '../visualization/StableFlowContainer';
-import { useStableFlow } from '@/lib/hooks/useStableFlow';
-
-// Import StandardFlowVisualizer
-import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from '../visualization/StandardFlowVisualizer'
-
-import DataFlowVisualizer from '../visualization/DataFlowVisualizer'
-
-// Memoize DataFlowVisualizer for better performance
-const MemoizedDataFlowVisualizer = React.memo(DataFlowVisualizer);
+// Simple step controller class
+class StepController {
+  private waitingCallback: (() => void) | null = null;
+  private isWaiting = false;
+  
+  constructor(private onWaitingChange: (isWaiting: boolean) => void) {}
+  
+  waitForNextStep(callback: () => void) {
+    this.waitingCallback = callback;
+    this.isWaiting = true;
+    this.onWaitingChange(true);
+  }
+  
+  advanceToNextStep() {
+    if (this.waitingCallback) {
+      const callback = this.waitingCallback;
+      this.waitingCallback = null;
+      this.isWaiting = false;
+      this.onWaitingChange(false);
+      callback();
+    }
+  }
+  
+  stop() {
+    this.waitingCallback = null;
+    this.isWaiting = false;
+    this.onWaitingChange(false);
+  }
+}
 
 // Mock response generation to simulate LLM calls
 const generateMockResponse = (text: string, patternId: string) => {
@@ -87,147 +82,6 @@ interface DataFlowMessage {
   complete?: boolean;
 }
 
-// Custom node component for the demo with memoization
-const CustomDemoNode = React.memo(({ data, id }: { data: any, id: string }) => {
-  const { theme } = useTheme();
-  const isDarkMode = theme === 'dark';
-  
-  // Memoize node styles to prevent unnecessary recalculations
-  const getNodeStyle = useCallback(() => {
-    const baseStyle = {
-      padding: '10px 20px',
-      borderRadius: '8px',
-      transition: 'all 0.2s ease',
-      width: '180px',
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)',
-      cursor: 'grab',
-      position: 'relative',
-      zIndex: 1,
-      display: 'block',
-      visibility: 'visible',
-      transform: 'translateZ(0)',
-      boxShadow: '0 0 0 1px var(--border)',
-      backgroundColor: isDarkMode ? 'var(--card)' : 'white',
-      opacity: 1,
-    }
-    
-    // Add status-specific styling
-    const statusStyle = data.status === 'running' ? {
-      boxShadow: `0 0 0 2px var(--primary), 0 0 15px ${isDarkMode ? 'rgba(66, 153, 225, 0.3)' : 'rgba(66, 153, 225, 0.5)'}`,
-      transform: 'scale(1.02) translateZ(0)'
-    } : data.status === 'complete' ? {
-      boxShadow: `0 0 0 2px ${isDarkMode ? 'rgba(16, 185, 129, 0.8)' : 'rgba(16, 185, 129, 0.6)'}`,
-    } : data.status === 'failed' ? {
-      boxShadow: `0 0 0 2px ${isDarkMode ? 'rgba(239, 68, 68, 0.8)' : 'rgba(239, 68, 68, 0.6)'}`,
-    } : {};
-    
-    // Node type specific styling with dark mode support
-    switch(data.nodeType) {
-      case 'input':
-        return { 
-          ...baseStyle, 
-          backgroundColor: isDarkMode ? 'rgba(51, 65, 85, 0.8)' : 'rgb(226, 232, 240)', 
-          border: `1px solid ${isDarkMode ? 'rgba(71, 85, 105, 0.8)' : 'rgb(203, 213, 225)'}`, 
-          ...statusStyle 
-        }
-      case 'llm':
-        return { 
-          ...baseStyle, 
-          backgroundColor: isDarkMode ? 'rgba(30, 58, 138, 0.4)' : 'rgb(219, 234, 254)', 
-          border: `1px solid ${isDarkMode ? 'rgba(59, 130, 246, 0.5)' : 'rgb(147, 197, 253)'}`, 
-          ...statusStyle 
-        }
-      case 'output':
-        return { 
-          ...baseStyle, 
-          backgroundColor: isDarkMode ? 'rgba(20, 83, 45, 0.4)' : 'rgb(220, 252, 231)', 
-          border: `1px solid ${isDarkMode ? 'rgba(34, 197, 94, 0.5)' : 'rgb(134, 239, 172)'}`, 
-          ...statusStyle 
-        }
-      case 'router':
-        return { 
-          ...baseStyle, 
-          backgroundColor: isDarkMode ? 'rgba(113, 63, 18, 0.4)' : 'rgb(254, 242, 220)', 
-          border: `1px solid ${isDarkMode ? 'rgba(234, 179, 8, 0.5)' : 'rgb(253, 224, 71)'}`, 
-          ...statusStyle 
-        }
-      case 'aggregator':
-        return { 
-          ...baseStyle, 
-          backgroundColor: isDarkMode ? 'rgba(22, 101, 52, 0.4)' : 'rgb(240, 253, 240)', 
-          border: `1px solid ${isDarkMode ? 'rgba(74, 222, 128, 0.5)' : 'rgb(187, 247, 208)'}`, 
-          ...statusStyle 
-        }
-      default:
-        return { 
-          ...baseStyle, 
-          backgroundColor: isDarkMode ? 'rgba(51, 65, 85, 0.6)' : 'white', 
-          border: `1px solid ${isDarkMode ? 'rgba(71, 85, 105, 0.6)' : 'rgb(226, 232, 240)'}`, 
-          ...statusStyle 
-        }
-    }
-  }, [data.status, data.nodeType, isDarkMode]); // Only recalculate when these dependencies change
-
-  // Memoize the truncated result text
-  const resultText = useMemo(() => {
-    if (!data.result) return null;
-    return data.result.length > 40 ? `${data.result.substring(0, 40)}...` : data.result;
-  }, [data.result]);
-  
-  const nodeStyle = useMemo(() => getNodeStyle(), [getNodeStyle]);
-  
-  // Use effect to ensure the node is visible after render
-  useEffect(() => {
-    // Force node to be visible after a small delay
-    const timer = setTimeout(() => {
-      const nodeElement = document.querySelector(`[data-id="${id}"]`);
-      if (nodeElement instanceof HTMLElement) {
-        nodeElement.style.opacity = '1';
-        nodeElement.style.visibility = 'visible';
-        nodeElement.style.display = 'block';
-      }
-    }, 200);
-    
-    return () => clearTimeout(timer);
-  }, [id]);
-  
-  return (
-    <div style={nodeStyle}>
-      <Handle type="target" position={Position.Left} style={{ visibility: 'visible', opacity: 1 }} />
-      <div>
-        <div className="flex items-center gap-2">
-          {data.status === 'running' && <Clock className="text-amber-500" size={16} />}
-          {data.status === 'complete' && <CheckCircle className="text-green-500" size={16} />}
-          {data.status === 'failed' && <WarningCircle className="text-destructive" size={16} />}
-          <strong>{data.label}</strong>
-        </div>
-        
-        {resultText && (
-          <div className={`mt-2 text-xs p-1.5 rounded border ${isDarkMode ? 'bg-background/80 border-border text-foreground' : 'bg-background/50 border-border/50 text-foreground'}`}>
-            {resultText}
-          </div>
-        )}
-      </div>
-      <Handle type="source" position={Position.Right} style={{ visibility: 'visible', opacity: 1 }} />
-    </div>
-  );
-}, (prevProps, nextProps) => {
-  // Only re-render when relevant props change
-  if (prevProps.id !== nextProps.id) return false;
-  
-  const prevData = prevProps.data;
-  const nextData = nextProps.data;
-  
-  // Compare important data properties
-  if (prevData.status !== nextData.status) return false;
-  if (prevData.label !== nextData.label) return false;
-  if (prevData.result !== nextData.result) return false;
-  
-  // If we got here, nothing important changed, skip re-render
-  return true;
-});
-
-const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
 // Create a DragHint component that shows a helpful message when nodes are dragged
 const DragHint = React.memo(() => {
   const [showDragHint, setShowDragHint] = useState(true);
@@ -258,6 +112,109 @@ const DragHint = React.memo(() => {
     </div>
   );
 });
+
+// Custom node component
+const CustomDemoNode = React.memo(({ data, id }: { data: any, id: string }) => {
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+  
+  // Basic node styling
+  const getNodeStyle = () => {
+    const baseStyle = {
+      padding: '10px 20px',
+      borderRadius: '8px',
+      transition: 'all 0.2s ease',
+      width: '180px',
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)',
+      cursor: 'grab',
+      position: 'relative',
+      zIndex: 1,
+      display: 'block',
+      visibility: 'visible',
+      transform: 'translateZ(0)',
+      boxShadow: '0 0 0 1px var(--border)',
+      backgroundColor: isDarkMode ? 'var(--card)' : 'white',
+      opacity: 1,
+    };
+    
+    // Add status-specific styling
+    const statusStyle = data.status === 'running' ? {
+      boxShadow: `0 0 0 2px var(--primary), 0 0 15px ${isDarkMode ? 'rgba(66, 153, 225, 0.3)' : 'rgba(66, 153, 225, 0.5)'}`,
+    } : data.status === 'complete' ? {
+      boxShadow: `0 0 0 2px ${isDarkMode ? 'rgba(16, 185, 129, 0.8)' : 'rgba(16, 185, 129, 0.6)'}`,
+    } : data.status === 'failed' ? {
+      boxShadow: `0 0 0 2px ${isDarkMode ? 'rgba(239, 68, 68, 0.8)' : 'rgba(239, 68, 68, 0.6)'}`,
+    } : {};
+    
+    // Apply type-specific and status-specific styling
+    switch(data.nodeType) {
+      case 'input':
+        return { 
+          ...baseStyle, 
+          backgroundColor: isDarkMode ? 'rgba(51, 65, 85, 0.8)' : 'rgb(226, 232, 240)', 
+          border: `1px solid ${isDarkMode ? 'rgba(71, 85, 105, 0.8)' : 'rgb(203, 213, 225)'}`, 
+          ...statusStyle 
+        };
+      case 'llm':
+        return { 
+          ...baseStyle, 
+          backgroundColor: isDarkMode ? 'rgba(30, 58, 138, 0.4)' : 'rgb(219, 234, 254)', 
+          border: `1px solid ${isDarkMode ? 'rgba(59, 130, 246, 0.5)' : 'rgb(147, 197, 253)'}`, 
+          ...statusStyle 
+        };
+      case 'output':
+        return { 
+          ...baseStyle, 
+          backgroundColor: isDarkMode ? 'rgba(20, 83, 45, 0.4)' : 'rgb(220, 252, 231)', 
+          border: `1px solid ${isDarkMode ? 'rgba(34, 197, 94, 0.5)' : 'rgb(134, 239, 172)'}`, 
+          ...statusStyle 
+        };
+      default:
+        return { 
+          ...baseStyle, 
+          backgroundColor: isDarkMode ? 'rgba(51, 65, 85, 0.6)' : 'white', 
+          border: `1px solid ${isDarkMode ? 'rgba(71, 85, 105, 0.6)' : 'rgb(226, 232, 240)'}`, 
+          ...statusStyle 
+        };
+    }
+  };
+
+  // Calculate the truncated result text
+  const resultText = data.result ? 
+    (data.result.length > 40 ? `${data.result.substring(0, 40)}...` : data.result) : 
+    null;
+  
+  // Force visibility of node
+  useEffect(() => {
+    const nodeElement = document.querySelector(`[data-id="${id}"]`);
+    if (nodeElement instanceof HTMLElement) {
+      nodeElement.style.opacity = '1';
+      nodeElement.style.visibility = 'visible';
+      nodeElement.style.display = 'block';
+    }
+  }, [id]);
+
+  return (
+    <div style={getNodeStyle()}>
+      <div>
+        <div className="flex items-center gap-2">
+          {data.status === 'running' && <Clock className="text-amber-500" size={16} />}
+          {data.status === 'complete' && <CheckCircle className="text-green-500" size={16} />}
+          {data.status === 'failed' && <WarningCircle className="text-destructive" size={16} />}
+          <strong>{data.label}</strong>
+        </div>
+        
+        {resultText && (
+          <div className={`mt-2 text-xs p-1.5 rounded border ${isDarkMode ? 'bg-background/80 border-border text-foreground' : 'bg-background/50 border-border/50 text-foreground'}`}>
+            {resultText}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
+
+const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   // Ensure patternData exists to prevent errors
   if (!patternData) {
     return (
@@ -288,51 +245,29 @@ const DragHint = React.memo(() => {
   const [iterations, setIterations] = useState<number>(0);
   const [animationSpeed, setAnimationSpeed] = useState<number>(1); // Default to normal speed (1x)
   const [animationMode, setAnimationMode] = useState<'auto' | 'step-by-step'>('auto'); 
-
-  // Apply additional stabilization on initial load
-  useEffect(() => {
-    // Apply initial stabilization
-    const timer1 = setTimeout(() => {
-      if (stableFlowContainerRef.current) {
-        stabilizeReactFlow(stableFlowContainerRef.current);
-      }
-      
-      // Force nodes visibility after initial load
-      forceNodesVisible('.react-flow', 3);
-    }, 300);
-    
-    // Apply another round of fixes after a longer delay
-    const timer2 = setTimeout(() => {
-      forceNodesVisible('.react-flow', 3);
-      
-      if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
-        fixReactFlowRendering(reactFlowInstance);
-      }
-    }, 1500);
-    
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-    };
-  }, [reactFlowInstance]);
   
-  // Initialize reactFlowInstance first
-  // Moved below and will be used after its definition
+  // Prepare nodes and edges for visualization
+  const demoNodes = patternData.nodes?.map(node => ({
+    ...node,
+    type: 'demoNode',
+    data: {
+      ...node.data,
+      status: 'idle',
+    },
+    draggable: true,
+    selectable: true,
+    style: { opacity: 1, visibility: 'visible' },
+  })) || [];
+  
+  const demoEdges = patternData.edges?.map(edge => ({
+    ...edge,
+    animated: false,
+    style: { opacity: 1, visibility: 'visible' },
+  })) || [];
+  
   // Step controller for managing execution flow
   const stepControllerRef = useRef<StepController | null>(null);
   
-  // Reference for the flow container
-  const flowContainerRef = useRef<HTMLDivElement>(null);
-  
-  // Initialize flow container helper with proper options - not using useMemo to avoid dependencies
-  const flowContainerHelpers = {
-    triggerResize: () => {
-      if (flowContainerRef.current) {
-        window.dispatchEvent(new Event('resize'));
-      }
-    }
-  };
-
   // Initialize step controller
   useEffect(() => {
     stepControllerRef.current = new StepController((isWaiting) => {
@@ -340,151 +275,164 @@ const DragHint = React.memo(() => {
     });
     
     return () => {
-      // Clean up on unmount
       if (stepControllerRef.current) {
         stepControllerRef.current.stop();
       }
     };
   }, []);
-
-  // Set up error suppression for ResizeObserver errors
-  useEffect(() => {
-    // Set up error suppression 
-    const cleanup = setupErrorSuppression();
-    
-    // Apply stabilization to any existing ReactFlow elements
-    const stabilizeTimeout = setTimeout(() => {
-      const flowContainers = document.querySelectorAll('[data-flow-container="true"]');
-      flowContainers.forEach(container => {
-        if (container instanceof HTMLElement) {
-          stabilizeReactFlow(container);
-        }
-      });
-    }, 500);
-    
-    return () => {
-      cleanup();
-      clearTimeout(stabilizeTimeout);
-    };
-  }, []);
-
-  // Create demo nodes for visualization - memoize them based on patternData
-  const initialDemoNodes = useMemo(() => {
-    if (!patternData || !Array.isArray(patternData.nodes)) {
-      return [];
-    }
-    
-    return patternData.nodes.map(node => ({
-      ...node,
-      type: 'demoNode',
-      data: {
-        ...node.data,
-        status: 'idle',
-      },
-      draggable: true,
-      selectable: true,
-    }));
-  }, [patternData?.nodes]);
   
-  // Optimize node positions for the demo display - memoized
-  const optimizedNodes = useMemo(() => {
-    if (!initialDemoNodes || !initialDemoNodes.length) {
-      return [];
-    }
-    
-    return initialDemoNodes.map(node => {
-      // Scale and center the nodes for better visualization
-      return {
-        ...node,
-        position: {
-          x: node.position.x * 0.8 + 50,
-          y: node.position.y + 50
-        }
-      };
-    });
-  }, [initialDemoNodes]);
+  // Flow container ref
+  const flowContainerRef = useRef<HTMLDivElement>(null);
   
-  const [nodes, setNodes, onNodesChange] = useNodesState(optimizedNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(patternData?.edges || []);
-  
-  const onFlowComplete = useCallback((flowId: string) => {
-    setDataFlows(prev => prev.filter(flow => flow.id !== flowId));
-  }, []);
-  
-  const resetDemo = () => {
+  // Reset the demo state
+  const resetDemo = useCallback(() => {
     setIsRunning(false);
     setOutput(null);
     setSteps({});
     setCurrentNodeId(null);
     setDataFlows([]);
-    setIterations(0); // Reset iterations count
-    setWaitingForNextStep(false); // Reset step-by-step state
-    
-    // Reset nodes
-    setNodes(nodes.map(node => ({
-      ...node,
-      data: {
-        ...node.data,
-        status: 'idle',
-        result: undefined
-      },
-      style: {
-        ...node.style,
-        opacity: 1,
-        visibility: 'visible',
-        display: 'block',
-        transform: 'translateZ(0)'
+    setIterations(0);
+    setWaitingForNextStep(false);
+  }, []);
+
+  // Update node status in the visualization
+  const updateNodeStatus = useCallback((nodeId: string, status: 'idle' | 'running' | 'complete' | 'failed', result?: string) => {
+    setDataFlows(prev => {
+      // If the node is complete, also complete any flows targeting it
+      if (status === 'complete') {
+        return prev.map(flow => 
+          flow.target === nodeId ? { ...flow, progress: 1 } : flow
+        );
       }
-    })));
+      return prev;
+    });
     
-    // Reset edges (remove animation)
-    setEdges((patternData?.edges || []).map(edge => ({
-      ...edge,
-      animated: false,
-      style: {
-        strokeWidth: 1.5,
-        opacity: 1,
-        visibility: 'visible'
+    // Update the step state
+    setSteps(prev => ({
+      ...prev,
+      [nodeId]: { 
+        ...prev[nodeId], 
+        status, 
+        result,
+        endTime: status === 'complete' || status === 'failed' ? Date.now() : undefined
       }
-    })));
+    }));
+  }, []);
+  
+  // Helper function for step-by-step control
+  const waitForNextStep = useCallback(async () => {
+    if (!stepControllerRef.current) return;
     
-    // Force a redraw of the flow after a delay
-    setTimeout(() => {
-      if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
-        // Use our specialized fix functions
-        fixReactFlowRendering(reactFlowInstance);
-        forceNodesVisible('.react-flow', 3);
+    setWaitingForNextStep(true);
+    return new Promise<void>(resolve => {
+      stepControllerRef.current?.waitForNextStep(() => {
+        resolve();
+      });
+    });
+  }, []);
+  
+  // Create a data flow between nodes
+  const createDataFlow = useCallback((source: string, target: string, content: string, type: 'message' | 'data' | 'response' | 'error') => {
+    const id = `flow-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const edgeId = `${source}-${target}`;
+    
+    const flow: DataFlowMessage = {
+      id,
+      edgeId,
+      source,
+      target,
+      content,
+      timestamp: Date.now(),
+      type,
+      progress: 0
+    };
+    
+    setDataFlows(prev => [...prev, flow]);
+  }, []);
+
+  // Process node based on type
+  const processNode = async (nodeId: string) => {
+    if (!patternData || !Array.isArray(patternData.nodes) || !Array.isArray(patternData.edges)) {
+      throw new Error('Invalid pattern data');
+    }
+    
+    // Mark node as running
+    setCurrentNodeId(nodeId);
+    setSteps(prev => ({
+      ...prev,
+      [nodeId]: { ...prev[nodeId], status: 'running', startTime: Date.now() }
+    }));
+    
+    // Increment iterations counter
+    setIterations(prev => prev + 1);
+    
+    // Update node status in visualization
+    updateNodeStatus(nodeId, 'running');
+    
+    try {
+      const node = patternData.nodes.find(n => n.id === nodeId);
+      if (!node) throw new Error(`Node ${nodeId} not found`);
+      
+      // Process node based on type
+      let result = '';
+      
+      if (node.data.nodeType === 'input') {
+        result = `Processing input: "${userInput}"`;
+        await new Promise(resolve => setTimeout(resolve, 500 / animationSpeed));
+      } else if (node.data.nodeType === 'llm') {
+        result = await generateMockResponse(userInput, patternData.id);
+      } else {
+        result = `Processed by ${node.data?.label || nodeId}`;
+        await new Promise(resolve => setTimeout(resolve, 700 / animationSpeed));
       }
-    }, 300);
+      
+      // Mark node as complete
+      updateNodeStatus(nodeId, 'complete', result);
+      
+      // If output node, set final output
+      if (node.data.nodeType === 'output') {
+        setOutput(result);
+        return;
+      }
+      
+      // Find next nodes
+      const outgoingEdges = patternData.edges.filter(edge => edge.source === nodeId);
+      
+      // Process next nodes sequentially
+      for (const edge of outgoingEdges) {
+        // Create data flow visualization
+        createDataFlow(
+          edge.source,
+          edge.target,
+          result,
+          node.data?.nodeType === 'llm' ? 'response' : 'message'
+        );
+        
+        // Wait proportionally to the animation speed
+        await new Promise(resolve => setTimeout(resolve, 800 / animationSpeed));
+        
+        // If step-by-step mode is active, wait for user to click "Next Step" button
+        if (animationMode === 'step-by-step' && stepControllerRef.current) {
+          await waitForNextStep();
+        }
+        
+        // Process target node
+        await processNode(edge.target);
+      }
+    } catch (error) {
+      console.error(`Error processing node ${nodeId}:`, error);
+      
+      // Mark node as failed
+      updateNodeStatus(nodeId, 'failed', error instanceof Error ? error.message : 'Unknown error');
+    }
   };
 
-  // Apply custom getEdgePoints function to work with MemoizedDataFlowVisualizer
-  const getEdgePoints = useCallback((edgeId: string) => {
-    if (!edges || !Array.isArray(edges) || !nodes || !Array.isArray(nodes)) return null;
-    
-    const edge = edges.find(e => e.id === edgeId);
-    if (!edge) return null;
-    
-    const sourceNode = nodes.find(n => n.id === edge.source);
-    const targetNode = nodes.find(n => n.id === edge.target);
-    
-    if (!sourceNode || !targetNode) return null;
-    
-    // Calculate center points of nodes
-    const sourceX = sourceNode.position.x + 150;  // assuming node width
-    const sourceY = sourceNode.position.y + 40;   // assuming node height
-    const targetX = targetNode.position.x;
-    const targetY = targetNode.position.y + 40;
-    
-    return { sourceX, sourceY, targetX, targetY };
-  }, [nodes, edges]);
-
+  // Run the demo
   const runDemo = async () => {
     if (!userInput.trim() || isRunning || !patternData || !Array.isArray(patternData.nodes)) return;
     
     resetDemo();
     setIsRunning(true);
-    setIterations(0); // Initialize iterations counter
     
     // Initialize all nodes as idle
     const initialSteps = patternData.nodes.reduce((acc, node) => {
@@ -501,394 +449,32 @@ const DragHint = React.memo(() => {
       // Process input node
       await processNode(inputNode.id);
       
-      // Final output
       setIsRunning(false);
       setWaitingForNextStep(false);
     } catch (error) {
       console.error('Error in demo:', error);
       setIsRunning(false);
       setWaitingForNextStep(false);
-      setOutput(`Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+      setOutput(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
-  // Helper function for step-by-step control
-  const waitForNextStep = useCallback(async () => {
-    if (!stepControllerRef.current) return;
-    
-    setWaitingForNextStep(true);
-    return new Promise<void>(resolve => {
-      stepControllerRef.current?.waitForNextStep(() => {
-        resolve();
-      });
-    });
-  }, []);
-  
-  // Process node based on type - Added additional error handling
-  const processNode = async (nodeId: string) => {
-    if (!patternData || !Array.isArray(patternData.nodes) || !Array.isArray(patternData.edges)) {
-      throw new Error('Invalid pattern data');
-    }
-    
-    // Mark node as running
-    setCurrentNodeId(nodeId);
-    setSteps(prev => ({
-      ...prev,
-      [nodeId]: { ...prev[nodeId], status: 'running', startTime: Date.now() }
-    }));
-    
-    // Increment iterations counter
-    setIterations(prev => prev + 1);
-    
-    try {
-      // Update node status in visualization using memoized function
-      updateNodeStatus(nodeId, 'running');
-      
-      const node = patternData.nodes.find(n => n.id === nodeId);
-      if (!node) throw new Error(`Node ${nodeId} not found`);
-      
-      // Process node based on type
-      let result = '';
-      
-      if (node.data.nodeType === 'input') {
-        result = `Processing input: "${userInput}"`;
-        await new Promise(resolve => setTimeout(resolve, 500 / animationSpeed)); // Short delay for input
-      } else if (node.data.nodeType === 'llm') {
-        result = await generateMockResponse(userInput, patternData.id);
-      } else if (node.data.nodeType === 'router') {
-        result = 'Determining next steps based on input analysis...';
-        await new Promise(resolve => setTimeout(resolve, 800 / animationSpeed)); // Delay for router decision
-        
-        // Router logic - randomly choose a path for demo purposes
-        const shouldSucceed = Math.random() > 0.2; // 80% success rate
-        if (!shouldSucceed) {
-          throw new Error('Router determined input cannot be processed further');
-        }
-      } else if (node.data.nodeType === 'aggregator') {
-        result = 'Combining results from parallel processes...';
-        await new Promise(resolve => setTimeout(resolve, 1200 / animationSpeed)); // Longer delay for aggregation
-      } else {
-        result = `Processed by ${node.data?.label || nodeId}`;
-        await new Promise(resolve => setTimeout(resolve, 700 / animationSpeed));
-      }
-      
-      // Mark node as complete
-      setSteps(prev => ({
-        ...prev,
-        [nodeId]: { 
-          ...prev[nodeId], 
-          status: 'complete', 
-          result, 
-          endTime: Date.now() 
-        }
-      }));
-      
-      // Update node in visualization using memoized function
-      updateNodeStatus(nodeId, 'complete', result);
-      
-      // If output node, set final output
-      if (node.data.nodeType === 'output') {
-        setOutput(result);
-        return;
-      }
-      
-      // Find next nodes
-      const outgoingEdges = patternData.edges.filter(edge => edge.source === nodeId);
-      
-      // Process next nodes sequentially
-      for (const edge of outgoingEdges) {
-        try {
-          // Animate edge using memoized function
-          setEdgeAnimated(edge.id, true);
-          
-          // Create data flow visualization
-          const newFlow = {
-            id: `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-            edgeId: edge.id,
-            source: edge.source,
-            target: edge.target,
-            content: result,
-            timestamp: Date.now(),
-            type: node.data?.nodeType === 'router' ? 'data' : 
-                  node.data?.nodeType === 'llm' ? 'response' : 'message',
-            progress: 0
-          };
-          setDataFlows(flows => [...flows, newFlow]);
-          
-          // Wait proportionally to the animation speed (faster speed = shorter delay)
-          await new Promise(resolve => setTimeout(resolve, 800 / animationSpeed));
-          
-          // If step-by-step mode is active, wait for user to click "Next Step" button
-          if (animationMode === 'step-by-step' && stepControllerRef.current) {
-            await waitForNextStep();
-          }
-          
-          // Process target node
-          await processNode(edge.target);
-        } catch (error) {
-          console.warn(`Error processing edge ${edge.id}:`, error);
-          // Continue with next edge if one fails
-        }
-      }
-    } catch (error) {
-      console.error(`Error processing node ${nodeId}:`, error);
-      
-      // Mark node as failed
-      setSteps(prev => ({
-        ...prev,
-        [nodeId]: { 
-          ...prev[nodeId], 
-          status: 'failed', 
-          result: error instanceof Error ? error.message : 'Unknown error',
-          endTime: Date.now()
-        }
-      }));
-      
-      // Update node in visualization using memoized function
-      updateNodeStatus(nodeId, 'failed', error instanceof Error ? error.message : 'Unknown error');
-      
-      // Create error flow visualization for failure paths
-      try {
-        const failureEdges = Array.isArray(patternData.edges) ? patternData.edges.filter(edge => 
-          edge.source === nodeId && 
-          patternData.nodes.find(n => n.id === edge.target)?.data?.label?.toLowerCase().includes('fail')
-        ) : [];
-        
-        for (const edge of failureEdges) {
-          // Animate edge using memoized function
-          setEdgeAnimated(edge.id, true);
-          
-          // Create error flow visualization
-          const errorFlow = {
-            id: `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-            edgeId: edge.id,
-            source: edge.source,
-            target: edge.target,
-            content: 'Error',
-            timestamp: Date.now(),
-            type: 'error',
-            progress: 0
-          };
-          setDataFlows(flows => [...flows, errorFlow]);
-          
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // If step-by-step mode is active, wait for user to click "Next Step" button
-          if (animationMode === 'step-by-step' && stepControllerRef.current) {
-            await waitForNextStep();
-          }
-          
-          // Process failure path
-          await processNode(edge.target);
-          return;
-        }
-      } catch (flowError) {
-        console.warn("Error handling failure flow:", flowError);
-      }
-      
-      throw error; // Propagate error if no failure path
-    }
-  };
-  
   // Calculate execution time for a step
-  const getExecutionTime = useCallback((step: StepState) => {
+  const getExecutionTime = (step: StepState) => {
     if (step.startTime && step.endTime) {
       return ((step.endTime - step.startTime) / 1000).toFixed(1) + 's';
     }
     return '';
-  }, []);
-  
-  // Initialize reactFlowInstance using useStableFlow to prevent initialization errors
-  const { 
-    containerRef: stableFlowContainerRef, 
-    resetFlow, 
-    fitView: fitViewFlow,
-    reactFlowInstance // This is initialized safely
-  } = useStableFlow({
-    fitViewOnResize: true,
-    fitViewPadding: 0.2,
-    stabilizationDelay: 300
-  });
-  
-  // Apply stabilization after reactFlowInstance is properly defined
-  useEffect(() => {
-    // Early exit if reactFlowInstance is not defined yet
-    if (!reactFlowInstance) return;
-    
-    // Apply second stabilization after a delay
-    const timer2 = setTimeout(() => {
-      try {
-        // Make sure reactFlowInstance is still valid before calling methods
-        if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
-          reactFlowInstance.fitView({ padding: 0.2 });
-        }
-        
-        // Force render nodes and make them visible
-        const forceNodeVisibility = () => {
-          setNodes(prevNodes => {
-            return prevNodes.map(node => ({
-              ...node,
-              style: {
-                ...node.style,
-                opacity: 1,
-                visibility: 'visible',
-                display: 'block',
-                transform: 'translateZ(0)'
-              }
-            }));
-          });
-        };
-        
-        // Call once immediately and once after a delay
-        forceNodeVisibility();
-        setTimeout(forceNodeVisibility, 300);
-      } catch (error) {
-        console.warn('Error applying ReactFlow stabilization:', error);
-      }
-    }, 800);
-    
-    return () => {
-      clearTimeout(timer2);
-    };
-  }, [reactFlowInstance, setNodes]);
+  };
 
-  // Use a different reference to trigger the resize safely
-  const stableResetFlow = useCallback(() => {
-    try {
-      // Check if reactFlowInstance is available
-      if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
-        reactFlowInstance.fitView({ padding: 0.2 });
-      }
-      
-      // Also use our stable reset as backup
-      if (resetFlow) {
-        resetFlow();
-      }
-    } catch (error) {
-      console.warn('Error in stableResetFlow:', error);
-      // Try to recover with timeout
-      setTimeout(() => {
-        if (resetFlow) resetFlow();
-      }, 100);
-    }
-  }, [reactFlowInstance, resetFlow]);
-  
-  // Setup safe resize handling with improved monitoring
-  useEffect(() => {
-    if (!stableFlowContainerRef.current) return;
-    
-    // Apply safer resize behavior once on mount, not on every render
-    const resetTimeout = setTimeout(() => {
-      stableResetFlow();
-    }, 1000);
-    
-    // Monitor for errors and re-trigger resize if needed
-    const handleLayoutUpdate = () => {
-      requestAnimationFrame(stableResetFlow);
-    };
-    
-    // Listen for layout update events
-    window.addEventListener('layout-update', handleLayoutUpdate);
-    
-    return () => {
-      clearTimeout(resetTimeout);
-      window.removeEventListener('layout-update', handleLayoutUpdate);
-    };
-  }, [stableResetFlow, stableFlowContainerRef]); // Only depend on stable functions
-  
-  // Add proper memoization to prevent frequent rerenders
-  // We don't need memoizedEdges and memoizedNodes since useNodesState and useEdgesState already handle this
-  // Remove excessive memoization that's causing infinite loops
-  
-  // Define nodeTypes and edgeTypes for ReactFlow with memoization
-  const nodeTypes = useMemo<NodeTypes>(() => ({
+  // Define nodeTypes for ReactFlow
+  const nodeTypes = {
     demoNode: CustomDemoNode
-  }), []);
-  
-  // Custom edge types with arrows for better visualization
-  const edgeTypes = useMemo(() => ({
-    custom: React.memo(({ id, sourceX, sourceY, targetX, targetY, animated }: any) => {
-      // Ensure coordinates have valid values to prevent SVG errors
-      if (isNaN(sourceX) || isNaN(sourceY) || isNaN(targetX) || isNaN(targetY)) {
-        sourceX = 0;
-        sourceY = 0;
-        targetX = 100;
-        targetY = 100;
-      }
-      
-      const edgePath = `M${sourceX},${sourceY} C${sourceX + 50},${sourceY} ${targetX - 50},${targetY} ${targetX},${targetY}`;
-      
-      // Calculate arrow position at target end
-      const dx = targetX - sourceX;
-      const dy = targetY - sourceY;
-      const angle = Math.atan2(dy, dx);
-      const arrowLength = 10;
-      
-      // Position arrow slightly before endpoint
-      const arrowX = targetX - arrowLength * Math.cos(angle);
-      const arrowY = targetY - arrowLength * Math.sin(angle);
-      
-      return (
-        <g>
-          <path
-            id={id}
-            stroke={animated ? 'var(--primary)' : 'var(--border)'}
-            strokeOpacity={1}
-            fill="none"
-            strokeWidth={animated ? 2 : 1.5}
-            className={animated ? 'animate-pulse' : ''}
-            d={edgePath}
-            strokeDasharray={animated ? "5,5" : ""}
-            style={{
-              strokeWidth: animated ? 2 : 1.5,
-              opacity: 1,
-              visibility: 'visible'
-            }}
-          />
-          
-          {/* Arrow marker */}
-          <polygon
-            points="-6,-4 0,0 -6,4"
-            fill={animated ? 'var(--primary)' : 'var(--border)'}
-            transform={`translate(${arrowX}, ${arrowY}) rotate(${angle * (180 / Math.PI)})`}
-            style={{
-              opacity: 1,
-              visibility: 'visible'
-            }}
-          />
-        </g>
-      );
-    })
-  }), []);
-  
-  // Fixed React error: Maximum update depth exceeded
-  const updateNodeStatus = useCallback((nodeId: string, status: 'idle' | 'running' | 'complete' | 'failed', result?: string) => {
-    setNodes(prevNodes => prevNodes.map(node => 
-      node.id === nodeId ? {
-        ...node,
-        data: { 
-          ...node.data, 
-          status,
-          result
-        }
-      } : node
-    ));
-  }, [setNodes]);
-  
-  // Fixed React error: Maximum update depth exceeded
-  const setEdgeAnimated = useCallback((edgeId: string, animated: boolean) => {
-    setEdges(prevEdges => prevEdges.map(e => 
-      e.id === edgeId ? { ...e, animated } : e
-    ));
-  }, [setEdges]);
-  
-  // Function to handle node drag events - safely using optional chaining
-  const onNodeDragStop = useCallback(() => {
-    // Recalculate data flow paths after nodes are moved
-    setDataFlows(prevFlows => {
-      if (!prevFlows?.length) return prevFlows || [];
-      return [...prevFlows]; // Force update of flow paths
-    });
+  };
+
+  // Flow completion handler
+  const handleFlowComplete = useCallback((flowId: string) => {
+    setDataFlows(prev => prev.filter(flow => flow.id !== flowId));
   }, []);
 
   return (
@@ -940,7 +526,6 @@ const DragHint = React.memo(() => {
                   }
                 }}
                 disabled={isRunning && !waitingForNextStep}
-                className="min-w-[110px]"
               >
                 Auto
               </Button>
@@ -949,7 +534,6 @@ const DragHint = React.memo(() => {
                 variant={animationMode === 'step-by-step' ? "default" : "outline"}
                 onClick={() => setAnimationMode('step-by-step')}
                 disabled={isRunning && !waitingForNextStep}
-                className="min-w-[110px]"
               >
                 Step-by-Step
               </Button>
@@ -957,31 +541,17 @@ const DragHint = React.memo(() => {
                 <Button 
                   size="sm"
                   variant="secondary"
-                  className="ml-2 pulse-animation"
                   onClick={() => {
                     if (stepControllerRef.current) {
                       stepControllerRef.current.advanceToNextStep();
                     }
                   }}
+                  className="pulse-animation"
                 >
-                  <Gauge size={16} weight="bold" className="mr-1" /> Next Step
+                  Next Step
                 </Button>
               )}
             </div>
-          </div>
-          
-          <div className="space-y-1.5 mb-4">
-            <div className="text-sm text-muted-foreground">
-              Switch between <span className="font-bold text-primary">Auto</span> and <span className="font-bold text-primary">Step-by-Step</span> modes to analyze how agents interact. Auto mode runs automatically, while Step-by-Step lets you control the pace to understand each agent communication in detail.
-            </div>
-            <div className="text-sm text-muted-foreground mt-1">
-              <span className="font-bold text-primary">Tip:</span> You can drag and interact with the nodes to better understand the pattern structure. Use the mouse wheel to zoom in/out and drag the background to pan.
-            </div>
-            {animationMode === 'step-by-step' && (
-              <div className="text-sm flex items-center text-primary-foreground bg-primary/10 px-3 py-2 rounded-md">
-                <span className="mr-2">•</span> Click <span className="mx-1 font-semibold">Next Step</span> to advance through each interaction in the workflow
-              </div>
-            )}
           </div>
           
           <div className="flex justify-between items-center">
@@ -1020,34 +590,20 @@ const DragHint = React.memo(() => {
           {/* Flow visualization with stabilized container */}
           <ReactFlowProvider>
             <StableFlowContainer
-              ref={stableFlowContainerRef}
+              ref={flowContainerRef}
               className="border border-border rounded-md overflow-hidden relative"
-              style={{ 
-                height: '400px', 
-                minHeight: '400px', 
-                position: 'relative',
-                transform: 'translateZ(0)',
-                backfaceVisibility: 'hidden',
-                WebkitBackfaceVisibility: 'hidden',
-                boxShadow: '0 0 0 1px var(--border)',
-                contain: 'layout'
-              }}
-              fitViewOnResize={true}
+              style={{ height: '400px', minHeight: '400px' }}
             >
               <DragHint />
               <StandardFlowVisualizerWithProvider
-                nodes={nodes}
-                edges={edges}
+                nodes={demoNodes}
+                edges={demoEdges}
                 flows={dataFlows}
-                onNodesChange={(updatedNodes) => onNodesChange({ nodes: updatedNodes })}
-                onEdgesChange={(updatedEdges) => onEdgesChange({ edges: updatedEdges })}
-                onFlowComplete={onFlowComplete}
+                onFlowComplete={handleFlowComplete}
                 animationSpeed={animationSpeed}
-                showLabels={true}
-                showControls={true}
-                autoFitView={false}
-                className="h-full w-full"
                 nodeTypes={nodeTypes}
+                showControls={true}
+                autoFitView={true}
               />
             </StableFlowContainer>
           </ReactFlowProvider>
@@ -1118,7 +674,7 @@ const DragHint = React.memo(() => {
               <div className="space-y-2">
                 <h3 className="text-lg font-medium">Final Output</h3>
                 <Alert>
-                  <AlertDescription className="whitespace-pre-wrap">
+                  <AlertDescription>
                     {output}
                   </AlertDescription>
                 </Alert>

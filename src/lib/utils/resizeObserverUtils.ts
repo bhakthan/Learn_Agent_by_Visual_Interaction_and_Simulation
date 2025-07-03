@@ -1,211 +1,90 @@
 /**
- * Utility functions for handling ResizeObserver-related errors and optimizations
+ * Utilities to handle and prevent ResizeObserver loop errors
  */
 
 /**
- * Creates a stable ResizeObserver that doesn't throw loop errors
+ * Debounce function to limit execution frequency
  */
-export const createStableResizeObserver = (callback: ResizeObserverCallback): ResizeObserver => {
-  try {
-    return new ResizeObserver((entries, observer) => {
-      // Use requestAnimationFrame to avoid synchronous layout triggers
-      window.requestAnimationFrame(() => {
-        try {
-          // Check if we're still in a valid state to execute callback
-          if (entries.length && document.body.contains(entries[0]?.target as Element)) {
-            callback(entries, observer);
-          }
-        } catch (e) {
-          console.error('Error in ResizeObserver callback:', e);
-        }
-      });
-    });
-  } catch (e) {
-    console.error('Error creating ResizeObserver:', e);
-    // Return a dummy observer if creation fails
-    return {
-      observe: () => {},
-      unobserve: () => {},
-      disconnect: () => {},
-    } as ResizeObserver;
-  }
-};
-
-/**
- * Throttle function for ResizeObserver callbacks
- */
-export const throttleResizeObserver = (callback: Function, delay: number = 100) => {
-  let lastCall = 0;
-  let timeout: number | null = null;
+function debounce(func: Function, wait: number) {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
   
-  return (...args: any[]) => {
-    const now = Date.now();
+  return function(...args: any[]) {
+    const later = () => {
+      timeout = null;
+      func(...args);
+    };
     
-    if (now - lastCall < delay) {
-      if (timeout) clearTimeout(timeout);
-      timeout = window.setTimeout(() => {
-        lastCall = now;
-        callback(...args);
-      }, delay);
-    } else {
-      lastCall = now;
-      callback(...args);
-    }
-  };
-};
-
-/**
- * Creates a stable resize detector that works around ResizeObserver issues
- * @param element - Element to observe
- * @param callback - Function to call on resize
- * @param options - Configuration options
- */
-export function createStableResizeDetector(
-  element: HTMLElement,
-  callback: () => void,
-  options: { 
-    throttle?: number;
-    useRAF?: boolean;
-    disconnectOnError?: boolean;
-  } = {}
-): () => void {
-  // Default options
-  const {
-    throttle = 100,
-    useRAF = true,
-    disconnectOnError = true
-  } = options;
-  
-  // Error counter to help disable problematic observers
-  let errorCount = 0;
-  
-  // Throttled callback
-  const throttledCallback = throttleResizeObserver(() => {
-    if (useRAF) {
-      requestAnimationFrame(callback);
-    } else {
-      callback();
-    }
-  }, throttle);
-  
-  // Create stable observer
-  const observer = createStableResizeObserver((entries) => {
-    try {
-      throttledCallback();
-    } catch (e) {
-      errorCount++;
-      console.debug('Resize detector error (suppressed)');
-      
-      // Disconnect if we're encountering repeated errors
-      if (disconnectOnError && errorCount > 3) {
-        try {
-          observer.disconnect();
-        } catch (err) {
-          // Silent handling
-        }
-      }
-    }
-  });
-  
-  // Start observing
-  try {
-    observer.observe(element);
-  } catch (e) {
-    console.warn('Failed to observe element', e);
-  }
-  
-  // Return cleanup function
-  return () => {
-    try {
-      observer.disconnect();
-    } catch (e) {
-      // Silent cleanup error handling
-    }
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
   };
 }
 
 /**
- * Sets up global error handling for ResizeObserver errors
+ * Apply ResizeObserver error suppression
+ * Returns a cleanup function to restore original error handlers
  */
-export const setupResizeObserverErrorHandling = () => {
-  // Only run in browser environment
-  if (typeof window === 'undefined') return;
-  
-  // Track error counts to apply adaptive solutions
-  let errorCount = 0;
-  let lastErrorTime = 0;
-  let recoveryInProgress = false;
-  
-  // Handle ResizeObserver errors specifically
-  const handleResizeObserverError = (e: Event | string) => {
-    const errorMsg = typeof e === 'string' ? e : (e as any).message || '';
-    
-    if (
-      errorMsg.includes('ResizeObserver') || 
-      errorMsg.includes('loop') ||
-      errorMsg.includes('undelivered notifications')
-    ) {
-      // Track errors for adaptive handling
-      const now = Date.now();
-      errorCount++;
-      
-      // If we're getting lots of errors in a short time, be more aggressive in recovery
-      if (now - lastErrorTime < 2000 && errorCount > 3 && !recoveryInProgress) {
-        recoveryInProgress = true;
-        
-        // Throttled recovery function
-        const stabilizeFlow = () => {
-          // Find and stabilize ReactFlow elements
-          document.querySelectorAll('.react-flow, .react-flow__container, .react-flow__viewport').forEach(el => {
-            if (el instanceof HTMLElement) {
-              // Apply stabilization techniques
-              el.style.transform = 'translateZ(0)';
-              el.style.backfaceVisibility = 'hidden';
-              
-              // Ensure elements have reasonable sizes
-              const parent = el.parentElement;
-              if (parent && parent.offsetHeight > 10 && (!el.style.height || el.offsetHeight < 10)) {
-                el.style.height = `${parent.offsetHeight}px`;
-              } else if (!el.style.height || el.offsetHeight < 10) {
-                el.style.height = '300px';
-              }
-            }
-          });
-          
-          // Reset recovery state after a delay
-          setTimeout(() => {
-            recoveryInProgress = false;
-            errorCount = Math.max(0, errorCount - 2);
-          }, 2000);
-        };
-        
-        // Apply stabilization
-        requestAnimationFrame(stabilizeFlow);
-      }
-      
-      lastErrorTime = now;
-      return true;
-    }
-    return false;
-  };
-  
-  // Intercept console errors
+export function setupResizeObserverErrorHandling() {
+  // Store original console error method
   const originalConsoleError = console.error;
-  console.error = function(msg, ...args) {
-    if (typeof msg === 'string' && handleResizeObserverError(msg)) {
-      return; // Suppress error
+  
+  // Override console.error to filter ResizeObserver errors
+  console.error = function(msg: any, ...args: any[]) {
+    // Filter out ResizeObserver errors
+    if (
+      typeof msg === 'string' && 
+      (msg.includes('ResizeObserver loop') || 
+       msg.includes('ResizeObserver was created') || 
+       msg.includes('undelivered notifications'))
+    ) {
+      // Just ignore these errors
+      return;
     }
     
     // Pass through other errors
     return originalConsoleError.apply(console, [msg, ...args]);
   };
   
-  // Add global error event listener
-  window.addEventListener('error', (e) => {
-    if (e.message && handleResizeObserverError(e.message)) {
+  // Add global error handler for ResizeObserver errors
+  const errorHandler = (e: ErrorEvent) => {
+    if (e.message && e.message.includes('ResizeObserver')) {
       e.preventDefault();
       e.stopPropagation();
       return false;
     }
-  }, true);
-};
+  };
+  
+  window.addEventListener('error', errorHandler, true);
+  
+  // Return cleanup function
+  return () => {
+    console.error = originalConsoleError;
+    window.removeEventListener('error', errorHandler, true);
+  };
+}
+
+/**
+ * Disable problematic ResizeObservers after too many errors
+ */
+export function disableResizeObserverIfProblematic() {
+  // This is a last-resort fix when all else fails
+  try {
+    // Find all ReactFlow elements
+    const flowElements = document.querySelectorAll('.react-flow, .react-flow__container');
+    flowElements.forEach(el => {
+      if (el instanceof HTMLElement) {
+        el.style.overflow = 'hidden'; // Temporarily freeze scrolling
+        el.style.height = el.offsetHeight + 'px'; // Fix height
+        el.style.width = el.offsetWidth + 'px'; // Fix width
+        
+        // Reset after a delay
+        setTimeout(() => {
+          el.style.overflow = '';
+        }, 1000);
+      }
+    });
+  } catch (e) {
+    // Silent recovery
+  }
+}
+
+export default { setupResizeObserverErrorHandling, disableResizeObserverIfProblematic };

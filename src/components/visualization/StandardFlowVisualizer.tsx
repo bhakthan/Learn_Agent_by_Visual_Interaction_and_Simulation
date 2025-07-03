@@ -3,25 +3,29 @@ import ReactFlow, {
   ReactFlowProvider,
   Controls,
   Background,
-  useNodesState,
-  useEdgesState,
-  useReactFlow,
   BackgroundVariant,
   Node,
   Edge,
-  NodeTypes
+  NodeTypes,
+  useNodesState,
+  useEdgesState,
+  useReactFlow
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { AgentNode } from './node-types/AgentNode';
 import DataFlowVisualizer from './DataFlowVisualizer';
 import { cn } from '@/lib/utils';
-import { useVisualizationTheme } from '@/lib/utils/visualizationTheme';
-import { DataFlowType } from '@/lib/utils/dataFlowUtils';
+import { useTheme } from '@/components/theme/ThemeProvider';
 
 // Standard node types
 const defaultNodeTypes: NodeTypes = {
   agent: AgentNode,
 };
+
+// Define data flow types
+export type DataFlowType = 
+  'query' | 'response' | 'tool_call' | 'observation' | 
+  'reflection' | 'plan' | 'message' | 'data' | 'error';
 
 // Interface for flow message with standardized properties
 export interface StandardFlowMessage {
@@ -41,8 +45,8 @@ interface StandardFlowVisualizerProps {
   edges: Edge[];
   flows?: StandardFlowMessage[];
   nodeTypes?: NodeTypes;
-  onNodesChange?: (nodes: Node[]) => void;
-  onEdgesChange?: (edges: Edge[]) => void;
+  onNodesChange?: (nodes: any) => void;
+  onEdgesChange?: (edges: any) => void;
   onFlowComplete?: (flowId: string) => void;
   animationSpeed?: number;
   showLabels?: boolean;
@@ -52,8 +56,7 @@ interface StandardFlowVisualizerProps {
 }
 
 /**
- * StandardFlowVisualizer - A component for visualizing data flows between nodes
- * with consistent styling across the application
+ * StandardFlowVisualizer - A simplified component for visualizing data flows
  */
 export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
   nodes: initialNodes,
@@ -69,126 +72,119 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
   autoFitView = true,
   className
 }) => {
-  const { theme, isDarkMode, background, edges: edgeStyles } = useVisualizationTheme();
-  const [nodes, setNodes, onNodeChanges] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgeChanges] = useEdgesState(initialEdges);
-  const [activeFlows, setActiveFlows] = useState<StandardFlowMessage[]>([]);
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+  const [nodes, setNodes, onNodeChanges] = useNodesState(initialNodes || []);
+  const [edges, setEdges, onEdgeChanges] = useEdgesState(initialEdges || []);
   const reactFlowInstance = useReactFlow();
 
-  // Handle external node changes
+  // Force nodes to have correct defaults
   useEffect(() => {
-    if (onNodesChange) {
-      onNodesChange(nodes);
-    }
-  }, [nodes, onNodesChange]);
-
-  // Handle external edge changes
-  useEffect(() => {
-    if (onEdgesChange) {
-      onEdgesChange(edges);
-    }
-  }, [edges, onEdgesChange]);
-
-  // Update with external nodes
-  useEffect(() => {
-    setNodes(initialNodes);
+    // Add default properties to ensure all nodes render correctly
+    const processedNodes = initialNodes?.map(node => ({
+      ...node,
+      style: {
+        ...node.style,
+        opacity: 1,
+        visibility: 'visible',
+        transform: 'translateZ(0)'
+      },
+      draggable: node.draggable !== undefined ? node.draggable : true,
+      selectable: node.selectable !== undefined ? node.selectable : true
+    })) || [];
+    
+    setNodes(processedNodes);
   }, [initialNodes, setNodes]);
 
-  // Update with external edges
+  // Update edges with correct defaults
   useEffect(() => {
-    setEdges(initialEdges);
+    const processedEdges = initialEdges?.map(edge => ({
+      ...edge,
+      style: {
+        ...edge.style,
+        opacity: 1,
+        visibility: 'visible'
+      }
+    })) || [];
+    
+    setEdges(processedEdges);
   }, [initialEdges, setEdges]);
 
-  // Update flows from external source
-  useEffect(() => {
-    setActiveFlows(flows);
-  }, [flows]);
-
-  // Get edge points for data flow visualization
+  // Get edge points for data flow visualization - with more safety checks
   const getEdgePoints = useCallback((edgeId: string) => {
-    if (!reactFlowInstance) return null;
+    if (!edges || !nodes) return null;
     
     const edge = edges.find(e => e.id === edgeId);
     if (!edge) return null;
     
-    // Get source and target nodes
     const sourceNode = nodes.find(n => n.id === edge.source);
     const targetNode = nodes.find(n => n.id === edge.target);
+    
     if (!sourceNode || !targetNode) return null;
     
-    // Use direct node positions since getNodePositionById is not available
-    const sourcePosition = sourceNode.position;
-    const targetPosition = targetNode.position;
+    // Default dimensions if not specified
+    const nodeWidth = 150;
+    const nodeHeight = 40;
     
-    // Get node dimensions
-    const sourceWidth = (sourceNode as any).width || 150;
-    const sourceHeight = (sourceNode as any).height || 40;
-    const targetWidth = (targetNode as any).width || 150;
-    const targetHeight = (targetNode as any).height || 40;
+    // Calculate center of source node for flow start
+    const sourceX = sourceNode.position.x + nodeWidth / 2;
+    const sourceY = sourceNode.position.y + nodeHeight / 2;
     
-    // Calculate center points
-    const sourceX = sourcePosition.x + sourceWidth / 2;
-    const sourceY = sourcePosition.y + sourceHeight / 2;
-    const targetX = targetPosition.x + targetWidth / 2;
-    const targetY = targetPosition.y + targetHeight / 2;
+    // Calculate center of target node for flow end
+    const targetX = targetNode.position.x + nodeWidth / 2;
+    const targetY = targetNode.position.y + nodeHeight / 2;
     
     return { sourceX, sourceY, targetX, targetY };
-  }, [reactFlowInstance, nodes, edges]);
+  }, [edges, nodes]);
 
-  // Handle flow completion
-  const handleFlowComplete = useCallback((flowId: string) => {
-    if (onFlowComplete) {
-      onFlowComplete(flowId);
-    } else {
-      setActiveFlows(flows => flows.filter(flow => flow.id !== flowId));
-    }
-  }, [onFlowComplete]);
-
-  // Auto fit view when content changes
+  // Apply fit view when needed
   useEffect(() => {
     if (autoFitView && reactFlowInstance) {
-      setTimeout(() => {
-        reactFlowInstance.fitView({
-          padding: 0.2,
-          includeHiddenNodes: false,
-          duration: 800,
-        });
-      }, 200);
+      const timer = setTimeout(() => {
+        try {
+          reactFlowInstance.fitView({
+            padding: 0.2,
+            includeHiddenNodes: true
+          });
+        } catch (error) {
+          console.warn('Error fitting view (suppressed)');
+        }
+      }, 300);
+      
+      return () => clearTimeout(timer);
     }
-  }, [autoFitView, reactFlowInstance, nodes, edges]);
+  }, [autoFitView, reactFlowInstance]);
 
   return (
-    <div className={cn(
-      "w-full h-[400px] border border-border rounded-md overflow-hidden", 
-      className
-    )}
-    style={{
-      transform: 'translateZ(0)',
-      backfaceVisibility: 'hidden',
-      WebkitBackfaceVisibility: 'hidden',
-      position: 'relative',
-      contain: 'layout'
-    }}>
+    <div 
+      className={cn(
+        "w-full h-full border border-border rounded-md overflow-hidden", 
+        className
+      )}
+      style={{
+        transform: 'translateZ(0)',
+        position: 'relative',
+        contain: 'layout',
+        minHeight: '300px'
+      }}
+    >
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodeChanges}
-        onEdgesChange={onEdgeChanges}
+        onNodesChange={(changes) => {
+          onNodeChanges(changes);
+          if (onNodesChange) onNodesChange(nodes);
+        }}
+        onEdgesChange={(changes) => {
+          onEdgeChanges(changes);
+          if (onEdgesChange) onEdgesChange(edges);
+        }}
         nodeTypes={nodeTypes}
-        fitView={autoFitView}
-        fitViewOptions={{ padding: 0.2, includeHiddenNodes: false }}
+        fitView={true}
+        fitViewOptions={{ padding: 0.2 }}
         minZoom={0.5}
         maxZoom={2}
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-        attributionPosition="bottom-right"
-        onInit={(instance) => {
-          // Fit view after initialization
-          setTimeout(() => {
-            if (instance && typeof instance.fitView === 'function') {
-              instance.fitView({ padding: 0.2 });
-            }
-          }, 200);
-        }}
         style={{
           background: isDarkMode ? 'var(--background)' : 'var(--card)',
           width: '100%',
@@ -198,24 +194,27 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
       >
         <Background
           variant={BackgroundVariant.Dots}
-          gap={background.gap}
-          size={background.size}
+          gap={12}
+          size={1}
           className={cn(
             "bg-background transition-all duration-300",
             isDarkMode ? "bg-opacity-40" : "bg-opacity-100"
           )}
         />
+        
         {showControls && (
           <Controls className="bg-card border border-border text-foreground" />
         )}
         
-        <DataFlowVisualizer
-          flows={activeFlows}
-          edges={edges}
-          getEdgePoints={getEdgePoints}
-          onFlowComplete={handleFlowComplete}
-          speed={animationSpeed}
-        />
+        {flows.length > 0 && (
+          <DataFlowVisualizer
+            flows={flows}
+            edges={edges}
+            getEdgePoints={getEdgePoints}
+            onFlowComplete={onFlowComplete}
+            speed={animationSpeed}
+          />
+        )}
       </ReactFlow>
     </div>
   );
@@ -223,6 +222,7 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
 
 /**
  * Wrapped version of StandardFlowVisualizer with ReactFlowProvider
+ * This is the recommended way to use this component
  */
 const StandardFlowVisualizerWithProvider: React.FC<StandardFlowVisualizerProps> = (props) => {
   return (
