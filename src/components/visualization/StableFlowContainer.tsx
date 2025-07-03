@@ -67,6 +67,16 @@ export const StableFlowContainer = forwardRef<HTMLDivElement, StableFlowContaine
             el.style.transform = 'translateZ(0)';
             el.style.visibility = 'visible';
             el.style.opacity = '1';
+            
+            // Remove any unwanted text nodes displaying in ReactFlow
+            el.childNodes.forEach(node => {
+              if (node.nodeType === Node.TEXT_NODE && node.textContent) {
+                if (node.textContent.trim().includes('/agent/invoke') || 
+                    node.textContent.trim().includes('POST ')) {
+                  node.textContent = '';
+                }
+              }
+            });
           }
         });
         

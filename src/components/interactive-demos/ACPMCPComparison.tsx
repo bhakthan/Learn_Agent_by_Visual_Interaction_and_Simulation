@@ -126,7 +126,7 @@ const ACPMCPComparison = () => {
           id: "1",
           from: "Client",
           to: "ACP Server",
-          content: "POST /agent/invoke\nContent-Type: application/json\n\n{\n  \"input\": \"Generate a summary of the quarterly report\",\n  \"options\": {\n    \"timeout\": 30\n  }\n}",
+          content: "{ \"input\": \"Generate a summary of the quarterly report\", \"options\": { \"timeout\": 30 } }",
           timestamp: "00:00",
           notes: "Standard HTTP request to the ACP endpoint"
         },
@@ -253,7 +253,7 @@ const ACPMCPComparison = () => {
           id: "1",
           from: "Client",
           to: "ACP Server",
-          content: "POST /agent/invoke\nContent-Type: application/json\n\n{\n  \"input\": \"Explain quantum computing\",\n  \"options\": {\n    \"stream\": true\n  }\n}",
+          content: "{ \"input\": \"Explain quantum computing\", \"options\": { \"stream\": true } }",
           timestamp: "00:00",
           notes: "Request with streaming option enabled"
         },

@@ -96,6 +96,30 @@ export function applyReactFlowGlobalOptimizations() {
         // Enforce minimum dimensions
         flow.style.minHeight = '200px';
         flow.style.minWidth = '200px';
+        
+        // Clean up text nodes
+        flow.childNodes.forEach(node => {
+          if (node.nodeType === Node.TEXT_NODE && node.textContent) {
+            if (node.textContent.trim().includes('/agent/invoke') || 
+                node.textContent.trim().includes('POST ')) {
+              node.textContent = '';
+            }
+          }
+        });
+      }
+    });
+    
+    // Also clean inside viewport and renderer
+    document.querySelectorAll('.react-flow__viewport, .react-flow__renderer').forEach(el => {
+      if (el instanceof HTMLElement) {
+        el.childNodes.forEach(node => {
+          if (node.nodeType === Node.TEXT_NODE && node.textContent) {
+            if (node.textContent.trim().includes('/agent/invoke') || 
+                node.textContent.trim().includes('POST ')) {
+              node.textContent = '';
+            }
+          }
+        });
       }
     });
   };
@@ -103,6 +127,22 @@ export function applyReactFlowGlobalOptimizations() {
   // Run stabilization after timeout to ensure ReactFlow is mounted
   setTimeout(stabilizeReactFlow, 1000);
   setTimeout(window.fixReactFlow, 1500);
+  
+  // Add periodic cleanup for text nodes that might appear after rendering
+  setInterval(() => {
+    document.querySelectorAll('.react-flow, .react-flow__viewport, .react-flow__renderer').forEach(el => {
+      if (el instanceof HTMLElement) {
+        el.childNodes.forEach(node => {
+          if (node.nodeType === Node.TEXT_NODE && node.textContent) {
+            if (node.textContent.trim().includes('/agent/invoke') || 
+                node.textContent.trim().includes('POST ')) {
+              node.textContent = '';
+            }
+          }
+        });
+      }
+    });
+  }, 2000);
 }
 
 // Declare the fixReactFlow function on window

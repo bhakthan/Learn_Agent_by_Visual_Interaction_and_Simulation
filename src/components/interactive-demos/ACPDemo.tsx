@@ -244,7 +244,7 @@ const ACPDemo = () => {
       id: "1",
       from: "client",
       to: "server",
-      content: "POST /agent/invoke\nRequest: \"Generate a summary of the quarterly report\"",
+      content: "Request: \"Generate a summary of the quarterly report\"",
       timestamp: "00:00"
     },
     {
@@ -276,7 +276,7 @@ const ACPDemo = () => {
       id: "1",
       from: "client",
       to: "server",
-      content: "POST /agents/invoke\nRequest: \"Analyze market trends and prepare a report\"",
+      content: "Request: \"Analyze market trends and prepare a report\"",
       timestamp: "00:00"
     },
     {
