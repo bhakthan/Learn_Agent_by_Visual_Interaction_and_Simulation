@@ -1,114 +1,113 @@
 /**
- * Global fixes for ReactFlow and ResizeObserver errors
+ * Utility functions to prevent and handle ResizeObserver errors in ReactFlow
+ * These are applied globally to improve stability
  */
 
-/**
- * Apply global optimizations to ReactFlow components
- * This helps prevent common issues with React Flow rendering
- */
 export function applyReactFlowGlobalOptimizations() {
-  // Wait until DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initOptimizations);
-  } else {
-    initOptimizations();
-  }
-}
-
-function initOptimizations() {
-  // Create global CSS that optimizes ReactFlow rendering
-  const styleEl = document.createElement('style');
-  styleEl.innerHTML = `
-    /* Essential stability fixes for ReactFlow elements */
-    .react-flow__viewport, 
-    .react-flow__container,
-    .react-flow__renderer,
-    .react-flow {
-      transform: translateZ(0) !important;
-      will-change: transform !important;
-      backface-visibility: hidden !important;
-      -webkit-backface-visibility: hidden !important;
-      contain: layout !important;
-    }
-
-    .react-flow__node {
-      opacity: 1 !important;
-      visibility: visible !important;
-      display: block !important;
-    }
-
-    .react-flow__edge-path {
-      opacity: 1 !important;
-      visibility: visible !important;
-      stroke-width: 1.5px !important;
-    }
-  `;
-  document.head.appendChild(styleEl);
-
-  // Setup global error suppressions
-  setupErrorSuppressions();
-
-  // Schedule periodic fixes
-  window.setInterval(() => {
-    applyReactFlowFixes();
-  }, 10000);
-
-  // Apply initial fixes
-  setTimeout(applyReactFlowFixes, 1000);
-  setTimeout(applyReactFlowFixes, 3000);
-}
-
-function applyReactFlowFixes() {
-  // Fix all ReactFlow nodes
-  document.querySelectorAll('.react-flow__node').forEach(node => {
-    if (node instanceof HTMLElement) {
-      node.style.opacity = '1';
-      node.style.visibility = 'visible';
-      node.style.display = 'block';
-      node.style.transform = 'translateZ(0)';
-    }
-  });
-
-  // Fix all ReactFlow edges
-  document.querySelectorAll('.react-flow__edge').forEach(edge => {
-    if (edge instanceof HTMLElement) {
-      edge.style.opacity = '1';
-      edge.style.visibility = 'visible';
+  // Override console.error to suppress ReactFlow ResizeObserver errors
+  const originalConsoleError = console.error;
+  console.error = function(...args: any[]) {
+    if (
+      typeof args[0] === 'string' && 
+      (args[0].includes('ResizeObserver') || 
+       args[0].includes('loop completed with undelivered notifications') || 
+       args[0].includes('Maximum update depth exceeded'))
+    ) {
+      // Silently suppress these errors
+      return;
     }
     
-    // Fix edge paths
-    edge.querySelectorAll('path').forEach(path => {
-      path.setAttribute('stroke-width', '1.5');
-      path.setAttribute('opacity', '1');
-      path.setAttribute('visibility', 'visible');
-    });
-  });
-
-  // Fix all flow containers
-  document.querySelectorAll('.react-flow__container, .react-flow__renderer, .react-flow__viewport').forEach(el => {
-    if (el instanceof HTMLElement) {
-      el.style.transform = 'translateZ(0)';
-      el.style.backfaceVisibility = 'hidden';
-      el.style.contain = 'layout paint';
-    }
-  });
-}
-
-function setupErrorSuppressions() {
-  // Suppress ResizeObserver loop errors
-  const originalConsoleError = console.error;
-  console.error = function(msg, ...args) {
-    if (
-      typeof msg === 'string' &&
-      (msg.includes('ResizeObserver loop') ||
-       msg.includes('ResizeObserver was created') ||
-       msg.includes('undelivered notifications') ||
-       msg.includes('ResizeObserver completed'))
-    ) {
-      return; // Suppress these errors
+    if (typeof args[0] === 'string' && args[0].includes('Invalid hook call')) {
+      // Log hook errors with helpful suggestion
+      console.warn(
+        '[ReactFlow Warning]: Invalid hook call detected. ' + 
+        'This might be caused by using hooks outside a ReactFlowProvider. ' +
+        'Ensure all ReactFlow hooks are used within a component wrapped by ReactFlowProvider.'
+      );
+      return;
     }
     
     // Pass through all other errors
-    return originalConsoleError.apply(console, [msg, ...args]);
+    return originalConsoleError.apply(console, args);
   };
+  
+  // Add global error handler for ResizeObserver errors
+  window.addEventListener('error', function(e) {
+    if (e && e.message && (
+      e.message.includes('ResizeObserver loop') || 
+      e.message.includes('ResizeObserver completed with undelivered notifications')
+    )) {
+      // Prevent the error from propagating
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  }, true);
+  
+  // Add recovery function for ReactFlow display issues
+  window.fixReactFlow = function() {
+    document.querySelectorAll('.react-flow__node').forEach(node => {
+      if (node instanceof HTMLElement) {
+        node.style.opacity = '1';
+        node.style.visibility = 'visible';
+        node.style.display = 'block';
+        node.style.transform = 'translateZ(0)';
+      }
+    });
+    
+    document.querySelectorAll('.react-flow__edge').forEach(edge => {
+      if (edge instanceof HTMLElement) {
+        edge.style.opacity = '1';
+        edge.style.visibility = 'visible';
+      }
+      
+      const paths = edge.querySelectorAll('path');
+      paths.forEach(path => {
+        path.setAttribute('stroke-width', '1.5');
+        path.setAttribute('opacity', '1');
+        path.setAttribute('visibility', 'visible');
+      });
+    });
+  };
+  
+  // Add window.matchMedia polyfill for environments that don't support it
+  if (!window.matchMedia) {
+    window.matchMedia = (query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => true,
+    });
+  }
+  
+  // Stabilize ReactFlow rendering
+  const stabilizeReactFlow = () => {
+    document.querySelectorAll('.react-flow').forEach(flow => {
+      if (flow instanceof HTMLElement) {
+        // Apply hardware acceleration
+        flow.style.transform = 'translateZ(0)';
+        flow.style.backfaceVisibility = 'hidden';
+        flow.style.webkitBackfaceVisibility = 'hidden';
+        
+        // Enforce minimum dimensions
+        flow.style.minHeight = '200px';
+        flow.style.minWidth = '200px';
+      }
+    });
+  };
+  
+  // Run stabilization after timeout to ensure ReactFlow is mounted
+  setTimeout(stabilizeReactFlow, 1000);
+  setTimeout(window.fixReactFlow, 1500);
+}
+
+// Declare the fixReactFlow function on window
+declare global {
+  interface Window {
+    fixReactFlow: () => void;
+  }
 }

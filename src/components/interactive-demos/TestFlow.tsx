@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import StandardFlowVisualizerWithProvider from '../visualization/StandardFlowVisualizer'
-import AdaptiveFlowProvider from '../visualization/AdaptiveFlowContainer'
+import SafeAdaptiveFlowContainer from '../visualization/SafeAdaptiveFlowContainer'
 import { Button } from '@/components/ui/button'
 import { Play, Stop, ArrowsCounterClockwise, ToggleRight } from '@phosphor-icons/react'
 import { Switch } from '@/components/ui/switch'
@@ -78,7 +78,7 @@ const initialEdges = [
 const TestFlow = () => {
   const [isSimulating, setIsSimulating] = useState(false);
   const [flows, setFlows] = useState<any[]>([]);
-  const [useAdaptiveFlow, setUseAdaptiveFlow] = useState(true);
+  const [useAdaptiveContainer, setUseAdaptiveContainer] = useState(true);
   const [randomizePositions, setRandomizePositions] = useState(false);
   const simulationTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -226,8 +226,8 @@ const TestFlow = () => {
             <div className="flex items-center space-x-2">
               <Switch
                 id="use-adaptive"
-                checked={useAdaptiveFlow}
-                onCheckedChange={setUseAdaptiveFlow}
+                checked={useAdaptiveContainer}
+                onCheckedChange={setUseAdaptiveContainer}
               />
               <Label htmlFor="use-adaptive">Use Adaptive Flow</Label>
             </div>
@@ -235,8 +235,8 @@ const TestFlow = () => {
         </div>
         
         <div style={{ height: 400 }} className="optimized-flow-container border rounded-md">
-          {useAdaptiveFlow ? (
-            <AdaptiveFlowProvider
+          {useAdaptiveContainer ? (
+            <SafeAdaptiveFlowContainer
               nodes={getInitialNodes(randomizePositions)}
               edges={initialEdges}
               fitViewOnInit={true}
