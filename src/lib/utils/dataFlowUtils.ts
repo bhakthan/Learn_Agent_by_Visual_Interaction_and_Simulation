@@ -67,7 +67,7 @@ export function getNodeDataFlowParams(nodeType: string | undefined) {
 export function getDataFlowAnimationStyle(
   type?: DataFlowType,
   params?: { color: string; pulseSpeed: number }
-) => {
+) {
   // Default values
   const defaults = {
     color: '#64748b',
@@ -164,13 +164,13 @@ export function getDataFlowAnimationStyle(
     default:
       return defaults;
   }
-};
+}
 
 // Utility to truncate flow content for display
 export const truncateFlowContent = (content: string, maxLength: number = 30): string => {
   if (content.length <= maxLength) return content;
   return `${content.substring(0, maxLength)}...`;
-};
+}
 
 /**
  * Simulates a pattern flow with specific messages
@@ -243,8 +243,8 @@ export const simulatePatternFlow = (
   };
 };
 
-// Export all the utility functions
-export { simulatePatternFlow, getDataFlowAnimationStyle, createDataFlow, resetDataFlow, getSpeedMultiplier };
+// Export previously declared utility functions
+// These are already exported where they're defined
 
 // Helper to create a flow
 function createDataFlow(
