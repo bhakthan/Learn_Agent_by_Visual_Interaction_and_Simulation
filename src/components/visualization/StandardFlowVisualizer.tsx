@@ -161,7 +161,14 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
     <div className={cn(
       "w-full h-[400px] border border-border rounded-md overflow-hidden", 
       className
-    )}>
+    )}
+    style={{
+      transform: 'translateZ(0)',
+      backfaceVisibility: 'hidden',
+      WebkitBackfaceVisibility: 'hidden',
+      position: 'relative',
+      contain: 'layout'
+    }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -169,10 +176,25 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
         onEdgesChange={onEdgeChanges}
         nodeTypes={nodeTypes}
         fitView={autoFitView}
+        fitViewOptions={{ padding: 0.2, includeHiddenNodes: false }}
         minZoom={0.5}
         maxZoom={2}
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}
         attributionPosition="bottom-right"
+        onInit={(instance) => {
+          // Fit view after initialization
+          setTimeout(() => {
+            if (instance && typeof instance.fitView === 'function') {
+              instance.fitView({ padding: 0.2 });
+            }
+          }, 200);
+        }}
+        style={{
+          background: isDarkMode ? 'var(--background)' : 'var(--card)',
+          width: '100%',
+          height: '100%'
+        }}
+        proOptions={{ hideAttribution: true }}
       >
         <Background
           variant={BackgroundVariant.Dots}

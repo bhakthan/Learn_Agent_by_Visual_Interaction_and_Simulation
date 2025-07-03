@@ -918,7 +918,16 @@ const FlowWithDataTransform = ({ scenario }: { scenario: DemoScenario }) => {
           </div>
         </div>
         
-        <div className="flex-grow w-full h-[400px] border border-border rounded-md overflow-hidden">
+        <div 
+          className="flex-grow w-full h-[400px] border border-border rounded-md overflow-hidden"
+          style={{
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            position: 'relative',
+            contain: 'layout'
+          }}
+        >
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -926,10 +935,25 @@ const FlowWithDataTransform = ({ scenario }: { scenario: DemoScenario }) => {
             onEdgesChange={onEdgesChange}
             nodeTypes={nodeTypes}
             fitView
+            fitViewOptions={{ padding: 0.2, includeHiddenNodes: false }}
             minZoom={0.5}
             maxZoom={2}
             defaultViewport={{ x: 0, y: 0, zoom: 1 }}
             attributionPosition="bottom-right"
+            onInit={(instance) => {
+              // Fit view after initialization
+              setTimeout(() => {
+                if (instance && typeof instance.fitView === 'function') {
+                  instance.fitView({ padding: 0.2 });
+                }
+              }, 300);
+            }}
+            style={{
+              background: theme === "dark" ? 'var(--background)' : 'var(--card)',
+              width: '100%', 
+              height: '100%'
+            }}
+            proOptions={{ hideAttribution: true }}
           >
             <Background
               variant={BackgroundVariant.Dots}

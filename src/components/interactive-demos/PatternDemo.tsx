@@ -1008,80 +1008,26 @@ const DragHint = React.memo(() => {
                 transform: 'translateZ(0)',
                 backfaceVisibility: 'hidden',
                 WebkitBackfaceVisibility: 'hidden',
-                boxShadow: '0 0 0 1px var(--border)'
+                boxShadow: '0 0 0 1px var(--border)',
+                contain: 'layout'
               }}
               fitViewOnResize={true}
             >
               <DragHint />
-              <MemoizedReactFlow
+              <StandardFlowVisualizerWithProvider
                 nodes={nodes}
                 edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
+                flows={dataFlows}
+                onNodesChange={(updatedNodes) => onNodesChange({ nodes: updatedNodes })}
+                onEdgesChange={(updatedEdges) => onEdgesChange({ edges: updatedEdges })}
+                onFlowComplete={onFlowComplete}
+                animationSpeed={animationSpeed}
+                showLabels={true}
+                showControls={true}
+                autoFitView={false}
+                className="h-full w-full"
                 nodeTypes={nodeTypes}
-                edgeTypes={edgeTypes}
-                onNodeDragStop={onNodeDragStop}
-                fitView
-                minZoom={0.2}
-                maxZoom={2}
-                defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
-                proOptions={{ hideAttribution: true }}
-                className="h-full bg-background"
-                onInit={(instance) => {
-                  // Apply specialized fix for ReactFlow rendering
-                  fixReactFlowRendering(instance);
-                  
-                  // Force all nodes to be visible with multiple attempts
-                  forceNodesVisible('.react-flow', 5);
-                  
-                  // Schedule additional visibility fixes
-                  const visibilityTimer1 = setTimeout(() => forceNodesVisible('.react-flow', 3), 500);
-                  const visibilityTimer2 = setTimeout(() => forceNodesVisible('.react-flow', 3), 1500);
-                  
-                  // Clean up timers
-                  return () => {
-                    clearTimeout(visibilityTimer1);
-                    clearTimeout(visibilityTimer2);
-                  };
-                }}
-                style={{
-                  background: theme === 'dark' ? 'var(--background)' : 'white'
-                }}
-              >
-                <MemoizedBackground 
-                  color={theme === 'dark' ? '#ffffff20' : '#aaa'} 
-                  gap={16} 
-                  size={1}
-                  style={{ 
-                    backgroundColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.1)' : 'transparent'
-                  }}
-                />
-                <MemoizedControls 
-                  className={theme === 'dark' ? 'dark-controls' : ''} 
-                />
-                <MemoizedMiniMap 
-                  nodeStrokeWidth={3}
-                  nodeColor={(n) => {
-                    const node = nodes.find(node => node.id === n.id);
-                    if (node?.data?.status === 'running') return '#f59e0b';
-                    if (node?.data?.status === 'complete') return '#10b981';
-                    if (node?.data?.status === 'failed') return '#ef4444';
-                    return theme === 'dark' ? '#ffffff80' : '#000000';
-                  }}
-                  style={{ 
-                    backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.6)' : undefined,
-                    maskColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.7)' : undefined
-                  }} 
-                />
-                <MemoizedDataFlowVisualizer 
-                  flows={dataFlows} 
-                  edges={edges}
-                  onFlowComplete={onFlowComplete}
-                  animationSpeed={animationSpeed || 1}
-                  getEdgePoints={getEdgePoints}
-                  speed={animationSpeed || 1}
-                />
-              </MemoizedReactFlow>
+              />
             </StableFlowContainer>
           </ReactFlowProvider>
           
