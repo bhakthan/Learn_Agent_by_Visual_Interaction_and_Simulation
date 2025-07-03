@@ -208,6 +208,58 @@ export function applyNodeStyling(nodes: Node[], theme: 'light' | 'dark' = 'light
   });
 }
 
+/**
+ * Process nodes with enhanced styling and positioning
+ */
+export function processNodes(nodes: Node[], theme: 'light' | 'dark' = 'light'): Node[] {
+  return nodes.map(node => {
+    // Apply base styling
+    const styledNode = applyNodeStyling([node], theme)[0];
+    
+    // Ensure node has proper positioning and is visible
+    return {
+      ...styledNode,
+      draggable: true,
+      style: {
+        ...styledNode.style,
+        visibility: 'visible',
+        opacity: 1,
+      }
+    };
+  });
+}
+
+/**
+ * Process edges with consistent styling and animations
+ */
+export function processEdges(edges: Edge[], theme: 'light' | 'dark' = 'light'): Edge[] {
+  return edges.map(edge => {
+    const baseEdge = applyEdgeAnimations([edge])[0];
+    
+    // Apply theme-specific styling
+    return {
+      ...baseEdge,
+      style: {
+        ...baseEdge.style,
+        stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined,
+      }
+    };
+  });
+}
+
+/**
+ * Normalize flow message data for visualization
+ */
+export function normalizeFlowMessage(message: any): any {
+  // Ensure message has expected structure
+  return {
+    id: message.id || `msg-${Date.now()}`,
+    type: message.type || 'default',
+    content: message.content || '',
+    ...message
+  };
+}
+
 export default {
   resetReactFlowRendering,
   useStableFlow,
