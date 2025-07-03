@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { Play, ArrowsCounterClockwise } from "@phosphor-icons/react";
-import { resetReactFlowRendering } from '@/lib/utils/reactFlowFixUtils';
+import { resetReactFlowRendering } from '@/lib/utils/visualizationUtils';
 
 // Import the StandardFlowVisualizer
 import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from '../visualization/StandardFlowVisualizer';

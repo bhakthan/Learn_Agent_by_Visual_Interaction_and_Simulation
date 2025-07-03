@@ -87,14 +87,71 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
         ...node.style,
         opacity: 1,
         visibility: 'visible',
-        transform: 'translateZ(0)'
+        transform: 'translateZ(0)',
+        willChange: 'transform',
+        transition: 'all 0.2s ease-out'
       },
       draggable: node.draggable !== undefined ? node.draggable : true,
-      selectable: node.selectable !== undefined ? node.selectable : true
+      selectable: node.selectable !== undefined ? node.selectable : true,
+      // Store original positions to prevent unwanted repositioning
+      data: {
+        ...node.data,
+        originalPosition: node.position
+      }
     })) || [];
     
     setNodes(processedNodes);
   }, [initialNodes, setNodes]);
+
+  // Track initial layout to prevent position shifting
+  const [initialLayout, setInitialLayout] = useState(false);
+
+  // Stabilize initial positions
+  useEffect(() => {
+    // Only run this once
+    if (initialLayout) return;
+    
+    // Schedule initial layout stabilization
+    const timer = setTimeout(() => {
+      // Ensure nodes maintain their positions
+      if (reactFlowInstance) {
+        try {
+          // Capture viewport state
+          const viewportInitial = reactFlowInstance.getViewport();
+          
+          // Apply fit view with smooth animation
+          reactFlowInstance.fitView({
+            padding: 0.2,
+            duration: 800
+          });
+          
+          // Set nodes to be locked in place after initial layout
+          setNodes(prevNodes => prevNodes.map(node => ({
+            ...node,
+            // Mark as positioned to prevent automatic repositioning
+            data: {
+              ...node.data,
+              positioned: true
+            },
+            // Ensure nodes have stable styles
+            style: {
+              ...node.style,
+              opacity: 1,
+              visibility: 'visible',
+              position: 'absolute'
+            }
+          })));
+          
+          // Mark layout as initialized
+          setInitialLayout(true);
+        } catch (error) {
+          // Silently handle fit view errors
+        }
+      }
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [reactFlowInstance, setNodes, initialLayout]);
 
   // Update edges with correct defaults
   useEffect(() => {
@@ -140,20 +197,38 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
   // Apply fit view when needed
   useEffect(() => {
     if (autoFitView && reactFlowInstance) {
+      // Initial delay for first render
       const timer = setTimeout(() => {
         try {
           reactFlowInstance.fitView({
             padding: 0.2,
-            includeHiddenNodes: true
+            includeHiddenNodes: true,
+            duration: 800 // longer animation for smoother transition
           });
         } catch (error) {
           console.warn('Error fitting view (suppressed)');
         }
       }, 300);
+
+      // Additional fit view after a longer delay to ensure positions are stabilized
+      const secondTimer = setTimeout(() => {
+        try {
+          reactFlowInstance.fitView({
+            padding: 0.2,
+            includeHiddenNodes: true,
+            duration: 200
+          });
+        } catch (error) {
+          // Suppress error
+        }
+      }, 1000);
       
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(secondTimer);
+      };
     }
-  }, [autoFitView, reactFlowInstance]);
+  }, [autoFitView, reactFlowInstance, nodes.length, edges.length]);
 
   return (
     <div 
@@ -165,14 +240,27 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
         transform: 'translateZ(0)',
         position: 'relative',
         contain: 'layout',
-        minHeight: '300px'
+        minHeight: '300px',
+        visibility: 'visible'
       }}
+      data-prevent-layout-shift="true"
+      data-stabilized-flow="true"
     >
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={(changes) => {
-          onNodeChanges(changes);
+          // Filter out position changes that might be coming from automatic layout
+          // but allow user-initiated drags
+          const filteredChanges = changes.filter(change => {
+            if (change.type === 'position' && !change.dragging) {
+              // Prevent automatic repositioning
+              return false;
+            }
+            return true;
+          });
+          
+          onNodeChanges(filteredChanges);
           if (onNodesChange) onNodesChange(nodes);
         }}
         onEdgesChange={(changes) => {
@@ -181,7 +269,7 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
         }}
         nodeTypes={nodeTypes}
         fitView={true}
-        fitViewOptions={{ padding: 0.2 }}
+        fitViewOptions={{ padding: 0.2, duration: 800 }}
         minZoom={0.5}
         maxZoom={2}
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}

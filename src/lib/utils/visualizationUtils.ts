@@ -181,3 +181,69 @@ export function normalizeFlowMessage(flow: any) {
     complete: flow.complete
   };
 }
+
+/**
+ * Stabilize a flow container to prevent unwanted node position changes
+ */
+export function stabilizeFlowContainer(containerElement: HTMLElement | null) {
+  if (!containerElement) return;
+  
+  // Apply hardware acceleration and other optimizations
+  containerElement.style.transform = 'translateZ(0)';
+  containerElement.style.backfaceVisibility = 'hidden';
+  containerElement.style.WebkitBackfaceVisibility = 'hidden';
+  containerElement.style.contain = 'layout paint';
+  
+  // Mark as stabilized
+  containerElement.setAttribute('data-stabilized', 'true');
+  
+  // Find ReactFlow components
+  const rfComponents = containerElement.querySelectorAll('.react-flow, .react-flow__renderer, .react-flow__viewport');
+  rfComponents.forEach(component => {
+    if (component instanceof HTMLElement) {
+      component.style.transform = 'translateZ(0)';
+      component.style.willChange = 'transform';
+      component.style.backfaceVisibility = 'hidden';
+    }
+  });
+  
+  // Ensure nodes are visible
+  const nodes = containerElement.querySelectorAll('.react-flow__node');
+  nodes.forEach(node => {
+    if (node instanceof HTMLElement) {
+      node.style.opacity = '1';
+      node.style.visibility = 'visible';
+      node.style.position = 'absolute';
+      node.style.zIndex = '1';
+    }
+  });
+  
+  // Ensure edges are visible
+  const edges = containerElement.querySelectorAll('.react-flow__edge');
+  edges.forEach(edge => {
+    if (edge instanceof HTMLElement) {
+      edge.style.opacity = '1';
+      edge.style.visibility = 'visible';
+    }
+    
+    // Make paths visible
+    const paths = edge.querySelectorAll('path');
+    paths.forEach(path => {
+      path.setAttribute('stroke-width', '1.5');
+      path.setAttribute('opacity', '1');
+      path.setAttribute('visibility', 'visible');
+    });
+  });
+  
+  return true;
+}
+
+/**
+ * Reset ReactFlow rendering - exported function that will be used by ACPDemo
+ */
+export function resetReactFlowRendering(containerRef: React.RefObject<HTMLElement>) {
+  if (!containerRef.current) return;
+  
+  // Use stabilization function
+  stabilizeFlowContainer(containerRef.current);
+}
