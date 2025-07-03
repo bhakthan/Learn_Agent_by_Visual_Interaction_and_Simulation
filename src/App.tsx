@@ -27,6 +27,11 @@ function App() {
   useEffect(() => {
     setMounted(true)
     
+    // Apply global ReactFlow optimizations
+    import('./lib/utils/preventResizeObserverErrors').then(module => {
+      module.applyReactFlowGlobalOptimizations();
+    });
+    
     // Set up global ResizeObserver error handling with improved prevention
     setupResizeObserverErrorHandling();
     

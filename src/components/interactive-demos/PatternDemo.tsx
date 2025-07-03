@@ -9,8 +9,7 @@ import { PatternData } from '@/lib/data/patterns';
 import { Play, ArrowsClockwise, CheckCircle, Clock, WarningCircle, ArrowBendDownRight } from "@phosphor-icons/react";
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { ReactFlowProvider } from 'reactflow';
-import { StableFlowContainer } from '../visualization/StableFlowContainer';
-import StandardFlowVisualizerWithProvider from '../visualization/StandardFlowVisualizer';
+import OptimizedFlowContainer from '../visualization/OptimizedFlowContainer';
 
 // Simple step controller class
 class StepController {
@@ -253,16 +252,27 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     data: {
       ...node.data,
       status: 'idle',
+      nodeType: node.data?.nodeType || 'default'
     },
     draggable: true,
     selectable: true,
-    style: { opacity: 1, visibility: 'visible' },
+    style: { 
+      opacity: 1, 
+      visibility: 'visible',
+      zIndex: 1,
+      display: 'block'
+    },
   })) || [];
   
   const demoEdges = patternData.edges?.map(edge => ({
     ...edge,
     animated: false,
-    style: { opacity: 1, visibility: 'visible' },
+    style: { 
+      opacity: 1, 
+      visibility: 'visible',
+      strokeWidth: 2,
+      stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined 
+    },
   })) || [];
   
   // Step controller for managing execution flow
@@ -587,25 +597,23 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
             </div>
           </div>
           
-          {/* Flow visualization with stabilized container */}
+          {/* Flow visualization with optimized container */}
           <ReactFlowProvider>
-            <StableFlowContainer
+            <OptimizedFlowContainer
               ref={flowContainerRef}
               className="border border-border rounded-md overflow-hidden relative"
               style={{ height: '400px', minHeight: '400px' }}
+              nodes={demoNodes}
+              edges={demoEdges}
+              flows={dataFlows}
+              onFlowComplete={handleFlowComplete}
+              animationSpeed={animationSpeed}
+              nodeTypes={nodeTypes}
+              showControls={true}
+              autoFitView={true}
             >
               <DragHint />
-              <StandardFlowVisualizerWithProvider
-                nodes={demoNodes}
-                edges={demoEdges}
-                flows={dataFlows}
-                onFlowComplete={handleFlowComplete}
-                animationSpeed={animationSpeed}
-                nodeTypes={nodeTypes}
-                showControls={true}
-                autoFitView={true}
-              />
-            </StableFlowContainer>
+            </OptimizedFlowContainer>
           </ReactFlowProvider>
           
           {Object.keys(steps).length > 0 && (

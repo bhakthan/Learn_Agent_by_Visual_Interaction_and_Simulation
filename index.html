@@ -35,6 +35,9 @@
         .react-flow__edge-path {
             will-change: transform;
             contain: strict;
+            stroke-width: 1.5px !important;
+            opacity: 1 !important;
+            visibility: visible !important;
         }
         
         /* Enhanced visualization container for data transforms */
@@ -62,12 +65,31 @@
             min-width: 50px;
             min-height: 30px;
             contain: layout style;
+            opacity: 1 !important;
+            visibility: visible !important;
+            display: block !important;
+            z-index: 1;
         }
         
         /* Prevent layout shifts during animation */
         .react-flow__edges {
             pointer-events: none;
             contain: layout style;
+        }
+        
+        /* Ensure edges are always visible */
+        .react-flow__edge {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        /* Container styling */
+        .optimized-flow-container {
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            contain: layout;
+            transform-style: preserve-3d;
         }
     </style>
     <script>

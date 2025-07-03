@@ -13,6 +13,13 @@ const useHash = window.location.search.includes('hash=true') ||
 
 const Router = useHash ? HashRouter : BrowserRouter;
 
+// In development mode, expose ReactFlow debug tools
+if (import.meta.env.DEV) {
+  import('./lib/utils/reactFlowDebugger').then(module => {
+    module.exposeReactFlowDebugTools();
+  });
+}
+
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Router>
