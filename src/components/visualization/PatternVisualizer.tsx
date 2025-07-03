@@ -34,8 +34,7 @@ import {
   getDataFlowAnimationStyle,
   resetDataFlow,
   createDataFlow,
-  getSpeedMultiplier,
-  setSpeedMultiplier
+  getSpeedMultiplier
 } from '@/lib/utils/dataFlowUtils'
 import DataFlowVisualizer from './DataFlowVisualizer'
 import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from './StandardFlowVisualizer'
@@ -196,8 +195,6 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       'fast': 2
     };
     setSpeedFactor(factors[animationState.speed]);
-    // Update the global speed multiplier
-    setSpeedMultiplier(factors[animationState.speed]);
   }, [animationState.speed]);
   
   // Effect to fit view whenever dimensions change significantly

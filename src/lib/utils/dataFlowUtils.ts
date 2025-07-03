@@ -21,6 +21,9 @@ export interface BaseDataFlow {
   complete?: boolean;
 }
 
+// Global animation speed state
+let _speedMultiplier = 1;
+
 // Function to get animation speed multiplier
 export function getSpeedMultiplier(speedSetting: number | string): number {
   if (typeof speedSetting === 'number') {
@@ -35,6 +38,11 @@ export function getSpeedMultiplier(speedSetting: number | string): number {
     case 'very-fast': return 3;
     default: return 1;
   }
+}
+
+// Function to set the global speed multiplier
+export function setSpeedMultiplier(speed: number): void {
+  _speedMultiplier = speed;
 }
 
 /**
