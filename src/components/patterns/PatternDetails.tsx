@@ -9,6 +9,7 @@ import { ListCheck, Info, Code, Workflow, PuzzlePiece, ArrowsOut, ArrowsIn, Book
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import ReferenceSection from "../references/ReferenceSection";
+import { PatternDemoReactFlow } from '../interactive-demos';
 
 interface PatternDetailsProps {
   pattern: PatternData;
@@ -160,7 +161,16 @@ const PatternDetails: React.FC<PatternDetailsProps> = ({ pattern }) => {
           </AccordionItem>
         </Accordion>
 
+        {/* Interactive Demo */}
+        <Separator className="my-6" />
+        <h3 className="font-medium mb-4 text-primary flex items-center gap-2">
+          <Code size={18} />
+          Interactive Demo
+        </h3>
+        <PatternDemoReactFlow patternData={pattern} className="mt-2" />
+
         {/* References section for this pattern */}
+        <Separator className="my-6" />
         <ReferenceSection type="pattern" itemId={pattern.id} />
       </CardContent>
     </Card>

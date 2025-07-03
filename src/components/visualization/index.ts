@@ -7,6 +7,7 @@
 export { default as OptimizedFlowContainer } from './OptimizedFlowContainer';
 export { default as DataFlowVisualizer } from './DataFlowVisualizer';
 export { default as StandardFlowVisualizer } from './StandardFlowVisualizer';
+export { default as EnhancedStandardFlowVisualizer } from './EnhancedStandardFlowVisualizer';
 export { StableFlowContainer } from './StableFlowContainer';
 export { StableFlowProvider } from './StableFlowContainer';
 export { default as AdaptiveFlowContainer } from './AdaptiveFlowContainer';
@@ -24,6 +25,7 @@ export { AgentNode } from './node-types/AgentNode';
 
 // Types
 export type { FlowMessage } from './OptimizedFlowContainer';
+export type { StandardFlowMessage, DataFlowType } from './EnhancedStandardFlowVisualizer';
 
 // Re-export React Flow provider for convenience
 export { ReactFlowProvider } from 'reactflow';

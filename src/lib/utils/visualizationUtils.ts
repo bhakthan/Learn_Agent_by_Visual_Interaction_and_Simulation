@@ -1,249 +1,216 @@
-import React, { useCallback, useRef, useEffect } from 'react';
+/**
+ * Visualization utilities for ReactFlow components
+ */
+import { useCallback, useEffect, useRef } from 'react';
 import { Node, Edge, useReactFlow } from 'reactflow';
-import { useTheme } from '@/components/theme/ThemeProvider';
 
 /**
- * Standardized flow rendering utilities
+ * Reset the ReactFlow rendering to fix common issues
+ * @param containerRef Reference to the container element
  */
-
-export interface FlowRenderOptions {
-  applyHardwareAcceleration?: boolean;
-  defaultNodeWidth?: number;
-  defaultNodeHeight?: number;
-  fitViewDelay?: number;
-  fitViewPadding?: number;
-}
-
-/**
- * Process nodes to ensure they have all required properties for stable rendering
- */
-export function processNodes(nodes: Node[], theme: string): Node[] {
-  return nodes.map(node => ({
-    ...node,
-    style: {
-      ...node.style,
-      opacity: 1,
-      visibility: 'visible',
-      transform: 'translateZ(0)',
-      willChange: 'transform',
-      transition: 'all 0.2s ease-out',
-      boxShadow: theme === 'dark' ? '0 0 0 1px rgba(255,255,255,0.1)' : undefined
-    },
-    draggable: node.draggable !== undefined ? node.draggable : true,
-    selectable: node.selectable !== undefined ? node.selectable : true
-  }));
-}
-
-/**
- * Process edges to ensure they have all required properties for stable rendering
- */
-export function processEdges(edges: Edge[], theme: string): Edge[] {
-  return edges.map(edge => ({
-    ...edge,
-    style: {
-      ...edge.style,
-      opacity: 1,
-      visibility: 'visible',
-      strokeWidth: 2,
-      stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined
-    }
-  }));
-}
-
-/**
- * Hook to stabilize flow component rendering with proper resize handling
- */
-export function useStableFlow(
-  containerRef: React.RefObject<HTMLElement>,
-  options: FlowRenderOptions = {}
-) {
-  const {
-    applyHardwareAcceleration = true,
-    defaultNodeWidth = 150,
-    defaultNodeHeight = 40,
-    fitViewDelay = 300,
-    fitViewPadding = 0.2
-  } = options;
+export function resetReactFlowRendering(containerRef: React.RefObject<HTMLDivElement>) {
+  if (!containerRef.current) return;
   
-  const reactFlowInstance = useReactFlow();
-  const { theme } = useTheme();
-  const isDarkMode = theme === 'dark';
-  
-  // Store dimensions to detect significant changes
-  const dimensionsRef = useRef({ width: 0, height: 0 });
-  
-  // Apply styles for hardware acceleration
-  useEffect(() => {
-    if (!applyHardwareAcceleration || !containerRef.current) return;
+  // Force re-render ReactFlow with a size change
+  setTimeout(() => {
+    if (!containerRef.current) return;
     
+    // Capture current scroll position to restore it after manipulation
+    const scrollLeft = containerRef.current.scrollLeft;
+    const scrollTop = containerRef.current.scrollTop;
+    
+    // First set explicit height and width to prevent layout collapse
+    const height = containerRef.current.offsetHeight;
+    const width = containerRef.current.offsetWidth;
+    containerRef.current.style.height = `${height}px`;
+    containerRef.current.style.width = `${width}px`;
+    
+    // Trigger reflow
+    const displayStyle = containerRef.current.style.display;
+    containerRef.current.style.display = 'none';
+    void containerRef.current.offsetHeight; // Force reflow
+    containerRef.current.style.display = displayStyle;
+    
+    // Force hardware acceleration for better rendering
     containerRef.current.style.transform = 'translateZ(0)';
-    containerRef.current.style.backfaceVisibility = 'hidden';
-    containerRef.current.style.WebkitBackfaceVisibility = 'hidden';
-    containerRef.current.style.contain = 'layout paint';
-  }, [applyHardwareAcceleration]);
+    containerRef.current.style.webkitBackfaceVisibility = 'hidden';
+    containerRef.current.style.perspective = '1000';
+    
+    // Find ReactFlow components and ensure they're visible
+    const reactFlowElements = containerRef.current.querySelectorAll('.react-flow__node, .react-flow__edge');
+    reactFlowElements.forEach((el) => {
+      if (el instanceof HTMLElement) {
+        el.style.visibility = 'visible';
+        el.style.opacity = '1';
+        el.style.transform = 'translateZ(0)';
+      }
+    });
+    
+    // Restore scroll position
+    containerRef.current.scrollLeft = scrollLeft;
+    containerRef.current.scrollTop = scrollTop;
+    
+    // Fix edge paths visibility
+    const paths = containerRef.current.querySelectorAll('.react-flow__edge-path');
+    paths.forEach((path) => {
+      if (path instanceof SVGElement) {
+        path.style.strokeWidth = '1.5px';
+        path.style.opacity = '1';
+      }
+    });
+  }, 100);
+}
+
+/**
+ * Hook to help maintain stable flow rendering
+ */
+export function useStableFlow(containerRef: React.RefObject<HTMLDivElement>) {
+  const reactFlowInstance = useReactFlow();
   
-  // Fit view when component mounts or dimensions change significantly
+  // Function to reset flow rendering
+  const resetFlow = useCallback(() => {
+    resetReactFlowRendering(containerRef);
+  }, [containerRef]);
+  
+  // Function to fit view properly
   const fitView = useCallback(() => {
     if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
       try {
-        reactFlowInstance.fitView({
-          padding: fitViewPadding,
-          includeHiddenNodes: true
-        });
-      } catch (error) {
-        console.warn('Error fitting view (suppressed)');
+        setTimeout(() => {
+          reactFlowInstance.fitView({
+            padding: 0.2,
+            includeHiddenNodes: true,
+            minZoom: 0.5,
+            maxZoom: 1.5
+          });
+        }, 50);
+      } catch (e) {
+        console.error("Error in fitView:", e);
       }
     }
-  }, [reactFlowInstance, fitViewPadding]);
+  }, [reactFlowInstance]);
   
-  // Handle resize events
-  const handleResize = useCallback(() => {
-    if (!containerRef.current) return;
-    
-    const { width, height } = containerRef.current.getBoundingClientRect();
-    const prevDimensions = dimensionsRef.current;
-    
-    // Only refit if dimensions changed significantly
-    const widthChanged = Math.abs(width - prevDimensions.width) > 5;
-    const heightChanged = Math.abs(height - prevDimensions.height) > 5;
-    
-    if ((widthChanged || heightChanged) && width > 50 && height > 50) {
-      dimensionsRef.current = { width, height };
-      
-      // Use timeout to avoid excessive fitView calls during resizing
-      setTimeout(fitView, fitViewDelay);
-    }
-  }, [fitView, fitViewDelay]);
-  
-  // Apply resize observer
+  // Apply fixes on mount and resize
   useEffect(() => {
-    if (!containerRef.current) return;
+    resetFlow();
+    fitView();
     
-    const resizeObserver = new ResizeObserver((entries) => {
-      if (entries[0]) {
-        handleResize();
-      }
-    });
+    const handleResize = () => {
+      resetFlow();
+      setTimeout(fitView, 100);
+    };
     
-    resizeObserver.observe(containerRef.current);
+    window.addEventListener('resize', handleResize);
+    
+    // Apply additional fixes for visibility issues
+    const fixVisibility = () => {
+      if (!containerRef.current) return;
+      
+      const nodes = containerRef.current.querySelectorAll('.react-flow__node');
+      const edges = containerRef.current.querySelectorAll('.react-flow__edge');
+      
+      nodes.forEach(node => {
+        if (node instanceof HTMLElement) {
+          node.style.visibility = 'visible';
+          node.style.opacity = '1';
+        }
+      });
+      
+      edges.forEach(edge => {
+        if (edge instanceof HTMLElement) {
+          edge.style.visibility = 'visible';
+          edge.style.opacity = '1';
+          
+          const paths = edge.querySelectorAll('path');
+          paths.forEach(path => {
+            path.setAttribute('stroke-opacity', '1');
+            path.setAttribute('visibility', 'visible');
+          });
+        }
+      });
+    };
+    
+    // Apply fixes multiple times to ensure they take effect
+    setTimeout(fixVisibility, 200);
+    setTimeout(fixVisibility, 500);
+    setTimeout(fixVisibility, 1000);
     
     return () => {
-      resizeObserver.disconnect();
+      window.removeEventListener('resize', handleResize);
     };
-  }, [handleResize]);
-  
-  // Calculate edge points for data flow visualization
-  const getEdgePoints = useCallback((edgeId: string, edges: Edge[], nodes: Node[]) => {
-    if (!edges || !nodes) return null;
-    
-    const edge = edges.find(e => e.id === edgeId);
-    if (!edge) return null;
-    
-    const sourceNode = nodes.find(n => n.id === edge.source);
-    const targetNode = nodes.find(n => n.id === edge.target);
-    
-    if (!sourceNode || !targetNode) return null;
-    
-    // Calculate center of source node for flow start
-    const sourceX = sourceNode.position.x + defaultNodeWidth / 2;
-    const sourceY = sourceNode.position.y + defaultNodeHeight / 2;
-    
-    // Calculate center of target node for flow end
-    const targetX = targetNode.position.x + defaultNodeWidth / 2;
-    const targetY = targetNode.position.y + defaultNodeHeight / 2;
-    
-    return { sourceX, sourceY, targetX, targetY };
-  }, [defaultNodeWidth, defaultNodeHeight]);
+  }, [resetFlow, fitView]);
   
   return {
+    resetFlow,
     fitView,
-    getEdgePoints,
-    handleResize,
-    isDarkMode,
-    processNodes: (nodes: Node[]) => processNodes(nodes, theme),
-    processEdges: (edges: Edge[]) => processEdges(edges, theme)
+    containerRef
   };
 }
 
 /**
- * Normalize flow visualization message for consistent display
+ * Apply animation style to edges
  */
-export function normalizeFlowMessage(flow: any) {
-  return {
-    id: flow.id || `flow-${Math.random().toString(36).substr(2, 9)}`,
-    edgeId: flow.edgeId,
-    source: flow.source,
-    target: flow.target,
-    content: flow.content || '',
-    type: flow.type || 'message',
-    progress: flow.progress || 0,
-    label: flow.label,
-    complete: flow.complete
-  };
+export function applyEdgeAnimations(edges: Edge[]): Edge[] {
+  return edges.map(edge => {
+    // Add animation to data flow edges
+    if (edge.animated || 
+        edge.className?.includes('tool_call') || 
+        edge.className?.includes('query') || 
+        edge.className?.includes('response')) {
+      return {
+        ...edge,
+        style: {
+          ...edge.style,
+          strokeWidth: 2,
+          strokeDasharray: '5,5',
+          animation: 'dashdraw 1s linear infinite'
+        }
+      };
+    }
+    return edge;
+  });
 }
 
 /**
- * Stabilize a flow container to prevent unwanted node position changes
+ * Apply consistent styling to nodes based on their type
  */
-export function stabilizeFlowContainer(containerElement: HTMLElement | null) {
-  if (!containerElement) return;
-  
-  // Apply hardware acceleration and other optimizations
-  containerElement.style.transform = 'translateZ(0)';
-  containerElement.style.backfaceVisibility = 'hidden';
-  containerElement.style.WebkitBackfaceVisibility = 'hidden';
-  containerElement.style.contain = 'layout paint';
-  
-  // Mark as stabilized
-  containerElement.setAttribute('data-stabilized', 'true');
-  
-  // Find ReactFlow components
-  const rfComponents = containerElement.querySelectorAll('.react-flow, .react-flow__renderer, .react-flow__viewport');
-  rfComponents.forEach(component => {
-    if (component instanceof HTMLElement) {
-      component.style.transform = 'translateZ(0)';
-      component.style.willChange = 'transform';
-      component.style.backfaceVisibility = 'hidden';
-    }
-  });
-  
-  // Ensure nodes are visible
-  const nodes = containerElement.querySelectorAll('.react-flow__node');
-  nodes.forEach(node => {
-    if (node instanceof HTMLElement) {
-      node.style.opacity = '1';
-      node.style.visibility = 'visible';
-      node.style.position = 'absolute';
-      node.style.zIndex = '1';
-    }
-  });
-  
-  // Ensure edges are visible
-  const edges = containerElement.querySelectorAll('.react-flow__edge');
-  edges.forEach(edge => {
-    if (edge instanceof HTMLElement) {
-      edge.style.opacity = '1';
-      edge.style.visibility = 'visible';
-    }
+export function applyNodeStyling(nodes: Node[], theme: 'light' | 'dark' = 'light'): Node[] {
+  return nodes.map(node => {
+    const nodeType = node.data?.nodeType || node.type || 'default';
     
-    // Make paths visible
-    const paths = edge.querySelectorAll('path');
-    paths.forEach(path => {
-      path.setAttribute('stroke-width', '1.5');
-      path.setAttribute('opacity', '1');
-      path.setAttribute('visibility', 'visible');
-    });
+    // Add styling based on node type
+    const className = `node-${nodeType} ${node.className || ''}`;
+    
+    // Base style for all nodes
+    const baseStyle = {
+      border: '1px solid',
+      borderRadius: '8px',
+      padding: '10px 15px',
+      fontSize: '12px',
+      fontFamily: 'Inter, sans-serif',
+      fontWeight: 500,
+      boxShadow: theme === 'dark' 
+        ? '0 2px 5px rgba(0, 0, 0, 0.5)' 
+        : '0 2px 5px rgba(0, 0, 0, 0.1)',
+      minWidth: '120px',
+      minHeight: '40px',
+      backdropFilter: theme === 'dark' ? 'blur(3px)' : 'none',
+      visibility: 'visible',
+      opacity: 1,
+      ...(node.style || {}),
+    };
+    
+    return {
+      ...node,
+      className,
+      style: baseStyle
+    };
   });
-  
-  return true;
 }
 
-/**
- * Reset ReactFlow rendering - exported function that will be used by ACPDemo
- */
-export function resetReactFlowRendering(containerRef: React.RefObject<HTMLElement>) {
-  if (!containerRef.current) return;
-  
-  // Use stabilization function
-  stabilizeFlowContainer(containerRef.current);
-}
+export default {
+  resetReactFlowRendering,
+  useStableFlow,
+  applyEdgeAnimations,
+  applyNodeStyling
+};
