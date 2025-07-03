@@ -66,20 +66,21 @@ export type StandardFlowVisualizerHandle = {
 export const StandardFlowVisualizer = React.forwardRef<
   StandardFlowVisualizerHandle,
   StandardFlowVisualizerProps
->(({
-  nodes: initialNodes,
-  edges: initialEdges,
-  flows = [],
-  nodeTypes = defaultNodeTypes,
-  onNodesChange,
-  onEdgesChange,
-  onFlowComplete,
-  animationSpeed = 1,
-  showLabels = true,
-  showControls = true,
-  autoFitView = true,
-  className
-}, ref) => {
+>((props, ref) => {
+  const {
+    nodes: initialNodes,
+    edges: initialEdges,
+    flows = [],
+    nodeTypes = defaultNodeTypes,
+    onNodesChange,
+    onEdgesChange,
+    onFlowComplete,
+    animationSpeed = 1,
+    showLabels = true,
+    showControls = true,
+    autoFitView = true,
+    className
+  } = props;
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
   const [nodes, setNodes, onNodeChanges] = useNodesState(initialNodes || []);
