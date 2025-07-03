@@ -59,7 +59,10 @@ interface StandardFlowVisualizerProps {
 /**
  * StandardFlowVisualizer - A simplified component for visualizing data flows
  */
-export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
+export const StandardFlowVisualizer = React.forwardRef<
+  { fitView: () => void },
+  StandardFlowVisualizerProps
+>(({
   nodes: initialNodes,
   edges: initialEdges,
   flows = [],
@@ -72,12 +75,27 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
   showControls = true,
   autoFitView = true,
   className
-}) => {
+}, ref) => {
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
   const [nodes, setNodes, onNodeChanges] = useNodesState(initialNodes || []);
   const [edges, setEdges, onEdgeChanges] = useEdgesState(initialEdges || []);
   const reactFlowInstance = useReactFlow();
+  
+  // Define fitView function using reactFlowInstance
+  const fitView = useCallback(() => {
+    if (reactFlowInstance) {
+      try {
+        reactFlowInstance.fitView({
+          padding: 0.2,
+          includeHiddenNodes: true,
+          duration: 800
+        });
+      } catch (error) {
+        console.warn('Error fitting view (suppressed)');
+      }
+    }
+  }, [reactFlowInstance]);
 
   // Force nodes to have correct defaults
   useEffect(() => {
@@ -206,33 +224,32 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
     return { sourceX, sourceY, targetX, targetY };
   }, [edges, nodes]);
 
+  // Expose fitView function for external use
+  const fitView = useCallback(() => {
+    if (reactFlowInstance) {
+      try {
+        reactFlowInstance.fitView({
+          padding: 0.2,
+          includeHiddenNodes: true,
+          duration: 800 // longer animation for smoother transition
+        });
+      } catch (error) {
+        console.warn('Error fitting view (suppressed)');
+      }
+    }
+  }, [reactFlowInstance]);
+
   // Apply fit view when needed
   useEffect(() => {
     if (autoFitView && reactFlowInstance) {
       // Initial delay for first render
       const timer = setTimeout(() => {
-        try {
-          reactFlowInstance.fitView({
-            padding: 0.2,
-            includeHiddenNodes: true,
-            duration: 800 // longer animation for smoother transition
-          });
-        } catch (error) {
-          console.warn('Error fitting view (suppressed)');
-        }
+        fitView();
       }, 300);
 
       // Additional fit view after a longer delay to ensure positions are stabilized
       const secondTimer = setTimeout(() => {
-        try {
-          reactFlowInstance.fitView({
-            padding: 0.2,
-            includeHiddenNodes: true,
-            duration: 200
-          });
-        } catch (error) {
-          // Suppress error
-        }
+        fitView();
       }, 1000);
       
       return () => {
@@ -240,7 +257,12 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
         clearTimeout(secondTimer);
       };
     }
-  }, [autoFitView, reactFlowInstance, nodes.length, edges.length]);
+  }, [autoFitView, reactFlowInstance, nodes.length, edges.length, fitView]);
+
+  // Expose fitView via the ref
+  React.useImperativeHandle(ref, () => ({
+    fitView
+  }), [fitView]);
 
   return (
     <div 
@@ -316,13 +338,56 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
  * This is the recommended way to use this component for improved stability
  */
 const StandardFlowVisualizerWithProvider: React.FC<StandardFlowVisualizerProps> = (props) => {
+  // Create ref to access the child component
+  const visualizerRef = useRef<{ fitView: () => void } | null>(null);
+  
+  // Expose fitView method
+  const fitView = useCallback(() => {
+    if (visualizerRef.current) {
+      visualizerRef.current.fitView();
+    }
+  }, []);
+
+  // Extend the component with fitView method
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // @ts-ignore - Attach the fitView method to the component instance
+      StandardFlowVisualizerWithProvider.fitView = fitView;
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        // @ts-ignore - Clean up
+        delete StandardFlowVisualizerWithProvider.fitView;
+      }
+    };
+  }, [fitView]);
+
   return (
     <ReactFlowProvider>
       <StableFlowContainer minHeight="300px">
-        <StandardFlowVisualizer {...props} />
+        <StandardFlowVisualizer 
+          {...props} 
+          // @ts-ignore - Add ref to access internal methods
+          ref={(el) => {
+            // Store reference to the inner component's fitView method
+            if (el) {
+              visualizerRef.current = {
+                fitView: el.fitView || (() => {})
+              };
+            }
+          }}
+        />
       </StableFlowContainer>
     </ReactFlowProvider>
   );
+};
+
+// Add fitView as a static method
+// @ts-ignore - Add static method
+StandardFlowVisualizerWithProvider.fitView = () => {
+  // Default implementation
+  console.warn('fitView not initialized yet');
 };
 
 export default StandardFlowVisualizerWithProvider;

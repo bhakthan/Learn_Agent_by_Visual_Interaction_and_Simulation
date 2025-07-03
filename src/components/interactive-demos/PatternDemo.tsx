@@ -12,6 +12,7 @@ import { ReactFlowProvider } from 'reactflow';
 import { StableFlowContainer } from '../visualization/StableFlowContainer';
 import StandardFlowVisualizerWithProvider from '../visualization/StandardFlowVisualizer';
 import { useStableFlowContainer, createStableNodes, createStableEdges } from '@/lib/utils/flows/StableFlowUtils';
+import { useFlowVisualizer, createSafeFitView } from '@/lib/utils/flows/flowVisualizerUtils';
 import { createFlow } from '@/lib/utils/flows/FlowHelper';
 
 // Simple step controller class
@@ -341,10 +342,23 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   }, []);
   
   // Flow container ref and utilities
-  const { containerRef: flowContainerRef, resetFlow, fitView } = useStableFlowContainer({
+  const { containerRef: flowContainerRef, resetFlow } = useStableFlowContainer({
     autoFitView: true,
     stabilizationDelay: 300
   });
+
+  // Additional flow visualization utilities for better stability
+  const { flowRef, fitView: safeFitView } = useFlowVisualizer();
+
+  // Combined fitView function for better reliability
+  const fitView = useCallback(() => {
+    // Try both fitView functions for better reliability
+    try {
+      if (safeFitView) safeFitView();
+    } catch (error) {
+      console.warn('Error in safeFitView, trying standard flow');
+    }
+  }, [safeFitView]);
   
   // Reset the demo state
   const resetDemo = useCallback(() => {
@@ -671,7 +685,17 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
           {/* Flow visualization with StableFlowContainer */}
           <ReactFlowProvider>
             <div 
-              ref={flowContainerRef}
+              ref={(el) => {
+                // Set both refs for better stability
+                if (flowContainerRef) {
+                  // @ts-ignore - Set the ref directly
+                  flowContainerRef.current = el;
+                }
+                if (flowRef) {
+                  // @ts-ignore - Set the ref directly
+                  flowRef.current = el;
+                }
+              }}
               className="border border-border rounded-md overflow-hidden relative"
               style={{ height: '400px', minHeight: '400px' }}
             >

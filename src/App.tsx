@@ -15,6 +15,7 @@ import ReferencesSection from './components/references/ReferencesSection'
 import { setupResizeObserverErrorHandling } from './lib/utils/resizeObserverUtils';
 import { setupReactFlowErrorHandling } from './lib/utils/reactFlowUtils';
 import { disableResizeObserverIfProblematic } from './lib/utils/resizeObserverUtils';
+import { setupGlobalFlowHandlers } from './lib/utils/flows/globalFlowHandlers';
 import TestFlow from './components/interactive-demos/TestFlow'
 
 // Placeholder component (disabled)
@@ -37,6 +38,9 @@ function App() {
     
     // Set up specific handling for ReactFlow components
     setupReactFlowErrorHandling();
+    
+    // Set up global flow handlers for fitView and other ReactFlow operations
+    const flowHandlers = setupGlobalFlowHandlers();
     
     // Advanced error handler with improved blocking of ResizeObserver errors
     const handleError = (event: ErrorEvent) => {
@@ -135,6 +139,11 @@ function App() {
     return () => {
       // Clean up event listeners
       window.removeEventListener('error', handleError, true);
+      
+      // Clean up flow handlers if available
+      if (flowHandlers && typeof flowHandlers.cleanup === 'function') {
+        flowHandlers.cleanup();
+      }
       
       try {
         layoutShiftObserver.disconnect();
