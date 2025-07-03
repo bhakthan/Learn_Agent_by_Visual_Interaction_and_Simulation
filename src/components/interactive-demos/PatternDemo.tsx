@@ -10,6 +10,8 @@ import { Play, ArrowsClockwise, CheckCircle, Clock, WarningCircle, ArrowBendDown
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { ReactFlowProvider } from 'reactflow';
 import OptimizedFlowContainer from '../visualization/OptimizedFlowContainer';
+import { useStableFlowContainer, createStableNodes, createStableEdges } from '@/lib/utils/flows/StableFlowUtils';
+import { createFlow } from '@/lib/utils/flows/FlowHelper';
 
 // Simple step controller class
 class StepController {
@@ -183,14 +185,32 @@ const CustomDemoNode = React.memo(({ data, id }: { data: any, id: string }) => {
     (data.result.length > 40 ? `${data.result.substring(0, 40)}...` : data.result) : 
     null;
   
-  // Force visibility of node
+  // Force visibility of node with improved stability
   useEffect(() => {
-    const nodeElement = document.querySelector(`[data-id="${id}"]`);
-    if (nodeElement instanceof HTMLElement) {
-      nodeElement.style.opacity = '1';
-      nodeElement.style.visibility = 'visible';
-      nodeElement.style.display = 'block';
-    }
+    // Use RAF for smoother rendering
+    const fixVisibility = () => {
+      const nodeElement = document.querySelector(`[data-id="${id}"]`);
+      if (nodeElement instanceof HTMLElement) {
+        nodeElement.style.opacity = '1';
+        nodeElement.style.visibility = 'visible';
+        nodeElement.style.display = 'block';
+        nodeElement.style.transform = 'translateZ(0)';
+        nodeElement.style.backfaceVisibility = 'hidden';
+        nodeElement.style.WebkitBackfaceVisibility = 'hidden';
+        nodeElement.style.zIndex = '1';
+      }
+    };
+
+    // Apply fixes multiple times with increasing delays
+    const timers = [
+      setTimeout(() => requestAnimationFrame(fixVisibility), 100),
+      setTimeout(() => requestAnimationFrame(fixVisibility), 500),
+      setTimeout(() => requestAnimationFrame(fixVisibility), 1000),
+    ];
+    
+    return () => {
+      timers.forEach(clearTimeout);
+    };
   }, [id]);
 
   return (
@@ -246,7 +266,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   const [animationMode, setAnimationMode] = useState<'auto' | 'step-by-step'>('auto'); 
   
   // Prepare nodes and edges for visualization
-  const demoNodes = patternData.nodes?.map(node => ({
+  const demoNodes = createStableNodes(patternData.nodes?.map(node => ({
     ...node,
     type: 'demoNode',
     data: {
@@ -256,24 +276,16 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     },
     draggable: true,
     selectable: true,
-    style: { 
-      opacity: 1, 
-      visibility: 'visible',
-      zIndex: 1,
-      display: 'block'
-    },
-  })) || [];
+  })) || []);
   
-  const demoEdges = patternData.edges?.map(edge => ({
+  const demoEdges = createStableEdges(patternData.edges?.map(edge => ({
     ...edge,
     animated: false,
     style: { 
-      opacity: 1, 
-      visibility: 'visible',
       strokeWidth: 2,
       stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined 
     },
-  })) || [];
+  })) || []);
   
   // Step controller for managing execution flow
   const stepControllerRef = useRef<StepController | null>(null);
@@ -291,8 +303,11 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     };
   }, []);
   
-  // Flow container ref
-  const flowContainerRef = useRef<HTMLDivElement>(null);
+  // Flow container ref and utilities
+  const { containerRef: flowContainerRef, resetFlow, fitView } = useStableFlowContainer({
+    autoFitView: true,
+    stabilizationDelay: 300
+  });
   
   // Reset the demo state
   const resetDemo = useCallback(() => {
@@ -303,7 +318,15 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     setDataFlows([]);
     setIterations(0);
     setWaitingForNextStep(false);
-  }, []);
+    
+    // Reset flow visualization
+    resetFlow();
+    
+    // Schedule a delayed fit view
+    setTimeout(() => {
+      fitView();
+    }, 100);
+  }, [resetFlow, fitView]);
 
   // Update node status in the visualization
   const updateNodeStatus = useCallback((nodeId: string, status: 'idle' | 'running' | 'complete' | 'failed', result?: string) => {
@@ -343,20 +366,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   
   // Create a data flow between nodes
   const createDataFlow = useCallback((source: string, target: string, content: string, type: 'message' | 'data' | 'response' | 'error') => {
-    const id = `flow-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-    const edgeId = `${source}-${target}`;
-    
-    const flow: DataFlowMessage = {
-      id,
-      edgeId,
-      source,
-      target,
-      content,
-      timestamp: Date.now(),
-      type,
-      progress: 0
-    };
-    
+    const flow = createFlow(source, target, content, type);
     setDataFlows(prev => [...prev, flow]);
   }, []);
 
@@ -508,9 +518,10 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
             <Button 
               onClick={runDemo} 
               disabled={!userInput.trim() || isRunning}
+              className="whitespace-nowrap"
             >
               {isRunning ? <ArrowsClockwise className="mr-2 animate-spin" size={16} /> : <Play className="mr-2" size={16} />}
-              {isRunning ? 'Running...' : 'Run Demo'}
+              {isRunning ? 'Running...' : 'Start Simulation'}
             </Button>
             <Button 
               variant="outline" 
