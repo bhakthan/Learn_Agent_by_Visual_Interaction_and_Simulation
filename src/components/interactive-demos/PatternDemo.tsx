@@ -524,6 +524,7 @@ const DragHint = React.memo(() => {
     });
   }, []);
   
+  // Process node based on type - Added additional error handling
   const processNode = async (nodeId: string) => {
     if (!patternData || !Array.isArray(patternData.nodes) || !Array.isArray(patternData.edges)) {
       throw new Error('Invalid pattern data');
@@ -539,13 +540,13 @@ const DragHint = React.memo(() => {
     // Increment iterations counter
     setIterations(prev => prev + 1);
     
-    // Update node status in visualization using memoized function
-    updateNodeStatus(nodeId, 'running');
-    
-    const node = patternData.nodes.find(n => n.id === nodeId);
-    if (!node) throw new Error(`Node ${nodeId} not found`);
-    
     try {
+      // Update node status in visualization using memoized function
+      updateNodeStatus(nodeId, 'running');
+      
+      const node = patternData.nodes.find(n => n.id === nodeId);
+      if (!node) throw new Error(`Node ${nodeId} not found`);
+      
       // Process node based on type
       let result = '';
       
@@ -596,34 +597,38 @@ const DragHint = React.memo(() => {
       
       // Process next nodes sequentially
       for (const edge of outgoingEdges) {
-        // Animate edge using memoized function
-        setEdgeAnimated(edge.id, true);
-        
-        
-        // Create data flow visualization
-        const newFlow = {
-          id: `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-          edgeId: edge.id,
-          source: edge.source,
-          target: edge.target,
-          content: result,
-          timestamp: Date.now(),
-          type: node.data?.nodeType === 'router' ? 'data' : 
-                node.data?.nodeType === 'llm' ? 'response' : 'message',
-          progress: 0
-        };
-        setDataFlows(flows => [...flows, newFlow]);
-        
-        // Wait proportionally to the animation speed (faster speed = shorter delay)
-        await new Promise(resolve => setTimeout(resolve, 800 / animationSpeed));
-        
-        // If step-by-step mode is active, wait for user to click "Next Step" button
-        if (animationMode === 'step-by-step' && stepControllerRef.current) {
-          await waitForNextStep();
+        try {
+          // Animate edge using memoized function
+          setEdgeAnimated(edge.id, true);
+          
+          // Create data flow visualization
+          const newFlow = {
+            id: `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            edgeId: edge.id,
+            source: edge.source,
+            target: edge.target,
+            content: result,
+            timestamp: Date.now(),
+            type: node.data?.nodeType === 'router' ? 'data' : 
+                  node.data?.nodeType === 'llm' ? 'response' : 'message',
+            progress: 0
+          };
+          setDataFlows(flows => [...flows, newFlow]);
+          
+          // Wait proportionally to the animation speed (faster speed = shorter delay)
+          await new Promise(resolve => setTimeout(resolve, 800 / animationSpeed));
+          
+          // If step-by-step mode is active, wait for user to click "Next Step" button
+          if (animationMode === 'step-by-step' && stepControllerRef.current) {
+            await waitForNextStep();
+          }
+          
+          // Process target node
+          await processNode(edge.target);
+        } catch (error) {
+          console.warn(`Error processing edge ${edge.id}:`, error);
+          // Continue with next edge if one fails
         }
-        
-        // Process target node
-        await processNode(edge.target);
       }
     } catch (error) {
       console.error(`Error processing node ${nodeId}:`, error);
@@ -642,40 +647,43 @@ const DragHint = React.memo(() => {
       // Update node in visualization using memoized function
       updateNodeStatus(nodeId, 'failed', error instanceof Error ? error.message : 'Unknown error');
       
-      // Create error flow visualization
-      const failureEdges = Array.isArray(patternData.edges) ? patternData.edges.filter(edge => 
-        edge.source === nodeId && 
-        patternData.nodes.find(n => n.id === edge.target)?.data?.label?.toLowerCase().includes('fail')
-      ) : [];
-      
-      for (const edge of failureEdges) {
-        // Animate edge
-        // Animate edge using memoized function
-        setEdgeAnimated(edge.id, true);
+      // Create error flow visualization for failure paths
+      try {
+        const failureEdges = Array.isArray(patternData.edges) ? patternData.edges.filter(edge => 
+          edge.source === nodeId && 
+          patternData.nodes.find(n => n.id === edge.target)?.data?.label?.toLowerCase().includes('fail')
+        ) : [];
         
-        // Create error flow visualization
-        const errorFlow = {
-          id: `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-          edgeId: edge.id,
-          source: edge.source,
-          target: edge.target,
-          content: 'Error',
-          timestamp: Date.now(),
-          type: 'error',
-          progress: 0
-        };
-        setDataFlows(flows => [...flows, errorFlow]);
-        
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // If step-by-step mode is active, wait for user to click "Next Step" button
-        if (animationMode === 'step-by-step' && stepControllerRef.current) {
-          await waitForNextStep();
+        for (const edge of failureEdges) {
+          // Animate edge using memoized function
+          setEdgeAnimated(edge.id, true);
+          
+          // Create error flow visualization
+          const errorFlow = {
+            id: `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            edgeId: edge.id,
+            source: edge.source,
+            target: edge.target,
+            content: 'Error',
+            timestamp: Date.now(),
+            type: 'error',
+            progress: 0
+          };
+          setDataFlows(flows => [...flows, errorFlow]);
+          
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // If step-by-step mode is active, wait for user to click "Next Step" button
+          if (animationMode === 'step-by-step' && stepControllerRef.current) {
+            await waitForNextStep();
+          }
+          
+          // Process failure path
+          await processNode(edge.target);
+          return;
         }
-        
-        // Process failure path
-        await processNode(edge.target);
-        return;
+      } catch (flowError) {
+        console.warn("Error handling failure flow:", flowError);
       }
       
       throw error; // Propagate error if no failure path
@@ -690,12 +698,12 @@ const DragHint = React.memo(() => {
     return '';
   }, []);
   
-  // Use our stable flow hook instead of multiple hooks
+  // Initialize reactFlowInstance using useStableFlow to prevent initialization errors
   const { 
     containerRef: stableFlowContainerRef, 
     resetFlow, 
     fitView: fitViewFlow,
-    reactFlowInstance
+    reactFlowInstance // This is initialized safely
   } = useStableFlow({
     fitViewOnResize: true,
     fitViewPadding: 0.2,
@@ -704,34 +712,39 @@ const DragHint = React.memo(() => {
   
   // Apply stabilization after reactFlowInstance is properly defined
   useEffect(() => {
+    // Early exit if reactFlowInstance is not defined yet
     if (!reactFlowInstance) return;
     
     // Apply second stabilization after a delay
     const timer2 = setTimeout(() => {
-      if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
-        reactFlowInstance.fitView({ padding: 0.2 });
+      try {
+        // Make sure reactFlowInstance is still valid before calling methods
+        if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
+          reactFlowInstance.fitView({ padding: 0.2 });
+        }
+        
+        // Force render nodes and make them visible
+        const forceNodeVisibility = () => {
+          setNodes(prevNodes => {
+            return prevNodes.map(node => ({
+              ...node,
+              style: {
+                ...node.style,
+                opacity: 1,
+                visibility: 'visible',
+                display: 'block',
+                transform: 'translateZ(0)'
+              }
+            }));
+          });
+        };
+        
+        // Call once immediately and once after a delay
+        forceNodeVisibility();
+        setTimeout(forceNodeVisibility, 300);
+      } catch (error) {
+        console.warn('Error applying ReactFlow stabilization:', error);
       }
-      
-      // Force render nodes and make them visible
-      const forceNodeVisibility = () => {
-        setNodes(prevNodes => {
-          return prevNodes.map(node => ({
-            ...node,
-            style: {
-              ...node.style,
-              opacity: 1,
-              visibility: 'visible',
-              display: 'block',
-              transform: 'translateZ(0)'
-            }
-          }));
-        });
-      };
-      
-      // Call once immediately and once after a delay
-      forceNodeVisibility();
-      setTimeout(forceNodeVisibility, 300);
-      
     }, 800);
     
     return () => {
@@ -741,14 +754,22 @@ const DragHint = React.memo(() => {
 
   // Use a different reference to trigger the resize safely
   const stableResetFlow = useCallback(() => {
-    // Check if reactFlowInstance is available
-    if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
-      reactFlowInstance.fitView({ padding: 0.2 });
-    }
-    
-    // Also use our stable reset as backup
-    if (resetFlow) {
-      resetFlow();
+    try {
+      // Check if reactFlowInstance is available
+      if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
+        reactFlowInstance.fitView({ padding: 0.2 });
+      }
+      
+      // Also use our stable reset as backup
+      if (resetFlow) {
+        resetFlow();
+      }
+    } catch (error) {
+      console.warn('Error in stableResetFlow:', error);
+      // Try to recover with timeout
+      setTimeout(() => {
+        if (resetFlow) resetFlow();
+      }, 100);
     }
   }, [reactFlowInstance, resetFlow]);
   
@@ -861,11 +882,11 @@ const DragHint = React.memo(() => {
     ));
   }, [setEdges]);
   
-  // Function to handle node drag events
+  // Function to handle node drag events - safely using optional chaining
   const onNodeDragStop = useCallback(() => {
     // Recalculate data flow paths after nodes are moved
     setDataFlows(prevFlows => {
-      if (prevFlows.length === 0) return prevFlows;
+      if (!prevFlows?.length) return prevFlows || [];
       return [...prevFlows]; // Force update of flow paths
     });
   }, []);
