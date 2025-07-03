@@ -11,6 +11,7 @@ import {
   ReactFlowInstance,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
+import { StableFlowContainer, StableFlowProvider } from './StableFlowContainer'
 import { PatternData } from '@/lib/data/patterns'
 import { patternContents } from '@/lib/data/patternContent'
 import { Card, CardContent } from '@/components/ui/card'
@@ -34,7 +35,7 @@ const { processNodes, processEdges, normalizeFlowMessage } = visualizationUtils
 import DataFlowVisualizer from './DataFlowVisualizer'
 import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from './StandardFlowVisualizer'
 import { useMemoizedCallback } from '@/lib/utils'
-import { useFlowContainer } from '@/lib/hooks'
+import { useTheme } from '@/components/theme/ThemeProvider'
 
 interface PatternVisualizerProps {
   patternData: PatternData
@@ -584,7 +585,11 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
             </div>
           )}
         </div>
-        <div style={{ height: 400 }} ref={containerRef}>
+        <StableFlowContainer style={{ height: 400 }} ref={containerRef} onReady={() => {
+          if (flowInstanceRef.current) {
+            flowInstanceRef.current.fitView({ padding: 0.2 });
+          }
+        }}>
           <StandardFlowVisualizerWithProvider
             nodes={nodes}
             edges={edges}
@@ -619,7 +624,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
                 : 'Click "Start Simulation" to see data flow between agents'}
             </div>
           </div>
-        </div>
+        </StableFlowContainer>
         <div className="p-4 border-t border-border">
           <h4 className="font-medium mb-2">Best Suited For:</h4>
           <div className="flex flex-wrap gap-2 mb-4">

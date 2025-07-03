@@ -1,197 +1,249 @@
 /**
- * StableFlowUtils - Robust utilities for ReactFlow components
- * Provides enhanced stability for ReactFlow visualizations across the application
+ * StableFlowUtils - Utilities for creating stable ReactFlow visualizations
+ * 
+ * This file contains various utilities to create stable, reliable ReactFlow visualizations
+ * with proper rendering, positioning, and error handling.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Node, Edge, ReactFlowInstance, useReactFlow } from 'reactflow';
-import { applyDomFixes } from '../reactFlowOptimization';
+import { Node, Edge, useReactFlow } from 'reactflow';
+import { useEffect, useRef, useCallback, useState } from 'react';
 
 /**
- * Hook to create and maintain a stable flow container with reliable rendering
+ * Creates stable nodes that are less prone to rendering issues
  */
-export function useStableFlowContainer(options: {
-  autoFitView?: boolean;
-  stabilizationDelay?: number;
-  autoResize?: boolean;
-}) {
-  const {
-    autoFitView = true,
-    stabilizationDelay = 500,
-    autoResize = true
-  } = options;
-
-  // Container reference and ReactFlow instance
-  const containerRef = useRef<HTMLDivElement>(null);
-  const rfInstanceRef = useRef<ReactFlowInstance | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  // Set ReactFlow instance when available
-  const onInit = useCallback((instance: ReactFlowInstance) => {
-    rfInstanceRef.current = instance;
-    setIsInitialized(true);
-  }, []);
-
-  // Apply stability fixes and fit view
-  const stabilizeFlow = useCallback(() => {
-    if (!containerRef.current) return;
-    
-    // Apply DOM fixes to ensure visibility
-    applyDomFixes(containerRef.current);
-    
-    // Fit view if requested and instance available
-    if (autoFitView && rfInstanceRef.current) {
-      try {
-        rfInstanceRef.current.fitView({
-          padding: 0.2,
-          includeHiddenNodes: true,
-          duration: 200
-        });
-      } catch (error) {
-        // Silent catch for fitView errors (common in ReactFlow)
-      }
-    }
-  }, [autoFitView]);
-
-  // Reset flow to stable state
-  const resetFlow = useCallback(() => {
-    if (!containerRef.current || !rfInstanceRef.current) return;
-    
-    // Apply full stabilization sequence
-    const timers = [
-      setTimeout(stabilizeFlow, 100),
-      setTimeout(stabilizeFlow, 500),
-      setTimeout(stabilizeFlow, 1000),
-    ];
-    
-    return () => {
-      timers.forEach(clearTimeout);
-    };
-  }, [stabilizeFlow]);
-
-  // Apply stability measures on mount and window resize
-  useEffect(() => {
-    // Initial stabilization
-    const cleanup = resetFlow();
-    
-    // Handle window resize events
-    const handleResize = () => {
-      if (autoResize) {
-        stabilizeFlow();
-      }
-    };
-    
-    // Apply with delay to ensure components are mounted
-    const initialTimer = setTimeout(() => {
-      stabilizeFlow();
-    }, stabilizationDelay);
-    
-    // Listen for resize events
-    if (autoResize) {
-      window.addEventListener('resize', handleResize);
-    }
-    
-    // Clean up
-    return () => {
-      if (cleanup) cleanup();
-      clearTimeout(initialTimer);
-      if (autoResize) {
-        window.removeEventListener('resize', handleResize);
-      }
-    };
-  }, [stabilizeFlow, resetFlow, autoResize, stabilizationDelay]);
-
-  // Manual fit view function for external use
-  const fitView = useCallback(() => {
-    if (rfInstanceRef.current) {
-      try {
-        rfInstanceRef.current.fitView({
-          padding: 0.2,
-          includeHiddenNodes: true,
-          duration: 200
-        });
-      } catch (error) {
-        // Silent catch
-      }
-    }
-  }, []);
-
-  return {
-    containerRef,
-    rfInstanceRef,
-    isInitialized,
-    onInit,
-    stabilizeFlow,
-    resetFlow,
-    fitView
-  };
-}
-
-/**
- * Creates enhanced nodes with stability optimizations
- */
-export function createStableNodes<T = any>(nodes: Node<T>[]): Node<T>[] {
+export function createStableNodes(nodes: Node[]): Node[] {
   if (!nodes || !Array.isArray(nodes)) return [];
   
   return nodes.map(node => ({
     ...node,
-    // Enhanced stability properties
+    // Ensure node has required properties for stable rendering
     style: {
       ...node.style,
       opacity: 1,
       visibility: 'visible',
-      display: 'block',
       transform: 'translateZ(0)',
       backfaceVisibility: 'hidden',
       WebkitBackfaceVisibility: 'hidden',
       contain: 'layout',
       zIndex: 1,
     },
-    // Default interaction settings
-    draggable: node.draggable !== undefined ? node.draggable : true,
-    selectable: node.selectable !== undefined ? node.selectable : true,
-    connectable: node.connectable !== undefined ? node.connectable : false,
+    // Ensure node has proper position
+    position: {
+      x: node.position?.x || 0,
+      y: node.position?.y || 0
+    },
+    // Add additional props for stability
+    data: {
+      ...node.data,
+      stableRendering: true,
+    }
   }));
 }
 
 /**
- * Creates enhanced edges with stability optimizations
+ * Creates stable edges that are less prone to rendering issues
  */
-export function createStableEdges<T = any>(edges: Edge<T>[]): Edge<T>[] {
+export function createStableEdges(edges: Edge[]): Edge[] {
   if (!edges || !Array.isArray(edges)) return [];
   
   return edges.map(edge => ({
     ...edge,
-    // Enhanced visibility properties
+    // Add styling for visibility
     style: {
       ...edge.style,
       opacity: 1,
       visibility: 'visible',
       strokeWidth: edge.style?.strokeWidth || 1.5,
-    },
-    // Ensure animated property is explicitly set
-    animated: edge.animated !== undefined ? edge.animated : false,
+    }
   }));
 }
 
 /**
- * Force renders all nodes in the flow to ensure visibility
+ * Custom hook to handle flow container with improved stability
  */
-export function forceNodesVisible(reactFlowInstance: ReactFlowInstance | null) {
-  if (!reactFlowInstance) return;
+export function useStableFlowContainer(options?: {
+  autoFitView?: boolean;
+  stabilizationDelay?: number;
+  minHeight?: string | number;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const reactFlowInstance = useReactFlow();
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [isStabilized, setIsStabilized] = useState(false);
   
-  try {
-    // Update node internals to force rerender
-    reactFlowInstance.getNodes().forEach(node => {
-      reactFlowInstance.updateNodeInternals(node.id);
-    });
+  const fitView = useCallback(() => {
+    if (!reactFlowInstance) return;
     
-    // Apply fit view to ensure everything is visible
-    reactFlowInstance.fitView({
-      padding: 0.2,
-      includeHiddenNodes: true,
-      duration: 200
+    try {
+      reactFlowInstance.fitView({
+        padding: 0.2,
+        minZoom: 0.5,
+        maxZoom: 2,
+        duration: 800
+      });
+    } catch (error) {
+      console.warn('Error fitting view (suppressed)');
+    }
+  }, [reactFlowInstance]);
+  
+  // Reset the flow visualization
+  const resetFlow = useCallback(() => {
+    if (!containerRef.current) return;
+    
+    // Force a re-render of the flow container
+    const element = containerRef.current;
+    
+    // Apply stability fixes
+    const applyStabilityFixes = () => {
+      if (!element) return;
+      
+      // Force hardware acceleration
+      element.style.transform = 'translateZ(0)';
+      element.style.backfaceVisibility = 'hidden';
+      element.style.WebkitBackfaceVisibility = 'hidden';
+      element.style.contain = 'layout';
+      
+      // Make nodes and edges visible
+      element.querySelectorAll('.react-flow__node, .react-flow__edge').forEach((el) => {
+        if (el instanceof HTMLElement) {
+          el.style.opacity = '1';
+          el.style.visibility = 'visible';
+          if (el.classList.contains('react-flow__node')) {
+            el.style.display = 'block';
+          }
+        }
+      });
+      
+      // Fix edge paths
+      element.querySelectorAll('.react-flow__edge-path').forEach((path) => {
+        if (path instanceof SVGElement) {
+          path.style.strokeWidth = '1.5px';
+          path.style.opacity = '1';
+          path.style.visibility = 'visible';
+        }
+      });
+    };
+    
+    // Apply fixes multiple times with increasing delays
+    applyStabilityFixes();
+    setTimeout(applyStabilityFixes, 100);
+    setTimeout(applyStabilityFixes, 500);
+    
+    // Fit view after reset
+    setTimeout(fitView, 200);
+    
+  }, [fitView]);
+  
+  // Watch for container size changes
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    const updateDimensions = () => {
+      if (!containerRef.current) return;
+      
+      const { width, height } = containerRef.current.getBoundingClientRect();
+      
+      if (width > 0 && height > 0) {
+        setDimensions({ width, height });
+        
+        // Only fit view if dimensions are non-zero
+        if (options?.autoFitView && !isStabilized) {
+          setTimeout(fitView, 100);
+          setIsStabilized(true);
+        }
+      }
+    };
+    
+    // Initial update
+    updateDimensions();
+    
+    // Create ResizeObserver with error handling
+    try {
+      const resizeObserver = new ResizeObserver((entries) => {
+        if (entries.length > 0) {
+          requestAnimationFrame(updateDimensions);
+        }
+      });
+      
+      resizeObserver.observe(containerRef.current);
+      
+      return () => {
+        resizeObserver.disconnect();
+      };
+    } catch (error) {
+      // Fallback to window resize event if ResizeObserver fails
+      window.addEventListener('resize', updateDimensions);
+      return () => {
+        window.removeEventListener('resize', updateDimensions);
+      };
+    }
+  }, [options?.autoFitView, isStabilized, fitView]);
+  
+  // Apply stabilization
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    // Stabilize the container
+    const applyStabilization = () => {
+      resetFlow();
+    };
+    
+    // Apply stability fixes with delay
+    const stabilizationDelay = options?.stabilizationDelay || 200;
+    const timer = setTimeout(applyStabilization, stabilizationDelay);
+    
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [resetFlow, options?.stabilizationDelay]);
+  
+  return {
+    containerRef,
+    dimensions,
+    resetFlow,
+    fitView,
+    isStabilized
+  };
+}
+
+/**
+ * Utility to fix common ReactFlow rendering issues
+ */
+export function fixReactFlowRendering(containerElement: HTMLElement | null) {
+  if (!containerElement) return;
+  
+  // Apply rendering fixes to the container
+  containerElement.style.transform = 'translateZ(0)';
+  containerElement.style.backfaceVisibility = 'hidden';
+  containerElement.style.WebkitBackfaceVisibility = 'hidden';
+  containerElement.style.contain = 'layout';
+  
+  // Apply fixes to nodes
+  const nodes = containerElement.querySelectorAll('.react-flow__node');
+  nodes.forEach((node) => {
+    if (node instanceof HTMLElement) {
+      node.style.opacity = '1';
+      node.style.visibility = 'visible';
+      node.style.display = 'block';
+      node.style.transform = 'translateZ(0)';
+    }
+  });
+  
+  // Apply fixes to edges
+  const edges = containerElement.querySelectorAll('.react-flow__edge');
+  edges.forEach((edge) => {
+    if (edge instanceof HTMLElement) {
+      edge.style.opacity = '1';
+      edge.style.visibility = 'visible';
+    }
+    
+    // Fix edge paths
+    const paths = edge.querySelectorAll('.react-flow__edge-path');
+    paths.forEach((path) => {
+      if (path instanceof SVGElement) {
+        path.style.strokeWidth = '1.5px';
+        path.style.opacity = '1';
+        path.style.visibility = 'visible';
+      }
     });
-  } catch (error) {
-    // Silent catch for ReactFlow errors
-  }
+  });
 }

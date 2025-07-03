@@ -16,6 +16,7 @@ import { AgentNode } from './node-types/AgentNode';
 import DataFlowVisualizer from './DataFlowVisualizer';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme/ThemeProvider';
+import { StableFlowContainer } from './StableFlowContainer';
 
 // Standard node types
 const defaultNodeTypes: NodeTypes = {
@@ -233,18 +234,9 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
   return (
     <div 
       className={cn(
-        "w-full h-full border border-border rounded-md overflow-hidden", 
+        "w-full h-full rounded-md overflow-hidden", 
         className
       )}
-      style={{
-        transform: 'translateZ(0)',
-        position: 'relative',
-        contain: 'layout',
-        minHeight: '300px',
-        visibility: 'visible'
-      }}
-      data-prevent-layout-shift="true"
-      data-stabilized-flow="true"
     >
       <ReactFlow
         nodes={nodes}
@@ -309,13 +301,15 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
 };
 
 /**
- * Wrapped version of StandardFlowVisualizer with ReactFlowProvider
- * This is the recommended way to use this component
+ * Wrapped version of StandardFlowVisualizer with ReactFlowProvider and StableFlowContainer
+ * This is the recommended way to use this component for improved stability
  */
 const StandardFlowVisualizerWithProvider: React.FC<StandardFlowVisualizerProps> = (props) => {
   return (
     <ReactFlowProvider>
-      <StandardFlowVisualizer {...props} />
+      <StableFlowContainer minHeight="300px">
+        <StandardFlowVisualizer {...props} />
+      </StableFlowContainer>
     </ReactFlowProvider>
   );
 };

@@ -1,182 +1,132 @@
 /**
- * FlowHelper - Helper functions for ReactFlow visualizations
- * Provides consistent utilities for calculating flow paths and animations
+ * Flow Helper - Utilities for data flows in visualizations
  */
-import { Edge, Node } from 'reactflow';
 
-// Types for flow messages
-export interface FlowMessage {
+/**
+ * Interface for data flow messages
+ */
+export interface DataFlowMessage {
   id: string;
   edgeId: string;
   source: string;
   target: string;
   content: string;
   timestamp: number;
-  type: string;
+  type: 'message' | 'data' | 'response' | 'error' | string;
   progress: number;
+  label?: string;
   complete?: boolean;
 }
 
 /**
- * Get the coordinates for a flow to travel along an edge
- */
-export function calculateEdgePoints(
-  source: Node,
-  target: Node,
-  sourceHandleId?: string,
-  targetHandleId?: string
-) {
-  if (!source || !target) return null;
-  
-  // Default dimensions if not specified
-  const sourceWidth = source.width || 150;
-  const sourceHeight = source.height || 40;
-  const targetWidth = target.width || 150;
-  const targetHeight = target.height || 40;
-  
-  // Calculate center points for default case
-  const sourceX = source.position.x + sourceWidth / 2;
-  const sourceY = source.position.y + sourceHeight / 2;
-  const targetX = target.position.x + targetWidth / 2;
-  const targetY = target.position.y + targetHeight / 2;
-  
-  return { sourceX, sourceY, targetX, targetY };
-}
-
-/**
- * Find edge point coordinates based on edge ID and nodes
- */
-export function findEdgePoints(edgeId: string, nodes: Node[], edges: Edge[]) {
-  if (!nodes || !edges) return null;
-  
-  // Find the edge by ID
-  const edge = edges.find(e => e.id === edgeId);
-  if (!edge) return null;
-  
-  // Find source and target nodes
-  const sourceNode = nodes.find(n => n.id === edge.source);
-  const targetNode = nodes.find(n => n.id === edge.target);
-  if (!sourceNode || !targetNode) return null;
-  
-  // Calculate the points
-  return calculateEdgePoints(
-    sourceNode, 
-    targetNode,
-    edge.sourceHandle || undefined,
-    edge.targetHandle || undefined
-  );
-}
-
-/**
- * Create a new flow message
+ * Create a data flow message
  */
 export function createFlow(
   source: string,
   target: string,
   content: string,
-  type: string = 'message'
-): FlowMessage {
-  const id = `flow-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-  const edgeId = `${source}-${target}`;
+  type: 'message' | 'data' | 'response' | 'error' | string = 'message',
+  label?: string
+): DataFlowMessage {
+  // Generate unique ID for the flow
+  const id = `flow-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   
+  // Create the flow object
   return {
     id,
-    edgeId,
+    edgeId: `${source}-${target}`, // Default edge ID pattern
     source,
     target,
     content,
     timestamp: Date.now(),
     type,
-    progress: 0
+    progress: 0, // Start at 0% progress
+    label,
+    complete: false
   };
 }
 
 /**
- * Calculate the position of a flow indicator along an edge based on progress
+ * Get a standard color for a flow type
  */
-export function calculateFlowPosition(
-  sourceX: number,
-  sourceY: number,
-  targetX: number,
-  targetY: number,
-  progress: number
-) {
-  // Ensure progress is between 0 and 1
-  const safeProgress = Math.max(0, Math.min(1, progress));
-  
-  // Linear interpolation between source and target
-  const x = sourceX + (targetX - sourceX) * safeProgress;
-  const y = sourceY + (targetY - sourceY) * safeProgress;
-  
-  return { x, y };
-}
-
-/**
- * Get the color for a specific flow type
- */
-export function getFlowTypeColor(
+export function getFlowColor(
   type: string,
   isDarkMode: boolean = false
-): { stroke: string; fill?: string; strokeWidth?: number } {
+): { color: string; fill: string; strokeWidth: number } {
+  // Default colors
+  const defaults = {
+    color: isDarkMode ? '#94a3b8' : '#64748b',
+    fill: isDarkMode ? 'rgba(148, 163, 184, 0.2)' : 'rgba(100, 116, 139, 0.2)',
+    strokeWidth: 2
+  };
+  
+  // Type-specific colors
   switch (type) {
     case 'query':
       return {
-        stroke: '#2563eb', // Blue
+        color: isDarkMode ? '#60a5fa' : '#3b82f6', // blue
+        fill: isDarkMode ? 'rgba(96, 165, 250, 0.2)' : 'rgba(59, 130, 246, 0.2)',
         strokeWidth: 2
       };
+      
     case 'response':
       return {
-        stroke: '#10b981', // Green
+        color: isDarkMode ? '#4ade80' : '#10b981', // green
+        fill: isDarkMode ? 'rgba(74, 222, 128, 0.2)' : 'rgba(16, 185, 129, 0.2)',
         strokeWidth: 2
       };
+      
     case 'tool_call':
       return {
-        stroke: '#d97706', // Amber
-        strokeWidth: 1.5
-      };
-    case 'observation':
-      return {
-        stroke: '#7c3aed', // Violet
-        strokeWidth: 1.5
-      };
-    case 'reflection':
-      return {
-        stroke: '#db2777', // Pink
-        strokeWidth: 1.5
-      };
-    case 'plan':
-      return {
-        stroke: '#06b6d4', // Cyan
-        strokeWidth: 1.5
-      };
-    case 'message':
-      return {
-        stroke: '#8b5cf6', // Purple
-        strokeWidth: 1.5
-      };
-    case 'data':
-      return {
-        stroke: '#0284c7', // Light Blue
-        strokeWidth: 1.5
-      };
-    case 'error':
-      return {
-        stroke: '#dc2626', // Red
+        color: isDarkMode ? '#f97316' : '#ea580c', // orange
+        fill: isDarkMode ? 'rgba(249, 115, 22, 0.2)' : 'rgba(234, 88, 12, 0.2)',
         strokeWidth: 2
       };
-    default:
+      
+    case 'observation':
       return {
-        stroke: isDarkMode ? '#94a3b8' : '#64748b', // Gray
-        strokeWidth: 1.5
+        color: isDarkMode ? '#a78bfa' : '#8b5cf6', // purple
+        fill: isDarkMode ? 'rgba(167, 139, 250, 0.2)' : 'rgba(139, 92, 246, 0.2)',
+        strokeWidth: 2
       };
+      
+    case 'reflection':
+      return {
+        color: isDarkMode ? '#c084fc' : '#a855f7', // purple-pink
+        fill: isDarkMode ? 'rgba(192, 132, 252, 0.2)' : 'rgba(168, 85, 247, 0.2)',
+        strokeWidth: 2.5
+      };
+      
+    case 'plan':
+      return {
+        color: isDarkMode ? '#fbbf24' : '#f59e0b', // amber
+        fill: isDarkMode ? 'rgba(251, 191, 36, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+        strokeWidth: 2
+      };
+      
+    case 'error':
+      return {
+        color: isDarkMode ? '#f87171' : '#ef4444', // red
+        fill: isDarkMode ? 'rgba(248, 113, 113, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+        strokeWidth: 3
+      };
+      
+    case 'data':
+      return {
+        color: isDarkMode ? '#22d3ee' : '#06b6d4', // cyan
+        fill: isDarkMode ? 'rgba(34, 211, 238, 0.2)' : 'rgba(6, 182, 212, 0.2)',
+        strokeWidth: 2
+      };
+      
+    default:
+      return defaults;
   }
 }
 
 /**
- * Truncate content for display in the UI
+ * Truncate content to a specified length
  */
 export function truncateContent(content: string, maxLength: number = 30): string {
-  if (!content || typeof content !== 'string') return '';
   if (content.length <= maxLength) return content;
   return `${content.substring(0, maxLength)}...`;
 }

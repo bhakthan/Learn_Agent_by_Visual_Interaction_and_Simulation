@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import StandardFlowVisualizerWithProvider from '../visualization/StandardFlowVisualizer'
-import SafeAdaptiveFlowContainer from '../visualization/SafeAdaptiveFlowContainer'
+import { StableFlowContainer } from '../visualization/StableFlowContainer'
 import { Button } from '@/components/ui/button'
 import { Play, Stop, ArrowsCounterClockwise, ToggleRight } from '@phosphor-icons/react'
 import { Switch } from '@/components/ui/switch'
@@ -183,8 +183,8 @@ const TestFlow = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Adaptive Flow Visualization Test</CardTitle>
-        <p className="text-muted-foreground">Test the optimized flow visualization with adaptive node positioning</p>
+        <CardTitle>Stable Flow Visualization Test</CardTitle>
+        <p className="text-muted-foreground">Test the improved flow visualization with stable rendering</p>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -236,14 +236,19 @@ const TestFlow = () => {
         
         <div style={{ height: 400 }} className="optimized-flow-container border rounded-md">
           {useAdaptiveContainer ? (
-            <SafeAdaptiveFlowContainer
-              nodes={getInitialNodes(randomizePositions)}
-              edges={initialEdges}
-              fitViewOnInit={true}
-              fitViewOnResize={true}
-              minHeight="400px"
-              style={{ height: "400px" }}
-            />
+            <StableFlowContainer minHeight="400px" style={{ height: "400px" }}>
+              <StandardFlowVisualizerWithProvider
+                nodes={getInitialNodes(randomizePositions)}
+                edges={initialEdges}
+                flows={flows}
+                onFlowComplete={handleFlowComplete}
+                animationSpeed={1}
+                showLabels={true}
+                showControls={true}
+                autoFitView={true}
+                className="h-full w-full"
+              />
+            </StableFlowContainer>
           ) : (
             <StandardFlowVisualizerWithProvider
               nodes={getInitialNodes(randomizePositions)}
@@ -260,14 +265,14 @@ const TestFlow = () => {
         </div>
         
         <div className="mt-4 p-4 border rounded-md bg-muted/30">
-          <h3 className="font-medium mb-2">Adaptive Flow Container Features</h3>
+          <h3 className="font-medium mb-2">Stable Flow Container Features</h3>
           <ul className="list-disc ml-6 space-y-1 text-sm">
-            <li>Automatically optimizes node positions to prevent layout shifts</li>
-            <li>Adapts layout to container size changes without jumps or glitches</li>
-            <li>Properly handles window resize events with adaptive positioning</li>
+            <li>Provides reliable rendering of flow components with consistent visibility</li>
+            <li>Prevents common ReactFlow rendering issues and layout shifts</li>
+            <li>Hardware-accelerated rendering with visual stability enhancements</li>
+            <li>Handles resize events gracefully with proper re-rendering</li>
             <li>Prevents ResizeObserver loop errors with enhanced error handling</li>
             <li>Maintains optimal view of all nodes regardless of viewport size</li>
-            <li>Hardware-accelerated rendering with visual stability enhancements</li>
           </ul>
         </div>
       </CardContent>
