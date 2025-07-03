@@ -37,7 +37,6 @@ import {
   getSpeedMultiplier,
   setSpeedMultiplier
 } from '@/lib/utils/dataFlowUtils'
-} from '@/lib/utils/dataFlowUtils'
 import DataFlowVisualizer from './DataFlowVisualizer'
 import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from './StandardFlowVisualizer'
 import { useMemoizedCallback } from '@/lib/utils'
