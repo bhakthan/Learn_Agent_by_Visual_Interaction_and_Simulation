@@ -49,3 +49,64 @@ export function setupReactFlowErrorHandling() {
     console.error = originalConsoleError;
   };
 }
+
+/**
+ * Fix ReactFlow rendering issues
+ * @param containerRef Reference to the ReactFlow container element
+ */
+export function fixReactFlowRendering(containerRef: React.RefObject<HTMLDivElement>) {
+  if (!containerRef.current) return;
+  
+  // Force recalculation of layout
+  setTimeout(() => {
+    if (containerRef.current) {
+      // Force hardware acceleration
+      containerRef.current.style.transform = 'translateZ(0)';
+      containerRef.current.style.backfaceVisibility = 'hidden';
+      containerRef.current.style.webkitBackfaceVisibility = 'hidden';
+      
+      // Apply force reflow
+      void containerRef.current.offsetHeight;
+      
+      // Ensure height is set
+      const parent = containerRef.current.parentElement;
+      if (parent && parent.offsetHeight > 10 && containerRef.current.offsetHeight < 10) {
+        containerRef.current.style.height = `${parent.offsetHeight}px`;
+      }
+      
+      // Dispatch resize event to trigger ReactFlow recalculation
+      window.dispatchEvent(new Event('resize'));
+    }
+  }, 100);
+}
+
+/**
+ * Force all nodes to be visible in ReactFlow
+ */
+export function forceNodesVisible() {
+  // Find all nodes in the document
+  const nodes = document.querySelectorAll('.react-flow__node');
+  nodes.forEach(node => {
+    if (node instanceof HTMLElement) {
+      node.style.visibility = 'visible';
+      node.style.opacity = '1';
+      node.style.display = 'block';
+    }
+  });
+  
+  // Find all edges
+  const edges = document.querySelectorAll('.react-flow__edge');
+  edges.forEach(edge => {
+    if (edge instanceof HTMLElement) {
+      edge.style.visibility = 'visible';
+      edge.style.opacity = '1';
+    }
+    
+    // Find paths inside edges
+    const paths = edge.querySelectorAll('path');
+    paths.forEach(path => {
+      path.setAttribute('stroke-opacity', '1');
+      path.setAttribute('visibility', 'visible');
+    });
+  });
+}

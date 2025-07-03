@@ -10,6 +10,8 @@ import { useOptimizedReactFlow } from './useOptimizedReactFlow';
 import { useFlowColors } from './useFlowColors';
 import { useReactFlowMemo } from './useReactFlowMemo';
 import { useAdaptiveFlow } from './useAdaptiveFlow';
+import useStableNodeLayout from './useStableNodeLayout';
+import useStableFlowUtils from './useStableFlowUtils';
 
 // Export all hooks
 export {
@@ -19,5 +21,7 @@ export {
   useOptimizedReactFlow,
   useFlowColors,
   useReactFlowMemo,
-  useAdaptiveFlow
+  useAdaptiveFlow,
+  useStableNodeLayout,
+  useStableFlowUtils
 };
