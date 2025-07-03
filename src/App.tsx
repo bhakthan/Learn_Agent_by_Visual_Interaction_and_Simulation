@@ -13,7 +13,7 @@ import AzureServicesOverview from './components/azure-services/AzureServicesOver
 import CommunitySharing from './components/community/CommunitySharing'
 import ReferencesSection from './components/references/ReferencesSection'
 import { setupResizeObserverErrorHandling } from './lib/utils/resizeObserverUtils';
-import { setupReactFlowErrorHandling } from './lib/utils/reactFlowFixUtils';
+import { setupReactFlowErrorHandling } from './lib/utils/reactFlowUtils';
 import { disableResizeObserverIfProblematic } from './lib/utils/resizeObserverUtils';
 import TestFlow from './components/interactive-demos/TestFlow'
 

@@ -17,7 +17,8 @@ import { AgentNode } from './node-types/AgentNode';
 import DataFlowVisualizer from './DataFlowVisualizer';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme/ThemeProvider';
-import { useStableFlow, applyNodeStyling, applyEdgeAnimations } from '@/lib/utils/visualizationUtils';
+import { useStableFlow } from '@/lib/hooks/useStableFlow';
+import { applyNodeStyling, applyEdgeAnimations } from '@/lib/utils/visualizationUtils';
 import { getStandardNodeStyle, getStandardEdgeStyle } from '@/lib/utils/standardNodeUtils';
 
 // Standard node types

@@ -2,6 +2,7 @@
  * Visualization utilities for ReactFlow components
  */
 import { Node, Edge } from 'reactflow';
+import React from 'react';
 
 /**
  * Reset the ReactFlow rendering to fix common issues
@@ -59,9 +60,6 @@ export function resetReactFlowRendering(containerRef: React.RefObject<HTMLDivEle
     });
   }, 100);
 }
-
-// Remove the useStableFlow hook from this utility file
-// Hooks must be in React components or custom hooks
 
 /**
  * Apply animation style to edges

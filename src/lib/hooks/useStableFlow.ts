@@ -1,9 +1,6 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useReactFlow } from 'reactflow';
-// Import from reactFlowUtils instead of reactFlowFixUtils
-import { forceNodesVisible } from '../utils/reactFlowUtils';
-// Import the fixReactFlowRendering from our fixed utility
-import { fixReactFlowRendering } from '../utils/reactFlowUtils';
+import { forceNodesVisible, fixReactFlowRendering } from '../utils/reactFlowUtils';
 
 interface UseStableFlowOptions {
   fitViewOnResize?: boolean;
@@ -44,11 +41,11 @@ export function useStableFlow({
     // Schedule a fix after a short delay
     setTimeout(() => {
       if (reactFlowInstance && containerRef.current) {
-        // Pass containerRef instead of reactFlowInstance
+        // Fix the ReactFlow rendering
         fixReactFlowRendering(containerRef);
       }
     }, 100);
-  }, [reactFlowInstance, fitViewPadding]);
+  }, [reactFlowInstance]);
   
   // Apply initial stabilization and fit view
   useEffect(() => {
