@@ -36,7 +36,7 @@ import DataFlowVisualizer from './DataFlowVisualizer'
 import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from './StandardFlowVisualizer'
 import { useMemoizedCallback } from '@/lib/utils'
 import { useTheme } from '@/components/theme/ThemeProvider'
-import { useFlowContainer } from '@/lib/utils/flows/StableFlowUtils'
+import { useStableFlowContainer } from '@/lib/utils/flows/StableFlowUtils'
 
 interface PatternVisualizerProps {
   patternData: PatternData
@@ -174,7 +174,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
   
   // Use custom flow container hook to better handle resizing
   const containerRef = useRef<HTMLDivElement>(null)
-  const { dimensions, updateDimensions } = useFlowContainer(containerRef)
+  const { dimensions, resetFlow } = useStableFlowContainer(containerRef)
   
   // Reset flow and nodes when pattern changes
   useEffect(() => {

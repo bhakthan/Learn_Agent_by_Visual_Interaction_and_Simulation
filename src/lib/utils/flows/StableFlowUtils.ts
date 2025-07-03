@@ -201,7 +201,8 @@ export function useStableFlowContainer(options?: {
     dimensions,
     resetFlow,
     fitView,
-    isStabilized
+    isStabilized,
+    updateDimensions: resetFlow // Alias for backward compatibility
   };
 }
 
@@ -247,3 +248,6 @@ export function fixReactFlowRendering(containerElement: HTMLElement | null) {
     });
   });
 }
+
+// Export an alias for backward compatibility with the original hook name
+export const useFlowContainer = useStableFlowContainer;
