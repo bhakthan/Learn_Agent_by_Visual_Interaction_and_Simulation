@@ -57,6 +57,67 @@ function initReactFlowFixes() {
 }
 
 /**
+ * Force nodes to be visible by applying direct styles
+ */
+export function forceNodesVisible() {
+  // Force all nodes to be visible
+  document.querySelectorAll('.react-flow__node').forEach(node => {
+    if (node instanceof HTMLElement) {
+      node.style.opacity = '1';
+      node.style.visibility = 'visible';
+      node.style.display = 'block';
+      node.style.transform = 'translateZ(0)';
+    }
+  });
+  
+  // Force edges to be visible too
+  document.querySelectorAll('.react-flow__edge').forEach(edge => {
+    if (edge instanceof HTMLElement) {
+      edge.style.opacity = '1';
+      edge.style.visibility = 'visible';
+    }
+  });
+}
+
+/**
+ * Fix ReactFlow rendering issues by applying optimizations and fitting view
+ */
+export function fixReactFlowRendering(instance: ReactFlowInstance, padding = 0.2) {
+  try {
+    // Force hardware acceleration on all ReactFlow elements
+    document.querySelectorAll('.react-flow, .react-flow__viewport, .react-flow__container').forEach(el => {
+      if (el instanceof HTMLElement) {
+        el.style.transform = 'translateZ(0)';
+        el.style.backfaceVisibility = 'hidden';
+        el.style.WebkitBackfaceVisibility = 'hidden';
+      }
+    });
+    
+    // Ensure all nodes are visible
+    forceNodesVisible();
+    
+    // Fit view if possible
+    if (instance && typeof instance.fitView === 'function') {
+      setTimeout(() => {
+        try {
+          instance.fitView({
+            padding,
+            includeHiddenNodes: true
+          });
+        } catch (e) {
+          console.warn('Error fitting view (suppressed):', e);
+        }
+      }, 100);
+    }
+    
+    return true;
+  } catch (e) {
+    console.warn('Error fixing ReactFlow rendering (suppressed):', e);
+    return false;
+  }
+}
+
+/**
  * Perform a reset of ReactFlow rendering for a specific container
  * This can help when nodes/edges are not visible
  */
