@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ReactFlow, {
   ReactFlowProvider,
   Controls,
@@ -56,11 +56,15 @@ interface StandardFlowVisualizerProps {
   className?: string;
 }
 
+export type StandardFlowVisualizerHandle = {
+  fitView: () => void;
+};
+
 /**
  * StandardFlowVisualizer - A simplified component for visualizing data flows
  */
 export const StandardFlowVisualizer = React.forwardRef<
-  { fitView: () => void },
+  StandardFlowVisualizerHandle,
   StandardFlowVisualizerProps
 >(({
   nodes: initialNodes,
@@ -82,7 +86,7 @@ export const StandardFlowVisualizer = React.forwardRef<
   const [edges, setEdges, onEdgeChanges] = useEdgesState(initialEdges || []);
   const reactFlowInstance = useReactFlow();
   
-  // Define fitView function using reactFlowInstance
+  // Define fitView function using reactFlowInstance that will be exposed via ref
   const fitView = useCallback(() => {
     if (reactFlowInstance) {
       try {
@@ -224,21 +228,6 @@ export const StandardFlowVisualizer = React.forwardRef<
     return { sourceX, sourceY, targetX, targetY };
   }, [edges, nodes]);
 
-  // Expose fitView function for external use
-  const fitView = useCallback(() => {
-    if (reactFlowInstance) {
-      try {
-        reactFlowInstance.fitView({
-          padding: 0.2,
-          includeHiddenNodes: true,
-          duration: 800 // longer animation for smoother transition
-        });
-      } catch (error) {
-        console.warn('Error fitting view (suppressed)');
-      }
-    }
-  }, [reactFlowInstance]);
-
   // Apply fit view when needed
   useEffect(() => {
     if (autoFitView && reactFlowInstance) {
@@ -339,7 +328,7 @@ export const StandardFlowVisualizer = React.forwardRef<
  */
 const StandardFlowVisualizerWithProvider: React.FC<StandardFlowVisualizerProps> = (props) => {
   // Create ref to access the child component
-  const visualizerRef = useRef<{ fitView: () => void } | null>(null);
+  const visualizerRef = useRef<StandardFlowVisualizerHandle | null>(null);
   
   // Expose fitView method
   const fitView = useCallback(() => {
@@ -369,14 +358,7 @@ const StandardFlowVisualizerWithProvider: React.FC<StandardFlowVisualizerProps> 
         <StandardFlowVisualizer 
           {...props} 
           // @ts-ignore - Add ref to access internal methods
-          ref={(el) => {
-            // Store reference to the inner component's fitView method
-            if (el) {
-              visualizerRef.current = {
-                fitView: el.fitView || (() => {})
-              };
-            }
-          }}
+          ref={visualizerRef}
         />
       </StableFlowContainer>
     </ReactFlowProvider>
