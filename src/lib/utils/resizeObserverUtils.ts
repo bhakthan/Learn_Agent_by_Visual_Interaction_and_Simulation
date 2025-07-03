@@ -1,90 +1,155 @@
 /**
- * Utilities to handle and prevent ResizeObserver loop errors
+ * Utilities for stable ResizeObserver handling
  */
 
 /**
- * Debounce function to limit execution frequency
+ * Creates a stable resize observer that avoids common issues
  */
-function debounce(func: Function, wait: number) {
-  let timeout: ReturnType<typeof setTimeout> | null = null;
+export function createStableResizeObserver(
+  callback: (entries: ResizeObserverEntry[]) => void, 
+  options: { 
+    throttleMs?: number,
+    debounceMs?: number,
+    errorLimit?: number
+  } = {}
+): ResizeObserver {
+  const { throttleMs = 100, debounceMs = 300, errorLimit = 3 } = options;
   
-  return function(...args: any[]) {
-    const later = () => {
-      timeout = null;
-      func(...args);
-    };
+  // Keep track of the last time we processed a resize event
+  let lastProcessTime = 0;
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  let errorCount = 0;
+  
+  // Create a function that handles both throttling and debouncing
+  const processEntries = (entries: ResizeObserverEntry[]) => {
+    // Throttle logic
+    const now = Date.now();
+    const timeSinceLast = now - lastProcessTime;
     
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
-/**
- * Apply ResizeObserver error suppression
- * Returns a cleanup function to restore original error handlers
- */
-export function setupResizeObserverErrorHandling() {
-  // Store original console error method
-  const originalConsoleError = console.error;
-  
-  // Override console.error to filter ResizeObserver errors
-  console.error = function(msg: any, ...args: any[]) {
-    // Filter out ResizeObserver errors
-    if (
-      typeof msg === 'string' && 
-      (msg.includes('ResizeObserver loop') || 
-       msg.includes('ResizeObserver was created') || 
-       msg.includes('undelivered notifications'))
-    ) {
-      // Just ignore these errors
+    if (timeSinceLast < throttleMs) {
+      // Skip this update due to throttling
       return;
     }
     
-    // Pass through other errors
-    return originalConsoleError.apply(console, [msg, ...args]);
+    // Clear any existing debounce timer
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+      debounceTimer = null;
+    }
+    
+    // Set up debounce timer
+    debounceTimer = setTimeout(() => {
+      lastProcessTime = Date.now();
+      
+      try {
+        callback(entries);
+      } catch (error) {
+        errorCount++;
+        
+        if (errorCount < errorLimit) {
+          console.warn('Error in resize observer callback (suppressed):', error);
+        }
+      }
+      
+      debounceTimer = null;
+    }, debounceMs);
   };
   
+  // Create the actual observer with error handling
+  try {
+    return new ResizeObserver((entries) => {
+      requestAnimationFrame(() => {
+        processEntries(entries);
+      });
+    });
+  } catch (error) {
+    console.warn('Error creating ResizeObserver, providing fallback implementation');
+    
+    // Return a dummy observer that does nothing
+    return {
+      observe: () => {},
+      unobserve: () => {},
+      disconnect: () => {}
+    } as ResizeObserver;
+  }
+}
+
+/**
+ * Setup improved error handling for ResizeObserver loops
+ */
+export function setupResizeObserverErrorHandling() {
   // Add global error handler for ResizeObserver errors
-  const errorHandler = (e: ErrorEvent) => {
-    if (e.message && e.message.includes('ResizeObserver')) {
-      e.preventDefault();
-      e.stopPropagation();
+  const handleError = (event: ErrorEvent) => {
+    if (event.message && (
+      event.message.includes('ResizeObserver loop') || 
+      event.message.includes('ResizeObserver completed with undelivered notifications')
+    )) {
+      // Prevent the error from propagating
+      event.preventDefault();
+      event.stopPropagation();
       return false;
     }
   };
   
-  window.addEventListener('error', errorHandler, true);
+  window.addEventListener('error', handleError, true);
   
   // Return cleanup function
   return () => {
-    console.error = originalConsoleError;
-    window.removeEventListener('error', errorHandler, true);
+    window.removeEventListener('error', handleError, true);
   };
 }
 
 /**
- * Disable problematic ResizeObservers after too many errors
+ * Throttle resize observer updates to prevent excessive rendering
+ */
+export function throttleResizeObserver(callback: () => void, delay: number = 150) {
+  let lastExecution = 0;
+  
+  return () => {
+    const now = Date.now();
+    const timeSinceLastExecution = now - lastExecution;
+    
+    if (timeSinceLastExecution >= delay) {
+      lastExecution = now;
+      callback();
+    }
+  };
+}
+
+/**
+ * Disable problematic resize observers if they cause too many errors
  */
 export function disableResizeObserverIfProblematic() {
-  // This is a last-resort fix when all else fails
-  try {
-    // Find all ReactFlow elements
-    const flowElements = document.querySelectorAll('.react-flow, .react-flow__container');
-    flowElements.forEach(el => {
+  if (!window.__resizeObserverErrorCount) {
+    window.__resizeObserverErrorCount = 0;
+  }
+  
+  window.__resizeObserverErrorCount++;
+  
+  // If we're getting too many errors, try to fix the issue
+  if (window.__resizeObserverErrorCount > 10) {
+    // Apply fix for ReactFlow elements
+    document.querySelectorAll('.react-flow__container, .react-flow__renderer, .react-flow').forEach(el => {
       if (el instanceof HTMLElement) {
-        el.style.overflow = 'hidden'; // Temporarily freeze scrolling
-        el.style.height = el.offsetHeight + 'px'; // Fix height
-        el.style.width = el.offsetWidth + 'px'; // Fix width
+        // Force hardware acceleration with better compositing
+        el.style.transform = 'translateZ(0)';
+        el.style.contain = 'layout paint';
         
-        // Reset after a delay
-        setTimeout(() => {
-          el.style.overflow = '';
-        }, 1000);
+        // Set explicit height to prevent layout shifts
+        if (el.offsetHeight < 10) {
+          el.style.height = '300px';
+        }
       }
     });
-  } catch (e) {
-    // Silent recovery
+    
+    // Reset counter after applying fixes
+    window.__resizeObserverErrorCount = 0;
   }
 }
 
-export default { setupResizeObserverErrorHandling, disableResizeObserverIfProblematic };
+// Add type declaration for global variables
+declare global {
+  interface Window {
+    __resizeObserverErrorCount?: number;
+  }
+}

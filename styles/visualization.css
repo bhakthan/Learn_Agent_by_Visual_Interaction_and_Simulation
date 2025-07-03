@@ -1,75 +1,101 @@
-/* 
- * Visualization styles to improve ReactFlow performance and prevent ResizeObserver errors
+/**
+ * Visualization styles for React Flow and data flow animations
  */
 
-/* Apply hardware acceleration consistently */
+/* Enhanced ReactFlow element stability */
 .react-flow,
 .react-flow__container,
 .react-flow__viewport,
-.react-flow__node,
-.react-flow__edge {
+.react-flow__renderer,
+[data-reactflow] {
   transform: translateZ(0);
   will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  contain: layout style;
-  opacity: 1 !important;
-  visibility: visible !important;
-  display: block !important;
+  contain: layout;
 }
 
-/* Ensure minimum dimensions for visualization containers */
-.visualization-container,
-.flow-container,
-[data-flow-container] {
-  min-height: 300px;
-  min-width: 300px;
-  position: relative;
-  display: block !important; /* Force display to fix visibility issues */
-  overflow: visible !important; /* Ensure container is visible */
-  visibility: visible !important;
-}
-
-/* Critical fix for React Flow visibility */
+/* Ensure sane minimums to prevent size bugs */
 .react-flow {
-  display: block !important;
-  visibility: visible !important;
-  min-height: 300px;
-  min-width: 100%;
+  min-height: 200px;
+  min-width: 200px;
+  contain: strict;
   z-index: 0;
 }
 
-/* Optimize edge animations to prevent jank */
-.react-flow__edge {
-  animation-fill-mode: both;
-  contain: paint layout;
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-/* Ensure edges are visible */
+/* Optimize animations to reduce jank */
 .react-flow__edge-path {
+  will-change: transform;
+  contain: strict;
   stroke-width: 1.5px !important;
   opacity: 1 !important;
   visibility: visible !important;
 }
 
-/* Prevent layout thrashing during animations */
-.react-flow__edge-path {
-  stroke-dasharray: 5;
-  animation-duration: 0.5s;
-  animation-timing-function: ease;
-  animation-iteration-count: 1;
-  contain: strict;
+/* Enhanced visualization container for data transforms */
+.transform-visualization {
+  position: relative;
+  overflow: hidden;
+  transform: translateZ(0);
+  contain: layout size;
 }
 
-/* Flow stabilization styles to fix common ReactFlow issues */
-.react-flow__renderer {
-  overflow: visible !important;
+/* Transformation effects */
+.transform-effect {
+  filter: drop-shadow(0 0 2px rgba(0, 120, 255, 0.5));
+  transition: all 0.3s ease;
   contain: layout style;
 }
 
-/* Dark mode improvements */
+/* Ensure tooltips appear above SVG elements */
+[role="tooltip"] {
+  z-index: 100;
+}
+
+/* Ensure all flow nodes are visible with minimum dimensions */
+.react-flow__node {
+  min-width: 50px;
+  min-height: 30px;
+  contain: layout style;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  z-index: 1;
+}
+
+/* Prevent layout shifts during animation */
+.react-flow__edges {
+  pointer-events: none;
+  contain: layout style;
+}
+
+/* Ensure edges are always visible */
+.react-flow__edge {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Stable container for flow visualizations */
+.optimized-flow-container {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  contain: layout;
+  transform-style: preserve-3d;
+}
+
+/* Stable node dragging */
+.react-flow__node.dragging {
+  z-index: 1000;
+}
+
+/* Better animation quality for data flow */
+.flow-indicator {
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.2));
+  will-change: transform;
+}
+
+/* Enhanced dark mode styling */
 .dark .react-flow__edge-path {
   stroke: rgba(255, 255, 255, 0.5);
 }
@@ -77,95 +103,41 @@
 .dark .react-flow__controls {
   background-color: var(--card);
   border-color: var(--border);
-  color: var(--card-foreground);
 }
 
-/* Add more padding to prevent edge clipping */
-.react-flow__edges {
-  pointer-events: none;
-  padding: 10px;
-}
-
-/* Fix for minimap rendering in dark mode */
-.dark .react-flow__minimap {
+.dark .react-flow__controls button {
   background-color: var(--card);
   border-color: var(--border);
+  color: var(--foreground);
 }
 
-/* Ensure handles are consistently visible */
-.react-flow__handle {
-  width: 8px;
-  height: 8px;
-  background-color: var(--primary);
-  border: 1px solid var(--background);
-  opacity: 1 !important;
-  visibility: visible !important;
+.dark .react-flow__controls button:hover {
+  background-color: var(--muted);
 }
 
-/* Fix z-index stacking for node interactions */
-.react-flow__node {
-  z-index: 1;
-  opacity: 1 !important; 
-  visibility: visible !important;
-  display: block !important;
+.dark .flow-indicator {
+  filter: drop-shadow(0px 0px 2px rgba(0, 0, 0, 0.8));
 }
 
-.react-flow__node.selected {
-  z-index: 2;
+/* Consistent node appearance */
+.agent-node {
+  padding: 10px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  width: 150px;
+  text-align: center;
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  color: var(--card-foreground);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
 }
 
-.react-flow__edge.selected {
-  z-index: 3;
+.agent-node:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Fixed position and visibility for flow components */
-.react-flow__container {
-  position: absolute !important;
-  top: 0;
-  left: 0;
-  width: 100% !important;
-  height: 100% !important;
-  overflow: hidden !important;
-}
-
-/* Ensure viewport is visible */
-.react-flow__viewport {
-  display: block !important;
-  visibility: visible !important;
-  transform-origin: 0 0;
-}
-
-/* More aggressive fix for node visibility issues */
-.react-flow__node-demoNode {
-  opacity: 1 !important;
-  visibility: visible !important;
-  display: block !important;
-  transform: translateZ(0);
-  min-width: 100px;
-  min-height: 50px;
-}
-
-/* Fix for panzoom behavior */
-.react-flow__pane {
-  cursor: grab;
-}
-
-.react-flow__pane.dragging {
-  cursor: grabbing;
-}
-
-/* Enhance node animations */
-@keyframes node-appear {
-  from {
-    opacity: 0;
-    transform: scale(0.8) translateZ(0);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateZ(0);
-  }
-}
-
-.react-flow__node {
-  animation: node-appear 0.3s ease-out forwards;
+.agent-node.selected, 
+.agent-node.active {
+  box-shadow: 0 0 0 2px var(--primary);
 }

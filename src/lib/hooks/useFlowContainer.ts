@@ -1,208 +1,93 @@
-import { useEffect, useRef } from 'react';
-import { throttleResizeObserver } from '../utils/resizeObserverUtil';
+import { useState, useEffect, useCallback } from 'react';
+import { useReactFlow } from 'reactflow';
+import { createStableResizeObserver } from '../utils/resizeObserverUtils';
 
-/**
- * Hook for better handling of ReactFlow container resizing with enhanced stability
- * 
- * @param options Optional configuration
- * @returns Container ref and utility methods
- */
-export function useFlowContainer(options: { 
-  fitViewOnResize?: boolean;
-  autoResize?: boolean;
-  debounce?: number;
-  centerContent?: boolean;
-} = {}) {
-  const { 
-    fitViewOnResize = true,
-    autoResize = true, 
-    debounce = 200,
-    centerContent = true
-  } = options;
-  
-  // Reference to the flow container
-  const containerRef = useRef<HTMLDivElement>(null);
-  // Reference to the ReactFlow instance
-  const reactFlowInstanceRef = useRef<any>(null);
-  // Track if we've applied initial stabilization
-  const initializedRef = useRef<boolean>(false);
-  
-  // Utility to reset and stabilize ReactFlow rendering with improved reliability
-  const resetReactFlowRendering = () => {
-    // Skip if no container
+type Dimensions = {
+  width: number;
+  height: number;
+};
+
+export function useFlowContainer(containerRef: React.RefObject<HTMLElement>) {
+  const [dimensions, setDimensions] = useState<Dimensions>({ width: 0, height: 0 });
+  const reactFlowInstance = useReactFlow();
+
+  // Function to update dimensions from the container element
+  const updateDimensions = useCallback(() => {
     if (!containerRef.current) return;
     
-    try {
-      // Apply temporary styles that force a reflow
-      const container = containerRef.current;
-      
-      // Use RAF for smoother rendering
-      requestAnimationFrame(() => {
-        // Hardware acceleration and rendering stability
-        container.style.transform = 'translateZ(0)';
-        container.style.webkitBackfaceVisibility = 'hidden';
-        container.style.contain = 'layout paint';
-        
-        // Force reflow
-        container.getBoundingClientRect();
-        
-        // Set explicit dimensions based on parent if needed
-        const parent = container.parentElement;
-        if (parent && (!container.style.height || parseInt(container.style.height) < 20)) {
-          const height = Math.max(parent.offsetHeight, 300);
-          container.style.height = `${height}px`;
-        }
-        
-        // Apply stabilization to ReactFlow elements
-        const flowElements = container.querySelectorAll('.react-flow__viewport, .react-flow__container');
-        flowElements.forEach(el => {
-          if (el instanceof HTMLElement) {
-            el.style.transform = 'translateZ(0)';
-            el.style.contain = 'layout paint';
-          }
-        });
-        
-        // Trigger a smooth rendering update
-        requestAnimationFrame(() => {
-          // Trigger fitView on the ReactFlow instance with proper error handling
-          if (reactFlowInstanceRef.current && fitViewOnResize) {
-            try {
-              if (typeof reactFlowInstanceRef.current.fitView === 'function') {
-                reactFlowInstanceRef.current.fitView({
-                  padding: 0.2,
-                  includeHiddenNodes: false,
-                  duration: 200
-                });
-              }
-            } catch (e) {
-              // Silently handle fitView errors
-              console.warn('Error in fitView, using fallback resize', e);
-              window.dispatchEvent(new Event('resize'));
-            }
-          }
-          
-          // Dispatch layout event
-          window.dispatchEvent(new CustomEvent('flow-layout-updated', {
-            detail: { containerId: container.id || 'flow-container' }
-          }));
-        });
-      });
-    } catch (e) {
-      // Silently handle errors but dispatch resize as fallback
-      window.dispatchEvent(new Event('resize'));
-    }
-  };
-  
-  // Set up resize handlers with improved stability
+    const { width, height } = containerRef.current.getBoundingClientRect();
+    
+    // Only update if significant changes
+    setDimensions(prev => {
+      if (
+        Math.abs(prev.width - width) > 5 ||
+        Math.abs(prev.height - height) > 5
+      ) {
+        return { width, height };
+      }
+      return prev;
+    });
+  }, [containerRef]);
+
+  // Setup resize observer to track container size changes
   useEffect(() => {
-    if (!containerRef.current || !autoResize) return;
+    if (!containerRef.current) return;
     
-    // Create a safer resize handler with RAF-based debouncing
-    let resizeTimeoutId: number | null = null;
-    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+    // Initial update
+    updateDimensions();
     
-    const handleResize = () => {
-      // Cancel any pending resize
-      if (resizeTimeoutId !== null) {
-        cancelAnimationFrame(resizeTimeoutId);
-        resizeTimeoutId = null;
-      }
+    // Create a stable resize observer
+    const resizeObserver = createStableResizeObserver(() => {
+      updateDimensions();
       
-      if (resizeTimer !== null) {
-        clearTimeout(resizeTimer);
-      }
-      
-      // Schedule new resize with RAF for better performance
-      resizeTimeoutId = requestAnimationFrame(() => {
-        resizeTimer = setTimeout(() => {
-          resetReactFlowRendering();
-          resizeTimeoutId = null;
-        }, debounce);
-      });
-    };
-    
-    // Apply initial stabilization after a short delay
-    if (!initializedRef.current) {
-      const initTimer = setTimeout(() => {
-        resetReactFlowRendering();
-        initializedRef.current = true;
-      }, 500);
-      
-      return () => {
-        clearTimeout(initTimer);
-      };
-    }
-    
-    // Set up stable resize observer with error handling
-    try {
-      // Use standard ResizeObserver with our throttling wrapper
-      const observer = new ResizeObserver(throttleResizeObserver(() => {
-        handleResize();
-      }));
-      
-      observer.observe(containerRef.current);
-      
-      // Listen for explicit layout update requests
-      const handleLayoutUpdate = () => handleResize();
-      window.addEventListener('layout-update', handleLayoutUpdate);
-      
-      return () => {
-        observer.disconnect();
-        window.removeEventListener('layout-update', handleLayoutUpdate);
-        
-        if (resizeTimeoutId !== null) {
-          cancelAnimationFrame(resizeTimeoutId);
-        }
-        
-        if (resizeTimer !== null) {
-          clearTimeout(resizeTimer);
-        }
-      };
-    } catch (e) {
-      // Fallback to window resize events
-      console.warn('ResizeObserver failed, using window resize fallback', e);
-      window.addEventListener('resize', handleResize);
-      
-      // Also listen for layout updates
-      window.addEventListener('layout-update', handleResize);
-      
-      return () => {
-        window.removeEventListener('resize', handleResize);
-        window.removeEventListener('layout-update', handleResize);
-        
-        if (resizeTimeoutId !== null) {
-          cancelAnimationFrame(resizeTimeoutId);
-        }
-        
-        if (resizeTimer !== null) {
-          clearTimeout(resizeTimer);
-        }
-      };
-    }
-  }, [autoResize, debounce]);
-  
-  // Return the container ref and utils
-  return {
-    containerRef,
-    setReactFlowInstance: (instance: any) => {
-      reactFlowInstanceRef.current = instance;
-      
-      // Apply initial stabilization if instance changes
-      if (instance && fitViewOnResize) {
-        requestAnimationFrame(() => {
+      // Apply fit view after dimensions update
+      setTimeout(() => {
+        if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
           try {
-            if (typeof instance.fitView === 'function') {
-              instance.fitView();
-            }
-          } catch (e) {
-            // Silent handling
+            reactFlowInstance.fitView({ 
+              duration: 300,
+              padding: 0.2,
+              includeHiddenNodes: true
+            });
+          } catch (error) {
+            console.warn('Error fitting flow view (suppressed)');
           }
-        });
+        }
+      }, 300);
+    }, {
+      throttleMs: 100,
+      debounceMs: 300
+    });
+    
+    // Start observing the container
+    resizeObserver.observe(containerRef.current);
+    
+    // Add a mutation observer to track DOM changes
+    const mutationObserver = new MutationObserver(() => {
+      if (containerRef.current) {
+        updateDimensions();
       }
-    },
-    resetRendering: resetReactFlowRendering,
-    triggerResize: () => {
-      resetReactFlowRendering();
-    }
+    });
+    
+    mutationObserver.observe(containerRef.current, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style', 'class']
+    });
+    
+    // Also listen for window resize events
+    window.addEventListener('resize', updateDimensions);
+    
+    return () => {
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+      window.removeEventListener('resize', updateDimensions);
+    };
+  }, [containerRef, updateDimensions, reactFlowInstance]);
+  
+  return {
+    dimensions,
+    updateDimensions
   };
 }

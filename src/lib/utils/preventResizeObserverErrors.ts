@@ -1,123 +1,114 @@
 /**
- * Global utility to prevent ResizeObserver errors
- * This should be imported and called once in your application's main entry point
+ * Global fixes for ReactFlow and ResizeObserver errors
  */
 
 /**
- * Prevent ResizeObserver loop errors from crashing the application
- */
-export function preventResizeObserverErrors() {
-  // Store original console.error to restore later if needed
-  const originalConsoleError = console.error;
-
-  // Override console.error to filter ResizeObserver errors
-  console.error = function(msg: any, ...args: any[]) {
-    // Check if message contains ResizeObserver error text
-    if (
-      (typeof msg === 'string' && (
-        msg.includes('ResizeObserver loop') ||
-        msg.includes('ResizeObserver was created') ||
-        msg.includes('undelivered notifications') ||
-        msg.includes('ResizeObserver completed')
-      )) ||
-      // Also check for error objects
-      (msg instanceof Error && 
-        msg.message && (
-          msg.message.includes('ResizeObserver loop') ||
-          msg.message.includes('ResizeObserver was created') ||
-          msg.message.includes('undelivered notifications') ||
-          msg.message.includes('ResizeObserver completed')
-        )
-      )
-    ) {
-      // For development, show a minimal notice but don't break the console
-      if (process.env.NODE_ENV === 'development') {
-        console.debug('[React Flow] ResizeObserver error suppressed');
-      }
-      return;
-    }
-
-    // Pass through all other errors
-    originalConsoleError.apply(console, [msg, ...args]);
-  };
-
-  // Add global error handler for ResizeObserver errors
-  window.addEventListener('error', (event) => {
-    if (
-      event.message && (
-        event.message.includes('ResizeObserver loop') ||
-        event.message.includes('ResizeObserver completed with undelivered notifications') ||
-        event.message.includes('ResizeObserver') ||
-        event.message.includes('undelivered notifications')
-      )
-    ) {
-      // Prevent the error from propagating
-      event.preventDefault();
-      event.stopPropagation();
-      
-      return false;
-    }
-  }, true);
-
-  // Return function to restore original behavior if needed
-  return () => {
-    console.error = originalConsoleError;
-  };
-}
-
-/**
- * Apply global optimizations for ReactFlow
+ * Apply global optimizations to ReactFlow components
+ * This helps prevent common issues with React Flow rendering
  */
 export function applyReactFlowGlobalOptimizations() {
-  // Prevent ResizeObserver errors
-  preventResizeObserverErrors();
-  
-  // Make window.requestAnimationFrame more reliable for ReactFlow
-  const originalRAF = window.requestAnimationFrame;
-  window.requestAnimationFrame = function(callback) {
-    // If the callback is related to rendering React Flow, wrap it for stability
-    return originalRAF.call(window, (timestamp) => {
-      try {
-        callback(timestamp);
-      } catch (err) {
-        console.debug('[React Flow] Animation frame error suppressed', err);
-      }
-    });
-  };
-  
-  // Add global function to force-show ReactFlow nodes
-  window.forceShowReactFlowNodes = function() {
-    document.querySelectorAll('.react-flow__node').forEach(node => {
-      if (node instanceof HTMLElement) {
-        node.style.opacity = '1';
-        node.style.visibility = 'visible';
-        node.style.display = 'block';
-        node.style.transform = 'translateZ(0)';
-      }
-    });
-    
-    document.querySelectorAll('.react-flow__edge').forEach(edge => {
-      if (edge instanceof HTMLElement) {
-        edge.style.opacity = '1';
-        edge.style.visibility = 'visible';
-      }
-    });
-    
-    console.log('ReactFlow node visibility forced');
-  };
-  
-  // Return cleanup function
-  return () => {
-    window.requestAnimationFrame = originalRAF;
-    delete (window as any).forceShowReactFlowNodes;
-  };
-}
-
-// Add type definitions for the global function
-declare global {
-  interface Window {
-    forceShowReactFlowNodes: () => void;
+  // Wait until DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initOptimizations);
+  } else {
+    initOptimizations();
   }
 }
 
-export default applyReactFlowGlobalOptimizations;
+function initOptimizations() {
+  // Create global CSS that optimizes ReactFlow rendering
+  const styleEl = document.createElement('style');
+  styleEl.innerHTML = `
+    /* Essential stability fixes for ReactFlow elements */
+    .react-flow__viewport, 
+    .react-flow__container,
+    .react-flow__renderer,
+    .react-flow {
+      transform: translateZ(0) !important;
+      will-change: transform !important;
+      backface-visibility: hidden !important;
+      -webkit-backface-visibility: hidden !important;
+      contain: layout !important;
+    }
+
+    .react-flow__node {
+      opacity: 1 !important;
+      visibility: visible !important;
+      display: block !important;
+    }
+
+    .react-flow__edge-path {
+      opacity: 1 !important;
+      visibility: visible !important;
+      stroke-width: 1.5px !important;
+    }
+  `;
+  document.head.appendChild(styleEl);
+
+  // Setup global error suppressions
+  setupErrorSuppressions();
+
+  // Schedule periodic fixes
+  window.setInterval(() => {
+    applyReactFlowFixes();
+  }, 10000);
+
+  // Apply initial fixes
+  setTimeout(applyReactFlowFixes, 1000);
+  setTimeout(applyReactFlowFixes, 3000);
+}
+
+function applyReactFlowFixes() {
+  // Fix all ReactFlow nodes
+  document.querySelectorAll('.react-flow__node').forEach(node => {
+    if (node instanceof HTMLElement) {
+      node.style.opacity = '1';
+      node.style.visibility = 'visible';
+      node.style.display = 'block';
+      node.style.transform = 'translateZ(0)';
+    }
+  });
+
+  // Fix all ReactFlow edges
+  document.querySelectorAll('.react-flow__edge').forEach(edge => {
+    if (edge instanceof HTMLElement) {
+      edge.style.opacity = '1';
+      edge.style.visibility = 'visible';
+    }
+    
+    // Fix edge paths
+    edge.querySelectorAll('path').forEach(path => {
+      path.setAttribute('stroke-width', '1.5');
+      path.setAttribute('opacity', '1');
+      path.setAttribute('visibility', 'visible');
+    });
+  });
+
+  // Fix all flow containers
+  document.querySelectorAll('.react-flow__container, .react-flow__renderer, .react-flow__viewport').forEach(el => {
+    if (el instanceof HTMLElement) {
+      el.style.transform = 'translateZ(0)';
+      el.style.backfaceVisibility = 'hidden';
+      el.style.contain = 'layout paint';
+    }
+  });
+}
+
+function setupErrorSuppressions() {
+  // Suppress ResizeObserver loop errors
+  const originalConsoleError = console.error;
+  console.error = function(msg, ...args) {
+    if (
+      typeof msg === 'string' &&
+      (msg.includes('ResizeObserver loop') ||
+       msg.includes('ResizeObserver was created') ||
+       msg.includes('undelivered notifications') ||
+       msg.includes('ResizeObserver completed'))
+    ) {
+      return; // Suppress these errors
+    }
+    
+    // Pass through all other errors
+    return originalConsoleError.apply(console, [msg, ...args]);
+  };
+}

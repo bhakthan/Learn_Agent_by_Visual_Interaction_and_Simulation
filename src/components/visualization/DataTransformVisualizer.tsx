@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getNodeDataFlowParams, getDataFlowAnimationStyle, DataFlowType } from '@/lib/utils/dataFlowUtils';
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { normalizeFlowMessage } from '@/lib/utils/visualizationUtils';
 
 // Data transformation states
 type TransformationStage = 'raw' | 'processing' | 'transformed';

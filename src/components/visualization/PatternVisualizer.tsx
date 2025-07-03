@@ -1,21 +1,14 @@
 import React, { useState, useCallback, useRef, useEffect, memo } from 'react'
-import ReactFlow, { 
-  Background, 
-  Controls,
-  MiniMap,
+import { 
   Node, 
   Edge,
-  Panel,
   Handle,
   Position,
   NodeTypes,
   useNodesState,
   useEdgesState,
   useReactFlow,
-  getNodesBounds,
   ReactFlowInstance,
-  ReactFlowProvider,
-  MarkerType
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { PatternData } from '@/lib/data/patterns'
@@ -36,6 +29,7 @@ import {
   createDataFlow,
   getSpeedMultiplier
 } from '@/lib/utils/dataFlowUtils'
+import { processNodes, processEdges, normalizeFlowMessage } from '@/lib/utils/visualizationUtils'
 import DataFlowVisualizer from './DataFlowVisualizer'
 import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from './StandardFlowVisualizer'
 import { useMemoizedCallback } from '@/lib/utils'
@@ -236,14 +230,20 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     stepQueueRef.current = [];
     
     // Reset all nodes (remove active state and status)
-    setNodes(currentNodes => currentNodes.map(node => ({
-      ...node,
-      data: {
-        ...node.data,
-        isActive: false,
-        status: null
-      }
-    })));
+    setNodes(currentNodes => {
+      const { theme } = useTheme();
+      return processNodes(
+        currentNodes.map(node => ({
+          ...node,
+          data: {
+            ...node.data,
+            isActive: false,
+            status: null
+          }
+        })),
+        theme
+      );
+    });
     
     // Reset edges (remove animation)
     setEdges(patternData.edges.map(edge => ({

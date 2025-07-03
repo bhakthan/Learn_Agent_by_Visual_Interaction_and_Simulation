@@ -1,186 +1,183 @@
-import React from 'react';
-import { throttleResizeObserver } from './resizeObserverUtil';
+import React, { useCallback, useRef, useEffect } from 'react';
+import { Node, Edge, useReactFlow } from 'reactflow';
+import { useTheme } from '@/components/theme/ThemeProvider';
 
 /**
- * Resets ReactFlow rendering to fix visual glitches and layout issues
- * Uses RAF and progressive enhancement to ensure smooth transitions
+ * Standardized flow rendering utilities
  */
-export const resetReactFlowRendering = (containerRef: React.RefObject<HTMLElement>) => {
-  if (!containerRef.current) return;
-  
-  // Use RAF for smoother handling
-  requestAnimationFrame(() => {
-    try {
-      const container = containerRef.current;
-      if (!container) return;
-      
-      // Apply temporary styles to force hardware acceleration
-      container.style.transform = 'translateZ(0)';
-      container.style.webkitBackfaceVisibility = 'hidden';
-      container.style.contain = 'layout paint';
-      
-      // Stabilize all ReactFlow elements
-      container.querySelectorAll('.react-flow__viewport, .react-flow__container, .react-flow').forEach(el => {
-        if (el instanceof HTMLElement) {
-          el.style.transform = 'translateZ(0)';
-          el.style.webkitBackfaceVisibility = 'hidden';
-          el.style.contain = 'layout paint';
-          
-          // Set explicit dimensions to prevent layout shifts
-          const parent = el.parentElement;
-          if (parent && parent.offsetHeight > 20 && (!el.style.height || el.offsetHeight < 20)) {
-            el.style.height = `${parent.offsetHeight}px`;
-          }
-        }
-      });
-      
-      // Force a reflow
-      container.getBoundingClientRect();
-      
-      // Schedule clean-up and fitView calls after reflow
-      requestAnimationFrame(() => {
-        // Trigger a minor style change to ensure React Flow recalculates positions
-        container.style.opacity = '0.99';
-        
-        requestAnimationFrame(() => {
-          // Restore opacity
-          container.style.opacity = '';
-          
-          // Custom event for observers
-          container.dispatchEvent(new CustomEvent('flow-render-reset', { 
-            bubbles: true,
-            detail: { timestamp: Date.now() }
-          }));
-          
-          // Dispatch a resize event as a fallback
-          window.dispatchEvent(new Event('resize'));
-        });
-      });
-    } catch (e) {
-      // Silently recover and dispatch resize as fallback
-      window.dispatchEvent(new Event('resize'));
-    }
-  });
-};
+
+export interface FlowRenderOptions {
+  applyHardwareAcceleration?: boolean;
+  defaultNodeWidth?: number;
+  defaultNodeHeight?: number;
+  fitViewDelay?: number;
+  fitViewPadding?: number;
+}
 
 /**
- * Creates a ResizeObserver for ReactFlow containers with enhanced stability
+ * Process nodes to ensure they have all required properties for stable rendering
  */
-export const createFlowContainerObserver = (
-  containerRef: React.RefObject<HTMLElement>, 
-  onResize: () => void
-) => {
-  if (!containerRef.current) return null;
-  
-  let isProcessingResize = false;
-  let needsAnotherResize = false;
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
-  
-  const processResize = () => {
-    if (isProcessingResize) {
-      needsAnotherResize = true;
-      return;
+export function processNodes(nodes: Node[], theme: string): Node[] {
+  return nodes.map(node => ({
+    ...node,
+    style: {
+      ...node.style,
+      opacity: 1,
+      visibility: 'visible',
+      transform: 'translateZ(0)',
+      willChange: 'transform',
+      transition: 'all 0.2s ease-out',
+      boxShadow: theme === 'dark' ? '0 0 0 1px rgba(255,255,255,0.1)' : undefined
+    },
+    draggable: node.draggable !== undefined ? node.draggable : true,
+    selectable: node.selectable !== undefined ? node.selectable : true
+  }));
+}
+
+/**
+ * Process edges to ensure they have all required properties for stable rendering
+ */
+export function processEdges(edges: Edge[], theme: string): Edge[] {
+  return edges.map(edge => ({
+    ...edge,
+    style: {
+      ...edge.style,
+      opacity: 1,
+      visibility: 'visible',
+      strokeWidth: 2,
+      stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined
     }
+  }));
+}
+
+/**
+ * Hook to stabilize flow component rendering with proper resize handling
+ */
+export function useStableFlow(
+  containerRef: React.RefObject<HTMLElement>,
+  options: FlowRenderOptions = {}
+) {
+  const {
+    applyHardwareAcceleration = true,
+    defaultNodeWidth = 150,
+    defaultNodeHeight = 40,
+    fitViewDelay = 300,
+    fitViewPadding = 0.2
+  } = options;
+  
+  const reactFlowInstance = useReactFlow();
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+  
+  // Store dimensions to detect significant changes
+  const dimensionsRef = useRef({ width: 0, height: 0 });
+  
+  // Apply styles for hardware acceleration
+  useEffect(() => {
+    if (!applyHardwareAcceleration || !containerRef.current) return;
     
-    isProcessingResize = true;
-    
-    // Schedule with RAF for smoother handling
-    requestAnimationFrame(() => {
+    containerRef.current.style.transform = 'translateZ(0)';
+    containerRef.current.style.backfaceVisibility = 'hidden';
+    containerRef.current.style.WebkitBackfaceVisibility = 'hidden';
+    containerRef.current.style.contain = 'layout paint';
+  }, [applyHardwareAcceleration]);
+  
+  // Fit view when component mounts or dimensions change significantly
+  const fitView = useCallback(() => {
+    if (reactFlowInstance && typeof reactFlowInstance.fitView === 'function') {
       try {
-        onResize();
-      } finally {
-        // Set a timer to allow settling before accepting more resize events
-        timeoutId = setTimeout(() => {
-          isProcessingResize = false;
-          
-          // If another resize was requested during processing, handle it
-          if (needsAnotherResize) {
-            needsAnotherResize = false;
-            processResize();
-          }
-        }, 200);
+        reactFlowInstance.fitView({
+          padding: fitViewPadding,
+          includeHiddenNodes: true
+        });
+      } catch (error) {
+        console.warn('Error fitting view (suppressed)');
+      }
+    }
+  }, [reactFlowInstance, fitViewPadding]);
+  
+  // Handle resize events
+  const handleResize = useCallback(() => {
+    if (!containerRef.current) return;
+    
+    const { width, height } = containerRef.current.getBoundingClientRect();
+    const prevDimensions = dimensionsRef.current;
+    
+    // Only refit if dimensions changed significantly
+    const widthChanged = Math.abs(width - prevDimensions.width) > 5;
+    const heightChanged = Math.abs(height - prevDimensions.height) > 5;
+    
+    if ((widthChanged || heightChanged) && width > 50 && height > 50) {
+      dimensionsRef.current = { width, height };
+      
+      // Use timeout to avoid excessive fitView calls during resizing
+      setTimeout(fitView, fitViewDelay);
+    }
+  }, [fitView, fitViewDelay]);
+  
+  // Apply resize observer
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    const resizeObserver = new ResizeObserver((entries) => {
+      if (entries[0]) {
+        handleResize();
       }
     });
-  };
-  
-  // Create ResizeObserver with our throttling utility
-  const callback = throttleResizeObserver(() => processResize());
-  const observer = new ResizeObserver(callback);
-  
-  // Start observing
-  observer.observe(containerRef.current);
-  
-  // Return cleanup function
-  return () => {
-    observer.disconnect();
-    if (timeoutId) clearTimeout(timeoutId);
-  };
-};
-
-/**
- * Optimizes ReactFlow rendering with intelligent debouncing of operations
- */
-export const optimizeFlowRendering = (reactFlowInstance: any) => {
-  if (!reactFlowInstance || typeof reactFlowInstance !== 'object') return;
-  
-  let fitViewScheduled = false;
-  
-  // Replace fitView with debounced version
-  const originalFitView = reactFlowInstance.fitView;
-  if (typeof originalFitView === 'function') {
-    reactFlowInstance.fitView = (...args: any[]) => {
-      if (fitViewScheduled) return;
-      
-      fitViewScheduled = true;
-      
-      // Use RAF for smoother handling
-      requestAnimationFrame(() => {
-        try {
-          originalFitView.apply(reactFlowInstance, args);
-        } catch (e) {
-          console.warn('Error in fitView', e);
-        } finally {
-          setTimeout(() => {
-            fitViewScheduled = false;
-          }, 200);
-        }
-      });
+    
+    resizeObserver.observe(containerRef.current);
+    
+    return () => {
+      resizeObserver.disconnect();
     };
-  }
+  }, [handleResize]);
   
-  return reactFlowInstance;
-};
+  // Calculate edge points for data flow visualization
+  const getEdgePoints = useCallback((edgeId: string, edges: Edge[], nodes: Node[]) => {
+    if (!edges || !nodes) return null;
+    
+    const edge = edges.find(e => e.id === edgeId);
+    if (!edge) return null;
+    
+    const sourceNode = nodes.find(n => n.id === edge.source);
+    const targetNode = nodes.find(n => n.id === edge.target);
+    
+    if (!sourceNode || !targetNode) return null;
+    
+    // Calculate center of source node for flow start
+    const sourceX = sourceNode.position.x + defaultNodeWidth / 2;
+    const sourceY = sourceNode.position.y + defaultNodeHeight / 2;
+    
+    // Calculate center of target node for flow end
+    const targetX = targetNode.position.x + defaultNodeWidth / 2;
+    const targetY = targetNode.position.y + defaultNodeHeight / 2;
+    
+    return { sourceX, sourceY, targetX, targetY };
+  }, [defaultNodeWidth, defaultNodeHeight]);
+  
+  return {
+    fitView,
+    getEdgePoints,
+    handleResize,
+    isDarkMode,
+    processNodes: (nodes: Node[]) => processNodes(nodes, theme),
+    processEdges: (edges: Edge[]) => processEdges(edges, theme)
+  };
+}
 
 /**
- * Monitors and fixes ReactFlow rendering issues
+ * Normalize flow visualization message for consistent display
  */
-export const monitorFlowRendering = (containerRef: React.RefObject<HTMLElement>) => {
-  if (!containerRef.current) return () => {};
-  
-  // Set up error handling
-  const handleError = (event: ErrorEvent) => {
-    if (event.message && (
-      event.message.includes('ResizeObserver') ||
-      event.message.includes('loop') ||
-      event.message.includes('undelivered notifications')
-    )) {
-      event.preventDefault();
-      event.stopPropagation();
-      
-      // Apply emergency fix
-      setTimeout(() => {
-        resetReactFlowRendering(containerRef);
-      }, 100);
-      
-      return false;
-    }
+export function normalizeFlowMessage(flow: any) {
+  return {
+    id: flow.id || `flow-${Math.random().toString(36).substr(2, 9)}`,
+    edgeId: flow.edgeId,
+    source: flow.source,
+    target: flow.target,
+    content: flow.content || '',
+    type: flow.type || 'message',
+    progress: flow.progress || 0,
+    label: flow.label,
+    complete: flow.complete
   };
-  
-  // Set up monitoring
-  window.addEventListener('error', handleError, true);
-  
-  // Return cleanup function
-  return () => {
-    window.removeEventListener('error', handleError, true);
-  };
-};
+}
