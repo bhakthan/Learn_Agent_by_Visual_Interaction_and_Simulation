@@ -63,10 +63,11 @@ export type StandardFlowVisualizerHandle = {
 /**
  * StandardFlowVisualizer - A simplified component for visualizing data flows
  */
-export const StandardFlowVisualizer = React.forwardRef<
-  StandardFlowVisualizerHandle,
-  StandardFlowVisualizerProps
->((props, ref) => {
+// Define the component as a standard function first
+const StandardFlowVisualizerBase = (
+  props: StandardFlowVisualizerProps, 
+  ref: React.ForwardedRef<StandardFlowVisualizerHandle>
+) => {
   const {
     nodes: initialNodes,
     edges: initialEdges,
@@ -322,6 +323,12 @@ export const StandardFlowVisualizer = React.forwardRef<
     </div>
   );
 };
+
+// Create the forwarded ref component
+export const StandardFlowVisualizer = React.forwardRef<
+  StandardFlowVisualizerHandle, 
+  StandardFlowVisualizerProps
+>(StandardFlowVisualizerBase);
 
 /**
  * Wrapped version of StandardFlowVisualizer with ReactFlowProvider and StableFlowContainer
