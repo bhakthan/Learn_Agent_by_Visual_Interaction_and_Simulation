@@ -235,6 +235,42 @@ const CustomDemoNode = React.memo(({ data, id }: { data: any, id: string }) => {
 });
 
 const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
+  // Force render optimizations for ReactFlow
+  useEffect(() => {
+    // Force a re-render and optimization after a small delay
+    const timer = setTimeout(() => {
+      // Check if we have a parent ReactFlow container
+      const reactFlowContainer = document.querySelector('.react-flow');
+      if (reactFlowContainer instanceof HTMLElement) {
+        // Force hardware acceleration and visibility
+        reactFlowContainer.style.transform = 'translateZ(0)';
+        reactFlowContainer.style.backfaceVisibility = 'hidden';
+        reactFlowContainer.style.WebkitBackfaceVisibility = 'hidden';
+        
+        // Fix node visibility issues
+        const nodes = document.querySelectorAll('.react-flow__node');
+        nodes.forEach(node => {
+          if (node instanceof HTMLElement) {
+            node.style.opacity = '1';
+            node.style.visibility = 'visible';
+            node.style.display = 'block';
+          }
+        });
+        
+        // Fix edge path issues
+        const edgePaths = document.querySelectorAll('.react-flow__edge-path');
+        edgePaths.forEach(path => {
+          if (path instanceof SVGElement) {
+            path.style.strokeWidth = '1.5px';
+            path.style.opacity = '1';
+            path.style.visibility = 'visible';
+          }
+        });
+      }
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, []);
   // Ensure patternData exists to prevent errors
   if (!patternData) {
     return (
@@ -367,7 +403,22 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   
   // Create a data flow between nodes
   const createDataFlow = useCallback((source: string, target: string, content: string, type: 'message' | 'data' | 'response' | 'error') => {
-    const flow = createFlow(source, target, content, type);
+    const id = `flow-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const edgeId = `${source}-${target}`;
+    
+    // Create the flow object
+    const flow = {
+      id,
+      edgeId,
+      source,
+      target,
+      content,
+      timestamp: Date.now(),
+      type,
+      progress: 0,
+      label: content.length > 15 ? content.substring(0, 15) + '...' : content
+    };
+    
     setDataFlows(prev => [...prev, flow]);
   }, []);
 
@@ -461,11 +512,19 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       return acc;
     }, {} as Record<string, StepState>);
     setSteps(initialSteps);
+
+    // Force animation refresh 
+    setTimeout(() => {
+      fitView();
+    }, 100);
     
     try {
       // Find input node
       const inputNode = patternData.nodes.find(node => node.data.nodeType === 'input');
       if (!inputNode) throw new Error('No input node found');
+      
+      // Apply a small delay to ensure UI is ready
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // Process input node
       await processNode(inputNode.id);

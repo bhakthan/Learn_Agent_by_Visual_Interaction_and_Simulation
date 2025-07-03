@@ -96,6 +96,9 @@ export const AgentNode = memo(({ data, id, selected }: NodeProps) => {
           style={{ backgroundColor: getNodeColor(nodeType) }}
         />
         <div className="font-medium text-sm">{label}</div>
+        {(status === 'active' || status === 'running') && (
+          <div className="ml-auto w-2 h-2 rounded-full bg-primary animate-pulse" />
+        )}
       </div>
       
       {description && (

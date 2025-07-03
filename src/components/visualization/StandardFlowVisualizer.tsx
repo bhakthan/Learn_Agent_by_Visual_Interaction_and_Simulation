@@ -90,7 +90,11 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
         visibility: 'visible',
         transform: 'translateZ(0)',
         willChange: 'transform',
-        transition: 'all 0.2s ease-out'
+        transition: 'all 0.2s ease-out',
+        zIndex: 1,
+        position: 'absolute',
+        display: 'block',
+        boxShadow: '0 0 0 1px var(--border)'
       },
       draggable: node.draggable !== undefined ? node.draggable : true,
       selectable: node.selectable !== undefined ? node.selectable : true,
@@ -102,7 +106,14 @@ export const StandardFlowVisualizer: React.FC<StandardFlowVisualizerProps> = ({
     })) || [];
     
     setNodes(processedNodes);
-  }, [initialNodes, setNodes]);
+    
+    // Force stabilize nodes after a short delay
+    const timer = setTimeout(() => {
+      fitView();
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [initialNodes, setNodes, fitView]);
 
   // Track initial layout to prevent position shifting
   const [initialLayout, setInitialLayout] = useState(false);

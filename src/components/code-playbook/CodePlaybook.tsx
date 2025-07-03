@@ -430,8 +430,16 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
             </TabsContent>
             
             <TabsContent value="interactive" className="py-4">
+              <div className="mb-2">
+                <p className="text-sm text-muted-foreground">
+                  Visualize how the {patternData.name} pattern executes with an interactive flow demonstration.
+                  Use different inputs to see how the pattern processes data through its components.
+                </p>
+              </div>
               <ReactFlowProvider>
-                <PatternDemo patternData={patternData} />
+                <div className="overflow-hidden border rounded-md mb-4">
+                  <PatternDemo patternData={patternData} />
+                </div>
               </ReactFlowProvider>
             </TabsContent>
           </Tabs>

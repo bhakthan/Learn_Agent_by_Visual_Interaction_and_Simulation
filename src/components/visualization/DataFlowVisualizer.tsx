@@ -46,36 +46,62 @@ const DataFlowVisualizer = React.memo(({
   const { isDarkMode, getFlowStyle } = useVisualizationTheme();
   const [activeFlows, setActiveFlows] = useState<DataFlow[]>([]);
   
-  // Update flow progress values
+  // Update flow progress values with improved animation handling
   useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveFlows(prevFlows => {
-        if (prevFlows.length === 0) return prevFlows;
-        
-        const updatedFlows = prevFlows.map(flow => {
-          // Increment progress based on speed factor
-          const incrementAmount = 0.02 * (speed || 1);
-          const newProgress = flow.progress + incrementAmount;
-          
-          // If flow is complete, trigger callback
-          if (newProgress >= 1 && onFlowComplete) {
-            setTimeout(() => {
-              onFlowComplete(flow.id);
-            }, 0);
-          }
-          
-          return {
-            ...flow, 
-            progress: Math.min(newProgress, 1)
-          };
-        });
-        
-        return updatedFlows.filter(flow => flow.progress < 1);
-      });
-    }, 20); // Base interval for animation updates
+    // Create a more stable animation loop
+    let animationFrameId: number;
+    let lastUpdateTime = performance.now();
     
-    return () => clearInterval(interval);
-  }, [onFlowComplete, speed]);
+    const updateAnimations = (currentTime: number) => {
+      // Calculate time delta for smooth animation regardless of frame rate
+      const deltaTime = currentTime - lastUpdateTime;
+      lastUpdateTime = currentTime;
+      
+      // Only update if we have flows to animate
+      if (activeFlows.length > 0) {
+        setActiveFlows(prevFlows => {
+          // Calculate progress increment based on delta time for smooth animation
+          const baseIncrement = 0.0006 * deltaTime; // Base speed adjustment
+          const speedFactor = speed || 1;
+          const incrementAmount = baseIncrement * speedFactor;
+          
+          const updatedFlows = prevFlows.map(flow => {
+            // Increment progress based on speed factor
+            const newProgress = flow.progress + incrementAmount;
+            
+            // If flow is complete, trigger callback
+            if (newProgress >= 1 && onFlowComplete) {
+              // Schedule callback outside of render cycle
+              setTimeout(() => {
+                onFlowComplete(flow.id);
+              }, 0);
+            }
+            
+            return {
+              ...flow, 
+              progress: Math.min(newProgress, 1)
+            };
+          });
+          
+          // Filter out completed flows
+          return updatedFlows.filter(flow => flow.progress < 1);
+        });
+      }
+      
+      // Continue animation loop
+      animationFrameId = requestAnimationFrame(updateAnimations);
+    };
+    
+    // Start animation loop
+    animationFrameId = requestAnimationFrame(updateAnimations);
+    
+    return () => {
+      // Clean up animation frame
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [onFlowComplete, speed, activeFlows.length]);
   
   // Add new flows to active flows
   useEffect(() => {
