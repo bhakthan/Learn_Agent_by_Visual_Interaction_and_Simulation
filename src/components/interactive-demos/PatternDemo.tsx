@@ -322,7 +322,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     animated: false,
     style: { 
       strokeWidth: 2,
-      stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined 
+      stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined
     },
   })) || []);
   
@@ -563,7 +563,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   // Calculate execution time for a step
   const getExecutionTime = (step: StepState) => {
     if (step.startTime && step.endTime) {
-      return `${((step.endTime - step.startTime) / 1000).toFixed(1)}s`;
+      return ((step.endTime - step.startTime) / 1000).toFixed(1) + 's';
     }
     return '';
   };
