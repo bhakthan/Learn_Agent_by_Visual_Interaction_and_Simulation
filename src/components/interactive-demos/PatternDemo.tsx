@@ -14,6 +14,7 @@ import StandardFlowVisualizerWithProvider from '../visualization/StandardFlowVis
 import { useStableFlowContainer, createStableNodes, createStableEdges } from '@/lib/utils/flows/StableFlowUtils';
 import { useFlowVisualizer, createSafeFitView } from '@/lib/utils/flows/flowVisualizerUtils';
 import { createFlow } from '@/lib/utils/flows/FlowHelper';
+import { fixReactFlowRendering } from '@/lib/utils/flows/visualizationFix';
 
 // Simple step controller class
 class StepController {
@@ -527,10 +528,16 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     }, {} as Record<string, StepState>);
     setSteps(initialSteps);
 
-    // Force animation refresh 
+    // Force animation refresh and enhanced node visibility
     setTimeout(() => {
       fitView();
-    }, 100);
+      
+      // Apply visibility fixes for ReactFlow elements
+      const container = document.querySelector('.react-flow');
+      if (container instanceof HTMLElement) {
+        fixReactFlowRendering(container);
+      }
+    }, 200);
     
     try {
       // Find input node
@@ -538,7 +545,7 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       if (!inputNode) throw new Error('No input node found');
       
       // Apply a small delay to ensure UI is ready
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 400));
       
       // Process input node
       await processNode(inputNode.id);

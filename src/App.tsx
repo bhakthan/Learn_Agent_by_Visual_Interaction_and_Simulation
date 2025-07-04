@@ -16,6 +16,7 @@ import { setupResizeObserverErrorHandling } from './lib/utils/resizeObserverUtil
 import { setupReactFlowErrorHandling } from './lib/utils/reactFlowUtils';
 import { disableResizeObserverIfProblematic } from './lib/utils/resizeObserverUtils';
 import { setupGlobalFlowHandlers } from './lib/utils/flows/globalFlowHandlers';
+import { setupSimulationButtonHandlers } from './lib/utils/flows/visualizationFix';
 import TestFlow from './components/interactive-demos/TestFlow'
 
 // Placeholder component (disabled)
@@ -41,6 +42,9 @@ function App() {
     
     // Set up global flow handlers for fitView and other ReactFlow operations
     const flowHandlers = setupGlobalFlowHandlers();
+    
+    // Setup handlers for simulation buttons to fix ReactFlow visibility
+    setupSimulationButtonHandlers();
     
     // Advanced error handler with improved blocking of ResizeObserver errors
     const handleError = (event: ErrorEvent) => {

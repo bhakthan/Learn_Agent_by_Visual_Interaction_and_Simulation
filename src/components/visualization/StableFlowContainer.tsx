@@ -53,61 +53,140 @@ export const StableFlowContainer = forwardRef<HTMLDivElement, StableFlowContaine
       };
     }, [onReady]);
 
-    // Force render stability
+    // Force render stability with improved timing and error handling
     useEffect(() => {
       if (!containerRef.current) return;
       
-      // Force stability styles
+      // Enhanced stability application with better error handling
       const applyStability = () => {
-        if (!containerRef.current) return;
-        
-        const flowElements = containerRef.current.querySelectorAll('.react-flow, .react-flow__viewport');
-        flowElements.forEach(el => {
-          if (el instanceof HTMLElement) {
-            el.style.transform = 'translateZ(0)';
-            el.style.visibility = 'visible';
-            el.style.opacity = '1';
-            
-            // Remove any unwanted text nodes displaying in ReactFlow
-            el.childNodes.forEach(node => {
-              if (node.nodeType === Node.TEXT_NODE && node.textContent) {
-                if (node.textContent.trim().includes('/agent/invoke') || 
-                    node.textContent.trim().includes('POST ')) {
-                  node.textContent = '';
+        try {
+          if (!containerRef.current) return;
+          
+          // Fix any ReactFlow containers
+          const flowElements = containerRef.current.querySelectorAll('.react-flow, .react-flow__viewport, .react-flow__renderer, .react-flow__container');
+          flowElements.forEach(el => {
+            if (el instanceof HTMLElement) {
+              el.style.transform = 'translateZ(0)';
+              el.style.visibility = 'visible';
+              el.style.opacity = '1';
+              el.style.display = 'block';
+              el.style.position = 'relative';
+              
+              // Remove any unwanted text nodes displaying in ReactFlow
+              Array.from(el.childNodes).forEach(node => {
+                if (node.nodeType === Node.TEXT_NODE && node.textContent) {
+                  if (node.textContent.trim().includes('/agent/invoke') || 
+                      node.textContent.trim().includes('POST ') ||
+                      node.textContent.trim().includes('undefined')) {
+                    // Remove the text node completely
+                    node.textContent = '';
+                    // Try to remove the node from DOM completely
+                    try {
+                      node.parentNode?.removeChild(node);
+                    } catch (e) {
+                      // Silently handle any errors
+                    }
+                  }
                 }
-              }
-            });
-          }
-        });
-        
-        // Force nodes to be visible
-        const nodes = containerRef.current.querySelectorAll('.react-flow__node');
-        nodes.forEach(el => {
-          if (el instanceof HTMLElement) {
-            el.style.opacity = '1';
-            el.style.visibility = 'visible';
-            el.style.transform = 'translateZ(0)';
-          }
-        });
-        
-        // Stabilize edges
-        const edges = containerRef.current.querySelectorAll('.react-flow__edge');
-        edges.forEach(el => {
-          if (el instanceof HTMLElement) {
-            el.style.opacity = '1';
-            el.style.visibility = 'visible';
-          }
-        });
+              });
+            }
+          });
+          
+          // Force nodes to be visible with enhanced styling
+          const nodes = containerRef.current.querySelectorAll('.react-flow__node');
+          nodes.forEach(el => {
+            if (el instanceof HTMLElement) {
+              el.style.opacity = '1';
+              el.style.visibility = 'visible';
+              el.style.transform = 'translateZ(0)';
+              el.style.display = 'block';
+              el.style.position = 'absolute';
+              el.style.zIndex = '1';
+              el.style.minWidth = '50px';
+              el.style.minHeight = '30px';
+              el.style.boxShadow = '0 0 0 1px var(--border)';
+              
+              // Apply the class directly to ensure styles are applied
+              el.className = el.className + ' react-flow__node-visible';
+            }
+          });
+          
+          // Stabilize edges with enhanced styling
+          const edges = containerRef.current.querySelectorAll('.react-flow__edge');
+          edges.forEach(el => {
+            if (el instanceof HTMLElement) {
+              el.style.opacity = '1';
+              el.style.visibility = 'visible';
+              el.style.zIndex = '0';
+              
+              // Find and enhance edge paths
+              const paths = el.querySelectorAll('path');
+              paths.forEach(path => {
+                if (path instanceof SVGElement) {
+                  path.setAttribute('stroke-width', '1.5');
+                  path.setAttribute('opacity', '1');
+                  path.setAttribute('visibility', 'visible');
+                }
+              });
+            }
+          });
+          
+          // Force render any nodes that might be hidden
+          const viewports = containerRef.current.querySelectorAll('.react-flow__viewport');
+          viewports.forEach(viewport => {
+            if (viewport instanceof HTMLElement) {
+              // Apply a small transformation to force a repaint
+              viewport.style.transform = 'translateZ(0) scale(0.9999)';
+              // Force a reflow
+              void viewport.offsetHeight;
+              // Return to normal scale with a transition
+              setTimeout(() => {
+                viewport.style.transform = 'translateZ(0) scale(1)';
+                viewport.style.transition = 'transform 0.01s';
+              }, 10);
+            }
+          });
+          
+        } catch (err) {
+          console.warn('Error applying stability fixes (suppressed)', err);
+        }
       };
       
-      // Apply fixes multiple times to ensure rendering
+      // Apply fixes multiple times with increasing delays for better reliability
       applyStability();
-      const timer1 = setTimeout(applyStability, 100);
-      const timer2 = setTimeout(applyStability, 500);
+      const timers = [
+        setTimeout(applyStability, 100),
+        setTimeout(applyStability, 500),
+        setTimeout(applyStability, 1000),
+        setTimeout(applyStability, 2000)
+      ];
+      
+      // Force a layout recalculation
+      const recalcLayout = () => {
+        if (!containerRef.current) return;
+        
+        try {
+          // Use ResizeObserver to detect and fix layout issues
+          const ro = new ResizeObserver(() => {
+            setTimeout(applyStability, 100);
+          });
+          
+          ro.observe(containerRef.current);
+          
+          // Cleanup the observer on unmount
+          return () => ro.disconnect();
+        } catch (e) {
+          // Fallback if ResizeObserver is not available
+          window.addEventListener('resize', applyStability);
+          return () => window.removeEventListener('resize', applyStability);
+        }
+      };
+      
+      const layoutCleanup = recalcLayout();
       
       return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
+        timers.forEach(clearTimeout);
+        if (layoutCleanup) layoutCleanup();
       };
     }, [containerRef]);
     

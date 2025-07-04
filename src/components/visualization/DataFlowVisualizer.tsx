@@ -61,7 +61,7 @@ const DataFlowVisualizer = React.memo(({
       if (activeFlows.length > 0) {
         setActiveFlows(prevFlows => {
           // Calculate progress increment based on delta time for smooth animation
-          const baseIncrement = 0.0006 * deltaTime; // Base speed adjustment
+          const baseIncrement = 0.001 * deltaTime; // Increased base speed for more visible movement
           const speedFactor = speed || 1;
           const incrementAmount = baseIncrement * speedFactor;
           
@@ -70,11 +70,18 @@ const DataFlowVisualizer = React.memo(({
             const newProgress = flow.progress + incrementAmount;
             
             // If flow is complete, trigger callback
-            if (newProgress >= 1 && onFlowComplete) {
+            if (newProgress >= 1 && onFlowComplete && !flow.complete) {
               // Schedule callback outside of render cycle
               setTimeout(() => {
                 onFlowComplete(flow.id);
               }, 0);
+              
+              // Mark as complete to prevent multiple callbacks
+              return {
+                ...flow, 
+                progress: 1,
+                complete: true
+              };
             }
             
             return {
@@ -83,8 +90,8 @@ const DataFlowVisualizer = React.memo(({
             };
           });
           
-          // Filter out completed flows
-          return updatedFlows.filter(flow => flow.progress < 1);
+          // Filter out completed flows after a short delay
+          return updatedFlows.filter(flow => flow.progress < 1 || (flow.complete && flow.progress === 1));
         });
       }
       
@@ -103,22 +110,53 @@ const DataFlowVisualizer = React.memo(({
     };
   }, [onFlowComplete, speed, activeFlows.length]);
   
-  // Add new flows to active flows
+  // Add new flows to active flows with improved duplicate handling
   useEffect(() => {
     if (flows.length === 0) return;
     
-    // Only add flows that aren't already in activeFlows
-    const newFlows = flows.filter(
-      flow => !activeFlows.some(pf => pf.id === flow.id)
-    );
+    // Only add flows that aren't already in activeFlows with better ID-based filtering
+    const activeFlowIds = new Set(activeFlows.map(flow => flow.id));
+    const newFlows = flows.filter(flow => !activeFlowIds.has(flow.id));
     
     if (newFlows.length > 0) {
+      // Add any missing edge animations
+      newFlows.forEach(flow => {
+        // Find and animate the edge
+        const edge = edges.find(e => e.id === flow.edgeId || (e.source === flow.source && e.target === flow.target));
+        if (edge && edge.animated === false) {
+          // Target the edge element and force animation
+          try {
+            const edgeEl = document.querySelector(`[data-id="${edge.id}"]`);
+            if (edgeEl instanceof HTMLElement) {
+              edgeEl.classList.add('animated');
+              
+              // Find and enhance edge paths
+              const paths = edgeEl.querySelectorAll('path');
+              paths.forEach(path => {
+                if (path instanceof SVGElement) {
+                  path.setAttribute('stroke-dasharray', '5,5');
+                  path.setAttribute('stroke-width', '1.5');
+                  path.setAttribute('opacity', '1');
+                  path.setAttribute('visibility', 'visible');
+                }
+              });
+            }
+          } catch (error) {
+            // Silently handle any errors
+          }
+        }
+      });
+      
       setActiveFlows(prevFlows => [
         ...prevFlows, 
-        ...newFlows.map(flow => ({ ...flow, progress: 0 }))
+        ...newFlows.map(flow => ({ 
+          ...flow, 
+          progress: 0,
+          complete: false
+        }))
       ]);
     }
-  }, [flows, activeFlows]);
+  }, [flows, edges]);
   
   const renderFlowIndicator = useCallback((flow: DataFlow) => {
     // Find the edge for this flow

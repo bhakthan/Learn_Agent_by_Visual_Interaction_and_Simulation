@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { Play, ArrowsCounterClockwise } from "@phosphor-icons/react";
 import { resetReactFlowRendering } from '@/lib/utils/visualizationUtils';
+import { fixReactFlowRendering } from '@/lib/utils/flows/visualizationFix';
 
 // Import the StandardFlowVisualizer
 import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from '../visualization/StandardFlowVisualizer';
@@ -335,6 +336,17 @@ const ACPDemo = () => {
     setIsSimulationRunning(true);
     setCurrentStep(0);
     setMessages([]);
+    
+    // Apply ReactFlow rendering fixes
+    setTimeout(() => {
+      const container = activeDemo === 'single' 
+        ? flowContainerRef1.current 
+        : flowContainerRef2.current;
+      
+      if (container) {
+        fixReactFlowRendering(container);
+      }
+    }, 100);
   };
   
   // Effect to handle simulation logic and cleanup
@@ -347,28 +359,84 @@ const ACPDemo = () => {
       
       // Define node mapping based on active demo
       const nodeMap = activeDemo === 'single' 
-        ? { client: 'client', server: 'server' } 
+        ? { client: 'client', server: 'server', agent: 'agent' } 
         : { client: 'client', server: 'server', agent1: 'agent1', agent2: 'agent2', agent3: 'agent3' };
       
-      interval = setInterval(() => {
+      // Initialize flow messages with an empty array
+      setFlowMessages([]);
+      
+      // Create a function to process each message in sequence
+      const processNextMessage = () => {
         if (step < messageSet.length) {
-          setMessages(prev => [...prev, messageSet[step]]);
-          // Update flow messages with current set of messages plus the new one
-          setFlowMessages(convertToFlowMessages([...messages, messageSet[step]], nodeMap));
-          setCurrentStep(prev => prev + 1);
+          const newMsg = messageSet[step];
+          
+          // Add message to log
+          setMessages(prev => [...prev, newMsg]);
+          
+          // Convert all messages up to current step to flow messages
+          const currentMessages = messageSet.slice(0, step + 1);
+          setFlowMessages(convertToFlowMessages(currentMessages, nodeMap));
+          
+          // Update step counter
+          setCurrentStep(step + 1);
           step++;
+          
+          // Schedule the next message
+          interval = setTimeout(processNextMessage, 1500);
         } else {
           clearInterval(interval);
           setIsSimulationRunning(false);
         }
-      }, 1500);
+      };
+      
+      // Start with a short delay
+      setTimeout(() => {
+        // Force render for ReactFlow
+        if (flowContainerRef1.current || flowContainerRef2.current) {
+          const container = activeDemo === 'single' ? flowContainerRef1.current : flowContainerRef2.current;
+          if (container) {
+            // Force nodes to be visible
+            const nodes = container.querySelectorAll('.react-flow__node');
+            nodes.forEach(node => {
+              if (node instanceof HTMLElement) {
+                node.style.opacity = '1';
+                node.style.visibility = 'visible';
+                node.style.display = 'block';
+                node.style.zIndex = '1';
+              }
+            });
+            
+            // Force edges to be visible
+            const edges = container.querySelectorAll('.react-flow__edge');
+            edges.forEach(edge => {
+              if (edge instanceof HTMLElement) {
+                edge.style.opacity = '1';
+                edge.style.visibility = 'visible';
+              }
+              
+              // Get edge paths
+              const paths = edge.querySelectorAll('path');
+              paths.forEach(path => {
+                if (path instanceof SVGElement) {
+                  path.setAttribute('stroke-width', '1.5');
+                  path.setAttribute('opacity', '1');
+                  path.setAttribute('visibility', 'visible');
+                }
+              });
+            });
+          }
+        }
+        
+        // Start the message processing
+        processNextMessage();
+      }, 300);
     }
     
     // Cleanup function
     return () => {
-      if (interval) clearInterval(interval);
+      if (interval) clearTimeout(interval);
     };
-  }, [isSimulationRunning, activeDemo, messages]);
+  }, [isSimulationRunning, activeDemo]);
   
   // Reset the simulation
   const resetSimulation = () => {

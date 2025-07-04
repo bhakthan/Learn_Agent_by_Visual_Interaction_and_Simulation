@@ -69,6 +69,31 @@
             visibility: visible !important;
             display: block !important;
             z-index: 1;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            pointer-events: all;
+            position: absolute;
+        }
+        
+        /* Prevent layout shifts during animation */
+        .react-flow__edges {
+            pointer-events: none;
+            contain: layout style;
+        }
+        
+        /* Ensure edges are always visible */
+        .react-flow__edge {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        .react-flow__edge-path {
+            stroke-width: 1.5px !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+            z-index: 1;
         }
         
         /* Prevent layout shifts during animation */
@@ -352,7 +377,9 @@
         // Check if it's a start simulation button or inside one
         if (e.target && (
           e.target.textContent.includes('Start Simulation') || 
-          (e.target.parentElement && e.target.parentElement.textContent.includes('Start Simulation'))
+          (e.target.parentElement && e.target.parentElement.textContent.includes('Start Simulation')) ||
+          e.target.textContent.includes('Run Simulation') ||
+          (e.target.parentElement && e.target.parentElement.textContent.includes('Run Simulation'))
         )) {
           // Trigger a custom event to help React Flow render correctly
           setTimeout(function() {
@@ -364,7 +391,56 @@
               if (container instanceof HTMLElement) {
                 container.style.transform = 'translateZ(0)';
                 container.style.backfaceVisibility = 'hidden';
+                
+                // Clean up any text nodes that might be interfering with rendering
+                Array.from(container.childNodes).forEach(function(node) {
+                  if (node.nodeType === Node.TEXT_NODE && node.textContent && node.textContent.trim()) {
+                    node.textContent = '';
+                  }
+                });
               }
+              
+              // Ensure nodes are visible
+              const nodes = container.querySelectorAll('.react-flow__node');
+              nodes.forEach(function(node) {
+                if (node instanceof HTMLElement) {
+                  node.style.opacity = '1';
+                  node.style.visibility = 'visible';
+                  node.style.display = 'block';
+                  node.style.zIndex = '1';
+                  node.style.transform = 'translateZ(0)';
+                }
+              });
+              
+              // Ensure edges are visible
+              const edges = container.querySelectorAll('.react-flow__edge-path');
+              edges.forEach(function(edge) {
+                if (edge instanceof SVGElement) {
+                  edge.setAttribute('stroke-width', '1.5');
+                  edge.setAttribute('opacity', '1');
+                  edge.setAttribute('visibility', 'visible');
+                }
+              });
+            });
+          }, 300);
+        }
+      });
+      
+      // Fix flow visualizations after page load
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          const flowContainers = document.querySelectorAll('.react-flow');
+          flowContainers.forEach(function(container) {
+            if (container instanceof HTMLElement) {
+              container.style.transform = 'translateZ(0)';
+              container.style.backfaceVisibility = 'hidden';
+              
+              // Clean up any text nodes
+              Array.from(container.childNodes).forEach(function(node) {
+                if (node.nodeType === Node.TEXT_NODE && node.textContent && node.textContent.trim()) {
+                  node.textContent = '';
+                }
+              });
               
               // Ensure nodes are visible
               const nodes = container.querySelectorAll('.react-flow__node');
@@ -385,9 +461,9 @@
                   edge.setAttribute('visibility', 'visible');
                 }
               });
-            });
-          }, 500);
-        }
+            }
+          });
+        }, 1000);
       });
     </script>
 </body>

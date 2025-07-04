@@ -230,30 +230,66 @@ const StandardFlowVisualizerBase = (
     return { sourceX, sourceY, targetX, targetY };
   }, [edges, nodes]);
 
-  // Apply fit view when needed
+  // Apply fit view when needed with enhanced error handling and stability
   useEffect(() => {
     if (autoFitView && reactFlowInstance) {
       // Initial delay for first render
-      const timer = setTimeout(() => {
-        fitView();
-      }, 300);
+      const safelyFitView = () => {
+        try {
+          reactFlowInstance.fitView({
+            padding: 0.2,
+            includeHiddenNodes: true,
+            duration: 400
+          });
+        } catch (error) {
+          // Silently handle any errors
+          console.warn('Error during fitView (suppressed)');
+        }
+      };
 
-      // Additional fit view after a longer delay to ensure positions are stabilized
-      const secondTimer = setTimeout(() => {
-        fitView();
-      }, 1000);
+      // Schedule multiple attempts to ensure visualization works
+      const fitViewTimers = [
+        setTimeout(safelyFitView, 100),
+        setTimeout(safelyFitView, 500),
+        setTimeout(safelyFitView, 1000)
+      ];
       
       return () => {
-        clearTimeout(timer);
-        clearTimeout(secondTimer);
+        fitViewTimers.forEach(clearTimeout);
       };
     }
-  }, [autoFitView, reactFlowInstance, nodes.length, edges.length, fitView]);
+  }, [autoFitView, reactFlowInstance, nodes.length, edges.length]);
 
-  // Expose fitView via the ref
+  // Expose fitView via the ref with enhanced reliability
   React.useImperativeHandle(ref, () => ({
-    fitView
-  }), [fitView]);
+    fitView: () => {
+      if (reactFlowInstance) {
+        try {
+          // Attempt to fit view with more conservative settings to prevent errors
+          reactFlowInstance.fitView({
+            padding: 0.2,
+            includeHiddenNodes: true,
+            duration: 400
+          });
+        } catch (error) {
+          console.warn('Error fitting view (suppressed)');
+          
+          // Try again with a delay as a fallback
+          setTimeout(() => {
+            try {
+              reactFlowInstance.fitView({
+                padding: 0.3,
+                includeHiddenNodes: true,
+                duration: 0 // Skip animation on second attempt
+              });
+            } catch (e) {
+              // Silently ignore any further errors
+            }
+          }, 200);
+        }
+      }
+    }
+  }), [reactFlowInstance]);
 
   return (
     <div 
