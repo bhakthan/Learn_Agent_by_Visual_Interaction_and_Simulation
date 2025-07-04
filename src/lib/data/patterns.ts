@@ -159,7 +159,7 @@ const executeReAct = async (query: string, maxCycles = 5) => {
           const toolInput = actionInputMatch[1].trim();
           
           // Step 2: Action phase - call the appropriate tool
-          console.log(\`Cycle \${currentCycle}: Taking action with tool "\\\${toolName}"...\`);
+          console.log("Cycle " + currentCycle + ": Taking action with tool \"" + toolName + "\"...");
           
           if (tools[toolName]) {
             const toolResult = await tools[toolName](toolInput);
@@ -431,7 +431,7 @@ const executeCodeAct = async (query, maxCycles = 5) => {
         "1. Write Python code to make progress, formatted as:\\n" +
         "   Thought: <your reasoning>\\n" +
         "   Code:\\n" +
-        "   \`\`\`code\\n" +
+        "   ```\\n" +
         "   # Your Python code here\\n" +
         "   \`\`\`\\n\\n" +
         "2. Or provide the final answer if you've solved the problem:\\n" +

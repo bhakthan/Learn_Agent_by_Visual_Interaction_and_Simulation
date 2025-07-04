@@ -176,9 +176,9 @@ Based on the current state, either:
 1. Write Python code to make progress, formatted as:
    Thought: <your reasoning>
    Code:
-   \`\`\`
+   ```
    # Your Python code here
-   \`\`\`
+   ```
 
 2. Or provide the final answer if you've solved the problem:
    Thought: <your reasoning>
@@ -189,7 +189,7 @@ Based on the current state, either:
                 # In a real implementation, this would be an API call to an LLM
                 agent_response = """Thought: I'll write code to calculate factorial of a number.
 Code:
-\`\`\`
+```
 def factorial(n):
     if n == 0 or n == 1:
         return 1
@@ -199,7 +199,7 @@ def factorial(n):
 # Test with n=5
 result = factorial(5)
 print(result)
-\`\`\`"""
+```"""
                 context_history.append(f"Agent: {agent_response}")
                 
                 # Check if the response contains a final answer

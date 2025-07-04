@@ -207,12 +207,12 @@ async function retrieveRelevantContext(query, filters = {}) {
     // Build filter expression based on provided filters
     let filterExpression = "";
     if (filters.category) {
-      filterExpression += \`category eq '\${filters.category}'\`;
+      filterExpression += "category eq '" + filters.category + "'";
     }
     
     if (filters.dateRange) {
-      const dateFilter = \`timestamp ge \${filters.dateRange.start} and timestamp le \${filters.dateRange.end}\`;
-      filterExpression += filterExpression ? \` and \${dateFilter}\` : dateFilter;
+      const dateFilter = "timestamp ge " + filters.dateRange.start + " and timestamp le " + filters.dateRange.end;
+      filterExpression += filterExpression ? " and " + dateFilter : dateFilter;
     }
     
     // Hybrid search combining vector, keyword, and filters
@@ -349,7 +349,7 @@ const credential = new DefaultAzureCredential();
 
 // Create blob service client using managed identity
 const blobServiceClient = new BlobServiceClient(
-  \`https://\${mockEnv.STORAGE_ACCOUNT_NAME}.blob.core.windows.net\`,
+  "https://" + mockEnv.STORAGE_ACCOUNT_NAME + ".blob.core.windows.net",
   credential
 );
 
@@ -380,7 +380,7 @@ async function storeConversationData(conversationId, userData, agentResponses) {
     
     // Store conversation data - with retention policy metadata
     const conversationBlob = containerClient.getBlockBlobClient(
-      \`conversations/\${conversationId}.json\`
+      "conversations/" + conversationId + ".json"
     );
     
     await conversationBlob.upload(
@@ -400,7 +400,7 @@ async function storeConversationData(conversationId, userData, agentResponses) {
     await piiContainer.createIfNotExists();
     
     const piiBlob = piiContainer.getBlockBlobClient(
-      \`users/\${userData.userId}.json\`
+      "users/" + userData.userId + ".json"
     );
     
     await piiBlob.upload(
@@ -452,7 +452,7 @@ const redisClient = new RedisClient({
 async function optimizedAgentQuery(query, options = {}) {
   try {
     // Generate cache key based on query and options
-    const cacheKey = \`query:\${hashString(query)}:options:\${hashString(JSON.stringify(options))}\`;
+    const cacheKey = "query:" + hashString(query) + ":options:" + hashString(JSON.stringify(options));
     
     // Check cache first
     const cachedResponse = await redisClient.get(cacheKey);
@@ -779,12 +779,12 @@ async function authorizeAgentOperation(userId, operationType) {
     );
     
     if (!userHasPermission) {
-      console.warn(\`Authorization denied: User \${userId} attempted \${operationType} without permission\`);
+      console.warn("Authorization denied: User " + userId + " attempted " + operationType + " without permission");
       return false;
     }
     
     // Log authorized access
-    console.log(\`Authorized \${userId} for \${operationType}\`);
+    console.log("Authorized " + userId + " for " + operationType);
     return true;
   } catch (error) {
     console.error("Authorization error:", error);
@@ -802,7 +802,7 @@ async function adminConfigureAgentPattern(userId, patternConfig) {
   }
   
   // Proceed with configuration (example)
-  console.log(\`Admin \${userId} configuring pattern ${patternId} with config:\`, patternConfig);
+  console.log("Admin " + userId + " configuring pattern " + patternId + " with config:", patternConfig);
   
   // Implementation continues...
 }

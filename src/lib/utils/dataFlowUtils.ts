@@ -75,7 +75,7 @@ export function getNodeDataFlowParams(nodeType: string | undefined) {
 export function getDataFlowAnimationStyle(
   type?: DataFlowType,
   params?: { color: string; pulseSpeed: number }
-) {
+): any {
   // Default values
   const defaults = {
     color: '#64748b',
@@ -178,7 +178,7 @@ export function getDataFlowAnimationStyle(
 export const truncateFlowContent = (content: string, maxLength: number = 30): string => {
   if (!content || typeof content !== 'string') return '';
   if (content.length <= maxLength) return content;
-  return `${content.substring(0, maxLength)}...`;
+  return content.substring(0, maxLength) + '...';
 };
 
 /**
