@@ -92,7 +92,6 @@
             stroke-width: 1.5px !important;
             opacity: 1 !important;
             visibility: visible !important;
-        }
             z-index: 1;
         }
         
@@ -117,6 +116,7 @@
             transform-style: preserve-3d;
         }
     </style>
+    <script src="/resizeObserverPolyfill.js"></script>
     <script>
         // Initialize recovery variables 
         window.__resizeRecoveryScheduled = false;
@@ -125,6 +125,8 @@
         
         // Initialize theme to prevent flash of wrong theme
         (function() {
+            const storageKey = 'azure-ai-agent-theme';
+            const defaultTheme = 'light';
             
             function getThemePreference() {
                 // Check local storage first

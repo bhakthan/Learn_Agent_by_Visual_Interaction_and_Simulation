@@ -75,10 +75,8 @@ export const StableFlowContainer = forwardRef<HTMLDivElement, StableFlowContaine
               // Remove any unwanted text nodes displaying in ReactFlow
               Array.from(el.childNodes).forEach(node => {
                 if (node.nodeType === Node.TEXT_NODE && node.textContent) {
-                  if (node.textContent.trim().includes('/agent/invoke') || 
-                      node.textContent.trim().includes('POST ') ||
-                      node.textContent.trim().includes('undefined')) {
-                    // Remove the text node completely
+                  // Clear any non-empty text nodes that might be causing issues
+                  if (node.textContent.trim()) {
                     node.textContent = '';
                     // Try to remove the node from DOM completely
                     try {

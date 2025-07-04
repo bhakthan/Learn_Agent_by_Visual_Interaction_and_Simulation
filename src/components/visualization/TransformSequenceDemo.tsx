@@ -612,7 +612,7 @@ const scenarioConfigs: Record<DemoScenario, {
  */
 const FlowWithDataTransform = ({ scenario }: { scenario: DemoScenario }) => {
   const config = scenarioConfigs[scenario];
-  const { theme } = useTheme();
+  const { theme, isDarkMode } = useTheme();
   const reactFlowInstance = useReactFlow();
   const [nodes, setNodes, onNodesChange] = useNodesState(config.initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(config.initialEdges);
