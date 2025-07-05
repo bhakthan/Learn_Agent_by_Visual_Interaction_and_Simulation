@@ -7,7 +7,6 @@
 export { default as PatternDemo } from './PatternDemo';
 export { default as PatternDemoReactFlow } from './PatternDemoReactFlow';
 export { default as PatternDemoSVG } from './PatternDemoSVG';
-export { default as TestFlow } from './TestFlow';
 
 // Protocol demos
 export { default as SimpleACPDemo } from './SimpleACPDemo';

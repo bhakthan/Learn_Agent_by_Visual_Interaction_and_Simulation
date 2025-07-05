@@ -17,7 +17,6 @@ import { setupReactFlowErrorHandling } from './lib/utils/reactFlowUtils';
 import { disableResizeObserverIfProblematic } from './lib/utils/resizeObserverUtils';
 import { setupGlobalFlowHandlers } from './lib/utils/flows/globalFlowHandlers';
 import { setupSimulationButtonHandlers } from './lib/utils/flows/visualizationFix';
-import TestFlow from './components/interactive-demos/TestFlow'
 
 // Placeholder component (disabled)
 const AppTutorialButton = () => null;
@@ -225,7 +224,6 @@ function App() {
                   <TabLink to="/azure-services" icon={<StackSimple size={16} weight="duotone" />} label="Azure Services" />
                   <TabLink to="/references" icon={<Books size={16} weight="duotone" />} label="References" />
                   <TabLink to="/community" icon={<Users size={16} weight="duotone" />} label="Community" />
-                  <TabLink to="/test" icon={<Code size={16} weight="duotone" />} label="Test Flow" />
                 </div>
               </ScrollArea>
             </div>
@@ -238,7 +236,6 @@ function App() {
               <Route path="/azure-services" element={<AzureServicesOverview />} />
               <Route path="/references" element={<ReferencesSection />} />
               <Route path="/community" element={<CommunitySharing />} />
-              <Route path="/test" element={<TestFlow />} />
               {/* Fallback route to redirect to home page */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
