@@ -651,6 +651,113 @@ const executeSelfReflection = async (query: string, maxRevisions = 3) => {
     return { status: 'failed', reason: error.message };
   }
 };`,
+    pythonCodeExample: `# Self-Reflection Agent implementation
+import openai
+import json
+from typing import Dict, List, Any, Optional, Union
+
+class SelfReflectionAgent:
+    def __init__(self, client, model: str = "gpt-4"):
+        self.client = client
+        self.model = model
+        
+    async def execute(self, query: str, max_revisions: int = 3) -> Dict[str, Any]:
+        """Execute the Self-Reflection agent to improve responses through iterative critique."""
+        try:
+            revisions = 0
+            reflections = []
+            current_response = ""
+            
+            # Initial response generation
+            initial_prompt = f"""You are an AI assistant tasked with answering the following query:
+Query: {query}
+
+Provide your best response to the query.
+"""
+            # Simulate LLM call for initial response
+            current_response = "The factorial of a number n is the product of all positive integers less than or equal to n. It's often denoted as n!. So 5! = 5 × 4 × 3 × 2 × 1 = 120."
+            
+            reflections.append({
+                "iteration": revisions,
+                "response": current_response,
+                "reflection": None
+            })
+            
+            while revisions < max_revisions:
+                revisions += 1
+                
+                # Self-reflection phase
+                reflection_prompt = f"""You are a critical evaluator examining the following response to the query:
+
+Query: {query}
+
+Response:
+{current_response}
+
+Critique this response by considering:
+1. Accuracy - Is all information factually correct?
+2. Completeness - Does it fully address the query?
+3. Clarity - Is it easy to understand?
+4. Conciseness - Is it appropriately detailed without being verbose?
+
+Provide specific suggestions for improvement.
+"""
+                # Simulate LLM call for reflection
+                reflection = f"The response is accurate but could be more complete. It defines factorial and gives an example for 5!, but doesn't explain how to calculate factorials for edge cases like 0! or mention practical applications or algorithmic implementations."
+                
+                # Improvement phase
+                improvement_prompt = f"""You are an AI assistant tasked with answering the following query:
+Query: {query}
+
+Your previous response was:
+{current_response}
+
+A critical evaluation identified these issues:
+{reflection}
+
+Provide an improved response addressing these critiques.
+"""
+                # Simulate LLM call for improved response
+                improved_response = f"""The factorial of a number n is the product of all positive integers less than or equal to n, denoted as n!. 
+
+**Definition**: n! = n × (n-1) × (n-2) × ... × 2 × 1
+
+**Examples**:
+- 5! = 5 × 4 × 3 × 2 × 1 = 120
+- 3! = 3 × 2 × 1 = 6
+- 0! = 1 (by definition)
+
+**Implementation**: Can be calculated recursively or iteratively. Useful in combinatorics, probability, and mathematical analysis."""
+                
+                reflections.append({
+                    "iteration": revisions,
+                    "response": improved_response,
+                    "reflection": reflection
+                })
+                
+                current_response = improved_response
+            
+            return {
+                "status": "success",
+                "final_response": current_response,
+                "revisions": revisions,
+                "reflection_history": reflections
+            }
+            
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+# Example usage
+async def main():
+    client = openai.AsyncOpenAI()  # Initialize with your API key
+    agent = SelfReflectionAgent(client)
+    result = await agent.execute("What is a factorial?")
+    print(json.dumps(result, indent=2))
+
+# Run the example
+# import asyncio
+# asyncio.run(main())
+`,
     implementation: [
       'Create a main response generation function',
       'Implement a self-critique mechanism with specific evaluation criteria',
@@ -852,6 +959,156 @@ const executeAgenticRAG = async (query) => {
     return { status: 'failed', reason: error.message };
   }
 };`,
+    pythonCodeExample: `# Agentic RAG implementation
+import openai
+import json
+from typing import Dict, List, Any, Optional, Union
+import numpy as np
+from datetime import datetime
+
+class AgenticRAGAgent:
+    def __init__(self, client, model: str = "gpt-4"):
+        self.client = client
+        self.model = model
+        
+    async def execute(self, query: str) -> Dict[str, Any]:
+        """Execute the Agentic RAG agent to retrieve and synthesize information."""
+        try:
+            # Simulated document store for demonstration
+            documents = [
+                {"id": "doc1", "content": "Azure AI Agents are systems that can understand goals and complete tasks.", "metadata": {"source": "azure_docs.pdf"}},
+                {"id": "doc2", "content": "Agent patterns include ReAct, Reflexion, and Plan-and-Execute methodologies.", "metadata": {"source": "patterns_guide.pdf"}},
+                {"id": "doc3", "content": "The Agent Communication Protocol (ACP) enables interoperability between AI agents.", "metadata": {"source": "acp_spec.pdf"}},
+                {"id": "doc4", "content": "Model Context Protocol (MCP) provides standardized interactions with AI models.", "metadata": {"source": "mcp_docs.pdf"}},
+                {"id": "doc5", "content": "Azure OpenAI Service provides secure, enterprise-ready AI capabilities.", "metadata": {"source": "azure_openai.pdf"}}
+            ]
+            
+            retrieval_steps = []
+            
+            # Step 1: Query Decomposition
+            decomp_prompt = f"""Analyze the following query and break it down into search terms:
+
+Query: {query}
+
+Output a JSON object with:
+1. "search_terms": Array of specific search terms to look for
+2. "required_info": Key information needed to answer the query
+3. "query_type": Classification (factual, comparison, explanation, etc.)
+"""
+            # Simulate LLM call for query decomposition
+            decomposition_result = {
+                "search_terms": ["agent patterns", "communication protocols", "Azure AI"],
+                "required_info": ["Definition of agent patterns", "How agents communicate", "Azure implementation"],
+                "query_type": "explanation"
+            }
+            
+            retrieval_steps.append({
+                "step": "Query Decomposition",
+                "output": decomposition_result
+            })
+            
+            # Step 2: Multi-query retrieval
+            search_results = []
+            for term in decomposition_result["search_terms"]:
+                # Simulate semantic search
+                for doc in documents:
+                    if any(word in doc["content"].lower() for word in term.lower().split()):
+                        similarity_score = 0.7 + np.random.random() * 0.3  # Simulated semantic similarity
+                        search_results.append({
+                            "doc_id": doc["id"],
+                            "content": doc["content"],
+                            "metadata": doc["metadata"],
+                            "search_term": term,
+                            "similarity": similarity_score
+                        })
+            
+            retrieval_steps.append({
+                "step": "Multi-query Retrieval",
+                "output": f"Retrieved {len(search_results)} candidate documents"
+            })
+            
+            # Step 3: Relevance Assessment
+            relevance_assessment = []
+            for result in search_results:
+                # Simulate relevance scoring
+                relevance_score = int(result["similarity"] * 10)
+                relevance_assessment.append({
+                    "doc_id": result["doc_id"],
+                    "content": result["content"],
+                    "relevance": relevance_score,
+                    "reasoning": f"Addresses {result['search_term']} with {relevance_score}/10 relevance"
+                })
+            
+            # Filter for high-relevance documents
+            relevant_docs = [doc for doc in relevance_assessment if doc["relevance"] >= 6]
+            
+            retrieval_steps.append({
+                "step": "Relevance Assessment",
+                "output": f"Filtered to {len(relevant_docs)} highly relevant documents"
+            })
+            
+            # Step 4: Information Synthesis
+            relevant_content = "\\n\\n".join([doc["content"] for doc in relevant_docs])
+            
+            synthesis_prompt = f"""Based on the following relevant information, provide a comprehensive answer to the query:
+
+Query: {query}
+
+Relevant Information:
+{relevant_content}
+
+Create a well-structured response that synthesizes the information and addresses the query directly.
+"""
+            
+            # Simulate LLM call for synthesis
+            synthesis_result = """Agent patterns are methodologies for designing AI agents with specific capabilities and behaviors. The main patterns include:
+
+1. **ReAct (Reasoning and Acting)**: Agents that alternate between reasoning about a problem and taking actions to solve it.
+
+2. **Reflexion**: Agents that can reflect on their own outputs and improve them through self-critique.
+
+3. **Plan-and-Execute**: Agents that create detailed plans before executing actions.
+
+These agent patterns communicate using standardized protocols such as:
+
+- **Agent Communication Protocol (ACP)**: Enables interoperability between different AI agents, allowing them to exchange information and coordinate tasks.
+
+- **Model Context Protocol (MCP)**: Provides standardized ways for agents to interact with AI models, creating a consistent interface for communication.
+
+Azure AI provides the infrastructure and services needed to implement these patterns securely and at scale."""
+            
+            retrieval_steps.append({
+                "step": "Information Synthesis",
+                "output": synthesis_result
+            })
+            
+            return {
+                "status": "success",
+                "answer": synthesis_result,
+                "process": retrieval_steps,
+                "sources": [doc["doc_id"] for doc in relevant_docs],
+                "metadata": {
+                    "total_documents_searched": len(documents),
+                    "relevant_documents_found": len(relevant_docs),
+                    "query_type": decomposition_result["query_type"],
+                    "timestamp": datetime.now().isoformat()
+                }
+            }
+            
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+# Example usage
+async def main():
+    client = openai.AsyncOpenAI()  # Initialize with your API key
+    agent = AgenticRAGAgent(client)
+    result = await agent.execute("Explain agent patterns and their communication protocols")
+    print(json.dumps(result, indent=2))
+
+# Run the example
+# import asyncio
+# asyncio.run(main())
+`,
     implementation: [
       'Set up vector database integration for knowledge retrieval',
       'Create query analysis functionality to identify key information needs',
@@ -1058,6 +1315,181 @@ const executeModernToolUse = async (query: string) => {
     return { status: 'failed', reason: error.message };
   }
 };`,
+    pythonCodeExample: `# Modern Tool Use implementation
+import openai
+import json
+import asyncio
+from typing import Dict, List, Any, Optional, Union
+from datetime import datetime
+
+class ModernToolUseAgent:
+    def __init__(self, client, model: str = "gpt-4"):
+        self.client = client
+        self.model = model
+        
+    async def execute(self, query: str) -> Dict[str, Any]:
+        """Execute the Modern Tool Use agent using MCP protocol for tool integration."""
+        try:
+            # Simulate MCP-enabled tools
+            tools = {
+                "kagi_search": self._kagi_search_tool,
+                "aws": self._aws_tool,
+                "calculator": self._calculator_tool,
+                "translator": self._translator_tool
+            }
+            
+            # Step 1: Analyze the query to determine required tools
+            analysis_prompt = f"""Analyze this user query to determine which tools might help answer it:
+            
+Query: {query}
+
+Available tools:
+- kagi_search: Performs web search using Kagi
+- aws: Interacts with AWS services (compute, storage, etc.)
+- calculator: Performs mathematical calculations
+- translator: Translates text between languages
+
+Respond with a JSON object containing:
+- "tools": Array of tool objects with "name", "parameters", and "reason" fields
+- "query_type": Classification of the query
+- "estimated_complexity": Simple, Medium, or Complex
+"""
+            
+            # Simulate LLM call for tool analysis
+            tool_analysis = {
+                "tools": [
+                    {
+                        "name": "kagi_search",
+                        "parameters": {"query": query},
+                        "reason": "Need to search for current information about the topic"
+                    }
+                ],
+                "query_type": "information_retrieval",
+                "estimated_complexity": "Medium"
+            }
+            
+            # Step 2: Execute tool requests through MCP protocol
+            tool_results = {}
+            
+            for tool_spec in tool_analysis["tools"]:
+                tool_name = tool_spec["name"]
+                tool_params = tool_spec["parameters"]
+                
+                print(f"Executing tool: {tool_name} with parameters: {tool_params}")
+                
+                # Create MCP-compliant tool request
+                mcp_request = {
+                    "tool": tool_name,
+                    "parameters": tool_params,
+                    "context": {
+                        "user_query": query,
+                        "purpose": tool_spec["reason"],
+                        "timestamp": datetime.now().isoformat()
+                    }
+                }
+                
+                # Process through MCP protocol
+                if tool_name in tools:
+                    tool_results[tool_name] = await tools[tool_name](mcp_request)
+                else:
+                    tool_results[tool_name] = {"error": f"Tool {tool_name} not available"}
+            
+            # Step 3: Generate response using tool outputs
+            tool_outputs_text = "\\n\\n".join([
+                f"{tool_name} result: {json.dumps(result, indent=2)}"
+                for tool_name, result in tool_results.items()
+            ])
+            
+            synthesis_prompt = f"""Using the following tool results, provide a comprehensive answer to the user's query.
+
+Query: {query}
+
+Tool Results:
+{tool_outputs_text}
+
+Generate a helpful response that synthesizes the information from these tools.
+"""
+            
+            # Simulate LLM call for synthesis
+            response = f"""Based on the search results and available information, here's a comprehensive answer to your query about "{query}":
+
+[Synthesized response incorporating tool results would appear here]
+
+The information has been gathered using modern tool integration patterns that ensure security, reliability, and standardized communication between the AI agent and external services."""
+            
+            return {
+                "status": "success",
+                "query": query,
+                "result": response,
+                "tools_used": list(tool_results.keys()),
+                "tool_results": tool_results,
+                "metadata": {
+                    "query_type": tool_analysis["query_type"],
+                    "complexity": tool_analysis["estimated_complexity"],
+                    "execution_time": "simulated"
+                }
+            }
+            
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+    
+    async def _kagi_search_tool(self, mcp_request: Dict[str, Any]) -> Dict[str, Any]:
+        """Simulate Kagi search tool through MCP protocol."""
+        search_query = mcp_request["parameters"]["query"]
+        
+        # Simulate search results
+        return {
+            "results": [
+                {
+                    "title": f"Search result 1 for '{search_query}'",
+                    "snippet": f"Relevant information about {search_query}...",
+                    "url": "https://example.com/result1"
+                },
+                {
+                    "title": f"Search result 2 for '{search_query}'",
+                    "snippet": f"Additional context about {search_query}...",
+                    "url": "https://example.com/result2"
+                }
+            ],
+            "total_results": 2,
+            "search_time": "0.3s"
+        }
+    
+    async def _aws_tool(self, mcp_request: Dict[str, Any]) -> Dict[str, Any]:
+        """Simulate AWS tool through MCP protocol."""
+        return {
+            "service": "simulated_aws_service",
+            "status": "success",
+            "response": "AWS operation completed successfully"
+        }
+    
+    async def _calculator_tool(self, mcp_request: Dict[str, Any]) -> Dict[str, Any]:
+        """Simulate calculator tool through MCP protocol."""
+        expression = mcp_request["parameters"].get("expression", "")
+        try:
+            result = eval(expression)  # In production, use a safe math evaluator
+            return {"result": result, "expression": expression}
+        except Exception as e:
+            return {"error": str(e), "expression": expression}
+    
+    async def _translator_tool(self, mcp_request: Dict[str, Any]) -> Dict[str, Any]:
+        """Simulate translator tool through MCP protocol."""
+        return {
+            "translated_text": "Translated text would appear here",
+            "source_language": "auto-detected",
+            "target_language": mcp_request["parameters"].get("target_lang", "en")
+        }
+
+# Example usage
+async def main():
+    client = openai.AsyncOpenAI()  # Initialize with your API key
+    agent = ModernToolUseAgent(client)
+    result = await agent.execute("What are the latest developments in AI agent patterns?")
+    print(json.dumps(result, indent=2))
+
+# Run the example
+# asyncio.run(main())
+`,
     implementation: [
       'Set up MCP protocol handler for standardized tool communication',
       'Create interfaces for various external tools and APIs',

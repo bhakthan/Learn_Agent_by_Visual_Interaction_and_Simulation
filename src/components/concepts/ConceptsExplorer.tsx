@@ -18,6 +18,14 @@ import { useTutorialContext } from "../tutorial/TutorialProvider"
 import { conceptsExplorerTutorial } from "@/lib/tutorial"
 import SimpleFlowDemo from "../visualization/SimpleFlowDemo"
 import SimpleTransformDemo from "../visualization/SimpleTransformDemo"
+import MCPArchitectureDiagram from "./MCPArchitectureDiagram"
+import AgentLifecycleVisual from "./AgentLifecycleVisual"
+import A2ACommunicationPatterns from "./A2ACommunicationPatterns"
+import ACPProtocolStack from "./ACPProtocolStack"
+import ProtocolComparison from "./ProtocolComparison"
+import AgentCommunicationPlayground from "./AgentCommunicationPlayground"
+import AgentPersonalityShowcase from "./AgentPersonalityShowcase"
+import CodeToVisualMapper from "./CodeToVisualMapper"
 
 const ConceptsExplorer = () => {
   const [showDetails, setShowDetails] = useState({
@@ -179,6 +187,15 @@ const ConceptsExplorer = () => {
               </CardContent>
             </Card>
           </div>
+          
+          {/* Agent Lifecycle Visualization */}
+          <AgentLifecycleVisual autoPlay={false} />
+          
+          {/* Agent Personality Showcase */}
+          <AgentPersonalityShowcase />
+          
+          {/* Code-to-Visual Pattern Mapper */}
+          <CodeToVisualMapper />
         </TabsContent>
 
         <TabsContent value="a2a" className="space-y-6 pt-6">
@@ -239,6 +256,9 @@ const ConceptsExplorer = () => {
           
           {/* References section for A2A */}
           <ReferenceSection type="concept" itemId="a2a" />
+          
+          {/* A2A Communication Patterns */}
+          <A2ACommunicationPatterns />
           
           <Separator className="my-6" />
           
@@ -331,6 +351,9 @@ const ConceptsExplorer = () => {
           </p>
           
           <MCPVisualDemo />
+          
+          {/* Interactive Agent Communication Playground */}
+          <AgentCommunicationPlayground />
           
           <h3 className="text-xl font-semibold tracking-tight mb-4 mt-8">Message Exchange Demo</h3>
           <p className="text-muted-foreground mb-6">
