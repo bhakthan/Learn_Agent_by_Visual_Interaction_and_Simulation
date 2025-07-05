@@ -343,6 +343,9 @@ const ConceptsExplorer = () => {
           {/* References section for MCP */}
           <ReferenceSection type="concept" itemId="mcp" />
           
+          {/* MCP Architecture Diagram */}
+          <MCPArchitectureDiagram />
+          
           <Separator className="my-6" />
           
           <h2 className="text-2xl font-semibold tracking-tight mb-4">Interactive MCP Demonstrations</h2>
