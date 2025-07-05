@@ -794,6 +794,82 @@ export const references: ReferencesData = {
         ]
       }
     ],
+
+    "semantic-kernel": [
+      {
+        id: "documentation",
+        name: "Documentation",
+        references: [
+          {
+            title: "Semantic Kernel Overview",
+            url: "https://learn.microsoft.com/en-us/semantic-kernel/overview/",
+            description: "Official documentation for Microsoft Semantic Kernel"
+          },
+          {
+            title: "Semantic Kernel Concepts",
+            url: "https://learn.microsoft.com/en-us/semantic-kernel/concepts/",
+            description: "Core concepts and terminology for Semantic Kernel"
+          },
+          {
+            title: "Semantic Kernel Agents",
+            url: "https://learn.microsoft.com/en-us/semantic-kernel/concepts/agents",
+            description: "Building AI agents with Semantic Kernel"
+          },
+          {
+            title: "Semantic Kernel Planners",
+            url: "https://learn.microsoft.com/en-us/semantic-kernel/concepts/planning",
+            description: "Using planners for goal-directed AI behavior"
+          }
+        ]
+      },
+      {
+        id: "samples",
+        name: "Code Samples",
+        references: [
+          {
+            title: "Semantic Kernel Python Getting Started",
+            url: "https://github.com/microsoft/semantic-kernel/tree/main/python/samples/getting_started_with_agents",
+            description: "Official getting started samples for Semantic Kernel agents in Python"
+          },
+          {
+            title: "Semantic Kernel C# Samples",
+            url: "https://github.com/microsoft/semantic-kernel/tree/main/dotnet/samples",
+            description: "Comprehensive C# samples for Semantic Kernel"
+          },
+          {
+            title: "Semantic Kernel Python Samples",
+            url: "https://github.com/microsoft/semantic-kernel/tree/main/python/samples",
+            description: "Python samples demonstrating Semantic Kernel capabilities"
+          },
+          {
+            title: "Semantic Kernel Java Samples",
+            url: "https://github.com/microsoft/semantic-kernel/tree/main/java/samples",
+            description: "Java samples for Semantic Kernel integration"
+          }
+        ]
+      },
+      {
+        id: "sdk",
+        name: "SDKs & APIs",
+        references: [
+          {
+            title: "Semantic Kernel Python SDK",
+            url: "https://pypi.org/project/semantic-kernel/",
+            description: "Python SDK for Semantic Kernel"
+          },
+          {
+            title: "Semantic Kernel .NET SDK",
+            url: "https://www.nuget.org/packages/Microsoft.SemanticKernel/",
+            description: ".NET SDK for Semantic Kernel"
+          },
+          {
+            title: "Semantic Kernel Java SDK",
+            url: "https://central.sonatype.com/artifact/com.microsoft.semantic-kernel/semantickernel-core",
+            description: "Java SDK for Semantic Kernel"
+          }
+        ]
+      }
+    ],
     
     "azure-ai-studio": [
       {

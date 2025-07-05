@@ -49,6 +49,7 @@ interface StandardFlowVisualizerProps {
   onNodesChange?: (nodes: any) => void;
   onEdgesChange?: (edges: any) => void;
   onFlowComplete?: (flowId: string) => void;
+  onNodeClick?: (event: React.MouseEvent, node: Node) => void;
   animationSpeed?: number;
   showLabels?: boolean;
   showControls?: boolean;
@@ -76,10 +77,11 @@ const StandardFlowVisualizerBase = (
     onNodesChange,
     onEdgesChange,
     onFlowComplete,
+    onNodeClick,
     animationSpeed = 1,
     showLabels = true,
     showControls = true,
-    autoFitView = true,
+    autoFitView = false,
     className
   } = props;
   const { theme } = useTheme();
@@ -111,12 +113,12 @@ const StandardFlowVisualizerBase = (
       style: {
         ...node.style,
         opacity: 1,
-        visibility: 'visible',
+        visibility: 'visible' as const,
         transform: 'translateZ(0)',
         willChange: 'transform',
         transition: 'all 0.2s ease-out',
         zIndex: 1,
-        position: 'absolute',
+        position: 'absolute' as const,
         display: 'block',
         boxShadow: '0 0 0 1px var(--border)'
       },
@@ -131,12 +133,14 @@ const StandardFlowVisualizerBase = (
     
     setNodes(processedNodes);
     
-    // Force stabilize nodes after a short delay
-    const timer = setTimeout(() => {
-      fitView();
-    }, 500);
-    
-    return () => clearTimeout(timer);
+    // Only apply fitView if explicitly enabled
+    if (autoFitView) {
+      const timer = setTimeout(() => {
+        fitView();
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
   }, [initialNodes, setNodes, fitView]);
 
   // Track initial layout to prevent position shifting
@@ -144,8 +148,11 @@ const StandardFlowVisualizerBase = (
 
   // Stabilize initial positions
   useEffect(() => {
-    // Only run this once
-    if (initialLayout) return;
+    // Only run this if autoFitView is enabled
+    if (initialLayout || !autoFitView) {
+      setInitialLayout(true); // Mark as initialized to prevent further effects
+      return;
+    }
     
     // Schedule initial layout stabilization
     const timer = setTimeout(() => {
@@ -187,7 +194,7 @@ const StandardFlowVisualizerBase = (
     }, 500);
     
     return () => clearTimeout(timer);
-  }, [reactFlowInstance, setNodes, initialLayout]);
+  }, [reactFlowInstance, setNodes, initialLayout, autoFitView]);
 
   // Update edges with correct defaults
   useEffect(() => {
@@ -196,7 +203,7 @@ const StandardFlowVisualizerBase = (
       style: {
         ...edge.style,
         opacity: 1,
-        visibility: 'visible'
+        visibility: 'visible' as const
       }
     })) || [];
     
@@ -232,32 +239,33 @@ const StandardFlowVisualizerBase = (
 
   // Apply fit view when needed with enhanced error handling and stability
   useEffect(() => {
-    if (autoFitView && reactFlowInstance) {
-      // Initial delay for first render
-      const safelyFitView = () => {
-        try {
-          reactFlowInstance.fitView({
-            padding: 0.2,
-            includeHiddenNodes: true,
-            duration: 400
-          });
-        } catch (error) {
-          // Silently handle any errors
-          console.warn('Error during fitView (suppressed)');
-        }
-      };
+    // Only run if autoFitView is explicitly enabled
+    if (!autoFitView || !reactFlowInstance) return;
+    
+    // Initial delay for first render
+    const safelyFitView = () => {
+      try {
+        reactFlowInstance.fitView({
+          padding: 0.2,
+          includeHiddenNodes: true,
+          duration: 400
+        });
+      } catch (error) {
+        // Silently handle any errors
+        console.warn('Error during fitView (suppressed)');
+      }
+    };
 
-      // Schedule multiple attempts to ensure visualization works
-      const fitViewTimers = [
-        setTimeout(safelyFitView, 100),
-        setTimeout(safelyFitView, 500),
-        setTimeout(safelyFitView, 1000)
-      ];
-      
-      return () => {
-        fitViewTimers.forEach(clearTimeout);
-      };
-    }
+    // Schedule multiple attempts to ensure visualization works
+    const fitViewTimers = [
+      setTimeout(safelyFitView, 100),
+      setTimeout(safelyFitView, 500),
+      setTimeout(safelyFitView, 1000)
+    ];
+    
+    return () => {
+      fitViewTimers.forEach(clearTimeout);
+    };
   }, [autoFitView, reactFlowInstance, nodes.length, edges.length]);
 
   // Expose fitView via the ref with enhanced reliability
@@ -319,12 +327,17 @@ const StandardFlowVisualizerBase = (
           onEdgeChanges(changes);
           if (onEdgesChange) onEdgesChange(edges);
         }}
+        onNodeClick={onNodeClick}
         nodeTypes={nodeTypes}
-        fitView={true}
+        fitView={autoFitView}
         fitViewOptions={{ padding: 0.2, duration: 800 }}
         minZoom={0.5}
         maxZoom={2}
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+        panOnScroll={false}
+        zoomOnScroll={false}
+        zoomOnPinch={false}
+        zoomOnDoubleClick={false}
         style={{
           background: isDarkMode ? 'var(--background)' : 'var(--card)',
           width: '100%',
@@ -348,7 +361,10 @@ const StandardFlowVisualizerBase = (
         
         {flows.length > 0 && (
           <DataFlowVisualizer
-            flows={flows}
+            flows={flows.map(flow => ({
+              ...flow,
+              timestamp: Date.now() // Add missing timestamp property
+            }))}
             edges={edges}
             getEdgePoints={getEdgePoints}
             onFlowComplete={onFlowComplete}

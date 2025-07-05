@@ -21,6 +21,26 @@
   min-width: 200px;
   contain: strict;
   z-index: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Force container dimensions for ACP Demo specifically */
+.react-flow__container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Force viewport dimensions */
+.react-flow__viewport {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Force renderer dimensions */
+.react-flow__renderer {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* Optimize animations to reduce jank */

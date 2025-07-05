@@ -38,6 +38,40 @@ export const azureAIServices: AzureAIService[] = [
     documentation: "https://learn.microsoft.com/azure/ai-services/openai/"
   },
   {
+    id: "semantic-kernel",
+    name: "Semantic Kernel",
+    description: "Microsoft's open-source SDK that integrates Large Language Models (LLMs) like OpenAI, Azure OpenAI, and Hugging Face with conventional programming languages. It provides orchestration, planning, and memory capabilities for building AI agents.",
+    capabilities: [
+      "Multi-language support (C#, Python, Java)",
+      "LLM orchestration and prompt management",
+      "Planning and goal-directed task execution",
+      "Plugin system for extending agent capabilities",
+      "Memory management for conversations and context",
+      "Function calling and tool integration",
+      "Semantic and native function execution",
+      "Template-based prompt engineering"
+    ],
+    useCases: [
+      "Building sophisticated AI agents with planning capabilities",
+      "Creating multi-step reasoning workflows",
+      "Integrating external tools and APIs with LLMs",
+      "Developing conversational AI with persistent memory",
+      "Orchestrating complex multi-agent systems",
+      "Enterprise AI application development"
+    ],
+    bestPractices: [
+      "Design semantic functions with clear, specific prompts and examples",
+      "Implement proper error handling and fallback mechanisms in agent workflows",
+      "Use the planner sparingly and validate generated plans before execution",
+      "Leverage native functions for deterministic operations and external integrations",
+      "Implement proper context management to avoid token limit issues",
+      "Follow security best practices when integrating external tools and APIs",
+      "Monitor and log agent execution steps for debugging and optimization",
+      "Implement proper input validation and output sanitization"
+    ],
+    documentation: "https://learn.microsoft.com/en-us/semantic-kernel/overview/"
+  },
+  {
     id: "azure-ai-foundry",
     name: "Azure AI Foundry",
     description: "Azure AI Foundry is a collection of tools and services for building, deploying, and managing AI models on Azure.",

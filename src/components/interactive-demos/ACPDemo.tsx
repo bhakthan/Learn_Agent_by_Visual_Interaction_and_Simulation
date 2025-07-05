@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { AnimatePresence, motion } from "framer-motion";
 import { Play, ArrowsCounterClockwise } from "@phosphor-icons/react";
 import { resetReactFlowRendering } from '@/lib/utils/visualizationUtils';
-import { fixReactFlowRendering } from '@/lib/utils/flows/visualizationFix';
+// import { fixReactFlowRendering } from '@/lib/utils/flows/visualizationFix'; // No longer needed
 
 // Import the StandardFlowVisualizer
 import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from '../visualization/StandardFlowVisualizer';
@@ -13,10 +12,15 @@ import StandardFlowVisualizerWithProvider, { StandardFlowMessage } from '../visu
 // Visualization components
 import ReactFlow, {
   Background,
+  BackgroundVariant,
   Controls,
   Edge,
   Node,
   Position,
+  ReactFlowProvider,
+  useNodesState,
+  useEdgesState,
+  useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -55,189 +59,278 @@ const ACPDemo = () => {
   const flowContainerRef1 = useRef<HTMLDivElement>(null);
   const flowContainerRef2 = useRef<HTMLDivElement>(null);
   
-  // Setup safe resize handling for ReactFlow instances
-  useEffect(() => {
-    // Apply to both flow containers with a delay between them
-    if (flowContainerRef1.current) {
-      resetReactFlowRendering(flowContainerRef1);
-    }
-    
-    // Delay the second container's initialization to prevent conflicts
-    const timeout = setTimeout(() => {
-      if (flowContainerRef2.current) {
-        resetReactFlowRendering(flowContainerRef2);
-      }
-    }, 500);
-    
-    return () => clearTimeout(timeout);
-  }, []);
+  // Simple animation state for visual feedback
+  const [simulationProgress, setSimulationProgress] = useState(0);
+  
+  // Simple status indicator - no node/edge manipulation
+  
+  // Disabled: These useEffect calls were causing node repositioning after initial render
+  // Since we're now using StableFlowContainer, these DOM manipulations are not needed
+  
+  // // Setup safe resize handling for ReactFlow instances
+  // useEffect(() => {
+  //   // Apply to both flow containers with a delay between them
+  //   if (flowContainerRef1.current) {
+  //     resetReactFlowRendering(flowContainerRef1);
+  //   }
+  //   
+  //   // Delay the second container's initialization to prevent conflicts
+  //   const timeout = setTimeout(() => {
+  //     if (flowContainerRef2.current) {
+  //       resetReactFlowRendering(flowContainerRef2);
+  //     }
+  //   }, 500);
+  //   
+  //   return () => clearTimeout(timeout);
+  // }, []);
 
-  // Single-Agent Demo Nodes and Edges
-  const singleAgentNodes: Node[] = [
+  // // Force ReactFlow to render properly after tab switch
+  // useEffect(() => {
+  //   // Only apply fixes when NOT running simulation to prevent re-centering
+  //   if (!isSimulationRunning) {
+  //     const timer = setTimeout(() => {
+  //       const container = activeDemo === 'single' 
+  //         ? flowContainerRef1.current 
+  //         : flowContainerRef2.current;
+  //       
+  //       if (container) {
+  //         fixReactFlowRendering(container);
+  //         
+  //         // Only trigger resize for tab switching, not during simulation
+  //         window.dispatchEvent(new Event('resize'));
+  //         
+  //         // Additional fix: Force all ReactFlow elements to be visible and properly positioned
+  //         const reactFlowEls = container.querySelectorAll('.react-flow');
+  //         reactFlowEls.forEach(el => {
+  //           if (el instanceof HTMLElement) {
+  //             el.style.height = '100%';
+  //             el.style.width = '100%';
+  //             el.style.position = 'relative';
+  //           }
+  //         });
+  //       }
+  //     }, 100);
+  //     
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [activeDemo, isSimulationRunning]);
+
+  // Single-Agent Demo Nodes - static positions (memoized)
+  const singleAgentNodes: Node[] = useMemo(() => [
     {
       id: 'client',
       type: 'default',
       data: { 
-        label: (
-          <div>
-            <div className="font-semibold">ACP Client</div>
-            <div className="text-xs text-muted-foreground">User Interface</div>
-          </div>
-        )
+        label: 'ACP Client'
       },
-      position: { x: 50, y: 100 },
-      className: 'border-2 border-border bg-background rounded-md px-2 py-1',
+      position: { x: 100, y: 200 },
+      style: {
+        background: 'var(--background)',
+        border: '2px solid var(--border)',
+        borderRadius: '6px',
+        padding: '12px',
+        minWidth: '120px',
+        fontSize: '14px',
+        fontWeight: '500'
+      }
     },
     {
       id: 'server',
       type: 'default',
       data: { 
-        label: (
-          <div className="bg-muted/50 p-1 rounded-md">
-            <div className="font-semibold">ACP Server</div>
-          </div>
-        )
+        label: 'ACP Server'
       },
-      position: { x: 400, y: 60 },
-      className: 'border-2 border-border bg-background rounded-md px-2 py-1 min-w-[200px]',
+      position: { x: 400, y: 100 },
+      style: {
+        background: 'var(--muted)',
+        border: '2px solid var(--border)',
+        borderRadius: '6px',
+        padding: '12px',
+        minWidth: '200px',
+        fontSize: '14px',
+        fontWeight: '500'
+      }
     },
     {
       id: 'agent',
       type: 'default',
       data: { 
-        label: (
-          <div>
-            <div className="font-semibold">Agent</div>
-            <div className="text-xs text-muted-foreground">Task Processor</div>
-          </div>
-        )
+        label: 'Agent'
       },
-      position: { x: 425, y: 140 },
-      parentNode: 'server',
-      className: 'border-2 border-border bg-background rounded-md px-2 py-1',
+      position: { x: 450, y: 200 },
+      style: {
+        background: 'var(--background)',
+        border: '2px solid var(--border)',
+        borderRadius: '6px',
+        padding: '12px',
+        minWidth: '100px',
+        fontSize: '14px',
+        fontWeight: '500'
+      }
     },
-  ];
+  ], []);
 
-  const singleAgentEdges: Edge[] = [
+  const singleAgentEdges: Edge[] = useMemo(() => [
     { 
       id: 'e-client-server', 
       source: 'client', 
       target: 'server', 
       label: 'REST',
-      animated: isSimulationRunning,
-      labelBgStyle: { fill: 'var(--muted)' },
-      labelStyle: { fontSize: 12 },
+      style: {
+        stroke: 'var(--primary)',
+        strokeWidth: 2
+      },
+      labelStyle: { 
+        fontSize: 12, 
+        fontWeight: 500,
+        fill: 'var(--foreground)'
+      },
+      labelBgStyle: { 
+        fill: 'var(--background)',
+        stroke: 'var(--border)',
+        strokeWidth: 1
+      }
     },
-  ];
+  ], []);
 
-  // Multi-Agent Demo Nodes and Edges
-  const multiAgentNodes: Node[] = [
+  // Multi-Agent Demo Nodes - static positions (memoized)
+  const multiAgentNodes: Node[] = useMemo(() => [
     {
       id: 'client',
       type: 'default',
       data: { 
-        label: (
-          <div>
-            <div className="font-semibold">ACP Client</div>
-            <div className="text-xs text-muted-foreground">User Interface</div>
-          </div>
-        )
+        label: 'ACP Client'
       },
-      position: { x: 50, y: 150 },
-      className: 'border-2 border-border bg-background rounded-md px-2 py-1',
+      position: { x: 100, y: 250 },
+      style: {
+        background: 'var(--background)',
+        border: '2px solid var(--border)',
+        borderRadius: '6px',
+        padding: '12px',
+        minWidth: '120px',
+        fontSize: '14px',
+        fontWeight: '500'
+      }
     },
     {
       id: 'server',
       type: 'default',
       data: { 
-        label: (
-          <div className="bg-muted/50 p-1 rounded-md">
-            <div className="font-semibold">ACP Server</div>
-          </div>
-        )
+        label: 'ACP Server'
       },
-      position: { x: 350, y: 60 },
-      className: 'border-2 border-border bg-background rounded-md px-2 py-1 min-w-[350px]',
+      position: { x: 350, y: 100 },
+      style: {
+        background: 'var(--muted)',
+        border: '2px solid var(--border)',
+        borderRadius: '6px',
+        padding: '12px',
+        minWidth: '350px',
+        fontSize: '14px',
+        fontWeight: '500'
+      }
     },
     {
       id: 'agent1',
       type: 'default',
       data: { 
-        label: (
-          <div>
-            <div className="font-semibold">Agent 1</div>
-            <div className="text-xs text-muted-foreground">Task Coordinator</div>
-          </div>
-        )
+        label: 'Agent 1'
       },
-      position: { x: 100, y: 140 },
-      parentNode: 'server',
-      className: 'border-2 border-border bg-background rounded-md px-2 py-1',
+      position: { x: 300, y: 200 },
+      style: {
+        background: 'var(--background)',
+        border: '2px solid var(--border)',
+        borderRadius: '6px',
+        padding: '12px',
+        minWidth: '100px',
+        fontSize: '14px',
+        fontWeight: '500'
+      }
     },
     {
       id: 'agent2',
       type: 'default',
       data: { 
-        label: (
-          <div>
-            <div className="font-semibold">Agent 2</div>
-            <div className="text-xs text-muted-foreground">Information Retrieval</div>
-          </div>
-        )
+        label: 'Agent 2'
       },
-      position: { x: 250, y: 140 },
-      parentNode: 'server',
-      className: 'border-2 border-border bg-background rounded-md px-2 py-1',
+      position: { x: 450, y: 200 },
+      style: {
+        background: 'var(--background)',
+        border: '2px solid var(--border)',
+        borderRadius: '6px',
+        padding: '12px',
+        minWidth: '100px',
+        fontSize: '14px',
+        fontWeight: '500'
+      }
     },
     {
       id: 'agent3',
       type: 'default',
       data: { 
-        label: (
-          <div>
-            <div className="font-semibold">Agent 3</div>
-            <div className="text-xs text-muted-foreground">Task Processor</div>
-          </div>
-        )
+        label: 'Agent 3'
       },
-      position: { x: 400, y: 140 },
-      parentNode: 'server',
-      className: 'border-2 border-border bg-background rounded-md px-2 py-1',
+      position: { x: 600, y: 200 },
+      style: {
+        background: 'var(--background)',
+        border: '2px solid var(--border)',
+        borderRadius: '6px',
+        padding: '12px',
+        minWidth: '100px',
+        fontSize: '14px',
+        fontWeight: '500'
+      }
     },
-  ];
+  ], []);
 
-  const multiAgentEdges: Edge[] = [
+  const multiAgentEdges: Edge[] = useMemo(() => [
     { 
       id: 'e-client-server', 
       source: 'client', 
       target: 'server', 
       label: 'REST',
-      animated: isSimulationRunning,
-      labelBgStyle: { fill: 'var(--muted)' },
-      labelStyle: { fontSize: 12 },
+      style: {
+        stroke: 'var(--primary)',
+        strokeWidth: 2
+      },
+      labelStyle: { 
+        fontSize: 12, 
+        fontWeight: 500,
+        fill: 'var(--foreground)'
+      },
+      labelBgStyle: { 
+        fill: 'var(--background)',
+        stroke: 'var(--border)',
+        strokeWidth: 1
+      }
     },
     {
       id: 'e-agent1-agent2',
       source: 'agent1',
       target: 'agent2',
-      animated: isSimulationRunning && currentStep >= 2,
-      style: { stroke: 'var(--secondary)' },
+      style: { 
+        stroke: 'var(--secondary)',
+        strokeWidth: 2
+      },
     },
     {
       id: 'e-agent2-agent3',
       source: 'agent2',
       target: 'agent3',
-      animated: isSimulationRunning && currentStep >= 3,
-      style: { stroke: 'var(--accent)' },
+      style: { 
+        stroke: 'var(--accent)',
+        strokeWidth: 2
+      },
     },
     {
       id: 'e-agent1-agent3',
       source: 'agent1',
       target: 'agent3',
-      animated: isSimulationRunning && currentStep >= 4,
-      style: { stroke: 'var(--primary)' },
+      style: { 
+        stroke: 'var(--primary)',
+        strokeWidth: 2
+      },
     },
-  ];
+  ], []);
 
   // Sample message flow for single agent demo
   const singleAgentMessages: Message[] = [
@@ -337,16 +430,27 @@ const ACPDemo = () => {
     setCurrentStep(0);
     setMessages([]);
     
-    // Apply ReactFlow rendering fixes
-    setTimeout(() => {
-      const container = activeDemo === 'single' 
-        ? flowContainerRef1.current 
-        : flowContainerRef2.current;
-      
-      if (container) {
-        fixReactFlowRendering(container);
-      }
-    }, 100);
+    // Removed ReactFlow rendering fixes - StableFlowContainer handles this properly
+    // setTimeout(() => {
+    //   const container = activeDemo === 'single' 
+    //     ? flowContainerRef1.current 
+    //     : flowContainerRef2.current;
+    //   
+    //   if (container) {
+    //     fixReactFlowRendering(container);
+    //     
+    //     // Force ReactFlow to recalculate layout - but don't trigger fitView
+    //     const reactFlowInstance = container.querySelector('.react-flow');
+    //     if (reactFlowInstance instanceof HTMLElement) {
+    //       reactFlowInstance.style.height = '100%';
+    //       reactFlowInstance.style.width = '100%';
+    //       reactFlowInstance.style.position = 'relative';
+    //       reactFlowInstance.style.display = 'block';
+    //     }
+    //     
+    //     // Don't trigger resize during simulation to prevent re-centering
+    //   }
+    // }, 100);
   };
   
   // Effect to handle simulation logic and cleanup
@@ -391,43 +495,8 @@ const ACPDemo = () => {
       
       // Start with a short delay
       setTimeout(() => {
-        // Force render for ReactFlow
-        if (flowContainerRef1.current || flowContainerRef2.current) {
-          const container = activeDemo === 'single' ? flowContainerRef1.current : flowContainerRef2.current;
-          if (container) {
-            // Force nodes to be visible
-            const nodes = container.querySelectorAll('.react-flow__node');
-            nodes.forEach(node => {
-              if (node instanceof HTMLElement) {
-                node.style.opacity = '1';
-                node.style.visibility = 'visible';
-                node.style.display = 'block';
-                node.style.zIndex = '1';
-              }
-            });
-            
-            // Force edges to be visible
-            const edges = container.querySelectorAll('.react-flow__edge');
-            edges.forEach(edge => {
-              if (edge instanceof HTMLElement) {
-                edge.style.opacity = '1';
-                edge.style.visibility = 'visible';
-              }
-              
-              // Get edge paths
-              const paths = edge.querySelectorAll('path');
-              paths.forEach(path => {
-                if (path instanceof SVGElement) {
-                  path.setAttribute('stroke-width', '1.5');
-                  path.setAttribute('opacity', '1');
-                  path.setAttribute('visibility', 'visible');
-                }
-              });
-            });
-          }
-        }
-        
-        // Start the message processing
+        // Don't force render or resize during simulation to prevent re-centering
+        // Just start the message processing without visual interference
         processNextMessage();
       }, 300);
     }
@@ -446,10 +515,10 @@ const ACPDemo = () => {
     setFlowMessages([]);
   };
 
-  // Handle node click
-  const onNodeClick = (_: any, node: Node) => {
+  // Handle node click (memoized)
+  const onNodeClick = useCallback((_: any, node: Node) => {
     setSelectedNode(node.id === selectedNode ? null : node.id);
-  };
+  }, [selectedNode]);
 
   return (
     <div className="space-y-6">
@@ -498,49 +567,59 @@ const ACPDemo = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2 border rounded-md overflow-hidden h-[350px]" ref={flowContainerRef1}>
-              <StandardFlowVisualizerWithProvider
-                nodes={singleAgentNodes}
-                edges={singleAgentEdges}
-                flows={activeDemo === 'single' ? flowMessages : []}
-                onNodeClick={onNodeClick}
-                autoFitView={true}
-                showLabels={true}
-                showControls={true}
-                className="h-full"
-              />
+            <div className="md:col-span-2 border rounded-md h-[500px]" ref={flowContainerRef1}>
+              <ReactFlowProvider>
+                <ReactFlow
+                  nodes={singleAgentNodes}
+                  edges={singleAgentEdges}
+                  onNodeClick={onNodeClick}
+                  fitView={false}
+                  preventScrolling={true}
+                  panOnDrag={false}
+                  panOnScroll={false}
+                  zoomOnScroll={false}
+                  zoomOnPinch={false}
+                  zoomOnDoubleClick={false}
+                  defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                  }}
+                  proOptions={{ hideAttribution: true }}
+                  minZoom={0.8}
+                  maxZoom={0.8}
+                >
+                  <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+                  <Controls />
+                </ReactFlow>
+              </ReactFlowProvider>
             </div>
             
             <div className="border rounded-md overflow-hidden">
               <div className="bg-muted py-2 px-4 border-b">
                 <h3 className="text-sm font-medium">Message Log</h3>
               </div>
-              <div className="h-[308px] overflow-y-auto p-2">
-                <AnimatePresence>
-                  {messages.map((message) => (
-                    <motion.div 
-                      key={message.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="mb-2"
-                    >
-                      <Card className={`overflow-hidden ${message.from === selectedNode || message.to === selectedNode ? 'border-primary' : ''}`}>
-                        <CardContent className="p-3">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs font-semibold">{message.from}</span>
-                              <span className="text-xs">→</span>
-                              <span className="text-xs font-semibold">{message.to}</span>
-                            </div>
-                            <span className="text-xs text-muted-foreground">{message.timestamp}</span>
+              <div className="h-[458px] overflow-y-auto p-2">
+                {messages.map((message) => (
+                  <div 
+                    key={message.id}
+                    className="mb-2"
+                  >
+                    <Card className={`overflow-hidden ${message.from === selectedNode || message.to === selectedNode ? 'border-primary' : ''}`}>
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs font-semibold">{message.from}</span>
+                            <span className="text-xs">→</span>
+                            <span className="text-xs font-semibold">{message.to}</span>
                           </div>
-                          <p className="text-xs whitespace-pre-wrap">{message.content}</p>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                          <span className="text-xs text-muted-foreground">{message.timestamp}</span>
+                        </div>
+                        <p className="text-xs whitespace-pre-wrap">{message.content}</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ))}
                 
                 {messages.length === 0 && (
                   <div className="flex items-center justify-center h-full">
@@ -604,49 +683,59 @@ const ACPDemo = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2 border rounded-md overflow-hidden h-[350px]" ref={flowContainerRef2}>
-              <StandardFlowVisualizerWithProvider
-                nodes={multiAgentNodes}
-                edges={multiAgentEdges}
-                flows={activeDemo === 'multi' ? flowMessages : []}
-                onNodeClick={onNodeClick}
-                autoFitView={true}
-                showLabels={true}
-                showControls={true}
-                className="h-full"
-              />
+            <div className="md:col-span-2 border rounded-md h-[500px]" ref={flowContainerRef2}>
+              <ReactFlowProvider>
+                <ReactFlow
+                  nodes={multiAgentNodes}
+                  edges={multiAgentEdges}
+                  onNodeClick={onNodeClick}
+                  fitView={false}
+                  preventScrolling={true}
+                  panOnDrag={false}
+                  panOnScroll={false}
+                  zoomOnScroll={false}
+                  zoomOnPinch={false}
+                  zoomOnDoubleClick={false}
+                  defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                  }}
+                  proOptions={{ hideAttribution: true }}
+                  minZoom={0.7}
+                  maxZoom={0.7}
+                >
+                  <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+                  <Controls />
+                </ReactFlow>
+              </ReactFlowProvider>
             </div>
             
             <div className="border rounded-md overflow-hidden">
               <div className="bg-muted py-2 px-4 border-b">
                 <h3 className="text-sm font-medium">Message Log</h3>
               </div>
-              <div className="h-[308px] overflow-y-auto p-2">
-                <AnimatePresence>
-                  {messages.map((message) => (
-                    <motion.div 
-                      key={message.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="mb-2"
-                    >
-                      <Card className={`overflow-hidden ${message.from === selectedNode || message.to === selectedNode ? 'border-primary' : ''}`}>
-                        <CardContent className="p-3">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs font-semibold">{message.from}</span>
-                              <span className="text-xs">→</span>
-                              <span className="text-xs font-semibold">{message.to}</span>
-                            </div>
-                            <span className="text-xs text-muted-foreground">{message.timestamp}</span>
+              <div className="h-[458px] overflow-y-auto p-2">
+                {messages.map((message) => (
+                  <div 
+                    key={message.id}
+                    className="mb-2"
+                  >
+                    <Card className={`overflow-hidden ${message.from === selectedNode || message.to === selectedNode ? 'border-primary' : ''}`}>
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs font-semibold">{message.from}</span>
+                            <span className="text-xs">→</span>
+                            <span className="text-xs font-semibold">{message.to}</span>
                           </div>
-                          <p className="text-xs whitespace-pre-wrap">{message.content}</p>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                          <span className="text-xs text-muted-foreground">{message.timestamp}</span>
+                        </div>
+                        <p className="text-xs whitespace-pre-wrap">{message.content}</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ))}
                 
                 {messages.length === 0 && (
                   <div className="flex items-center justify-center h-full">

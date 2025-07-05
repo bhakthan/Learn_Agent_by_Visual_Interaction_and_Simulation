@@ -5,11 +5,11 @@ import { PatternData } from '@/lib/data/patterns';
 import { patternContents } from '@/lib/data/patternContent';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ListCheck, Info, Code, Workflow, PuzzlePiece, ArrowsOut, ArrowsIn, BookmarkSimple } from "@phosphor-icons/react";
+import { ListChecks, Info, Code, FlowArrow, PuzzlePiece, ArrowsOut, ArrowsIn, BookmarkSimple } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import ReferenceSection from "../references/ReferenceSection";
-import { PatternDemoReactFlow } from '../interactive-demos';
+import { PatternDemoSVG } from '../interactive-demos';
 
 interface PatternDetailsProps {
   pattern: PatternData;
@@ -45,10 +45,10 @@ const PatternDetails: React.FC<PatternDetailsProps> = ({ pattern }) => {
               <ArrowsIn size={16} /> Limitations
             </TabsTrigger>
             <TabsTrigger value="applications" className="flex items-center gap-2">
-              <Workflow size={16} /> Applications
+              <FlowArrow size={16} /> Applications
             </TabsTrigger>
             <TabsTrigger value="practices" className="flex items-center gap-2">
-              <ListCheck size={16} /> Best Practices
+              <ListChecks size={16} /> Best Practices
             </TabsTrigger>
             <TabsTrigger value="related" className="flex items-center gap-2">
               <PuzzlePiece size={16} /> Related Patterns
@@ -167,7 +167,7 @@ const PatternDetails: React.FC<PatternDetailsProps> = ({ pattern }) => {
           <Code size={18} />
           Interactive Demo
         </h3>
-        <PatternDemoReactFlow patternData={pattern} className="mt-2" />
+        <PatternDemoSVG patternData={pattern} className="mt-2" />
 
         {/* References section for this pattern */}
         <Separator className="my-6" />

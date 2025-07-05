@@ -1,26 +1,23 @@
 import { useState, useEffect } from 'react'
 import { agentPatterns } from '@/lib/data/patterns'
-import PatternVisualizer from '@/components/visualization/PatternVisualizer'
-import AdvancedPatternVisualizer from '@/components/visualization/AdvancedPatternVisualizer'
+import SimplePatternVisualizer from '@/components/visualization/SimplePatternVisualizer'
 import CodePlaybook from '@/components/code-playbook/CodePlaybook'
 import PatternDetails from './PatternDetails'
-import MultiPatternVisualizer from './MultiPatternVisualizer'
+import SimpleMultiPatternVisualizer from './SimpleMultiPatternVisualizer'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { ReactFlowProvider } from 'reactflow'
 import { ChartLine, Code, Info, Swap } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
-import { Toggle } from '@/components/ui/toggle'
 import { PatternSidebar } from './PatternSidebar'
 import { TutorialButton } from '../tutorial/TutorialButton'
 import { useTutorialContext } from '../tutorial/TutorialProvider'
 import { agentPatternsTutorial } from '@/lib/tutorial'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 
 const PatternExplorer = () => {
   const [selectedPattern, setSelectedPattern] = useState(agentPatterns[0] || null)
   const [viewMode, setViewMode] = useState<'single' | 'compare'>('single')
-  const [useAdvancedVisualizer, setUseAdvancedVisualizer] = useState<boolean>(true)
   
   const { startTutorial, registerTutorial, hasCompletedTutorial } = useTutorialContext();
   
@@ -34,6 +31,12 @@ const PatternExplorer = () => {
     // Force a re-render if patterns were updated
     if (agentPatterns.length > 2) {
       console.log("Loaded " + agentPatterns.length + " agent patterns");
+    }
+    
+    // Debug: Log pattern data structure
+    console.log("Agent patterns data:", agentPatterns);
+    if (agentPatterns.length > 0) {
+      console.log("First pattern structure:", agentPatterns[0]);
     }
   }, []);
   
@@ -58,14 +61,6 @@ const PatternExplorer = () => {
             onClick={() => startTutorial(agentPatternsTutorial.id)}
             tooltip="Learn about Agent Patterns"
           />
-          <Toggle
-            className="flex gap-2 items-center"
-            pressed={useAdvancedVisualizer}
-            onPressedChange={setUseAdvancedVisualizer}
-          >
-            <Info className="h-4 w-4" />
-            {useAdvancedVisualizer ? "Advanced Mode" : "Standard Mode"}
-          </Toggle>
           
           <Button 
             variant="outline" 
@@ -81,7 +76,7 @@ const PatternExplorer = () => {
       {viewMode === 'single' ? (
         <div className="flex relative">
           {/* Sidebar */}
-          {selectedPattern && (
+          {selectedPattern ? (
             <>
               <div className="hidden md:block">
                 <PatternSidebar 
@@ -132,32 +127,26 @@ const PatternExplorer = () => {
                   </TabsList>
                   
                   <TabsContent value="visualization">
-                    <ReactFlowProvider>
-                      <div className="flow-container" data-flow>
-                        {useAdvancedVisualizer ? (
-                          <AdvancedPatternVisualizer key={selectedPattern.id} patternData={selectedPattern} />
-                        ) : (
-                          <PatternVisualizer key={selectedPattern.id} patternData={selectedPattern} />
-                        )}
-                      </div>
-                    </ReactFlowProvider>
+                    <div className="flow-container" data-flow>
+                      <ErrorBoundary>
+                        <SimplePatternVisualizer patternData={selectedPattern} />
+                      </ErrorBoundary>
+                    </div>
                   </TabsContent>
                   
                   <TabsContent value="details">
-                    <PatternDetails pattern={selectedPattern} />
+                    <ErrorBoundary>
+                      <PatternDetails pattern={selectedPattern} />
+                    </ErrorBoundary>
                   </TabsContent>
                   
                   <TabsContent value="implementation">
-                    <ReactFlowProvider>
-                      <CodePlaybook patternData={selectedPattern} />
-                    </ReactFlowProvider>
+                    <CodePlaybook patternData={selectedPattern} />
                   </TabsContent>
                 </Tabs>
               </div>
             </>
-          )}
-          
-          {!selectedPattern && (
+          ) : (
             <div className="w-full p-8 text-center border border-dashed rounded-lg">
               <p className="text-muted-foreground">No patterns available to display</p>
             </div>
@@ -166,9 +155,13 @@ const PatternExplorer = () => {
       ) : (
         <Tabs defaultValue="comparison">
           <TabsContent value="comparison">
-            <ReactFlowProvider>
-              <MultiPatternVisualizer initialPatterns={[selectedPattern.id]} />
-            </ReactFlowProvider>
+            {selectedPattern ? (
+              <SimpleMultiPatternVisualizer initialPatterns={[selectedPattern.id]} />
+            ) : (
+              <div className="w-full p-8 text-center border border-dashed rounded-lg">
+                <p className="text-muted-foreground">No patterns available to compare</p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       )}

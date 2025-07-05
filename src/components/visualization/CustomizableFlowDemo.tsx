@@ -133,6 +133,7 @@ const CustomizableFlowDemo = () => {
   
   // Update node status
   const updateNodeStatus = useCallback((nodeId, status) => {
+    console.log('Updating node status:', nodeId, status); // Debug log
     setNodes(nds => nds.map(node => {
       if (node.id === nodeId) {
         return {
@@ -167,12 +168,13 @@ const CustomizableFlowDemo = () => {
   
   // Create a new data flow
   const handleDataFlow = useCallback((flow) => {
+    console.log('Adding data flow:', flow); // Debug log
     setDataFlows(flows => [...flows, flow]);
   }, []);
   
   // Reset visualization to initial state
   const resetVisualization = useCallback(() => {
-    // Reset nodes
+    // Reset nodes to initial state
     setNodes(initialNodes.map(node => ({
       ...node,
       data: {
@@ -181,7 +183,7 @@ const CustomizableFlowDemo = () => {
       }
     })));
     
-    // Reset edges
+    // Reset edges to initial state
     setEdges(initialEdges.map(edge => ({
       ...edge,
       animated: false
@@ -203,27 +205,62 @@ const CustomizableFlowDemo = () => {
   const startSimulation = useCallback(() => {
     if (isSimulating) return;
     
+    console.log('Starting simulation...'); // Debug log
     setIsSimulating(true);
     
     // Reset first
     resetVisualization();
     
-    // Start new simulation
-    const { cleanup } = simulatePatternFlow(
-      nodes,
-      edges,
-      updateNodeStatus,
-      updateEdgeStatus,
-      handleDataFlow,
-      "User query input",
-      null,
-      animationSpeed
-    );
-    
-    cleanupRef.current = cleanup;
+    // Use a timeout to ensure state updates have been processed
+    setTimeout(() => {
+      try {
+        console.log('Executing simulation with:', { 
+          nodes: initialNodes.length, 
+          edges: initialEdges.length,
+          animationSpeed
+        }); // Debug log
+        
+        // Use the initial node and edge definitions to ensure consistency
+        const { createDataFlow, cleanup } = simulatePatternFlow(
+          initialNodes,
+          initialEdges,
+          updateNodeStatus,
+          updateEdgeStatus,
+          handleDataFlow,
+          "User query input",
+          null,
+          animationSpeed
+        );
+        
+        cleanupRef.current = cleanup;
+        
+        // Create sample flows to demonstrate the animation
+        if (createDataFlow) {
+          // Flow 1: User to Agent
+          createDataFlow('user', 'agent', 'Hello, please help me with a task', 'query', 1000, 'Query');
+          
+          // Flow 2: Agent to Tool  
+          createDataFlow('agent', 'tool', 'search_web("latest news")', 'tool_call', 3000, 'Tool Call');
+          
+          // Flow 3: Tool to Agent
+          createDataFlow('tool', 'agent', 'Found 10 recent articles', 'observation', 5000, 'Result');
+          
+          // Flow 4: Agent to Result
+          createDataFlow('agent', 'result', 'Here are the latest news articles I found', 'response', 7000, 'Response');
+          
+          // Auto-stop simulation after all flows complete
+          setTimeout(() => {
+            setIsSimulating(false);
+          }, (10000 / animationSpeed)); // Give some buffer time for the last flow to complete
+        }
+        
+        console.log('Simulation started successfully'); // Debug log
+      } catch (error) {
+        console.error('Error starting simulation:', error);
+        setIsSimulating(false);
+      }
+    }, 100);
   }, [
-    nodes, 
-    edges, 
     updateNodeStatus, 
     updateEdgeStatus, 
     handleDataFlow, 

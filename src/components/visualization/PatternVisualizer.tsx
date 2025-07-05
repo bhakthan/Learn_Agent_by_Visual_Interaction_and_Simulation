@@ -7,7 +7,6 @@ import {
   NodeTypes,
   useNodesState,
   useEdgesState,
-  useReactFlow,
   ReactFlowInstance,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
@@ -18,7 +17,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
-import { Play, Stop, ArrowsCounterClockwise, Info, FastForward, Pause, StepForward, Rewind, QuestionCircle, DotsSixVertical } from '@phosphor-icons/react'
+import { Play, Stop, ArrowsCounterClockwise, Info, FastForward, Pause, CaretRight, Rewind, Question, DotsSixVertical } from '@phosphor-icons/react'
 import NodeDragHint from './NodeDragHint'
 // Import necessary functions from dataFlowUtils
 import { 
@@ -38,6 +37,13 @@ import { useMemoizedCallback } from '@/lib/utils'
 import { useTheme } from '@/components/theme/ThemeProvider'
 import { useStableFlowContainer } from '@/lib/utils/flows/StableFlowUtils'
 import { fixReactFlowRendering } from '@/lib/utils/flows/visualizationFix'
+
+/**
+ * PatternVisualizer - Standard mode visualizer for agent patterns
+ * 
+ * Note: Currently has ReactFlow context issues in some scenarios.
+ * AdvancedPatternVisualizer is recommended and set as default.
+ */
 
 interface PatternVisualizerProps {
   patternData: PatternData
@@ -154,6 +160,37 @@ const messageTemplates = {
 };
 
 const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
+  // Add null checks for patternData
+  if (!patternData) {
+    console.error("PatternVisualizer: patternData is null or undefined");
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">No pattern data available</p>
+      </div>
+    );
+  }
+
+  if (!patternData.nodes || !patternData.edges) {
+    console.error("PatternVisualizer: patternData structure is invalid", patternData);
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Invalid pattern data structure</p>
+      </div>
+    );
+  }
+
+  if (!Array.isArray(patternData.nodes) || !Array.isArray(patternData.edges)) {
+    console.error("PatternVisualizer: nodes or edges are not arrays", { 
+      nodes: patternData.nodes, 
+      edges: patternData.edges 
+    });
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Invalid pattern data format</p>
+      </div>
+    );
+  }
+
   const [nodes, setNodes, onNodesChange] = useNodesState(patternData.nodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(patternData.edges)
   const [dataFlows, setDataFlows] = useState<DataFlowMessage[]>([])
@@ -171,11 +208,14 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
   const simulationRef = useRef<NodeJS.Timeout | null>(null)
   const simulationCleanupRef = useRef<(() => void) | null>(null)
   const stepQueueRef = useRef<Array<() => void>>([])
-  const reactFlowInstance = useReactFlow()
+  // Remove useReactFlow() hook as it's not needed here and causes provider issues
   
   // Use custom flow container hook to better handle resizing
-  const containerRef = useRef<HTMLDivElement>(null)
-  const { dimensions, resetFlow } = useStableFlowContainer(containerRef)
+  const { containerRef, resetFlow } = useStableFlowContainer({
+    autoFitView: false,
+    stabilizationDelay: 300
+  });
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   
   // Reset flow and nodes when pattern changes
   useEffect(() => {
@@ -195,15 +235,16 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
     setSpeedFactor(factors[animationState.speed]);
   }, [animationState.speed]);
   
-  // Effect to fit view whenever dimensions change significantly
+  // Effect to fit view whenever dimensions change significantly (but not during animation)
   useEffect(() => {
-    if (dimensions.width > 0 && dimensions.height > 0 && flowInstanceRef.current) {
-      const fitViewTimeout = setTimeout(() => {
-        flowInstanceRef.current?.fitView({ duration: 300, padding: 0.2 });
-      }, 200);
-      return () => clearTimeout(fitViewTimeout);
-    }
-  }, [dimensions]);
+    // Disabled fitView to prevent clustering when navigating between patterns
+    // if (dimensions.width > 0 && dimensions.height > 0 && flowInstanceRef.current && !isAnimating) {
+    //   const fitViewTimeout = setTimeout(() => {
+    //     flowInstanceRef.current?.fitView({ duration: 300, padding: 0.2 });
+    //   }, 200);
+    //   return () => clearTimeout(fitViewTimeout);
+    // }
+  }, [dimensions, isAnimating]);
   
   // Reset visualization
   const resetVisualization = useCallback(() => {
@@ -270,12 +311,12 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       }
     })));
     
-    // Also fit the view to ensure all nodes are visible
-    if (flowInstanceRef.current) {
-      setTimeout(() => {
-        flowInstanceRef.current?.fitView({ duration: 800, padding: 0.2 });
-      }, 100);
-    }
+    // Don't call fitView as it causes clustering
+    // if (flowInstanceRef.current) {
+    //   setTimeout(() => {
+    //     flowInstanceRef.current?.fitView({ duration: 800, padding: 0.2 });
+    //   }, 100);
+    // }
   }, [patternData.nodes, setNodes]);
   
   const getEdgePoints = useMemoizedCallback((edgeId: string) => {
@@ -355,7 +396,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
           data: {
             ...node.data,
             isActive: status !== null,
-            status: node.id === nodeId ? status : node.data.status
+            status: node.id === nodeId ? status : (node.data as any).status
           }
         }))
       );
@@ -449,10 +490,10 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       if (containerRef.current) {
         fixReactFlowRendering(containerRef.current);
         
-        // Also force update of React Flow
-        if (flowInstanceRef.current) {
-          flowInstanceRef.current.fitView();
-        }
+        // Don't call fitView during animation as it causes clustering
+        // if (flowInstanceRef.current) {
+        //   flowInstanceRef.current.fitView();
+        // }
       }
     }, 300);
     
@@ -462,20 +503,47 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
       clearTimeout(forceVisibilityTimer);
     };
     
-    // In auto mode, start simulation immediately
-    if (animationState.mode === 'auto') {
-      const autoStartTimer = setTimeout(() => {
-        // Create several flows to show activity
-        for (let i = 0; i < Math.min(edges.length, 3); i++) {
-          if (edges[i]) {
-            handleEdgeStatus(edges[i].id, true);
-          }
-        }
-      }, 150);
-      simulationRef.current = autoStartTimer;
-    } else {
-      // In step mode, we've already triggered the first step above
-      console.log('Started in step-by-step mode. Click Next Step to proceed after the first automatic step.');
+    // Actually start some flows to show animation
+    if (nodes.length > 0 && edges.length > 0) {
+      // Find the first few edges to animate
+      const edgesToAnimate = edges.slice(0, Math.min(edges.length, 3));
+      
+      edgesToAnimate.forEach((edge, index) => {
+        const delay = index * 1000 / speedFactor;
+        
+        setTimeout(() => {
+          // Activate source node
+          handleNodeStatus(edge.source, 'processing');
+          
+          // Animate the edge
+          handleEdgeStatus(edge.id, true);
+          
+          // Create a data flow
+          handleDataFlow({
+            id: `flow-${Date.now()}-${index}`,
+            edgeId: edge.id,
+            source: edge.source,
+            target: edge.target,
+            content: `Processing: ${queryInput || 'data'}`,
+            timestamp: Date.now(),
+            type: 'message',
+            progress: 0,
+            label: 'Processing...'
+          });
+          
+          // Activate target node after a delay
+          setTimeout(() => {
+            handleNodeStatus(edge.target, 'complete');
+            handleEdgeStatus(edge.id, false);
+          }, 2000 / speedFactor);
+          
+        }, delay);
+      });
+      
+      // Stop animation after all flows complete
+      setTimeout(() => {
+        setIsAnimating(false);
+      }, (edgesToAnimate.length * 1000 + 2000) / speedFactor);
     }
     
     // Return cleanup function
@@ -579,7 +647,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
                   onClick={executeNextStep}
                   disabled={!isAnimating || stepQueueRef.current.length === 0}
                 >
-                  <StepForward size={14} className="mr-2" />
+                  <CaretRight size={14} className="mr-2" />
                   Next Step {stepQueueRef.current.length > 0 ? `(${stepQueueRef.current.length})` : ''}
                 </Button>
               )}
@@ -647,10 +715,11 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
             </div>
           )}
         </div>
-        <StableFlowContainer style={{ height: 400 }} ref={containerRef} onReady={() => {
-          if (flowInstanceRef.current) {
-            flowInstanceRef.current.fitView({ padding: 0.2 });
-          }
+        <StableFlowContainer style={{ height: 600 }} ref={containerRef} onReady={() => {
+          // Disabled fitView to prevent clustering when navigating between patterns
+          // if (flowInstanceRef.current && !isAnimating) {
+          //   flowInstanceRef.current.fitView({ padding: 0.2 });
+          // }
         }}>
           <StandardFlowVisualizerWithProvider
             nodes={nodes}
@@ -672,7 +741,7 @@ const PatternVisualizer = ({ patternData }: PatternVisualizerProps) => {
             animationSpeed={speedFactor}
             showLabels={true}
             showControls={true}
-            autoFitView={true}
+            autoFitView={false}
             nodeTypes={nodeTypes}
             className="h-full"
           />

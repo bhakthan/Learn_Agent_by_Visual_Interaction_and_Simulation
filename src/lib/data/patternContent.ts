@@ -55,7 +55,9 @@ export const patternContents: PatternContent[] = [
       "Include meta-reasoning about tool selection and action strategies",
       "Maintain comprehensive context of past reasoning and actions",
       "Build validation mechanisms for tool outputs",
-      "Set reasonable limits on reasoning-action cycles to prevent loops"
+      "Set reasonable limits on reasoning-action cycles to prevent loops",
+      "Consider using frameworks like Semantic Kernel for orchestration and planning",
+      "Leverage Semantic Kernel's plugin system for tool integration and management"
     ],
     relatedPatterns: ["Autonomous Workflow", "Plan and Execute", "CodeAct Agent"]
   },
@@ -471,7 +473,9 @@ export const patternContents: PatternContent[] = [
       "Consider stateful orchestration for complex workflows",
       "Use consistent formats for communication between components",
       "Include monitoring for both individual workers and overall process",
-      "Balance the granularity of tasks against coordination overhead"
+      "Balance the granularity of tasks against coordination overhead",
+      "Utilize Semantic Kernel's agent orchestration capabilities for managing multiple specialized agents",
+      "Leverage Semantic Kernel's plugin system to create reusable worker components"
     ],
     relatedPatterns: ["Plan and Execute", "Routing"]
   },
@@ -704,7 +708,9 @@ export const patternContents: PatternContent[] = [
       "Create mechanisms for tracking progress through the plan",
       "Design the planning prompt to consider potential obstacles and alternatives",
       "Include validation steps at key points in the execution",
-      "Consider different levels of planning granularity based on task complexity"
+      "Consider different levels of planning granularity based on task complexity",
+      "Use Semantic Kernel's planner capabilities for goal-directed task execution",
+      "Leverage Semantic Kernel's memory management for maintaining plan state and context"
     ],
     relatedPatterns: ["Orchestrator-Worker", "Reflexion"]
   },

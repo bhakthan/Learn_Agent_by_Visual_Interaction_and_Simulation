@@ -26,10 +26,10 @@ export function createStableNodes(nodes: Node[]): Node[] {
       contain: 'layout',
       zIndex: 1,
     },
-    // Ensure node has proper position
+    // Ensure node has proper position - preserve original positions including (0,0)
     position: {
-      x: node.position?.x || 0,
-      y: node.position?.y || 0
+      x: node.position?.x !== undefined ? node.position.x : 0,
+      y: node.position?.y !== undefined ? node.position.y : 0
     },
     // Add additional props for stability
     data: {
@@ -99,7 +99,7 @@ export function useStableFlowContainer(options?: {
       // Force hardware acceleration
       element.style.transform = 'translateZ(0)';
       element.style.backfaceVisibility = 'hidden';
-      element.style.WebkitBackfaceVisibility = 'hidden';
+      element.style.webkitBackfaceVisibility = 'hidden';
       element.style.contain = 'layout';
       
       // Make nodes and edges visible
@@ -128,10 +128,10 @@ export function useStableFlowContainer(options?: {
     setTimeout(applyStabilityFixes, 100);
     setTimeout(applyStabilityFixes, 500);
     
-    // Fit view after reset
-    setTimeout(fitView, 200);
+    // Don't call fitView as it causes clustering
+    // setTimeout(fitView, 200);
     
-  }, [fitView]);
+  }, []);
   
   // Watch for container size changes
   useEffect(() => {
@@ -182,9 +182,36 @@ export function useStableFlowContainer(options?: {
   useEffect(() => {
     if (!containerRef.current) return;
     
-    // Stabilize the container
+    // Only apply basic stabilization without calling resetFlow
     const applyStabilization = () => {
-      resetFlow();
+      if (!containerRef.current) return;
+      
+      // Apply basic stability fixes without fitView
+      const element = containerRef.current;
+      element.style.transform = 'translateZ(0)';
+      element.style.backfaceVisibility = 'hidden';
+      element.style.webkitBackfaceVisibility = 'hidden';
+      element.style.contain = 'layout';
+      
+      // Make nodes and edges visible
+      element.querySelectorAll('.react-flow__node, .react-flow__edge').forEach((el) => {
+        if (el instanceof HTMLElement) {
+          el.style.opacity = '1';
+          el.style.visibility = 'visible';
+          if (el.classList.contains('react-flow__node')) {
+            el.style.display = 'block';
+          }
+        }
+      });
+      
+      // Fix edge paths
+      element.querySelectorAll('.react-flow__edge-path').forEach((path) => {
+        if (path instanceof SVGElement) {
+          path.style.strokeWidth = '1.5px';
+          path.style.opacity = '1';
+          path.style.visibility = 'visible';
+        }
+      });
     };
     
     // Apply stability fixes with delay
@@ -194,7 +221,7 @@ export function useStableFlowContainer(options?: {
     return () => {
       clearTimeout(timer);
     };
-  }, [resetFlow, options?.stabilizationDelay]);
+  }, [options?.stabilizationDelay]);
   
   return {
     containerRef,
@@ -215,7 +242,7 @@ export function fixReactFlowRendering(containerElement: HTMLElement | null) {
   // Apply rendering fixes to the container
   containerElement.style.transform = 'translateZ(0)';
   containerElement.style.backfaceVisibility = 'hidden';
-  containerElement.style.WebkitBackfaceVisibility = 'hidden';
+  containerElement.style.webkitBackfaceVisibility = 'hidden';
   containerElement.style.contain = 'layout';
   
   // Apply fixes to nodes

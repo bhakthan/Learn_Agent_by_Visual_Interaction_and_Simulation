@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator"
 import A2ADemo from "../interactive-demos/A2ADemo"
 import MCPDemo from "../interactive-demos/MCPDemo"
 import MCPVisualDemo from "../interactive-demos/MCPVisualDemo"
-import ACPDemo from "../interactive-demos/ACPDemo"
+import SimpleACPDemo from "../interactive-demos/SimpleACPDemo"
 import ACPMCPComparison from "../interactive-demos/ACPMCPComparison"
 import Agent2AgentProtocolDemo from "../interactive-demos/Agent2AgentProtocolDemo"
 import Agent2AgentProtocolExplainer from "./Agent2AgentProtocolExplainer"
@@ -16,8 +16,8 @@ import ReferenceSection from "../references/ReferenceSection"
 import { TutorialButton } from "../tutorial/TutorialButton"
 import { useTutorialContext } from "../tutorial/TutorialProvider"
 import { conceptsExplorerTutorial } from "@/lib/tutorial"
-import CustomizableFlowDemo from "../visualization/CustomizableFlowDemo"
-import TransformSequenceDemo from "../visualization/TransformSequenceDemo"
+import SimpleFlowDemo from "../visualization/SimpleFlowDemo"
+import SimpleTransformDemo from "../visualization/SimpleTransformDemo"
 
 const ConceptsExplorer = () => {
   const [showDetails, setShowDetails] = useState({
@@ -400,7 +400,7 @@ const ConceptsExplorer = () => {
             Explore how the Agent Communication Protocol enables standardized communication between clients and agents.
           </p>
           
-          <ACPDemo />
+          <SimpleACPDemo />
           
           <Separator className="my-6" />
           
@@ -438,7 +438,7 @@ const ConceptsExplorer = () => {
             </CardContent>
           </Card>
           
-          <CustomizableFlowDemo />
+          <SimpleFlowDemo />
           
           <Card className="mt-6">
             <CardHeader>
@@ -539,7 +539,7 @@ const ConceptsExplorer = () => {
             </CardContent>
           </Card>
           
-          <TransformSequenceDemo />
+          <SimpleTransformDemo />
           
           <Card className="mt-6">
             <CardHeader>

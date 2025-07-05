@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,13 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { PatternData } from '@/lib/data/patterns';
 import { Play, ArrowsClockwise, CheckCircle, Clock, WarningCircle, ArrowBendDownRight } from "@phosphor-icons/react";
 import { useTheme } from '@/components/theme/ThemeProvider';
-import { ReactFlowProvider } from 'reactflow';
-import { StableFlowContainer } from '../visualization/StableFlowContainer';
 import StandardFlowVisualizerWithProvider from '../visualization/StandardFlowVisualizer';
-import { useStableFlowContainer, createStableNodes, createStableEdges } from '@/lib/utils/flows/StableFlowUtils';
-import { useFlowVisualizer, createSafeFitView } from '@/lib/utils/flows/flowVisualizerUtils';
-import { createFlow } from '@/lib/utils/flows/FlowHelper';
-import { fixReactFlowRendering } from '@/lib/utils/flows/visualizationFix';
+import { createStableNodes, createStableEdges } from '@/lib/utils/flows/StableFlowUtils';
 
 // Simple step controller class
 class StepController {
@@ -46,19 +41,193 @@ class StepController {
   }
 }
 
-// Mock response generation to simulate LLM calls
+// Real-world business scenario examples for each pattern
+const getBusinessScenarios = (patternId: string) => {
+  const scenarios = {
+    'react-agent': {
+      placeholder: 'What are the latest Azure OpenAI pricing changes and how do they compare to our current costs?',
+      examples: [
+        'Research our competitor\'s new AI product features and pricing strategy',
+        'Find the latest compliance requirements for GDPR in our industry',
+        'Analyze market trends for cloud computing services in 2024'
+      ]
+    },
+    'codeact-agent': {
+      placeholder: 'Analyze our Q4 sales data CSV file and create a performance dashboard',
+      examples: [
+        'Process customer feedback CSV and generate sentiment analysis charts',
+        'Clean and merge multiple Excel files from different departments',
+        'Build automated report generator for monthly KPI tracking'
+      ]
+    },
+    'self-reflection': {
+      placeholder: 'Draft a comprehensive business proposal for our new AI consulting services',
+      examples: [
+        'Write a detailed technical white paper on our cloud migration strategy',
+        'Create a comprehensive risk assessment report for our new product launch',
+        'Develop a strategic plan for digital transformation in our organization'
+      ]
+    },
+    'agentic-rag': {
+      placeholder: 'What are the best practices for implementing zero-trust security in our enterprise?',
+      examples: [
+        'Find implementation guidelines for SOC 2 compliance in our industry',
+        'Research Azure security features relevant to our healthcare application',
+        'Analyze our company\'s security policy documents for compliance gaps'
+      ]
+    },
+    'modern-tool-use': {
+      placeholder: 'Generate a comprehensive market analysis report using multiple data sources',
+      examples: [
+        'Create a competitor analysis using web search, financial data, and social media',
+        'Build a customer insights dashboard pulling from CRM, surveys, and analytics',
+        'Develop a risk assessment using news data, market feeds, and regulatory sources'
+      ]
+    },
+    'model-context-protocol': {
+      placeholder: 'Analyze our employee handbook for policy updates needed for remote work',
+      examples: [
+        'Review our legal contracts for compliance with new data protection laws',
+        'Assess our technical documentation for security best practices',
+        'Evaluate our customer service protocols against industry standards'
+      ]
+    },
+    'agent-to-agent': {
+      placeholder: 'Plan and execute a comprehensive digital marketing campaign for our new product',
+      examples: [
+        'Coordinate a multi-team product launch involving marketing, sales, and support',
+        'Develop a crisis management response plan with legal, PR, and operations teams',
+        'Create a comprehensive business case with market research, financial analysis, and risk assessment'
+      ]
+    },
+    'prompt-chaining': {
+      placeholder: 'Transform our technical documentation into user-friendly customer guides',
+      examples: [
+        'Convert legal contracts into plain language summaries for customers',
+        'Transform technical specifications into marketing materials',
+        'Create training materials from complex operational procedures'
+      ]
+    },
+    'parallelization': {
+      placeholder: 'Evaluate three different cloud providers for our infrastructure migration',
+      examples: [
+        'Compare multiple software vendors for our ERP system upgrade',
+        'Analyze different market entry strategies for our new product',
+        'Assess various investment opportunities for our growth capital'
+      ]
+    },
+    'routing': {
+      placeholder: 'Help me with my customer service inquiry about billing and technical support',
+      examples: [
+        'I need assistance with both HR policies and IT equipment setup',
+        'Route my request to the appropriate team for product refund and feedback',
+        'Direct my inquiry to sales, technical support, or account management'
+      ]
+    },
+    'orchestrator-worker': {
+      placeholder: 'Manage our quarterly business review process across all departments',
+      examples: [
+        'Coordinate our annual audit across finance, operations, and compliance teams',
+        'Orchestrate our product development cycle from design to launch',
+        'Manage our customer onboarding process across sales, support, and technical teams'
+      ]
+    },
+    'plan-and-execute': {
+      placeholder: 'Plan and implement a company-wide digital transformation initiative',
+      examples: [
+        'Develop and execute a comprehensive cybersecurity improvement plan',
+        'Create and implement a customer experience optimization strategy',
+        'Plan and execute a merger integration across all business functions'
+      ]
+    },
+    'computer-using-agent': {
+      placeholder: 'Automate our monthly invoice processing workflow across multiple systems',
+      examples: [
+        'Set up automated customer onboarding process using our CRM and email systems',
+        'Create automated data backup and reporting routine using our business applications',
+        'Build automated quality assurance testing workflow for our web application'
+      ]
+    },
+    'deep-researcher': {
+      placeholder: 'Research emerging AI regulations and their impact on our business operations',
+      examples: [
+        'Conduct comprehensive market research for our new product category',
+        'Analyze industry trends and competitive landscape for strategic planning',
+        'Research best practices for sustainable business operations in our sector'
+      ]
+    },
+    'voice-agent': {
+      placeholder: 'Set up our customer service voice assistant for handling common inquiries',
+      examples: [
+        'Create an internal IT helpdesk voice assistant for employee support',
+        'Build a voice-powered meeting assistant for scheduling and note-taking',
+        'Develop a voice interface for our warehouse inventory management system'
+      ]
+    },
+    'evaluator-optimizer': {
+      placeholder: 'Optimize our customer service response quality and efficiency metrics',
+      examples: [
+        'Improve our marketing campaign performance through A/B testing and optimization',
+        'Enhance our hiring process by evaluating and refining interview procedures',
+        'Optimize our supply chain operations for cost and delivery performance'
+      ]
+    },
+    'reflexion': {
+      placeholder: 'Analyze and improve our quarterly business strategy presentation',
+      examples: [
+        'Review and enhance our product development roadmap for better market fit',
+        'Evaluate and refine our customer acquisition strategy',
+        'Assess and improve our risk management framework'
+      ]
+    },
+    'autonomous-workflow': {
+      placeholder: 'Monitor and optimize our e-commerce website performance automatically',
+      examples: [
+        'Automatically manage our social media content scheduling and engagement',
+        'Monitor and respond to customer service tickets based on priority and type',
+        'Automatically optimize our cloud infrastructure costs based on usage patterns'
+      ]
+    }
+  };
+
+  return scenarios[patternId] || {
+    placeholder: 'Enter your business scenario to see how this pattern works...',
+    examples: [
+      'Try describing a real business challenge you\'re facing',
+      'Explain a workflow or process you want to improve',
+      'Describe a task that requires multiple steps or decisions'
+    ]
+  };
+};
+
+// Enhanced mock response generation with business-focused outputs
 const generateMockResponse = (text: string, patternId: string) => {
   return new Promise<string>((resolve) => {
     // Add random delay for realistic effect
     const delay = 500 + Math.random() * 1500;
     setTimeout(() => {
-      if (patternId === 'prompt-chaining') {
-        resolve(`This is an analysis of your input "${text}" using a chain of specialized prompts to extract meaning, determine intent, and formulate a response.`);
-      } else if (patternId === 'parallelization') {
-        resolve(`Three independent analyses of "${text}" run in parallel and aggregated to provide a more robust response with diverse perspectives.`);
-      } else {
-        resolve(`Processed your input "${text}" using the ${patternId} pattern.`);
-      }
+      const responses = {
+        'react-agent': `I'll research Azure OpenAI pricing by searching current documentation, analyzing cost comparison tools, and calculating potential savings. Based on my research, I found that Azure OpenAI recently updated their pricing model with tiered rates and bulk discounts that could reduce your costs by 15-20%.`,
+        'codeact-agent': `I'll analyze your Q4 sales data by loading the CSV file, cleaning the data, performing statistical analysis, and creating interactive charts. The analysis shows a 23% increase in sales volume with strong performance in the enterprise segment.`,
+        'self-reflection': `I've drafted a comprehensive business proposal for AI consulting services. After self-review, I've identified areas for improvement in market positioning and competitive analysis. The refined proposal now includes stronger value propositions and clearer service differentiation.`,
+        'agentic-rag': `Based on our enterprise security knowledge base, I've compiled best practices for zero-trust implementation including identity verification, least-privilege access, and continuous monitoring. I've also identified specific Azure security services that align with your requirements.`,
+        'modern-tool-use': `I've generated a comprehensive market analysis by integrating data from multiple sources: web search for industry trends, financial APIs for market data, and social media analytics for sentiment. The report shows promising growth opportunities in the enterprise AI sector.`,
+        'model-context-protocol': `I've analyzed your employee handbook using our secure document processing system. The analysis identifies 8 policy areas requiring updates for remote work compliance, including data security, communication protocols, and performance management frameworks.`,
+        'agent-to-agent': `Our marketing team has developed creative concepts, the analytics team has identified target segments, and the sales team has created conversion strategies. Together, we've created a comprehensive campaign projected to increase product awareness by 40% and drive 25% more qualified leads.`,
+        'prompt-chaining': `I've transformed your technical documentation through a structured process: simplified complex terminology, reorganized content for user flow, added visual examples, and created quick reference guides. The result is customer-friendly documentation that reduces support tickets by an estimated 30%.`,
+        'parallelization': `I've evaluated three cloud providers simultaneously: AWS offers best enterprise features, Azure provides seamless integration with your existing Microsoft stack, and Google Cloud delivers competitive pricing. Based on parallel analysis, Azure appears to be the optimal choice for your infrastructure needs.`,
+        'routing': `I've analyzed your inquiry and determined it requires both billing support and technical assistance. I'm routing your billing questions to our accounts team and your technical issues to our engineering support. You'll receive responses from both teams within 2 business hours.`,
+        'orchestrator-worker': `I've coordinated your quarterly business review across all departments. Finance provided budget analysis, Sales shared pipeline updates, Operations reported on efficiency metrics, and Marketing delivered campaign performance. The consolidated report shows 18% growth with strong performance indicators across all areas.`,
+        'plan-and-execute': `I've developed a comprehensive digital transformation plan with 4 phases: assessment, infrastructure upgrade, staff training, and system integration. The plan includes specific timelines, resource requirements, and success metrics. Implementation begins with cloud migration and proceeds through process digitization.`,
+        'computer-using-agent': `I've automated your monthly invoice processing workflow by integrating your accounting system with email processing and approval workflows. The automation reduces processing time by 70% and eliminates manual data entry errors. Monthly invoices will now be processed automatically with exception handling for unusual cases.`,
+        'deep-researcher': `I've conducted extensive research on emerging AI regulations across multiple jurisdictions. The research reveals significant compliance requirements for data handling, algorithm transparency, and bias mitigation. I've compiled a comprehensive impact assessment with recommended action items for your business operations.`,
+        'voice-agent': `I've configured your customer service voice assistant to handle common inquiries including billing questions, technical support, and account management. The system recognizes natural speech patterns and can escalate complex issues to human agents. Initial testing shows 85% success rate for routine inquiries.`,
+        'evaluator-optimizer': `I've analyzed your customer service metrics and identified optimization opportunities. Current response quality scores averaging 3.2/5 can be improved through enhanced training protocols and automated response suggestions. Implementing these changes should increase satisfaction scores to 4.2/5 within 90 days.`,
+        'reflexion': `I've analyzed your quarterly business strategy presentation and identified several areas for improvement. After reflection, I've strengthened the market analysis section, clarified financial projections, and enhanced the competitive positioning. The revised presentation now provides more compelling arguments for the proposed strategic direction.`,
+        'autonomous-workflow': `I've set up continuous monitoring of your e-commerce website performance with automated optimization responses. The system tracks loading times, conversion rates, and user behavior patterns. When performance drops below thresholds, it automatically adjusts caching, scales resources, and optimizes content delivery for improved user experience.`
+      };
+
+      resolve(responses[patternId] || `I've processed your request "${text}" using the ${patternId} pattern to deliver business-focused results tailored to your specific needs.`);
     }, delay);
   });
 };
@@ -93,7 +262,7 @@ const DragHint = React.memo(() => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowDragHint(false);
-    }, 6000); // Auto-hide after 6 seconds
+    }, 4000); // Reduced time to 4 seconds
     
     return () => clearTimeout(timer);
   }, []);
@@ -102,13 +271,13 @@ const DragHint = React.memo(() => {
 
   return (
     <div 
-      className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-background/90 border border-border px-4 py-2 rounded-full shadow-md z-10 animate-fade-in flex items-center"
+      className="absolute bottom-4 right-4 bg-background/95 border border-border px-3 py-2 rounded-md shadow-md z-20 animate-fade-in flex items-center max-w-[200px]"
       style={{ backdropFilter: 'blur(4px)' }}
     >
       <div className="mr-2 text-primary">👆</div>
-      <div className="text-sm">Nodes are draggable! Try moving them around</div>
+      <div className="text-xs">Drag nodes around!</div>
       <button 
-        className="ml-2 text-muted-foreground hover:text-foreground"
+        className="ml-2 text-muted-foreground hover:text-foreground text-xs"
         onClick={() => setShowDragHint(false)}
       >
         ✕
@@ -131,10 +300,10 @@ const CustomDemoNode = React.memo(({ data, id }: { data: any, id: string }) => {
       width: '180px',
       color: isDarkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)',
       cursor: 'grab',
-      position: 'relative',
+      position: 'relative' as const,
       zIndex: 1,
-      display: 'block',
-      visibility: 'visible',
+      display: 'block' as const,
+      visibility: 'visible' as const,
       transform: 'translateZ(0)',
       boxShadow: '0 0 0 1px var(--border)',
       backgroundColor: isDarkMode ? 'var(--card)' : 'white',
@@ -187,34 +356,6 @@ const CustomDemoNode = React.memo(({ data, id }: { data: any, id: string }) => {
   const resultText = data.result ? 
     (data.result.length > 40 ? `${data.result.substring(0, 40)}...` : data.result) : 
     null;
-  
-  // Force visibility of node with improved stability
-  useEffect(() => {
-    // Use RAF for smoother rendering
-    const fixVisibility = () => {
-      const nodeElement = document.querySelector(`[data-id="${id}"]`);
-      if (nodeElement instanceof HTMLElement) {
-        nodeElement.style.opacity = '1';
-        nodeElement.style.visibility = 'visible';
-        nodeElement.style.display = 'block';
-        nodeElement.style.transform = 'translateZ(0)';
-        nodeElement.style.backfaceVisibility = 'hidden';
-        nodeElement.style.WebkitBackfaceVisibility = 'hidden';
-        nodeElement.style.zIndex = '1';
-      }
-    };
-
-    // Apply fixes multiple times with increasing delays
-    const timers = [
-      setTimeout(() => requestAnimationFrame(fixVisibility), 100),
-      setTimeout(() => requestAnimationFrame(fixVisibility), 500),
-      setTimeout(() => requestAnimationFrame(fixVisibility), 1000),
-    ];
-    
-    return () => {
-      timers.forEach(clearTimeout);
-    };
-  }, [id]);
 
   return (
     <div style={getNodeStyle()}>
@@ -237,42 +378,6 @@ const CustomDemoNode = React.memo(({ data, id }: { data: any, id: string }) => {
 });
 
 const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
-  // Force render optimizations for ReactFlow
-  useEffect(() => {
-    // Force a re-render and optimization after a small delay
-    const timer = setTimeout(() => {
-      // Check if we have a parent ReactFlow container
-      const reactFlowContainer = document.querySelector('.react-flow');
-      if (reactFlowContainer instanceof HTMLElement) {
-        // Force hardware acceleration and visibility
-        reactFlowContainer.style.transform = 'translateZ(0)';
-        reactFlowContainer.style.backfaceVisibility = 'hidden';
-        reactFlowContainer.style.WebkitBackfaceVisibility = 'hidden';
-        
-        // Fix node visibility issues
-        const nodes = document.querySelectorAll('.react-flow__node');
-        nodes.forEach(node => {
-          if (node instanceof HTMLElement) {
-            node.style.opacity = '1';
-            node.style.visibility = 'visible';
-            node.style.display = 'block';
-          }
-        });
-        
-        // Fix edge path issues
-        const edgePaths = document.querySelectorAll('.react-flow__edge-path');
-        edgePaths.forEach(path => {
-          if (path instanceof SVGElement) {
-            path.style.strokeWidth = '1.5px';
-            path.style.opacity = '1';
-            path.style.visibility = 'visible';
-          }
-        });
-      }
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, []);
   // Ensure patternData exists to prevent errors
   if (!patternData) {
     return (
@@ -293,7 +398,11 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   }
 
   const { theme } = useTheme();
-  const [userInput, setUserInput] = useState('');
+  
+  // Get business scenarios for the current pattern and set default input
+  const currentScenarios = getBusinessScenarios(patternData.id);
+  const [userInput, setUserInput] = useState(currentScenarios.placeholder);
+  
   const [isRunning, setIsRunning] = useState(false);
   const [output, setOutput] = useState<string | null>(null);
   const [steps, setSteps] = useState<Record<string, StepState>>({});
@@ -304,8 +413,8 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
   const [animationSpeed, setAnimationSpeed] = useState<number>(1); // Default to normal speed (1x)
   const [animationMode, setAnimationMode] = useState<'auto' | 'step-by-step'>('auto'); 
   
-  // Prepare nodes and edges for visualization
-  const demoNodes = createStableNodes(patternData.nodes?.map(node => ({
+  // Prepare nodes and edges for visualization with state
+  const initialNodes = useMemo(() => createStableNodes(patternData.nodes?.map(node => ({
     ...node,
     type: 'demoNode',
     data: {
@@ -315,16 +424,23 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     },
     draggable: true,
     selectable: true,
-  })) || []);
+    // Explicitly preserve position with stronger typing
+    position: { 
+      x: typeof node.position?.x === 'number' ? node.position.x : 0, 
+      y: typeof node.position?.y === 'number' ? node.position.y : 0 
+    }
+  })) || []), [patternData.id, patternData.nodes]);
   
-  const demoEdges = createStableEdges(patternData.edges?.map(edge => ({
+  const [demoNodes, setDemoNodes] = useState(initialNodes);
+  
+  const demoEdges = useMemo(() => createStableEdges(patternData.edges?.map(edge => ({
     ...edge,
     animated: false,
     style: { 
       strokeWidth: 2,
       stroke: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : undefined
     },
-  })) || []);
+  })) || []), [patternData.edges, theme]);
   
   // Step controller for managing execution flow
   const stepControllerRef = useRef<StepController | null>(null);
@@ -342,24 +458,17 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     };
   }, []);
   
-  // Flow container ref and utilities
-  const { containerRef: flowContainerRef, resetFlow } = useStableFlowContainer({
-    autoFitView: true,
-    stabilizationDelay: 300
-  });
-
-  // Additional flow visualization utilities for better stability
-  const { flowRef, fitView: safeFitView } = useFlowVisualizer();
-
-  // Combined fitView function for better reliability
-  const fitView = useCallback(() => {
-    // Try both fitView functions for better reliability
-    try {
-      if (safeFitView) safeFitView();
-    } catch (error) {
-      console.warn('Error in safeFitView, trying standard flow');
-    }
-  }, [safeFitView]);
+  // Sync demoNodes with initialNodes when pattern changes
+  useEffect(() => {
+    setDemoNodes(initialNodes);
+  }, [initialNodes]);
+  
+  // Flow container ref (simple version without useReactFlow dependency)
+  const flowContainerRef = useRef<HTMLDivElement>(null);
+  const resetFlow = useCallback(() => {
+    // Simple reset function - the actual flow reset is handled by the visualizer
+    console.log('Flow reset requested');
+  }, []);
   
   // Reset the demo state
   const resetDemo = useCallback(() => {
@@ -371,17 +480,34 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     setIterations(0);
     setWaitingForNextStep(false);
     
+    // Reset nodes to idle state while preserving positions
+    setDemoNodes(prev => prev.map(node => ({
+      ...node,
+      // Preserve the position explicitly
+      position: node.position,
+      data: { ...node.data, status: 'idle', result: undefined }
+    })));
+    
     // Reset flow visualization
     resetFlow();
     
-    // Schedule a delayed fit view
-    setTimeout(() => {
-      fitView();
-    }, 100);
-  }, [resetFlow, fitView]);
+    // Don't call fitView as it causes clustering
+    // setTimeout(() => {
+    //   if (!isRunning) {
+    //     fitView();
+    //   }
+    // }, 100);
+  }, [resetFlow]);
 
   // Update node status in the visualization
   const updateNodeStatus = useCallback((nodeId: string, status: 'idle' | 'running' | 'complete' | 'failed', result?: string) => {
+    // Update the visual nodes while preserving positions
+    setDemoNodes(prev => prev.map(node => 
+      node.id === nodeId 
+        ? { ...node, position: node.position, data: { ...node.data, status, result } }
+        : node
+    ));
+    
     setDataFlows(prev => {
       // If the node is complete, also complete any flows targeting it
       if (status === 'complete') {
@@ -528,17 +654,6 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
     }, {} as Record<string, StepState>);
     setSteps(initialSteps);
 
-    // Force animation refresh and enhanced node visibility
-    setTimeout(() => {
-      fitView();
-      
-      // Apply visibility fixes for ReactFlow elements
-      const container = document.querySelector('.react-flow');
-      if (container instanceof HTMLElement) {
-        fixReactFlowRendering(container);
-      }
-    }, 200);
-    
     try {
       // Find input node
       const inputNode = patternData.nodes.find(node => node.data.nodeType === 'input');
@@ -583,14 +698,31 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
       <CardHeader>
         <CardTitle>{patternData.name} Pattern Demo</CardTitle>
         <CardDescription>
-          Interactive demonstration of the {patternData.name} agent pattern with step-by-step visualization
+          Interactive demonstration of the {patternData.name} agent pattern with real-world business scenarios
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
+          {/* Business scenario examples */}
+          <div className="p-4 bg-muted/30 border border-border rounded-md">
+            <h4 className="text-sm font-medium mb-2">Try these business scenarios:</h4>
+            <div className="grid grid-cols-1 gap-2">
+              {currentScenarios.examples.map((example, index) => (
+                <button
+                  key={index}
+                  onClick={() => setUserInput(example)}
+                  disabled={isRunning}
+                  className="text-left text-xs p-2 rounded border border-border/50 bg-background hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {example}
+                </button>
+              ))}
+            </div>
+          </div>
+          
           <div className="flex gap-2 items-center">
             <Input
-              placeholder="Enter some text to process..."
+              placeholder={currentScenarios.placeholder}
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               disabled={isRunning}
@@ -689,44 +821,30 @@ const PatternDemo = React.memo(({ patternData }: PatternDemoProps) => {
             </div>
           </div>
           
-          {/* Flow visualization with StableFlowContainer */}
-          <ReactFlowProvider>
-            <div 
-              ref={(el) => {
-                // Set both refs for better stability
-                if (flowContainerRef) {
-                  // @ts-ignore - Set the ref directly
-                  flowContainerRef.current = el;
-                }
-                if (flowRef) {
-                  // @ts-ignore - Set the ref directly
-                  flowRef.current = el;
-                }
-              }}
-              className="border border-border rounded-md overflow-hidden relative"
-              style={{ height: '400px', minHeight: '400px' }}
-            >
-              <StableFlowContainer 
-                minHeight="400px"
-                onReady={() => {
-                  if (resetFlow) resetFlow();
-                  if (fitView) fitView();
-                }}
-              >
-                <StandardFlowVisualizerWithProvider
-                  nodes={demoNodes}
-                  edges={demoEdges}
-                  flows={dataFlows}
-                  onFlowComplete={handleFlowComplete}
-                  animationSpeed={animationSpeed}
-                  nodeTypes={nodeTypes}
-                  showControls={true}
-                  autoFitView={true}
-                />
-                <DragHint />
-              </StableFlowContainer>
-            </div>
-          </ReactFlowProvider>
+          {/* Flow visualization */}
+          <div 
+            ref={(el) => {
+              // Set the container ref
+              if (flowContainerRef) {
+                // @ts-ignore - Set the ref directly
+                flowContainerRef.current = el;
+              }
+            }}
+            className="border border-border rounded-md overflow-hidden relative"
+            style={{ height: '500px', minHeight: '500px' }}
+          >
+            <StandardFlowVisualizerWithProvider
+              nodes={demoNodes}
+              edges={demoEdges}
+              flows={dataFlows}
+              onFlowComplete={handleFlowComplete}
+              animationSpeed={animationSpeed}
+              nodeTypes={nodeTypes}
+              showControls={true}
+              autoFitView={false}
+            />
+            <DragHint />
+          </div>
           
           {Object.keys(steps).length > 0 && (
             <>

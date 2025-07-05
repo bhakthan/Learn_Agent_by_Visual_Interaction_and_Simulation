@@ -6,7 +6,6 @@ import ReactFlow, {
   Panel,
   useNodesState,
   useEdgesState,
-  useReactFlow,
   ReactFlowInstance,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
@@ -18,7 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { 
   Play, Stop, ArrowsCounterClockwise, Info, 
-  FastForward, Pause, StepForward, Rewind, 
+  FastForward, Pause, CaretRight, Rewind, 
   CaretDown, CaretUp, ChartLine, List, Gear, DotsSixVertical
 } from '@phosphor-icons/react'
 import NodeDragHint from './NodeDragHint'
@@ -48,6 +47,37 @@ interface AnimationState {
 }
 
 const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisualizerProps) => {
+  // Add null checks for patternData
+  if (!patternData) {
+    console.error("AdvancedPatternVisualizer: patternData is null or undefined");
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">No pattern data available</p>
+      </div>
+    );
+  }
+
+  if (!patternData.nodes || !patternData.edges) {
+    console.error("AdvancedPatternVisualizer: patternData structure is invalid", patternData);
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Invalid pattern data structure</p>
+      </div>
+    );
+  }
+
+  if (!Array.isArray(patternData.nodes) || !Array.isArray(patternData.edges)) {
+    console.error("AdvancedPatternVisualizer: nodes or edges are not arrays", { 
+      nodes: patternData.nodes, 
+      edges: patternData.edges 
+    });
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Invalid pattern data format</p>
+      </div>
+    );
+  }
+
   const [nodes, setNodes, onNodesChange] = useNodesState(patternData.nodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(patternData.edges)
   const [dataFlows, setDataFlows] = useState<DataFlow[]>([])
@@ -76,23 +106,48 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
   const simulationRef = useRef<NodeJS.Timeout | null>(null)
   const simulationCleanupRef = useRef<(() => void) | null>(null)
   const stepQueueRef = useRef<Array<() => void>>([])
-  const reactFlowInstance = useReactFlow()
+  // Remove useReactFlow() hook as it's not needed here and causes provider issues
   
   // Initialize available message types
   const availableMessageTypes = ['message', 'data', 'response', 'error'];
   
   // Reset flow and nodes when pattern changes
   useEffect(() => {
-    resetVisualization();
-    // Make sure isAnimating is reset when pattern changes
+    // Update nodes and edges when pattern changes
+    setNodes(patternData.nodes);
+    setEdges(patternData.edges);
+    
+    // Reset animation state and flows without calling resetVisualization
+    // to avoid race conditions with edge updates
     setIsAnimating(false);
     setDataFlows([]);
+    setAnimationState({
+      speed: 'normal',
+      mode: 'auto',
+      isPaused: false,
+      step: 0
+    });
+    setVisualizationMode('basic');
+    
+    // Clear any running timeouts
+    if (simulationRef.current) {
+      clearTimeout(simulationRef.current);
+      simulationRef.current = null;
+    }
+    
+    if (simulationCleanupRef.current) {
+      simulationCleanupRef.current();
+      simulationCleanupRef.current = null;
+    }
+    
+    // Clear step queue
+    stepQueueRef.current = [];
     
     // Signal that the component is ready
     if (onReady) {
       onReady();
     }
-  }, [patternData.id]);
+  }, [patternData.id, patternData.nodes, patternData.edges, onReady]);
 
   // Initialize node type filters when nodes change
   useEffect(() => {
@@ -153,12 +208,12 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
       }
     })));
     
-    // Reset edges (remove animation)
+    // Reset edges to original pattern edges (remove animation)
     setEdges(patternData.edges.map(edge => ({
       ...edge,
       animated: false
     })));
-  }, [patternData.edges, setNodes, setEdges]);
+  }, [setNodes, setEdges, patternData.edges]);
   
   const getEdgePoints = useCallback((edgeId: string) => {
     const edge = edges.find(e => e.id === edgeId);
@@ -229,7 +284,7 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
           data: {
             ...node.data,
             isActive: status !== null,
-            status: node.id === nodeId ? status : node.data.status
+            status: node.id === nodeId ? status : (node.data as any).status
           }
         }))
       );
@@ -279,6 +334,49 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
     // Store the cleanup function
     simulationCleanupRef.current = cleanup;
     
+    // Actually start some flows to show animation
+    if (nodes.length > 0 && edges.length > 0) {
+      // Find the first few edges to animate
+      const edgesToAnimate = edges.slice(0, Math.min(edges.length, 3));
+      
+      edgesToAnimate.forEach((edge, index) => {
+        const delay = index * 1000 / speedFactor;
+        
+        setTimeout(() => {
+          // Activate source node
+          handleNodeStatus(edge.source, 'processing');
+          
+          // Animate the edge
+          handleEdgeStatus(edge.id, true);
+          
+          // Create a data flow
+          handleDataFlow({
+            id: `flow-${Date.now()}-${index}`,
+            edgeId: edge.id,
+            source: edge.source,
+            target: edge.target,
+            content: `Processing: ${queryInput || 'data'}`,
+            timestamp: Date.now(),
+            type: 'message',
+            progress: 0,
+            label: 'Processing...'
+          });
+          
+          // Activate target node after a delay
+          setTimeout(() => {
+            handleNodeStatus(edge.target, 'complete');
+            handleEdgeStatus(edge.id, false);
+          }, 2000 / speedFactor);
+          
+        }, delay);
+      });
+      
+      // Stop animation after all flows complete
+      setTimeout(() => {
+        setIsAnimating(false);
+      }, (edgesToAnimate.length * 1000 + 2000) / speedFactor);
+    }
+    
     // In auto mode, start simulation immediately
     if (animationState.mode === 'auto') {
       simulationRef.current = setTimeout(() => {}, 100);
@@ -306,21 +404,31 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
 
   // Reset node layout to original positions
   const resetLayout = useCallback(() => {
-    setNodes(patternData.nodes.map(node => ({
-      ...node,
-      data: {
-        ...node.data,
-        isActive: false,
-        status: null
-      }
-    })));
+    setNodes(currentNodes => currentNodes.map(currentNode => {
+      // Find the original node data
+      const originalNode = patternData.nodes.find(n => n.id === currentNode.id);
+      if (!originalNode) return currentNode;
+      
+      // Update the node while preserving React Flow's internal state
+      return {
+        ...currentNode,
+        position: originalNode.position,
+        data: {
+          ...currentNode.data,
+          isActive: false,
+          status: null,
+          // Preserve any other data that might have been added
+          ...originalNode.data
+        }
+      };
+    }));
     
-    // Also fit the view to ensure all nodes are visible
-    if (flowInstanceRef.current) {
-      setTimeout(() => {
-        flowInstanceRef.current?.fitView({ duration: 800 });
-      }, 100);
-    }
+    // Don't call fitView as it causes clustering
+    // if (flowInstanceRef.current) {
+    //   setTimeout(() => {
+    //     flowInstanceRef.current?.fitView({ duration: 800 });
+    //   }, 100);
+    // }
   }, [patternData.nodes, setNodes]);
 
   const handleDataFlowFilterChange = useCallback((filter: DataFlowFilter) => {
@@ -429,7 +537,7 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
                     onClick={executeNextStep}
                     disabled={!isAnimating || stepQueueRef.current.length === 0}
                   >
-                    <StepForward size={14} className="mr-2" />
+                    <CaretRight size={14} className="mr-2" />
                     Next Step {stepQueueRef.current.length > 0 ? `(${stepQueueRef.current.length})` : ''}
                   </Button>
                 )}
@@ -474,8 +582,8 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
         
         <TabsContent value="data-flow" className="m-0 p-4 border-t">
           <DataFlowControls
-            availableNodes={nodes}
-            availableEdges={edges}
+            availableNodes={nodes.map(n => ({ id: n.id, type: n.type || 'default', data: { label: n.data.label, nodeType: n.data.nodeType || 'default' } }))}
+            availableEdges={edges.map(e => ({ id: e.id, source: e.source, target: e.target, label: typeof e.label === 'string' ? e.label : undefined }))}
             availableMessageTypes={availableMessageTypes}
             onFilterChange={handleDataFlowFilterChange}
             onVisualizationModeChange={handleVisualizationModeChange}
@@ -546,18 +654,18 @@ const AdvancedPatternVisualizer = ({ patternData, onReady }: AdvancedPatternVisu
           </Collapsible>
         </div>
         
-        <div style={{ height: 500 }}>
+        <div style={{ height: 600 }}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             nodeTypes={nodeTypes}
-            fitView
             onInit={onInit}
             nodesDraggable={true}
             nodesConnectable={false}
             elementsSelectable={true}
+            fitView={false} // Disable automatic fitView to prevent clustering
           >
             <Background />
             <Controls />

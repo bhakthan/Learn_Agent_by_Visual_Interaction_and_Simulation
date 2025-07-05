@@ -5,8 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Check, Code, Play, ListChecks, FileCode, FlowArrow, Graph, Bug, ShieldCheck } from "@phosphor-icons/react"
 import { Steps } from './Steps'
 import { PatternData } from '@/lib/data/patterns'
-import PatternDemo from '../interactive-demos/PatternDemo'
-import { ReactFlowProvider } from 'reactflow'
+import SimplePatternFlow from '../interactive-demos/SimplePatternFlow'
 import BestPractices from './BestPractices'
 import PatternSecurityControls from './PatternSecurityControls'
 import SyntaxHighlighter from 'react-syntax-highlighter'
@@ -148,32 +147,32 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
           <Tabs defaultValue="general" className="w-full" data-section="code-playbook">
             <div className="overflow-x-auto pb-2 w-full">
               <TabsList className="flex w-full flex-nowrap gap-0.5" role="tablist">
-                <TabsTrigger value="general" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]">
-                  <ListChecks size={12} /> <span className="hidden sm:inline">General Guide</span><span className="sm:hidden">Guide</span>
+                <TabsTrigger value="general" className="flex items-center gap-1 h-10 px-3 py-2 text-sm">
+                  <ListChecks size={14} /> <span className="hidden sm:inline">General Guide</span><span className="sm:hidden">Guide</span>
                 </TabsTrigger>
-                <TabsTrigger value="steps" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]">
-                  <ListChecks size={12} /> <span className="hidden sm:inline">Implementation Steps</span><span className="sm:hidden">Steps</span>
+                <TabsTrigger value="steps" className="flex items-center gap-1 h-10 px-3 py-2 text-sm">
+                  <ListChecks size={14} /> <span className="hidden sm:inline">Implementation Steps</span><span className="sm:hidden">Steps</span>
                 </TabsTrigger>
-                <TabsTrigger value="code" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]">
-                  <Code size={12} /> <span className="hidden sm:inline">Complete Code</span><span className="sm:hidden">Code</span>
+                <TabsTrigger value="code" className="flex items-center gap-1 h-10 px-3 py-2 text-sm">
+                  <Code size={14} /> <span className="hidden sm:inline">Complete Code</span><span className="sm:hidden">Code</span>
                 </TabsTrigger>
-                <TabsTrigger value="visualizer" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]" data-tab="code-visualizer">
-                  <FileCode size={12} /> <span className="hidden sm:inline">Code Visualizer</span><span className="sm:hidden">Visualizer</span>
+                <TabsTrigger value="visualizer" className="flex items-center gap-1 h-10 px-3 py-2 text-sm" data-tab="code-visualizer">
+                  <FileCode size={14} /> <span className="hidden sm:inline">Code Visualizer</span><span className="sm:hidden">Visualizer</span>
                 </TabsTrigger>
-                <TabsTrigger value="interactive" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]">
-                  <Play size={12} /> <span className="hidden sm:inline">Interactive Example</span><span className="sm:hidden">Example</span>
+                <TabsTrigger value="interactive" className="flex items-center gap-1 h-10 px-3 py-2 text-sm">
+                  <Play size={14} /> <span className="hidden sm:inline">Interactive Example</span><span className="sm:hidden">Example</span>
                 </TabsTrigger>
-                <TabsTrigger value="debugger" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]">
-                  <Bug size={12} /> <span className="hidden sm:inline">Debugger</span><span className="sm:hidden">Debug</span>
+                <TabsTrigger value="debugger" className="flex items-center gap-1 h-10 px-3 py-2 text-sm">
+                  <Bug size={14} /> <span className="hidden sm:inline">Debugger</span><span className="sm:hidden">Debug</span>
                 </TabsTrigger>
-                <TabsTrigger value="algorithm" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]">
-                  <Graph size={12} /> <span className="hidden sm:inline">Algorithm Steps</span><span className="sm:hidden">Algorithm</span>
+                <TabsTrigger value="algorithm" className="flex items-center gap-1 h-10 px-3 py-2 text-sm">
+                  <Graph size={14} /> <span className="hidden sm:inline">Algorithm Steps</span><span className="sm:hidden">Algorithm</span>
                 </TabsTrigger>
-                <TabsTrigger value="security" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]">
-                  <ShieldCheck size={12} /> <span className="hidden sm:inline">Security Controls</span><span className="sm:hidden">Security</span>
+                <TabsTrigger value="security" className="flex items-center gap-1 h-10 px-3 py-2 text-sm">
+                  <ShieldCheck size={14} /> <span className="hidden sm:inline">Security Controls</span><span className="sm:hidden">Security</span>
                 </TabsTrigger>
-                <TabsTrigger value="practices" className="flex items-center gap-0.5 h-8 px-1 py-0.5 text-[10px]" data-tab="best-practices">
-                  <Check size={12} /> <span className="hidden sm:inline">Best Practices</span><span className="sm:hidden">Practices</span>
+                <TabsTrigger value="practices" className="flex items-center gap-1 h-10 px-3 py-2 text-sm" data-tab="best-practices">
+                  <Check size={14} /> <span className="hidden sm:inline">Best Practices</span><span className="sm:hidden">Practices</span>
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -436,11 +435,9 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
                   Use different inputs to see how the pattern processes data through its components.
                 </p>
               </div>
-              <ReactFlowProvider>
-                <div className="overflow-hidden border rounded-md mb-4">
-                  <PatternDemo patternData={patternData} />
-                </div>
-              </ReactFlowProvider>
+              <div className="overflow-hidden border rounded-md mb-4">
+                <SimplePatternFlow patternData={patternData} />
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>

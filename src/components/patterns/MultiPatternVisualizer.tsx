@@ -3,10 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { ArrowsCounterClockwise, Play, Stop, ArrowsHorizontal, ChartLine, Table } from '@phosphor-icons/react'
-import { ReactFlowProvider } from 'reactflow'
 import { PatternData, agentPatterns } from '@/lib/data/patterns'
-import PatternVisualizer from '@/components/visualization/PatternVisualizer'
-import AdvancedPatternVisualizer from '@/components/visualization/AdvancedPatternVisualizer'
+import SimplePatternVisualizer from '@/components/visualization/SimplePatternVisualizer'
+import SimpleMultiPatternVisualizer from '@/components/visualization/SimpleMultiPatternVisualizer'
 import ComparisonTimelineVisualizer from '@/components/visualization/ComparisonTimelineVisualizer'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -194,13 +193,9 @@ const MultiPatternVisualizer = ({ initialPatterns, useAdvancedVisualizer = true 
         <>
           <div className={`grid gap-6 ${selectedPatterns.length > 1 ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
             {selectedPatterns.map((pattern) => (
-              <ReactFlowProvider key={pattern.id}>
-                {useAdvanced ? (
-                  <AdvancedPatternVisualizer patternData={pattern} />
-                ) : (
-                  <PatternVisualizer patternData={pattern} />
-                )}
-              </ReactFlowProvider>
+              <div key={pattern.id}>
+                <SimplePatternVisualizer patternData={pattern} />
+              </div>
             ))}
             
             {selectedPatterns.length === 0 && (
