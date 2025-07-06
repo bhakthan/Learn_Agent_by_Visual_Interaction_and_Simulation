@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -131,6 +131,15 @@ export const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({
 }) => {
   const [selectedPath, setSelectedPath] = useState<LearningPath>(learningPaths[0]);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+
+  // Debounced hover handlers to prevent flickering
+  const handleMouseEnter = useCallback((nodeId: string) => {
+    setHoveredNode(nodeId);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setHoveredNode(null);
+  }, []);
 
   // Load user progress from localStorage
   useEffect(() => {
@@ -307,26 +316,27 @@ export const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({
                 <div
                   key={node.id}
                   className={cn(
-                    "absolute w-16 h-16 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all duration-300",
-                    "hover:scale-110 hover:shadow-lg",
+                    "absolute w-16 h-16 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all duration-200",
+                    // Remove CSS hover to prevent conflicts
                     node.isCompleted ? "bg-green-500 border-green-600 text-white" :
                     node.isUnlocked ? "bg-primary border-primary text-white" :
                     "bg-muted border-muted-foreground text-muted-foreground",
                     isCurrentPage && "ring-4 ring-primary/30",
-                    isHovered && "scale-110 shadow-lg"
+                    // Only apply hover effects via JavaScript state
+                    isHovered && "scale-110 shadow-lg z-20"
                   )}
                   style={{
                     left: position.x - 32,
                     top: position.y - 32,
-                    zIndex: 10
+                    zIndex: isHovered ? 20 : 10
                   }}
                   onClick={() => {
                     if (node.isUnlocked) {
                       onNavigate(node.path);
                     }
                   }}
-                  onMouseEnter={() => setHoveredNode(node.id)}
-                  onMouseLeave={() => setHoveredNode(null)}
+                  onMouseEnter={() => handleMouseEnter(node.id)}
+                  onMouseLeave={handleMouseLeave}
                 >
                   {node.isCompleted ? (
                     <CheckCircle size={24} weight="fill" />
@@ -335,7 +345,7 @@ export const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({
                   )}
                   
                   {/* Node label */}
-                  <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 text-center">
+                  <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 text-center pointer-events-none">
                     <div className={cn(
                       "text-xs font-medium whitespace-nowrap",
                       isCurrentPage ? "text-primary" : "text-foreground"
@@ -422,45 +432,63 @@ export const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({
             )}
           </div>
           
-          {/* Detailed Node Information */}
+          {/* Detailed Node Information - Fixed position to prevent layout shifts */}
           {hoveredNode && (
-            <Card className="border-primary/20">
-              <CardContent className="p-4">
-                {(() => {
-                  const node = selectedPath.nodes.find(n => n.id === hoveredNode);
-                  if (!node) return null;
-                  
-                  return (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <div className="p-1 bg-primary/10 rounded">
-                          {node.icon}
-                        </div>
-                        <h4 className="font-medium">{node.title}</h4>
-                        <Badge className={cn("text-xs", getDifficultyColor(node.difficulty))}>
-                          {node.difficulty}
-                        </Badge>
-                      </div>
-                      
-                      <p className="text-sm text-muted-foreground">{node.description}</p>
-                      
-                      <div className="flex items-center gap-4 text-xs">
-                        <span>⏱️ {node.estimatedTime}</span>
-                        <span>✅ {node.completionRate}% complete</span>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-1">
-                        {node.skills.map((skill, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {skill}
+            <div className="mt-4">
+              <Card className="border-primary/20">
+                <CardContent className="p-4">
+                  {(() => {
+                    const node = selectedPath.nodes.find(n => n.id === hoveredNode);
+                    if (!node) return null;
+                    
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1 bg-primary/10 rounded">
+                            {node.icon}
+                          </div>
+                          <h4 className="font-medium">{node.title}</h4>
+                          <Badge className={cn("text-xs", getDifficultyColor(node.difficulty))}>
+                            {node.difficulty}
                           </Badge>
-                        ))}
+                        </div>
+                        
+                        <p className="text-sm text-muted-foreground">{node.description}</p>
+                        
+                        <div className="flex items-center gap-4 text-xs">
+                          <span>⏱️ {node.estimatedTime}</span>
+                          <span>✅ {node.completionRate}% complete</span>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-1">
+                          {node.skills.map((skill, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {skill}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })()}
-              </CardContent>
-            </Card>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+          
+          {/* Placeholder to maintain consistent height when no node is hovered */}
+          {!hoveredNode && (
+            <div className="mt-4">
+              <Card className="border-transparent">
+                <CardContent className="p-4">
+                  <div className="space-y-2 opacity-0">
+                    <div className="h-6 bg-transparent"></div>
+                    <div className="h-4 bg-transparent"></div>
+                    <div className="h-4 bg-transparent"></div>
+                    <div className="h-6 bg-transparent"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
         </CardContent>
       </Card>
