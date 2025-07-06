@@ -5,13 +5,14 @@ import { ThemeToggle } from './components/theme/ThemeToggle'
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
-import { Code, Books, PuzzlePiece, Plugs, StackSimple, Brain, Robot, Article, Users, GithubLogo, Path } from '@phosphor-icons/react'
+import { Code, Books, PuzzlePiece, Plugs, StackSimple, Brain, Robot, Article, Users, GithubLogo, Path, GraduationCap } from '@phosphor-icons/react'
 import PatternExplorer from './components/patterns/PatternExplorer'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import ConceptsExplorer from './components/concepts/ConceptsExplorer'
 import AzureServicesOverview from './components/azure-services/AzureServicesOverview'
 import CommunitySharing from './components/community/CommunitySharing'
 import ReferencesSection from './components/references/ReferencesSection'
+import QuizSection from './components/quiz/QuizSection'
 import { setupResizeObserverErrorHandling } from './lib/utils/resizeObserverUtils';
 import { setupReactFlowErrorHandling } from './lib/utils/reactFlowUtils';
 import { disableResizeObserverIfProblematic } from './lib/utils/resizeObserverUtils';
@@ -35,6 +36,7 @@ function App() {
       case '/azure-services': return 'azure-services';
       case '/references': return 'references';
       case '/community': return 'community';
+      case '/quiz': return 'quiz';
       default: return 'core-concepts';
     }
   };
@@ -252,6 +254,7 @@ function App() {
                   <TabLink to="/" icon={<Brain size={16} weight="duotone" />} label="Core Concepts" />
                   <TabLink to="/patterns" icon={<PuzzlePiece size={16} weight="duotone" />} label="Agent Patterns" />
                   <TabLink to="/azure-services" icon={<StackSimple size={16} weight="duotone" />} label="Azure Services" />
+                  <TabLink to="/quiz" icon={<GraduationCap size={16} weight="duotone" />} label="Knowledge Quiz" />
                   <TabLink to="/references" icon={<Books size={16} weight="duotone" />} label="References" />
                   <TabLink to="/community" icon={<Users size={16} weight="duotone" />} label="Community" />
                 </div>
@@ -264,6 +267,7 @@ function App() {
               <Route path="/" element={<ConceptsExplorer />} />
               <Route path="/patterns" element={<PatternExplorer />} />
               <Route path="/azure-services" element={<AzureServicesOverview />} />
+              <Route path="/quiz" element={<QuizSection />} />
               <Route path="/references" element={<ReferencesSection />} />
               <Route path="/community" element={<CommunitySharing />} />
               {/* Fallback route to redirect to home page */}

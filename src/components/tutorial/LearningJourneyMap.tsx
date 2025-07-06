@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Brain, PuzzlePiece, StackSimple, Books, Users, 
   CheckCircle, Circle, Star, TrendUp, Target, 
-  Path, MapPin, Trophy, Sparkle
+  Path, MapPin, Trophy, Sparkle, GraduationCap
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +46,7 @@ const learningPaths: LearningPath[] = [
     id: 'beginner-path',
     title: 'Beginner\'s Journey',
     description: 'Start your AI agent learning adventure',
-    recommendedOrder: ['core-concepts', 'azure-services', 'references', 'community', 'agent-patterns'],
+    recommendedOrder: ['core-concepts', 'azure-services', 'references', 'community', 'agent-patterns', 'quiz'],
     totalProgress: 0,
     nodes: [
       {
@@ -118,6 +118,20 @@ const learningPaths: LearningPath[] = [
         isCompleted: false,
         isUnlocked: false,
         path: '/patterns'
+      },
+      {
+        id: 'quiz',
+        title: 'Knowledge Quiz',
+        description: 'Test your understanding with adaptive quizzes',
+        icon: <GraduationCap size={20} />,
+        difficulty: 'beginner',
+        estimatedTime: '15-20 min',
+        prerequisites: [],
+        skills: ['Knowledge Assessment', 'Concept Validation', 'Progress Tracking'],
+        completionRate: 0,
+        isCompleted: false,
+        isUnlocked: true,
+        path: '/quiz'
       }
     ]
   }
@@ -147,6 +161,32 @@ export const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({
     let totalCompleted = 0;
     
     updatedPath.nodes = updatedPath.nodes.map(node => {
+      // Handle quiz node separately
+      if (node.id === 'quiz') {
+        const quizProgress = localStorage.getItem('quiz-progress');
+        if (quizProgress) {
+          const progress = JSON.parse(quizProgress);
+          const completedQuizzes = progress.completedQuizzes || [];
+          const totalQuizzes = progress.totalQuizzes || 0;
+          const averageScore = progress.averageScore || 0;
+          
+          // Consider quiz completed if they've taken at least 3 quizzes with 70%+ average
+          const isCompleted = completedQuizzes.length >= 3 && averageScore >= 70;
+          const completionRate = Math.min(100, (completedQuizzes.length / Math.max(1, totalQuizzes)) * 100);
+          
+          if (isCompleted) totalCompleted++;
+          
+          return {
+            ...node,
+            completionRate,
+            isCompleted,
+            isUnlocked: true // Quiz is always unlocked
+          };
+        }
+        return node;
+      }
+      
+      // Handle other nodes with existing logic
       const analytics = localStorage.getItem(`page-analytics-${node.id}`);
       if (analytics) {
         const data = JSON.parse(analytics);
@@ -231,6 +271,25 @@ export const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({
     }
     if (completedNodes.length === selectedPath.nodes.length) {
       achievements.push({ title: 'Journey Complete', description: 'Mastered all sections', icon: <Trophy size={16} /> });
+    }
+    
+    // Quiz-specific achievements
+    const quizProgress = localStorage.getItem('quiz-progress');
+    if (quizProgress) {
+      const progress = JSON.parse(quizProgress);
+      const completedQuizzes = progress.completedQuizzes || [];
+      const highScores = completedQuizzes.filter((quiz: any) => quiz.score >= 90);
+      const perfectScores = completedQuizzes.filter((quiz: any) => quiz.score === 100);
+      
+      if (completedQuizzes.length >= 1) {
+        achievements.push({ title: 'Quiz Taker', description: 'Completed your first quiz', icon: <GraduationCap size={16} /> });
+      }
+      if (highScores.length >= 3) {
+        achievements.push({ title: 'High Achiever', description: 'Scored 90%+ on 3 quizzes', icon: <Target size={16} /> });
+      }
+      if (perfectScores.length >= 1) {
+        achievements.push({ title: 'Perfect Score', description: 'Achieved 100% on a quiz', icon: <Sparkle size={16} /> });
+      }
     }
     
     return achievements;
@@ -458,6 +517,21 @@ export const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({
                         <div className="flex items-center gap-4 text-xs">
                           <span>⏱️ {node.estimatedTime}</span>
                           <span>✅ {node.completionRate}% complete</span>
+                          {node.id === 'quiz' && (() => {
+                            const quizProgress = localStorage.getItem('quiz-progress');
+                            if (quizProgress) {
+                              const progress = JSON.parse(quizProgress);
+                              const averageScore = progress.averageScore || 0;
+                              const completedQuizzes = progress.completedQuizzes || [];
+                              return (
+                                <>
+                                  <span>📊 {averageScore}% avg score</span>
+                                  <span>🎯 {completedQuizzes.length} quizzes taken</span>
+                                </>
+                              );
+                            }
+                            return null;
+                          })()}
                         </div>
                         
                         <div className="flex flex-wrap gap-1">

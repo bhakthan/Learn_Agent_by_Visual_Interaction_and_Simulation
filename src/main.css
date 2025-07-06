@@ -185,3 +185,117 @@
     @apply bg-background text-foreground;
   }
 }
+
+/*
+  Print styles for quiz results
+*/
+@media print {
+  @page {
+    size: A4;
+    margin: 0.5in;
+  }
+
+  body {
+    font-size: 12pt;
+    line-height: 1.3;
+    color: black !important;
+    background: white !important;
+  }
+
+  /* Hide all non-essential elements during print */
+  .print\:hidden,
+  nav,
+  .sidebar,
+  .navigation,
+  button:not(.print\:block),
+  .scroll-area-scrollbar,
+  .tabs-list {
+    display: none !important;
+  }
+
+  /* Show print-only elements */
+  .print\:block {
+    display: block !important;
+  }
+
+  /* Ensure print content is visible */
+  .print\:h-auto {
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  /* Prevent page breaks inside important elements */
+  .print\:break-inside-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Add proper spacing for print */
+  .print\:space-y-2 > * + * {
+    margin-top: 0.5rem !important;
+  }
+
+  .print\:space-y-6 > * + * {
+    margin-top: 1.5rem !important;
+  }
+
+  .print\:mt-8 {
+    margin-top: 2rem !important;
+  }
+
+  /* Ensure borders are visible in print */
+  .print\:border-2 {
+    border: 2px solid black !important;
+  }
+
+  /* Typography adjustments for print */
+  .print\:text-base {
+    font-size: 12pt !important;
+  }
+
+  .print\:text-sm {
+    font-size: 10pt !important;
+  }
+
+  .print\:text-black {
+    color: black !important;
+  }
+
+  .print\:font-bold {
+    font-weight: bold !important;
+  }
+
+  .print\:font-semibold {
+    font-weight: 600 !important;
+  }
+
+  /* Card adjustments for print */
+  .card {
+    border: 1px solid black !important;
+    box-shadow: none !important;
+  }
+
+  /* Remove background colors that don't print well */
+  .bg-blue-100 {
+    background-color: #e6f3ff !important;
+  }
+
+  /* Ensure text is readable in print */
+  .text-muted-foreground {
+    color: #333 !important;
+  }
+
+  /* Quiz-specific print styles */
+  .quiz-results-container {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* Ensure proper spacing between quiz questions */
+  .quiz-question-print {
+    margin-bottom: 1.5rem !important;
+    padding: 1rem !important;
+    border: 1px solid #ccc !important;
+    break-inside: avoid !important;
+  }
+}
