@@ -13,6 +13,24 @@ An interactive educational platform for understanding AI agents, Agent-to-Agent 
 - **Agent Communication Playground**: Interactive sandbox for exploring agent-to-agent interactions
 - **Protocol Comparison**: Side-by-side analysis of different communication protocols
 
+### 🎯 Comprehensive Quiz System
+**Advanced Assessment & Learning Analytics** - A robust quiz system that adapts to your role and expertise:
+- **Multi-Level Assessment**: Beginner, Intermediate, and Advanced questions with progressive complexity
+- **Role-Based Adaptation**: Personalized quizzes for Business Leaders, Developers, AI Engineers, and more
+- **Comprehensive Scoring**: Accurate answer validation with detailed feedback and improvement suggestions
+- **Progress Tracking**: LocalStorage-based progress saving with performance analytics
+- **Print-Ready Results**: Complete quiz results with all questions, answers, and explanations for offline review
+- **Real-Time Feedback**: Instant scoring with explanations for both correct and incorrect answers
+- **Category-Specific Quizzes**: Focused assessments on Core Concepts, Agent Patterns, Azure Services, and more
+
+**Quiz Features**:
+- **8 Professional Personas**: From No-Code Engineers to AI Architects with targeted content
+- **5 Major Categories**: Core Concepts, Agent Patterns, Azure Services, Communication Protocols, and Advanced Topics
+- **50+ Questions**: Comprehensive question bank with code examples and practical scenarios
+- **Adaptive Timing**: Question-specific time limits with auto-progression
+- **Smart Feedback**: Personalized improvement suggestions based on answer patterns
+- **Export Functionality**: Save or print detailed quiz results with complete explanations
+
 ## 🎨 Creative & Educational Innovations
 
 ### 🎮 Agent Communication Playground
@@ -57,6 +75,7 @@ Each personality features:
 - **Code Examples**: Real-world code snippets for each concept and difficulty level
 - **Interactive Demos**: Hands-on demonstrations with play/pause/reset controls
 - **Pattern Showcases**: Visual representations of common agent design patterns
+- **Comprehensive Assessment**: Multi-level quiz system with role-based adaptation and progress tracking
 - **Accessibility-First**: All visualizations include proper ARIA labels and keyboard navigation
 
 ### Agent Patterns & Examples
@@ -139,11 +158,16 @@ src/
 │   │   └── ConceptsExplorer.tsx
 │   ├── interactive-demos/  # Interactive demonstrations
 │   ├── patterns/          # Agent pattern examples
+│   ├── quiz/              # Comprehensive quiz system
+│   │   ├── AdaptiveLearningQuiz.tsx
+│   │   └── QuizSection.tsx
 │   ├── tutorial/          # Tutorial system
 │   ├── ui/               # Reusable UI components
 │   └── visualization/    # Visualization utilities
 ├── lib/
 │   ├── data/             # Pattern definitions and examples
+│   │   ├── patterns.ts
+│   │   └── quizzes.ts    # Quiz questions and scoring logic
 │   └── utils/            # Utility functions
 ├── styles/               # Global styles and themes
 └── types/                # TypeScript definitions
@@ -207,6 +231,14 @@ This platform revolutionizes how AI agent concepts are taught through:
 - **Interactive Examples**: Hands-on code examples and demos
 - **Visual Learning**: SVG-based animations and diagrams
 
+### Advanced Assessment System
+- **Role-Based Quizzes**: Personalized assessments for 8 professional personas
+- **Multi-Level Difficulty**: Beginner, Intermediate, and Advanced questions with progressive complexity
+- **Comprehensive Feedback**: Detailed explanations and improvement suggestions for every answer
+- **Progress Tracking**: LocalStorage-based analytics tracking quiz completion and performance
+- **Category Specialization**: Focused assessments on Core Concepts, Agent Patterns, Azure Services, Communication Protocols, and Advanced Topics
+- **Export Functionality**: Print-ready results with complete question/answer/explanation sets
+
 ### Knowledge Levels
 - **Beginner**: Conceptual overviews with simple analogies
 - **Intermediate**: Technical implementations with practical examples
@@ -221,7 +253,17 @@ Real-world implementations in multiple languages:
 
 ## 🎮 Interactive Demos
 
-### 🎨 Agent Communication Playground
+### � Adaptive Learning Quiz System
+**Comprehensive Knowledge Assessment** - Advanced quiz system with role-based personalization:
+- **Smart Question Selection**: Questions adapt to your professional role and expertise level
+- **Real-Time Scoring**: Instant feedback with detailed explanations and improvement suggestions
+- **Progress Analytics**: Track your learning journey across different categories and difficulty levels
+- **Professional Personas**: 8 specialized roles from Business Leaders to AI Architects
+- **Category Deep-Dives**: Focused assessments on Core Concepts, Agent Patterns, Communication Protocols, and Azure Services
+- **Export Results**: Print-ready comprehensive results with all questions, answers, and explanations
+- **Timed Challenges**: Adaptive question timing with auto-progression for focused learning
+
+### �🎨 Agent Communication Playground
 **Visual storytelling meets technical precision**:
 - **Protocol Simulations**: Watch MCP, A2A, and ACP protocols in action with animated message flows
 - **Component Architecture**: Visual representation of User → Claude → MCP Servers → Data Sources flow
@@ -277,19 +319,29 @@ Create new visualizations by:
 1. Start with Agent Lifecycle Visual
 2. Explore basic communication patterns
 3. Try interactive demos
-4. Progress to pattern examples
+4. Take the beginner-level quiz to assess understanding
+5. Progress to pattern examples
 
 ### For Developers
 1. Review code examples at intermediate level
 2. Examine pattern implementations
 3. Explore protocol specifications
-4. Build custom agent patterns
+4. Complete developer-focused quizzes
+5. Build custom agent patterns
 
 ### For Architects
 1. Study advanced patterns and optimizations
 2. Analyze protocol comparisons
 3. Review scalability considerations
-4. Design multi-agent systems
+4. Take advanced-level assessments
+5. Design multi-agent systems
+
+### Assessment-Driven Learning
+- **Start with a Quiz**: Identify knowledge gaps before diving into content
+- **Targeted Study**: Focus on areas identified through quiz feedback
+- **Progressive Assessment**: Move from beginner to advanced quizzes as you learn
+- **Performance Tracking**: Monitor your progress across different categories
+- **Expert Validation**: Advanced quizzes help validate professional expertise
 
 ## 🤝 Contributing
 
@@ -307,6 +359,9 @@ We welcome contributions! Please see our contributing guidelines for:
 - Add micro-learning content for new features
 - Use SVG for all custom visualizations (no external chart libraries)
 - Implement proper error boundaries and loading states
+- **Quiz System**: When adding new content, include corresponding quiz questions with explanations
+- **Multi-Level Content**: Ensure all new features support beginner, intermediate, and advanced levels
+- **Role-Based Design**: Consider how different professional personas would interact with new features
 
 ## 📄 License
 
@@ -323,4 +378,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Ready to explore the future of AI agents?** 🚀 Welcome to AI Agent School - where complex concepts become clear, interactive, and memorable!
 
-Start with the Agent Lifecycle Visual and discover how intelligent systems think, communicate, and evolve!
+Start with the Agent Lifecycle Visual, test your knowledge with our comprehensive quiz system, and discover how intelligent systems think, communicate, and evolve!
+
+🎯 **New to AI Agents?** Take our beginner quiz to identify your starting point!  
+💻 **Experienced Developer?** Challenge yourself with our advanced assessments!  
+🏢 **Business Leader?** Explore role-specific quizzes tailored to your needs!
