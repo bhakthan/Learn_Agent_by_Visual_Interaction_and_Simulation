@@ -18,6 +18,7 @@ interface PatternFlowState {
   isAnimating: boolean;
   currentStep: number;
   activeNodes: Set<string>;
+  nodeSteps: Map<string, number>; // Track individual node step numbers
 }
 
 const SimpleMultiPatternVisualizer: React.FC<SimpleMultiPatternVisualizerProps> = ({ 
@@ -237,8 +238,9 @@ const SimpleMultiPatternVisualizer: React.FC<SimpleMultiPatternVisualizerProps> 
       [patternId]: {
         patternId,
         isAnimating: true,
-        currentStep: 1,
-        activeNodes: new Set()
+        currentStep: 0,
+        activeNodes: new Set(),
+        nodeSteps: new Map()
       }
     }));
 
@@ -257,14 +259,20 @@ const SimpleMultiPatternVisualizer: React.FC<SimpleMultiPatternVisualizerProps> 
       }
 
       const nodeId = pattern.nodes[stepIndex].id;
-      setFlowStates(prev => ({
-        ...prev,
-        [patternId]: {
-          ...prev[patternId],
-          currentStep: stepIndex + 1,
-          activeNodes: new Set([...prev[patternId]?.activeNodes || [], nodeId])
-        }
-      }));
+      setFlowStates(prev => {
+        const newNodeSteps = new Map(prev[patternId]?.nodeSteps || []);
+        newNodeSteps.set(nodeId, stepIndex + 1); // Set individual node step number
+        
+        return {
+          ...prev,
+          [patternId]: {
+            ...prev[patternId],
+            currentStep: stepIndex + 1,
+            activeNodes: new Set([...prev[patternId]?.activeNodes || [], nodeId]),
+            nodeSteps: newNodeSteps
+          }
+        };
+      });
 
       stepIndex++;
       setTimeout(animateStep, 1000);
@@ -432,7 +440,7 @@ const SimpleMultiPatternVisualizer: React.FC<SimpleMultiPatternVisualizerProps> 
                             {/* Show sequence number during simulation */}
                             {flowState?.isAnimating && isActive && (
                               <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                                {flowState.currentStep}
+                                {flowState.nodeSteps.get(node.id) || 0}
                               </div>
                             )}
                             {/* Simple active indicator */}
@@ -518,7 +526,7 @@ const SimpleMultiPatternVisualizer: React.FC<SimpleMultiPatternVisualizerProps> 
                                 {/* Show sequence number during simulation */}
                                 {flowState?.isAnimating && isActive && (
                                   <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                                    {flowState.currentStep}
+                                    {flowState.nodeSteps.get(node.id) || 0}
                                   </div>
                                 )}
                                 {/* Node position indicator */}
