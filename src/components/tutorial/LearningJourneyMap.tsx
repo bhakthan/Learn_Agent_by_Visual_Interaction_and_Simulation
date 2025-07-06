@@ -173,16 +173,28 @@ export const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({
   };
 
   const getNodePosition = (index: number, total: number) => {
-    // Create a curved path layout
-    const angle = (index / (total - 1)) * Math.PI;
-    const radius = 120;
-    const centerX = 200;
-    const centerY = 150;
+    // Create a more spread out layout that uses the full canvas width
+    const containerWidth = 800;
+    const containerHeight = 400;
+    const nodeRadius = 32; // Node radius for positioning
+    const padding = 80; // More padding from edges
     
-    return {
-      x: centerX + Math.cos(angle) * radius,
-      y: centerY - Math.sin(angle) * radius * 0.6
-    };
+    if (total <= 1) {
+      return { x: containerWidth / 2, y: containerHeight / 2 };
+    }
+    
+    // Use a flowing path that spreads horizontally across the canvas
+    const progress = index / (total - 1); // 0 to 1
+    const x = padding + progress * (containerWidth - padding * 2);
+    
+    // Create a more pronounced wave pattern for better spacing
+    const waveHeight = containerHeight * 0.3; // Increased wave height
+    const centerY = containerHeight / 2;
+    // Use a more complex wave pattern to avoid nodes clustering
+    const waveOffset = Math.sin(progress * Math.PI * 1.5) * waveHeight;
+    const y = Math.max(nodeRadius + 20, Math.min(containerHeight - nodeRadius - 20, centerY + waveOffset));
+    
+    return { x, y };
   };
 
   const getNextRecommendedNode = () => {
@@ -259,8 +271,8 @@ export const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({
         
         <CardContent className="space-y-6">
           {/* Learning Path Visualization */}
-          <div className="relative bg-gradient-to-br from-muted/20 to-muted/40 rounded-lg p-6 min-h-[300px]">
-            <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
+          <div className="relative bg-gradient-to-br from-muted/20 to-muted/40 rounded-lg p-6 min-h-[500px]">
+            <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }} viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet">
               {/* Draw connections between nodes */}
               {selectedPath.nodes.map((node, index) => {
                 if (index === selectedPath.nodes.length - 1) return null;
@@ -275,10 +287,11 @@ export const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({
                     y1={current.y}
                     x2={next.x}
                     y2={next.y}
-                    stroke={node.isCompleted ? '#22c55e' : '#e5e7eb'}
-                    strokeWidth="2"
-                    strokeDasharray={node.isCompleted ? '0' : '5,5'}
+                    stroke={node.isCompleted ? '#22c55e' : '#cbd5e1'}
+                    strokeWidth="1.5"
+                    strokeDasharray={node.isCompleted ? '0' : '4,4'}
                     className="transition-all duration-300"
+                    opacity={0.7}
                   />
                 );
               })}
