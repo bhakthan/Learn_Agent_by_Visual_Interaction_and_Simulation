@@ -8,6 +8,7 @@ import { Play, ArrowsCounterClockwise, Pause, ArrowRight, Info } from "@phosphor
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScrollArea } from '@/components/ui/scroll-area';
+import MCPArchitectureDiagram from '@/components/concepts/MCPArchitectureDiagram';
 
 // Simplified version without ReactFlow to avoid rendering issues
 
@@ -24,59 +25,12 @@ interface SimulationStep {
   }[];
 }
 
-interface NodeInfo {
-  id: string;
-  label: string;
-  type: string;
-  description: string;
-}
-
 const MCPVisualDemo = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [currentStep, setCurrentStep] = useState<number | null>(null);
   const [selectedTab, setSelectedTab] = useState('messages');
   const [autoPlay, setAutoPlay] = useState(true);
-  
-  // Node definitions for the static diagram
-  const nodes: NodeInfo[] = [
-    {
-      id: 'user',
-      label: 'User',
-      type: 'user',
-      description: 'Human providing query'
-    },
-    {
-      id: 'agent',
-      label: 'Agent',
-      type: 'agent',
-      description: 'Host with MCP client'
-    },
-    {
-      id: 'mcp_client',
-      label: 'MCP Client',
-      type: 'agent',
-      description: 'Manages MCP communication'
-    },
-    {
-      id: 'mcp_server',
-      label: 'MCP Server',
-      type: 'server',
-      description: 'Provides tools & resources'
-    },
-    {
-      id: 'llm',
-      label: 'LLM',
-      type: 'llm',
-      description: 'Large Language Model'
-    },
-    {
-      id: 'tools',
-      label: 'Tools',
-      type: 'tool',
-      description: 'APIs, Databases, Websites'
-    },
-  ];
   
   // Simulation steps that will be played
   const simulationSteps: SimulationStep[] = [
@@ -375,99 +329,15 @@ const MCPVisualDemo = () => {
           </TabsList>
           
           <TabsContent value="diagram" className="mt-4 space-y-4">
-            <div className="border rounded-md p-4 bg-muted/20 h-[400px] flex flex-col items-center justify-center">
-              <div className="text-center mb-6">
-                <h3 className="text-lg font-medium mb-2">ModelContextProtocol Architecture</h3>
+            <div className="border rounded-md p-4 bg-muted/20">
+              <div className="text-center mb-4">
+                <h3 className="text-lg font-medium mb-2">Model Context Protocol Architecture</h3>
                 <p className="text-sm text-muted-foreground">
-                  Static visualization of key components in MCP
+                  Interactive visualization of MCP components and their relationships
                 </p>
               </div>
               
-              <div className="grid grid-cols-3 gap-6 w-full max-w-3xl">
-                {nodes.map(node => (
-                  <div
-                    key={node.id}
-                    className={`p-4 rounded-md shadow-sm border ${
-                      currentStepData?.nodeHighlights.includes(node.id) 
-                        ? 'ring-2 ring-primary ring-offset-2' 
-                        : ''
-                    } ${
-                      node.type === 'user' ? 'bg-background/80 border-muted-foreground/30' :
-                      node.type === 'agent' ? 'bg-primary/10 border-primary/30' :
-                      node.type === 'server' ? 'bg-secondary/10 border-secondary/30' :
-                      node.type === 'llm' ? 'bg-accent/10 border-accent/30' :
-                      node.type === 'tool' ? 'bg-destructive/10 border-destructive/30' :
-                      'bg-card border-border'
-                    }`}
-                  >
-                    <h4 className="font-medium text-center">{node.label}</h4>
-                    <p className="text-xs text-center text-muted-foreground mt-1">{node.description}</p>
-                  </div>
-                ))}
-              </div>
-              
-              <p className="text-sm text-center text-muted-foreground mt-8">
-                {currentStepData 
-                  ? `Step ${currentStepData.id}/${simulationSteps.length}: ${currentStepData.description}`
-                  : 'Press "Start Demo" to see the MCP communication flow'
-                }
-              </p>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-2">
-                <Button
-                  onClick={startSimulation}
-                  disabled={isRunning && !isPaused}
-                  size="sm"
-                  className="flex items-center gap-1"
-                >
-                  <Play size={16} />
-                  Start Demo
-                </Button>
-                
-                {isRunning && (
-                  <Button
-                    onClick={togglePause}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-1"
-                  >
-                    {isPaused ? (
-                      <>
-                        <Play size={16} />
-                        Resume
-                      </>
-                    ) : (
-                      <>
-                        <Pause size={16} />
-                        Pause
-                      </>
-                    )}
-                  </Button>
-                )}
-                
-                <Button
-                  onClick={nextStep}
-                  disabled={!isRunning || (currentStep !== null && currentStep === simulationSteps.length - 1)}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                >
-                  <ArrowRight size={16} />
-                  Next Step
-                </Button>
-                
-                <Button
-                  onClick={resetSimulation}
-                  variant="ghost"
-                  size="sm"
-                  className="flex items-center gap-1"
-                >
-                  <ArrowsCounterClockwise size={16} />
-                  Reset
-                </Button>
-              </div>
+              <MCPArchitectureDiagram autoPlay={isRunning} />
             </div>
           </TabsContent>
           

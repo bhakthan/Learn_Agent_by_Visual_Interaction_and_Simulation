@@ -92,6 +92,9 @@ const AdaptiveLearningQuiz: React.FC<AdaptiveLearningQuizProps> = ({ onQuizCompl
     
     localStorage.setItem('page-analytics-quiz', JSON.stringify(pageAnalytics));
   }, []);
+
+  // Timer effect for auto-advancing questions
+  useEffect(() => {
     if (!currentSession || currentSession.completed || timeRemaining <= 0) return;
 
     const timer = setInterval(() => {
@@ -202,7 +205,7 @@ const AdaptiveLearningQuiz: React.FC<AdaptiveLearningQuizProps> = ({ onQuizCompl
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [currentSession, timeRemaining, currentAnswer, onQuizComplete]);
+  }, [currentSession, timeRemaining, currentAnswer, onQuizComplete, calculateQuizScore, generateQuizFeedback]);
 
   const startQuiz = useCallback(() => {
     if (!selectedPersona) return;
