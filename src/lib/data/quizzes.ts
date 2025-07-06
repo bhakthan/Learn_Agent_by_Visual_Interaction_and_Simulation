@@ -1185,18 +1185,8 @@ export const calculateQuizScore = (session: QuizSession): number => {
     const selectedAnswer = session.answers[question.id];
     // Ensure both values are numbers for comparison
     const selectedAnswerNum = typeof selectedAnswer === 'string' ? parseInt(selectedAnswer) : selectedAnswer;
-    const isCorrect = selectedAnswerNum === question.correctAnswer;
-    
-    // Debug logging
-    // console.log('Scoring question:', {
-    //   questionId: question.id,
-    //   selectedAnswer,
-    //   selectedAnswerNum,
-    //   correctAnswer: question.correctAnswer,
-    //   isCorrect,
-    //   question: question.question.substring(0, 50) + '...',
-    //   hasAnswer: selectedAnswer !== undefined && selectedAnswer !== null
-    // });
+    // Both selectedAnswerNum and question.correctAnswer are 0-based
+    const isCorrect = selectedAnswerNum !== undefined ? selectedAnswerNum === question.correctAnswer : false;
     
     return isCorrect;
   }).length;
@@ -1216,18 +1206,8 @@ export const generateQuizFeedback = (session: QuizSession): QuizFeedback[] => {
     const selectedAnswer = session.answers[question.id];
     // Ensure both values are numbers for comparison
     const selectedAnswerNum = typeof selectedAnswer === 'string' ? parseInt(selectedAnswer) : selectedAnswer;
-    const isCorrect = selectedAnswerNum === question.correctAnswer;
-    
-    // Debug logging
-    // console.log('Feedback generation:', {
-    //   questionId: question.id,
-    //   selectedAnswer,
-    //   selectedAnswerNum,
-    //   correctAnswer: question.correctAnswer,
-    //   isCorrect,
-    //   selectedAnswerType: typeof selectedAnswer,
-    //   correctAnswerType: typeof question.correctAnswer
-    // });
+    // Both selectedAnswerNum and question.correctAnswer are 0-based
+    const isCorrect = selectedAnswerNum !== undefined ? selectedAnswerNum === question.correctAnswer : false;
     
     return {
       questionId: question.id,

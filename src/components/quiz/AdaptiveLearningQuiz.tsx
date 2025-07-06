@@ -115,19 +115,6 @@ const AdaptiveLearningQuiz: React.FC<AdaptiveLearningQuizProps> = ({ onQuizCompl
               answers: updatedAnswers
             };
 
-            // Debug logging for timer auto-submit
-            console.log('=== TIMER AUTO-SUBMIT DEBUG ===');
-            console.log('Timer auto-submit:', {
-              questionId: currentQuestion.id,
-              selectedAnswer: answerValue,
-              correctAnswer: currentQuestion.correctAnswer,
-              isCorrect: answerValue === currentQuestion.correctAnswer,
-              currentAnswer: currentAnswer,
-              questionIndex: currentSession.currentQuestionIndex,
-              totalQuestions: currentSession.questions.length,
-              allAnswers: updatedAnswers
-            });
-
             setCurrentAnswer('');
             
             // Move to next question or complete quiz
@@ -157,16 +144,9 @@ const AdaptiveLearningQuiz: React.FC<AdaptiveLearningQuizProps> = ({ onQuizCompl
                 ...updatedSession,
                 currentQuestionIndex: nextIndex
               };
-              console.log('=== TIMER MOVING TO NEXT QUESTION ===');
-              console.log('Moving to next question:', {
-                nextIndex: nextIndex,
-                totalQuestions: currentSession.questions.length,
-                sessionAnswers: updatedSession.answers
-              });
               setCurrentSession(nextSession);
               setTimeRemaining(nextSession.questions[nextIndex].timeEstimate);
-            }
-          } else {
+            }            } else {
             // No answer selected, just move to next question
             const nextIndex = currentSession.currentQuestionIndex + 1;
             if (nextIndex >= currentSession.questions.length) {
@@ -185,6 +165,9 @@ const AdaptiveLearningQuiz: React.FC<AdaptiveLearningQuizProps> = ({ onQuizCompl
               setQuizFeedback(feedback);
               setShowResults(true);
               setTimeRemaining(0);
+              
+              // Save progress to localStorage
+              saveQuizProgress(completedSession);
               
               if (onQuizComplete) {
                 onQuizComplete(completedSession);
@@ -294,24 +277,10 @@ const AdaptiveLearningQuiz: React.FC<AdaptiveLearningQuizProps> = ({ onQuizCompl
       answers: updatedAnswers
     };
 
-    // Debug logging
-    console.log('=== ANSWER SUBMIT DEBUG ===');
-    console.log('Answer submitted:', {
-      questionId: currentQuestion.id,
-      selectedAnswer: answerValue,
-      correctAnswer: currentQuestion.correctAnswer,
-      isCorrect: answerValue === currentQuestion.correctAnswer,
-      currentAnswer: currentAnswer,
-      questionIndex: currentSession.currentQuestionIndex,
-      totalQuestions: currentSession.questions.length,
-      allAnswers: updatedAnswers
-    });
-
     // Check if this is the last question
     const isLastQuestion = currentSession.currentQuestionIndex + 1 >= currentSession.questions.length;
     
     if (isLastQuestion) {
-      console.log('=== COMPLETING QUIZ ===');
       // Complete the quiz immediately for the last question
       const completedSession = {
         ...updatedSession,
@@ -322,17 +291,18 @@ const AdaptiveLearningQuiz: React.FC<AdaptiveLearningQuizProps> = ({ onQuizCompl
       };
       
       completedSession.score = calculateQuizScore(completedSession);
-      const feedback = generateQuizFeedback(completedSession);
-      
-      setCurrentSession(completedSession);
-      setQuizFeedback(feedback);
-      setShowResults(true);
-      setTimeRemaining(0);
-      setCurrentAnswer(''); // Clear answer only after completion
-      
-      if (onQuizComplete) {
-        onQuizComplete(completedSession);
-      }
+      const feedback = generateQuizFeedback(completedSession);              setCurrentSession(completedSession);
+              setQuizFeedback(feedback);
+              setShowResults(true);
+              setTimeRemaining(0);
+              setCurrentAnswer(''); // Clear answer only after completion
+              
+              // Save progress to localStorage
+              saveQuizProgress(completedSession);
+              
+              if (onQuizComplete) {
+                onQuizComplete(completedSession);
+              }
     } else {
       // Move to next question immediately using the updated session
       const nextIndex = currentSession.currentQuestionIndex + 1;
@@ -340,13 +310,6 @@ const AdaptiveLearningQuiz: React.FC<AdaptiveLearningQuizProps> = ({ onQuizCompl
         ...updatedSession,
         currentQuestionIndex: nextIndex
       };
-      
-      console.log('=== MANUAL SUBMIT MOVING TO NEXT QUESTION ===');
-      console.log('Moving to next question:', {
-        nextIndex: nextIndex,
-        totalQuestions: currentSession.questions.length,
-        sessionAnswers: updatedSession.answers
-      });
       
       setCurrentSession(nextSession);
       setCurrentAnswer(''); // Clear answer for next question
@@ -376,6 +339,9 @@ const AdaptiveLearningQuiz: React.FC<AdaptiveLearningQuizProps> = ({ onQuizCompl
       setQuizFeedback(feedback);
       setShowResults(true);
       setTimeRemaining(0);
+      
+      // Save progress to localStorage
+      saveQuizProgress(completedSession);
       
       if (onQuizComplete) {
         onQuizComplete(completedSession);
@@ -670,13 +636,15 @@ const AdaptiveLearningQuiz: React.FC<AdaptiveLearningQuizProps> = ({ onQuizCompl
                             <div className="print:block">
                               <p className="text-xs font-medium print:text-sm print:font-semibold mb-1">Your Answer:</p>
                               <p className="text-xs text-muted-foreground print:text-sm print:text-black">
-                                {question.options[currentSession.answers[question.id] - 1] || 'Not answered'}
+                                {currentSession.answers[question.id] !== undefined 
+                                  ? question.options[currentSession.answers[question.id]]
+                                  : 'Not answered'}
                               </p>
                             </div>
                             <div className="print:block">
                               <p className="text-xs font-medium print:text-sm print:font-semibold mb-1">Correct Answer:</p>
                               <p className="text-xs text-muted-foreground print:text-sm print:text-black">
-                                {question.options[question.correctAnswer - 1]}
+                                {question.options[question.correctAnswer]}
                               </p>
                             </div>
                             <div className="print:block">
@@ -731,11 +699,11 @@ const AdaptiveLearningQuiz: React.FC<AdaptiveLearningQuizProps> = ({ onQuizCompl
                             <ol className="list-decimal list-inside space-y-1">
                               {question.options.map((option, optIndex) => (
                                 <li key={optIndex} className={`${
-                                  optIndex + 1 === question.correctAnswer ? 'font-bold text-green-600' : ''
+                                  optIndex === question.correctAnswer ? 'font-bold text-green-600' : ''
                                 } ${
-                                  optIndex + 1 === currentSession.answers[question.id] ? 'bg-blue-100' : ''
+                                  optIndex === currentSession.answers[question.id] ? 'bg-blue-100' : ''
                                 }`}>
-                                  {option} {optIndex + 1 === question.correctAnswer ? '(Correct)' : ''} {optIndex + 1 === currentSession.answers[question.id] ? '(Your Answer)' : ''}
+                                  {option} {optIndex === question.correctAnswer ? '(Correct)' : ''} {optIndex === currentSession.answers[question.id] ? '(Your Answer)' : ''}
                                 </li>
                               ))}
                             </ol>
