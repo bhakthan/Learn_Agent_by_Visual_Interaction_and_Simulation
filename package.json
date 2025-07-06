@@ -1,8 +1,8 @@
 {
-    "name": "spark-template",
-    "private": true,
-    "version": "0.0.0",
-    "type": "module",
+  "name": "ai-agent-school",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
     "scripts": {
         "dev": "vite",
         "kill": "fuser -k 5000/tcp",

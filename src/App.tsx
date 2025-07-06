@@ -188,7 +188,7 @@ function App() {
             <div className="container mx-auto px-4 py-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Brain size={28} weight="duotone" className="text-primary" />
-                <h1 className="text-2xl font-bold">Azure AI Agent Concept Visualization & Simulation</h1>
+                <h1 className="text-2xl font-bold">AI Agent School</h1>
               </div>
               
               <div className="flex items-center space-x-4">
@@ -274,7 +274,7 @@ function App() {
           
           <footer className="border-t border-border py-6 bg-muted transition-colors duration-300">
             <div className="container mx-auto px-4 text-center text-muted-foreground">
-              <p>Azure AI Agent Visualization - Interactive learning resource for AI agent patterns and concepts</p>
+              <p>AI Agent School - Where AI Agent Concepts Come to Life</p>
             </div>
           </footer>
           

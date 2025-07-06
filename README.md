@@ -1,4 +1,6 @@
-# 🤖 AI Agent & Protocol Visualization Platform
+# 🎓 AI Agent School
+
+**Where AI Agent Concepts Come to Life**
 
 An interactive educational platform for understanding AI agents, Agent-to-Agent (A2A) communication, Model Context Protocol (MCP), and Agent Communication Protocol (ACP). This application provides comprehensive visualizations, micro-learning modules, and hands-on demonstrations of modern AI agent architectures.
 
@@ -65,7 +67,7 @@ Each personality features:
 
 ## 🚀 Quick Start
 
-> **From Spark Template to AI Education Platform**: This project began as a Spark template and has been completely transformed into a specialized educational platform for AI agent concepts, featuring custom SVG visualizations, interactive learning components, and comprehensive protocol demonstrations.
+> **From Spark Template to AI Agent School**: This project began as a Spark template and has been completely transformed into a specialized educational platform for AI agent concepts, featuring custom SVG visualizations, interactive learning components, and comprehensive protocol demonstrations.
 
 ### Prerequisites
 - Node.js 18+ 
@@ -319,4 +321,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Ready to explore the future of AI agents?** 🚀 Start with the Agent Lifecycle Visual and discover how intelligent systems think, communicate, and evolve!
+**Ready to explore the future of AI agents?** 🚀 Welcome to AI Agent School - where complex concepts become clear, interactive, and memorable!
+
+Start with the Agent Lifecycle Visual and discover how intelligent systems think, communicate, and evolve!
