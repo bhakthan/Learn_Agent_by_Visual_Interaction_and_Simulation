@@ -225,6 +225,30 @@ const AdaptiveLearningQuiz: React.FC<AdaptiveLearningQuizProps> = ({ onQuizCompl
       );
     }
 
+    if (questions.length === 0) {
+      // If no questions found for the selected difficulty, try to get questions from all difficulty levels
+      if (selectedCategory) {
+        questions = getQuizzesByCategory(selectedCategory.id);
+      } else {
+        // For persona-based quiz, try without difficulty filter
+        questions = generateAdaptiveQuiz(
+          selectedPersona.id, 
+          selectedPersona.focusAreas, 
+          'beginner', // fallback to beginner
+          15
+        );
+      }
+    }
+
+    if (questions.length === 0) {
+      console.error('No questions found for selected criteria:', {
+        persona: selectedPersona?.id,
+        category: selectedCategory?.id,
+        difficulty: selectedDifficulty
+      });
+      return;
+    }
+
     // Shuffle questions
     questions = questions.sort(() => Math.random() - 0.5);
 
@@ -410,6 +434,33 @@ const AdaptiveLearningQuiz: React.FC<AdaptiveLearningQuizProps> = ({ onQuizCompl
   if (quizStarted && currentSession && !showResults) {
     const currentQuestion = currentSession.questions[currentSession.currentQuestionIndex];
     const progress = ((currentSession.currentQuestionIndex + 1) / currentSession.questions.length) * 100;
+
+    // Check if currentQuestion exists - if not, there's an issue with question loading
+    if (!currentQuestion) {
+      return (
+        <Card className="w-full max-w-4xl mx-auto">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <GraduationCap size={24} className="text-primary" />
+              AI Agent Knowledge Quiz
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <p className="text-lg text-muted-foreground mb-4">
+                No questions available for the selected {selectedDifficulty} difficulty level.
+              </p>
+              <p className="text-sm text-muted-foreground mb-6">
+                Try selecting a different difficulty level or category, or check back later as we're continuously adding new questions.
+              </p>
+              <Button onClick={() => setQuizStarted(false)} variant="outline">
+                Back to Quiz Setup
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
 
     return (
       <Card className="w-full max-w-4xl mx-auto">
