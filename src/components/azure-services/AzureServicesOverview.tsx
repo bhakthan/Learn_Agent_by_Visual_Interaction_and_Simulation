@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
   Cloud, Database, ShieldCheck, Lightning, Calculator, 
-  Robot, Translate, Search, FileText, MagnifyingGlass,
+  Robot, Translate, MagnifyingGlass as Search, FileText, MagnifyingGlass,
   BookmarkSimple
 } from "@phosphor-icons/react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ReferenceLinks } from '../references/ReferenceLinks';
 import ReferenceSection from '../references/ReferenceSection';
+import { EnhancedTutorialButton, pagesSynopsis } from '../tutorial/EnhancedTutorialButton';
 
 const AzureServicesOverview = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,6 +72,15 @@ const AzureServicesOverview = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Azure AI Services</h1>
+        <EnhancedTutorialButton
+          tooltip="Learn about Azure AI Services"
+          pageSynopsis={pagesSynopsis['azure-services']}
+          showDetailedView={true}
+        />
+      </div>
+      
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="w-full md:w-auto">
           <div className="relative">

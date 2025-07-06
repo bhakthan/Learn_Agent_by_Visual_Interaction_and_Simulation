@@ -10,7 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { ChartLine, Code, Info, Swap } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { PatternSidebar } from './PatternSidebar'
-import { TutorialButton } from '../tutorial/TutorialButton'
+import { EnhancedTutorialButton, pagesSynopsis } from '../tutorial/EnhancedTutorialButton'
 import { useTutorialContext } from '../tutorial/TutorialProvider'
 import { agentPatternsTutorial } from '@/lib/tutorial'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
@@ -56,10 +56,12 @@ const PatternExplorer = () => {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Agent Patterns</h2>
         <div className="flex items-center gap-2">
-          <TutorialButton
+          <EnhancedTutorialButton
             hasCompleted={hasCompletedTutorial(agentPatternsTutorial.id)}
             onClick={() => startTutorial(agentPatternsTutorial.id)}
             tooltip="Learn about Agent Patterns"
+            pageSynopsis={pagesSynopsis['agent-patterns']}
+            showDetailedView={true}
           />
           
           <Button 

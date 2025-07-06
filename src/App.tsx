@@ -5,7 +5,7 @@ import { ThemeToggle } from './components/theme/ThemeToggle'
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
-import { Code, Books, PuzzlePiece, Plugs, StackSimple, Brain, Robot, Article, Users, GithubLogo } from '@phosphor-icons/react'
+import { Code, Books, PuzzlePiece, Plugs, StackSimple, Brain, Robot, Article, Users, GithubLogo, Path } from '@phosphor-icons/react'
 import PatternExplorer from './components/patterns/PatternExplorer'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import ConceptsExplorer from './components/concepts/ConceptsExplorer'
@@ -17,12 +17,33 @@ import { setupReactFlowErrorHandling } from './lib/utils/reactFlowUtils';
 import { disableResizeObserverIfProblematic } from './lib/utils/resizeObserverUtils';
 import { setupGlobalFlowHandlers } from './lib/utils/flows/globalFlowHandlers';
 import { setupSimulationButtonHandlers } from './lib/utils/flows/visualizationFix';
+import LearningJourneyMap from './components/tutorial/LearningJourneyMap';
 
 // Placeholder component (disabled)
 const AppTutorialButton = () => null;
 
 function App() {
   const [mounted, setMounted] = useState(false)
+  const [showJourneyMap, setShowJourneyMap] = useState(false)
+  const location = useLocation()
+  
+  // Get current page for journey map
+  const getCurrentPage = () => {
+    switch (location.pathname) {
+      case '/': return 'core-concepts';
+      case '/patterns': return 'agent-patterns';
+      case '/azure-services': return 'azure-services';
+      case '/references': return 'references';
+      case '/community': return 'community';
+      default: return 'core-concepts';
+    }
+  };
+
+  const handleNavigate = (path: string) => {
+    setShowJourneyMap(false);
+    // Navigate to the path
+    window.location.href = path;
+  };
   
   // Fix hydration issues and set up error handling
   useEffect(() => {
@@ -171,6 +192,15 @@ function App() {
               </div>
               
               <div className="flex items-center space-x-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowJourneyMap(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Path size={16} />
+                  <span className="hidden sm:inline">Journey Map</span>
+                </Button>
                 <AppTutorialButton />
                 <div className="flex items-center gap-2">
                   <ThemeToggle />
@@ -217,7 +247,7 @@ function App() {
 
             {/* Navigation tabs */}
             <div className="container mx-auto px-4 pb-1">
-              <ScrollArea className="w-full" orientation="horizontal">
+              <ScrollArea className="w-full">
                 <div className="flex space-x-1">
                   <TabLink to="/" icon={<Brain size={16} weight="duotone" />} label="Core Concepts" />
                   <TabLink to="/patterns" icon={<PuzzlePiece size={16} weight="duotone" />} label="Agent Patterns" />
@@ -247,6 +277,14 @@ function App() {
               <p>Azure AI Agent Visualization - Interactive learning resource for AI agent patterns and concepts</p>
             </div>
           </footer>
+          
+          {/* Learning Journey Map */}
+          <LearningJourneyMap
+            currentPage={getCurrentPage()}
+            isVisible={showJourneyMap}
+            onClose={() => setShowJourneyMap(false)}
+            onNavigate={handleNavigate}
+          />
         </div>
     </ThemeProvider>
   );

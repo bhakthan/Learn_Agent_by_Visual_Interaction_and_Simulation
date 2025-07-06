@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Books, FileText, Link as LinkIcon, MagnifyingGlass } from '@phosphor-icons/react';
+import { EnhancedTutorialButton, pagesSynopsis } from '../tutorial/EnhancedTutorialButton';
 
 export default function ReferencesSection() {
   const [activeTab, setActiveTab] = useState('documentation');
@@ -25,11 +26,18 @@ export default function ReferencesSection() {
   
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">References</h1>
-        <p className="text-muted-foreground">
-          Essential documentation, articles, and resources for Azure AI agent development
-        </p>
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">References</h1>
+          <p className="text-muted-foreground">
+            Essential documentation, articles, and resources for Azure AI agent development
+          </p>
+        </div>
+        <EnhancedTutorialButton
+          tooltip="Learn about References"
+          pageSynopsis={pagesSynopsis['references']}
+          showDetailedView={true}
+        />
       </div>
       
       <div className="flex items-center space-x-2">

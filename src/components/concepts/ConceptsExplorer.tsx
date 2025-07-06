@@ -13,7 +13,9 @@ import Agent2AgentProtocolExplainer from "./Agent2AgentProtocolExplainer"
 import ConceptDetails from "./ConceptDetails"
 import { BookOpen, BookmarkSimple, ArrowsHorizontal, Palette, MagicWand } from "@phosphor-icons/react"
 import ReferenceSection from "../references/ReferenceSection"
-import { TutorialButton } from "../tutorial/TutorialButton"
+import { EnhancedTutorialButton, pagesSynopsis } from "../tutorial/EnhancedTutorialButton"
+import { FloatingContextualHelp, useFloatingContextualHelp } from "../tutorial/FloatingContextualHelp"
+import SmartPageAnalytics from "../tutorial/SmartPageAnalytics"
 import { useTutorialContext } from "../tutorial/TutorialProvider"
 import { conceptsExplorerTutorial } from "@/lib/tutorial"
 import SimpleFlowDemo from "../visualization/SimpleFlowDemo"
@@ -36,6 +38,7 @@ const ConceptsExplorer = () => {
   })
 
   const { startTutorial, registerTutorial, hasCompletedTutorial } = useTutorialContext();
+  const { isVisible, hideHelp, showHelp } = useFloatingContextualHelp('core-concepts', 15000);
 
   // Register the concepts tutorial
   useEffect(() => {
@@ -52,10 +55,12 @@ const ConceptsExplorer = () => {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Core Concepts</h1>
-        <TutorialButton
+        <EnhancedTutorialButton
           hasCompleted={hasCompletedTutorial(conceptsExplorerTutorial.id)}
           onClick={() => startTutorial(conceptsExplorerTutorial.id)}
           tooltip="Learn about Core Concepts"
+          pageSynopsis={pagesSynopsis['core-concepts']}
+          showDetailedView={true}
         />
       </div>
 
@@ -68,7 +73,7 @@ const ConceptsExplorer = () => {
           <TabsTrigger value="visualization">Flow Visualization</TabsTrigger>
           <TabsTrigger value="transformation">Data Transformation</TabsTrigger>
         </TabsList>
-        <TabsContent value="agents" className="space-y-6 pt-6">
+        <TabsContent value="agents" className="space-y-6 pt-6" data-section="agents-lifecycle">
           <Card>
             <CardHeader>
               <CardTitle>What are Azure AI Agents?</CardTitle>
@@ -198,7 +203,7 @@ const ConceptsExplorer = () => {
           <CodeToVisualMapper />
         </TabsContent>
 
-        <TabsContent value="a2a" className="space-y-6 pt-6">
+        <TabsContent value="a2a" className="space-y-6 pt-6" data-section="a2a-communication">
           <Card>
             <CardHeader>
               <CardTitle>Agent-to-Agent (A2A) Communication</CardTitle>
@@ -288,7 +293,7 @@ const ConceptsExplorer = () => {
           <A2ADemo />
         </TabsContent>
 
-        <TabsContent value="mcp" className="space-y-6 pt-6">
+        <TabsContent value="mcp" className="space-y-6 pt-6" data-section="mcp-protocol">
           <Card>
             <CardHeader>
               <CardTitle>ModelContextProtocol (MCP)</CardTitle>
@@ -366,7 +371,7 @@ const ConceptsExplorer = () => {
           <MCPDemo />
         </TabsContent>
 
-        <TabsContent value="acp" className="space-y-6 pt-6">
+        <TabsContent value="acp" className="space-y-6 pt-6" data-section="acp-protocol">
           <Card>
             <CardHeader>
               <CardTitle>Agent Communication Protocol (ACP)</CardTitle>
@@ -661,6 +666,21 @@ const ConceptsExplorer = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Floating Contextual Help */}
+      <FloatingContextualHelp
+        pageSynopsis={pagesSynopsis['core-concepts']}
+        pageKey="core-concepts"
+        isVisible={isVisible}
+        onClose={hideHelp}
+        onStartTutorial={() => startTutorial(conceptsExplorerTutorial.id)}
+      />
+
+      {/* Smart Page Analytics */}
+      <SmartPageAnalytics
+        pageKey="core-concepts"
+        pageTitle="Core Concepts"
+      />
     </div>
   );
 }

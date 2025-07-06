@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { EnhancedTutorialButton, pagesSynopsis } from '../tutorial/EnhancedTutorialButton';
 
 const CommunitySharing = () => {
   const [patternName, setPatternName] = useState("");
@@ -28,7 +29,14 @@ const CommunitySharing = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">Community Sharing</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Community Sharing</h1>
+        <EnhancedTutorialButton
+          tooltip="Learn about Community"
+          pageSynopsis={pagesSynopsis['community']}
+          showDetailedView={true}
+        />
+      </div>
       <p className="text-muted-foreground mb-8">
         Learn from and contribute to the Azure AI agent community. Share your implementations, 
         best practices, and unique agent patterns.

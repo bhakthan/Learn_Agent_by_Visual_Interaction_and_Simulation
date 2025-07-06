@@ -23,7 +23,7 @@ import { getAlgorithmVisualization, AlgorithmVisualizationData } from '@/lib/uti
 import { getDebugExample } from '@/lib/utils/codeDebugExamples'
 import { useSidebarCollapse } from '@/hooks/use-sidebar-collapse'
 import { cn } from '@/lib/utils'
-import { TutorialButton } from '../tutorial/TutorialButton'
+import { EnhancedTutorialButton, pagesSynopsis } from '../tutorial/EnhancedTutorialButton'
 import { useTutorialContext } from '../tutorial/TutorialProvider'
 import { codePlaybookTutorial } from '@/lib/tutorial'
 
@@ -129,10 +129,12 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
     <div className="space-y-6 w-full">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-lg font-medium">Code Playbook</h3>
-        <TutorialButton
+        <EnhancedTutorialButton
           hasCompleted={hasCompletedTutorial(codePlaybookTutorial.id)}
           onClick={() => startTutorial(codePlaybookTutorial.id)}
           tooltip="Learn about Code Playbook"
+          pageSynopsis={pagesSynopsis['agent-patterns']}
+          showDetailedView={true}
         />
       </div>
       
