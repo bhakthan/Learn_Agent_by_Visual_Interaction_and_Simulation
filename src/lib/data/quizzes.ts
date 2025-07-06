@@ -884,6 +884,63 @@ export const quizCategories: QuizCategory[] = [
             persona: ['agent-designer', 'agent-developer', 'ai-enthusiast'],
             timeEstimate: 45
           },
+          // Additional Intermediate Questions for Better Coverage
+          {
+            id: 'reflection-i3',
+            question: 'How would you implement a self-reflection mechanism for an AI agent in a production environment?',
+            options: [
+              'Use simple if-else statements to check outputs',
+              'Implement a feedback loop with performance metrics, error tracking, and automated adjustment mechanisms',
+              'Have humans manually review every action',
+              'Use random sampling to check results'
+            ],
+            correctAnswer: 1,
+            explanation: 'Production self-reflection requires systematic feedback loops with performance metrics, error tracking, and automated adjustment mechanisms to enable continuous improvement.',
+            difficulty: 'intermediate',
+            category: 'agent-patterns',
+            subCategory: 'self-reflection',
+            learningObjectives: ['Implement self-reflection in production'],
+            relatedConcepts: ['feedback-loops', 'performance-metrics', 'error-tracking', 'automation'],
+            persona: ['agent-developer', 'ai-engineer', 'ai-ops-engineer'],
+            timeEstimate: 45,
+            codeExample: `
+class SelfReflectingAgent:
+    def __init__(self):
+        self.performance_metrics = {}
+        self.error_log = []
+        self.adjustment_thresholds = {'accuracy': 0.8, 'response_time': 2.0}
+    
+    def reflect_on_performance(self):
+        current_metrics = self.calculate_metrics()
+        if current_metrics['accuracy'] < self.adjustment_thresholds['accuracy']:
+            self.adjust_strategy('accuracy')
+        if current_metrics['response_time'] > self.adjustment_thresholds['response_time']:
+            self.adjust_strategy('speed')
+    
+    def adjust_strategy(self, metric):
+        # Implement adjustment logic based on metric
+        pass
+            `
+          },
+          {
+            id: 'reflection-i4',
+            question: 'What design patterns can be combined with self-reflection for maximum effectiveness?',
+            options: [
+              'Only observer pattern',
+              'Strategy pattern for adaptive behavior, Chain of Responsibility for error handling, and Observer for monitoring',
+              'Just singleton pattern',
+              'Template method pattern only'
+            ],
+            correctAnswer: 1,
+            explanation: 'Effective self-reflection combines multiple patterns: Strategy for adaptive behavior, Chain of Responsibility for error handling, and Observer for real-time monitoring.',
+            difficulty: 'intermediate',
+            category: 'agent-patterns',
+            subCategory: 'self-reflection',
+            learningObjectives: ['Combine design patterns with self-reflection'],
+            relatedConcepts: ['design-patterns', 'strategy-pattern', 'observer-pattern', 'chain-of-responsibility'],
+            persona: ['agent-architect', 'agent-developer', 'ai-engineer'],
+            timeEstimate: 50
+          },
           // Advanced Questions
           {
             id: 'reflection-a1',
@@ -1186,3 +1243,199 @@ export const generateQuizFeedback = (session: QuizSession): QuizFeedback[] => {
     };
   });
 };
+
+// Business-focused advanced questions
+const businessAdvancedQuestions = [
+  {
+    id: 'business-strategy-a1',
+    question: 'What ROI metrics should be tracked when implementing AI agent solutions at enterprise scale?',
+    options: [
+      'Only cost reduction',
+      'Cost reduction, productivity gains, error reduction, customer satisfaction improvement, and time-to-market acceleration',
+      'Just employee satisfaction',
+      'Only revenue increase'
+    ],
+    correctAnswer: 1,
+    explanation: 'Enterprise AI agent ROI should track multiple metrics: cost reduction, productivity gains, error reduction, customer satisfaction improvement, and time-to-market acceleration for comprehensive value assessment.',
+    difficulty: 'advanced',
+    category: 'business-strategy',
+    subCategory: 'enterprise-implementation',
+    learningObjectives: ['Measure AI agent business value'],
+    relatedConcepts: ['roi-metrics', 'enterprise-scale', 'productivity-gains', 'customer-satisfaction'],
+    persona: ['business-leader', 'ai-ops-engineer'],
+    timeEstimate: 55
+  },
+  {
+    id: 'business-strategy-a2',
+    question: 'How should organizations approach AI agent governance and risk management?',
+    options: [
+      'No governance needed',
+      'Implement AI ethics committees, establish clear accountability frameworks, monitor bias and fairness, and ensure regulatory compliance',
+      'Let IT handle everything',
+      'Only worry about technical performance'
+    ],
+    correctAnswer: 1,
+    explanation: 'AI agent governance requires AI ethics committees, clear accountability frameworks, bias and fairness monitoring, and regulatory compliance to ensure responsible deployment.',
+    difficulty: 'advanced',
+    category: 'business-strategy',
+    subCategory: 'governance',
+    learningObjectives: ['Understand AI governance'],
+    relatedConcepts: ['ai-ethics', 'accountability', 'bias-monitoring', 'regulatory-compliance'],
+    persona: ['business-leader'],
+    timeEstimate: 50
+  }
+];
+
+// Designer-focused intermediate and advanced questions
+const designerAdvancedQuestions = [
+  {
+    id: 'design-patterns-i1',
+    question: 'What UX principles should guide conversational agent interface design?',
+    options: [
+      'Make it look like existing software',
+      'Design for natural conversation flow, clear intent recognition, graceful error handling, and context preservation',
+      'Use as many features as possible',
+      'Copy other chatbots exactly'
+    ],
+    correctAnswer: 1,
+    explanation: 'Conversational agent UX should prioritize natural conversation flow, clear intent recognition, graceful error handling, and context preservation for optimal user experience.',
+    difficulty: 'intermediate',
+    category: 'agent-design',
+    subCategory: 'ux-patterns',
+    learningObjectives: ['Apply UX principles to agent design'],
+    relatedConcepts: ['conversation-flow', 'intent-recognition', 'error-handling', 'context-preservation'],
+    persona: ['agent-designer', 'no-code-engineer'],
+    timeEstimate: 45
+  },
+  {
+    id: 'design-patterns-a1',
+    question: 'How do you design agent workflows that adapt to different user expertise levels?',
+    options: [
+      'Use the same interface for everyone',
+      'Implement progressive disclosure, adaptive complexity, contextual help, and personalized interaction patterns based on user proficiency',
+      'Make everything as simple as possible',
+      'Always use the most complex interface'
+    ],
+    correctAnswer: 1,
+    explanation: 'Adaptive agent workflows require progressive disclosure, adaptive complexity, contextual help, and personalized interaction patterns that adjust based on user proficiency levels.',
+    difficulty: 'advanced',
+    category: 'agent-design',
+    subCategory: 'adaptive-interfaces',
+    learningObjectives: ['Design adaptive agent interfaces'],
+    relatedConcepts: ['progressive-disclosure', 'adaptive-complexity', 'contextual-help', 'personalization'],
+    persona: ['agent-designer', 'agent-developer'],
+    timeEstimate: 55
+  }
+];
+
+// Developer-focused advanced questions
+const developerAdvancedQuestions = [
+  {
+    id: 'development-a1',
+    question: 'What are the key architectural patterns for building resilient multi-agent systems?',
+    options: [
+      'Use only microservices',
+      'Implement circuit breakers, bulkhead isolation, timeout patterns, retry with exponential backoff, and graceful degradation',
+      'Just add more servers',
+      'Use only monolithic architecture'
+    ],
+    correctAnswer: 1,
+    explanation: 'Resilient multi-agent systems require circuit breakers, bulkhead isolation, timeout patterns, retry with exponential backoff, and graceful degradation to handle failures gracefully.',
+    difficulty: 'advanced',
+    category: 'agent-development',
+    subCategory: 'resilience-patterns',
+    learningObjectives: ['Implement resilient agent architectures'],
+    relatedConcepts: ['circuit-breakers', 'bulkhead-isolation', 'timeout-patterns', 'exponential-backoff', 'graceful-degradation'],
+    persona: ['agent-developer', 'ai-engineer', 'agent-architect'],
+    timeEstimate: 60,
+    codeExample: `
+class ResilientAgentFramework:
+    def __init__(self):
+        self.circuit_breakers = {}
+        self.timeout_config = {'default': 5000, 'critical': 10000}
+        self.retry_config = {'max_attempts': 3, 'base_delay': 1000}
+    
+    async def execute_with_resilience(self, operation, service_name):
+        circuit_breaker = self.get_circuit_breaker(service_name)
+        
+        if circuit_breaker.is_open():
+            return await self.fallback_strategy(operation)
+        
+        try {
+            result = await self.execute_with_timeout_and_retry(operation)
+            circuit_breaker.record_success()
+            return result
+        } catch (Exception e) {
+            circuit_breaker.record_failure()
+            return await self.handle_failure(e, operation)
+        }
+    }
+    
+    async def execute_with_timeout_and_retry(self, operation):
+        for attempt in range(self.retry_config['max_attempts']):
+            try:
+                timeout = self.timeout_config.get(operation.type, self.timeout_config['default'])
+                return await asyncio.wait_for(operation.execute(), timeout=timeout/1000)
+            except asyncio.TimeoutError:
+                if attempt == self.retry_config['max_attempts'] - 1:
+                    raise
+                delay = self.retry_config['base_delay'] * (2 ** attempt)
+                await asyncio.sleep(delay / 1000)
+    `
+  },
+  {
+    id: 'development-a2',
+    question: 'How do you implement proper observability in distributed agent systems?',
+    options: [
+      'Just use logs',
+      'Implement distributed tracing, structured logging, metrics collection, health checks, and correlation IDs across all agent interactions',
+      'Use only monitoring dashboards',
+      'Observability is not needed'
+    ],
+    correctAnswer: 1,
+    explanation: 'Proper observability in distributed agent systems requires distributed tracing, structured logging, metrics collection, health checks, and correlation IDs to track interactions across the system.',
+    difficulty: 'advanced',
+    category: 'agent-development',
+    subCategory: 'observability',
+    learningObjectives: ['Implement agent system observability'],
+    relatedConcepts: ['distributed-tracing', 'structured-logging', 'metrics-collection', 'health-checks', 'correlation-ids'],
+    persona: ['agent-developer', 'ai-engineer', 'ai-ops-engineer'],
+    timeEstimate: 55
+  }
+];
+
+// Add these questions to the main categories
+quizCategories.forEach(category => {
+  if (category.id === 'business-strategy') {
+    if (!category.subCategories.find(sub => sub.id === 'enterprise-implementation')) {
+      category.subCategories.push({
+        id: 'enterprise-implementation',
+        name: 'Enterprise Implementation',
+        description: 'Strategies for implementing AI agents at enterprise scale',
+        questions: businessAdvancedQuestions
+      });
+    }
+  }
+  
+  if (category.id === 'agent-design') {
+    if (!category.subCategories.find(sub => sub.id === 'ux-patterns')) {
+      category.subCategories.push({
+        id: 'ux-patterns',
+        name: 'UX Design Patterns',
+        description: 'User experience patterns for agent interfaces',
+        questions: designerAdvancedQuestions.filter(q => q.category === 'agent-design')
+      });
+    }
+  }
+  
+  if (category.id === 'agent-development') {
+    if (!category.subCategories.find(sub => sub.id === 'resilience-patterns')) {
+      category.subCategories.push({
+        id: 'resilience-patterns',
+        name: 'Resilience Patterns',
+        description: 'Patterns for building resilient agent systems',
+        questions: developerAdvancedQuestions.filter(q => q.category === 'agent-development')
+      });
+    }
+  }
+});
