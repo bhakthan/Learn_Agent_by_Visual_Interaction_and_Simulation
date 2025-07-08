@@ -28,6 +28,7 @@ import ProtocolComparison from "./ProtocolComparison"
 import AgentCommunicationPlayground from "./AgentCommunicationPlayground"
 import AgentPersonalityShowcase from "./AgentPersonalityShowcase"
 import CodeToVisualMapper from "./CodeToVisualMapper"
+import EnlightenMeButton from "./EnlightenMeButton"
 
 const ConceptsExplorer = () => {
   const [showDetails, setShowDetails] = useState({
@@ -74,7 +75,13 @@ const ConceptsExplorer = () => {
           <TabsTrigger value="transformation">Data Transformation</TabsTrigger>
         </TabsList>
         <TabsContent value="agents" className="space-y-6 pt-6" data-section="agents-lifecycle">
-          <Card>
+          <Card className="relative">
+            <EnlightenMeButton 
+              title="Azure AI Agents" 
+              conceptId="agents"
+              description="Autonomous software entities built on Large Language Models (LLMs) that can perform tasks without constant human supervision"
+              customPrompt="Explain Azure AI Agents in detail. Cover what they are, their key capabilities, architecture components, and how they differ from traditional AI systems. Include practical examples of Azure AI Agent applications, how they're built, and best practices for implementing them."
+            />
             <CardHeader>
               <CardTitle>What are Azure AI Agents?</CardTitle>
               <CardDescription>Understanding the core concepts</CardDescription>
@@ -204,7 +211,12 @@ const ConceptsExplorer = () => {
         </TabsContent>
 
         <TabsContent value="a2a" className="space-y-6 pt-6" data-section="a2a-communication">
-          <Card>
+          <Card className="relative">
+            <EnlightenMeButton 
+              title="Agent-to-Agent (A2A) Communication" 
+              conceptId="a2a"
+              customPrompt="Explain Agent-to-Agent (A2A) communication in detail. Cover how agents collaborate and exchange information, different communication patterns, interaction models, protocol standards, and challenges in implementing effective A2A systems. Include Azure-specific implementations where relevant."
+            />
             <CardHeader>
               <CardTitle>Agent-to-Agent (A2A) Communication</CardTitle>
               <CardDescription>How agents collaborate and communicate</CardDescription>
@@ -294,7 +306,12 @@ const ConceptsExplorer = () => {
         </TabsContent>
 
         <TabsContent value="mcp" className="space-y-6 pt-6" data-section="mcp-protocol">
-          <Card>
+          <Card className="relative">
+            <EnlightenMeButton 
+              title="ModelContextProtocol (MCP)" 
+              conceptId="mcp"
+              customPrompt="Explain the ModelContextProtocol (MCP) in detail. Cover its purpose, key components, how it enables agent communication, context management, and benefits compared to other protocols. Include specific examples of MCP implementation in Azure AI services and practical applications."
+            />
             <CardHeader>
               <CardTitle>ModelContextProtocol (MCP)</CardTitle>
               <CardDescription>Standardized agent communication framework</CardDescription>
@@ -372,7 +389,12 @@ const ConceptsExplorer = () => {
         </TabsContent>
 
         <TabsContent value="acp" className="space-y-6 pt-6" data-section="acp-protocol">
-          <Card>
+          <Card className="relative">
+            <EnlightenMeButton 
+              title="Agent Communication Protocol (ACP)" 
+              conceptId="acp"
+              customPrompt="Explain the Agent Communication Protocol (ACP) in detail. Cover its purpose, key features, how it enables agent interoperability, supported communication patterns, and deployment models. Compare it with other protocols like MCP and provide examples of practical ACP implementations in Azure AI services."
+            />
             <CardHeader>
               <CardTitle>Agent Communication Protocol (ACP)</CardTitle>
               <CardDescription>Open standard for agent interoperability</CardDescription>
@@ -450,7 +472,12 @@ const ConceptsExplorer = () => {
         </TabsContent>
         
         <TabsContent value="visualization" className="space-y-6 pt-6">
-          <Card>
+          <Card className="relative">
+            <EnlightenMeButton 
+              title="Flow Visualization" 
+              conceptId="flow-visualization"
+              customPrompt="Explain the concept of flow visualization in AI agent systems. Cover the different types of information flows, how visualizations help understand agent interactions, visualization techniques for different message types, and best practices for creating effective flow visualizations. Include specific applications in Azure AI agent environments."
+            />
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Palette size={24} className="text-primary" />
@@ -551,7 +578,12 @@ const ConceptsExplorer = () => {
         </TabsContent>
         
         <TabsContent value="transformation" className="space-y-6 pt-6">
-          <Card>
+          <Card className="relative">
+            <EnlightenMeButton 
+              title="Data Transformation Between Agents" 
+              conceptId="data-transformation"
+              customPrompt="Explain data transformation in AI agent systems. Cover how data is transformed between agents, different types of transformations (input/output), their purposes, and how visualizations help understand these transformations. Include examples of common transformations in Azure AI agent systems and best practices for designing effective data flow between agents."
+            />
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MagicWand size={24} className="text-primary" weight="fill" />
