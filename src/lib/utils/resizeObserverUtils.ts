@@ -1,155 +1,137 @@
 /**
- * Utilities for stable ResizeObserver handling
+ * Utilities to handle ResizeObserver errors and improve visualization stability
  */
 
 /**
- * Creates a stable resize observer that avoids common issues
+ * Set up error handling for ResizeObserver loops
  */
-export function createStableResizeObserver(
-  callback: (entries: ResizeObserverEntry[]) => void, 
-  options: { 
-    throttleMs?: number,
-    debounceMs?: number,
-    errorLimit?: number
-  } = {}
-): ResizeObserver {
-  const { throttleMs = 100, debounceMs = 300, errorLimit = 3 } = options;
-  
-  // Keep track of the last time we processed a resize event
-  let lastProcessTime = 0;
-  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+export const setupResizeObserverErrorHandling = () => {
+  // Track error state
   let errorCount = 0;
-  
-  // Create a function that handles both throttling and debouncing
-  const processEntries = (entries: ResizeObserverEntry[]) => {
-    // Throttle logic
-    const now = Date.now();
-    const timeSinceLast = now - lastProcessTime;
-    
-    if (timeSinceLast < throttleMs) {
-      // Skip this update due to throttling
-      return;
-    }
-    
-    // Clear any existing debounce timer
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-      debounceTimer = null;
-    }
-    
-    // Set up debounce timer
-    debounceTimer = setTimeout(() => {
-      lastProcessTime = Date.now();
-      
-      try {
-        callback(entries);
-      } catch (error) {
-        errorCount++;
-        
-        if (errorCount < errorLimit) {
-          console.warn('Error in resize observer callback (suppressed):', error);
-        }
+  let lastErrorTime = 0;
+  let recoveryScheduled = false;
+
+  // Create window-level error handler
+  const handleError = (event: ErrorEvent | Event) => {
+    if (
+      event instanceof ErrorEvent &&
+      event.message &&
+      (
+        event.message.includes('ResizeObserver') ||
+        event.message.includes('loop') ||
+        event.message.includes('undelivered notifications')
+      )
+    ) {
+      // Track error frequency
+      const now = Date.now();
+      if (now - lastErrorTime > 5000) {
+        errorCount = 0;
       }
       
-      debounceTimer = null;
-    }, debounceMs);
-  };
-  
-  // Create the actual observer with error handling
-  try {
-    return new ResizeObserver((entries) => {
-      requestAnimationFrame(() => {
-        processEntries(entries);
-      });
-    });
-  } catch (error) {
-    console.warn('Error creating ResizeObserver, providing fallback implementation');
-    
-    // Return a dummy observer that does nothing
-    return {
-      observe: () => {},
-      unobserve: () => {},
-      disconnect: () => {}
-    } as ResizeObserver;
-  }
-}
-
-/**
- * Setup improved error handling for ResizeObserver loops
- */
-export function setupResizeObserverErrorHandling() {
-  // Add global error handler for ResizeObserver errors
-  const handleError = (event: ErrorEvent) => {
-    if (event.message && (
-      event.message.includes('ResizeObserver loop') || 
-      event.message.includes('ResizeObserver completed with undelivered notifications')
-    )) {
-      // Prevent the error from propagating
-      event.preventDefault();
-      event.stopPropagation();
+      errorCount++;
+      lastErrorTime = now;
+      
+      // Apply recovery if errors are frequent
+      if (errorCount > 2 && !recoveryScheduled) {
+        recoveryScheduled = true;
+        
+        setTimeout(() => {
+          // Force repaint with RAF for smoother handling
+          requestAnimationFrame(() => {
+            document.querySelectorAll('.react-flow, .react-flow__container').forEach(el => {
+              if (el instanceof HTMLElement) {
+                el.style.transform = 'translateZ(0)';
+                el.style.contain = 'layout paint';
+              }
+            });
+          });
+          
+          // Reset recovery state
+          setTimeout(() => {
+            recoveryScheduled = false;
+          }, 2000);
+        }, 200);
+      }
+      
+      // Prevent error from propagating
+      if (event.preventDefault) {
+        event.preventDefault();
+      }
+      if (event.stopPropagation) {
+        event.stopPropagation();
+      }
+      
       return false;
     }
   };
-  
+
+  // Add event listener
   window.addEventListener('error', handleError, true);
   
   // Return cleanup function
   return () => {
     window.removeEventListener('error', handleError, true);
   };
-}
+};
 
 /**
- * Throttle resize observer updates to prevent excessive rendering
+ * Disable problematic ResizeObservers if they're causing too many errors
  */
-export function throttleResizeObserver(callback: () => void, delay: number = 150) {
-  let lastExecution = 0;
+export const disableResizeObserverIfProblematic = () => {
+  const errorCount = (window as any).__resizeObserverErrorCount || 0;
   
-  return () => {
-    const now = Date.now();
-    const timeSinceLastExecution = now - lastExecution;
-    
-    if (timeSinceLastExecution >= delay) {
-      lastExecution = now;
-      callback();
-    }
-  };
-}
-
-/**
- * Disable problematic resize observers if they cause too many errors
- */
-export function disableResizeObserverIfProblematic() {
-  if (!window.__resizeObserverErrorCount) {
-    window.__resizeObserverErrorCount = 0;
-  }
-  
-  window.__resizeObserverErrorCount++;
-  
-  // If we're getting too many errors, try to fix the issue
-  if (window.__resizeObserverErrorCount > 10) {
-    // Apply fix for ReactFlow elements
-    document.querySelectorAll('.react-flow__container, .react-flow__renderer, .react-flow').forEach(el => {
+  // If we've seen multiple errors, try to disable the problematic observers
+  if (errorCount > 3) {
+    // Apply emergency fixes
+    document.querySelectorAll('.react-flow').forEach(el => {
       if (el instanceof HTMLElement) {
-        // Force hardware acceleration with better compositing
-        el.style.transform = 'translateZ(0)';
-        el.style.contain = 'layout paint';
-        
-        // Set explicit height to prevent layout shifts
-        if (el.offsetHeight < 10) {
+        // Force explicit dimensions to prevent layout shifts
+        if (!el.style.height || el.offsetHeight < 20) {
           el.style.height = '300px';
+        }
+        if (!el.style.width || el.offsetWidth < 20) {
+          el.style.width = '100%';
         }
       }
     });
     
-    // Reset counter after applying fixes
-    window.__resizeObserverErrorCount = 0;
+    // Reset error count to give it a fresh start
+    (window as any).__resizeObserverErrorCount = 0;
   }
-}
+};
 
-// Add type declaration for global variables
-declare global {
-  interface Window {
-    __resizeObserverErrorCount?: number;
-  }
-}
+/**
+ * Create a stable resize observer that won't trigger loops
+ */
+export const createStableResizeObserver = (callback: ResizeObserverCallback) => {
+  // Track if we're currently processing to prevent loops
+  let isProcessing = false;
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  
+  const observer = new ResizeObserver((...args) => {
+    // Prevent re-entrancy
+    if (isProcessing) return;
+    
+    isProcessing = true;
+    
+    // Clear any pending timeout
+    if (timeout) clearTimeout(timeout);
+    
+    // Debounce the callback
+    timeout = setTimeout(() => {
+      try {
+        callback(...args);
+      } catch (e) {
+        console.warn('Error in resize observer callback', e);
+      } finally {
+        isProcessing = false;
+      }
+    }, 100);
+  });
+  
+  return {
+    observe: (target: Element) => observer.observe(target),
+    unobserve: (target: Element) => observer.unobserve(target),
+    disconnect: () => observer.disconnect()
+  };
+};

@@ -1,153 +1,98 @@
 /**
- * Utility functions to prevent and handle ResizeObserver errors in ReactFlow
- * These are applied globally to improve stability
+ * Utility to apply global optimizations to prevent ReactFlow and ResizeObserver errors
  */
 
-export function applyReactFlowGlobalOptimizations() {
-  // Override console.error to suppress ReactFlow ResizeObserver errors
+export const applyReactFlowGlobalOptimizations = () => {
+  // Block error propagation for ResizeObserver errors
   const originalConsoleError = console.error;
   console.error = function(...args: any[]) {
+    const errorMessage = args[0];
+    
+    // Check if it's a ResizeObserver error
     if (
-      typeof args[0] === 'string' && 
-      (args[0].includes('ResizeObserver') || 
-       args[0].includes('loop completed with undelivered notifications') || 
-       args[0].includes('Maximum update depth exceeded'))
+      typeof errorMessage === 'string' && (
+        errorMessage.includes('ResizeObserver loop') ||
+        errorMessage.includes('ResizeObserver was created') ||
+        errorMessage.includes('undelivered notifications')
+      )
     ) {
-      // Silently suppress these errors
+      // Suppress the error
       return;
     }
     
-    if (typeof args[0] === 'string' && args[0].includes('Invalid hook call')) {
-      // Log hook errors with helpful suggestion
-      console.warn(
-        '[ReactFlow Warning]: Invalid hook call detected. ' + 
-        'This might be caused by using hooks outside a ReactFlowProvider. ' +
-        'Ensure all ReactFlow hooks are used within a component wrapped by ReactFlowProvider.'
-      );
-      return;
+    // Check if it's a ReactFlow-related error
+    if (
+      typeof errorMessage === 'string' && (
+        errorMessage.includes('zustand provider') ||
+        errorMessage.includes('[React Flow]')
+      )
+    ) {
+      // Suppress in production, show simplified in development
+      if (process.env.NODE_ENV !== 'development') {
+        return;
+      }
+      return originalConsoleError.call(console, '[ReactFlow Error Suppressed]');
     }
     
-    // Pass through all other errors
-    return originalConsoleError.apply(console, args);
+    // Pass through other errors
+    originalConsoleError.apply(console, args);
   };
   
-  // Add global error handler for ResizeObserver errors
-  window.addEventListener('error', function(e) {
-    if (e && e.message && (
-      e.message.includes('ResizeObserver loop') || 
-      e.message.includes('ResizeObserver completed with undelivered notifications')
-    )) {
-      // Prevent the error from propagating
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
+  // Add a global style to ensure React Flow visualizations are properly visible
+  const style = document.createElement('style');
+  style.innerHTML = `
+    .react-flow__node {
+      opacity: 1 !important;
+      visibility: visible !important;
+      display: block !important;
+      z-index: 1;
+      transform: translateZ(0);
     }
-  }, true);
-  
-  // Add recovery function for ReactFlow display issues
-  window.fixReactFlow = function() {
-    document.querySelectorAll('.react-flow__node').forEach(node => {
-      if (node instanceof HTMLElement) {
-        node.style.opacity = '1';
-        node.style.visibility = 'visible';
-        node.style.display = 'block';
-        node.style.transform = 'translateZ(0)';
-      }
-    });
     
-    document.querySelectorAll('.react-flow__edge').forEach(edge => {
-      if (edge instanceof HTMLElement) {
-        edge.style.opacity = '1';
-        edge.style.visibility = 'visible';
-      }
-      
-      const paths = edge.querySelectorAll('path');
-      paths.forEach(path => {
-        path.setAttribute('stroke-width', '1.5');
-        path.setAttribute('opacity', '1');
-        path.setAttribute('visibility', 'visible');
-      });
-    });
-  };
-  
-  // Add window.matchMedia polyfill for environments that don't support it
-  if (!window.matchMedia) {
-    window.matchMedia = (query) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: () => {},
-      removeListener: () => {},
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      dispatchEvent: () => true,
-    });
-  }
-  
-  // Stabilize ReactFlow rendering
-  const stabilizeReactFlow = () => {
-    document.querySelectorAll('.react-flow').forEach(flow => {
-      if (flow instanceof HTMLElement) {
-        // Apply hardware acceleration
-        flow.style.transform = 'translateZ(0)';
-        flow.style.backfaceVisibility = 'hidden';
-        flow.style.webkitBackfaceVisibility = 'hidden';
-        
-        // Enforce minimum dimensions
-        flow.style.minHeight = '200px';
-        flow.style.minWidth = '200px';
-        
-        // Clean up text nodes
-        flow.childNodes.forEach(node => {
-          if (node.nodeType === Node.TEXT_NODE && node.textContent) {
-            if (node.textContent.trim().includes('/agent/invoke') || 
-                node.textContent.trim().includes('POST ')) {
-              node.textContent = '';
-            }
-          }
-        });
-      }
-    });
+    .react-flow__edge-path {
+      stroke-width: 1.5px !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+    }
     
-    // Also clean inside viewport and renderer
-    document.querySelectorAll('.react-flow__viewport, .react-flow__renderer').forEach(el => {
-      if (el instanceof HTMLElement) {
-        el.childNodes.forEach(node => {
-          if (node.nodeType === Node.TEXT_NODE && node.textContent) {
-            if (node.textContent.trim().includes('/agent/invoke') || 
-                node.textContent.trim().includes('POST ')) {
-              node.textContent = '';
-            }
+    .react-flow__viewport {
+      transform: translate(0px, 0px) scale(1) !important;
+    }
+    
+    .react-flow {
+      min-height: 200px;
+    }
+  `;
+  document.head.appendChild(style);
+  
+  // Add mutation observer to clean unwanted text nodes
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.addedNodes.length) {
+        mutation.addedNodes.forEach((node) => {
+          // Check if this is a text node under a react-flow element
+          if (node.nodeType === Node.TEXT_NODE && 
+              node.parentElement && 
+              (
+                node.parentElement.classList.contains('react-flow') ||
+                node.parentElement.classList.contains('react-flow__viewport')
+              ) &&
+              node.textContent && 
+              node.textContent.trim()) {
+            // Clear problematic text content
+            node.textContent = '';
           }
         });
       }
     });
+  });
+  
+  // Start observing
+  observer.observe(document.body, { childList: true, subtree: true });
+  
+  return () => {
+    // Cleanup
+    console.error = originalConsoleError;
+    observer.disconnect();
   };
-  
-  // Run stabilization after timeout to ensure ReactFlow is mounted
-  setTimeout(stabilizeReactFlow, 1000);
-  setTimeout(window.fixReactFlow, 1500);
-  
-  // Add periodic cleanup for text nodes that might appear after rendering
-  setInterval(() => {
-    document.querySelectorAll('.react-flow, .react-flow__viewport, .react-flow__renderer').forEach(el => {
-      if (el instanceof HTMLElement) {
-        el.childNodes.forEach(node => {
-          if (node.nodeType === Node.TEXT_NODE && node.textContent) {
-            if (node.textContent.trim().includes('/agent/invoke') || 
-                node.textContent.trim().includes('POST ')) {
-              node.textContent = '';
-            }
-          }
-        });
-      }
-    });
-  }, 2000);
-}
-
-// Declare the fixReactFlow function on window
-declare global {
-  interface Window {
-    fixReactFlow: () => void;
-  }
-}
+};

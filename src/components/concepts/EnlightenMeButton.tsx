@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LightbulbFilament } from '@phosphor-icons/react';
+import { Lightbulb, SpinnerGap } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -10,7 +10,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -44,7 +43,6 @@ interface EnlightenMeButtonProps {
   conceptId: string;
   description?: string;
   customPrompt?: string;
-  position?: 'top-right' | 'top-left';
   className?: string;
 }
 
@@ -53,7 +51,6 @@ const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({
   conceptId,
   description,
   customPrompt,
-  position = 'top-right',
   className,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -62,10 +59,15 @@ const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({
   const [response, setResponse] = useState<string>('');
   const [showResponse, setShowResponse] = useState(false);
 
-  // Generate default prompt based on the concept when dialog opens
+  // Create a detailed prompt based on the context description
   const generateDefaultPrompt = () => {
     // The default prompt will be based on the concept's title and description
-    const basePrompt = `Explain the concept of ${title} in detail, covering key components, benefits, and practical applications. Include specific examples related to Azure AI services where relevant.`;
+    const basePrompt = `Explain the concept of ${title} in detail, covering:
+1. What it is and why it's important in the context of Azure AI Agents
+2. How it works and its key components
+3. Real-world applications and use cases
+4. Best practices when implementing it
+5. How it relates to other agent patterns or concepts`;
     
     if (customPrompt) {
       return customPrompt;
@@ -115,27 +117,27 @@ const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({
     <>
       <Button
         variant="ghost"
-        size="icon"
+        size="sm"
         className={cn(
-          'absolute z-10 rounded-full w-8 h-8 flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all duration-200',
-          position === 'top-right' ? 'right-2 top-2' : 'left-2 top-2',
+          "absolute top-2 right-2 px-2 h-8 w-8 rounded-full hover:bg-yellow-100 hover:text-yellow-900 dark:hover:bg-yellow-900/20 dark:hover:text-yellow-400 transition-colors",
           className
         )}
         onClick={handleOpen}
-        title="Enlighten Me"
+        aria-label={`Learn more about ${title}`}
+        title="Enlighten me about this topic"
       >
-        <LightbulbFilament size={18} weight="duotone" className="text-primary" />
+        <Lightbulb size={18} weight="fill" className="text-yellow-500" />
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <LightbulbFilament size={24} weight="duotone" className="text-primary" />
+              <Lightbulb size={24} weight="fill" className="text-yellow-500" />
               Enlighten Me: {title}
             </DialogTitle>
             <DialogDescription>
-              Customize the prompt to learn more about this concept, or use the suggested prompt.
+              Learn more about this concept with AI assistance. Edit the prompt if you'd like to ask something specific.
             </DialogDescription>
           </DialogHeader>
 
@@ -171,12 +173,12 @@ const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({
           </div>
 
           <DialogFooter className="flex gap-2 items-center">
-            {isLoading && <Spinner className="mr-2" />}
+            {isLoading && <SpinnerGap size={20} className="animate-spin mr-2" />}
             <Button variant="outline" onClick={handleClose}>
               Close
             </Button>
             <Button onClick={handleSubmit} disabled={isLoading || prompt.trim().length === 0}>
-              {isLoading ? 'Processing...' : 'Submit'}
+              {isLoading ? 'Processing...' : 'Get Insights'}
             </Button>
           </DialogFooter>
         </DialogContent>

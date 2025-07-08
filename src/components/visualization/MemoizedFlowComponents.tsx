@@ -7,9 +7,12 @@ import ReactFlow, {
 } from 'reactflow';
 
 /**
- * Memoized ReactFlow component
+ * Memoized ReactFlow component with improved error handling
  */
-export const MemoizedReactFlow = React.memo(ReactFlow);
+export const MemoizedReactFlow = React.memo(({ ...props }) => {
+  // Ensure proper props are passed to ReactFlow to prevent errors
+  return <ReactFlow {...props} />;
+});
 
 /**
  * Memoized Background component

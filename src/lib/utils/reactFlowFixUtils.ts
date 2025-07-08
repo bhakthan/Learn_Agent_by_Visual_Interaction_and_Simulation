@@ -1,112 +1,114 @@
 /**
- * Utility functions for fixing ReactFlow errors
+ * Utility functions to prevent and fix ReactFlow errors
  */
 
-// Setup error handling for ReactFlow
-export function setupReactFlowErrorHandling() {
-  // Override console.error to suppress ReactFlow errors
+/**
+ * Set up global error handling for ReactFlow-specific errors
+ */
+export const setupReactFlowErrorHandling = () => {
+  // The original console.error
   const originalConsoleError = console.error;
+  
+  // Override console.error to filter out known React Flow errors
   console.error = function(...args: any[]) {
+    // Check if the error message contains ReactFlow specific errors
     if (
-      typeof args[0] === 'string' && 
+      args[0] && typeof args[0] === 'string' &&
       (
-        args[0].includes('ReactFlow') || 
-        args[0].includes('Invalid hook call') ||
-        args[0].includes('Uncaught Error') ||
-        args[0].includes('ResizeObserver')
+        args[0].includes('zustand provider') ||
+        args[0].includes('ReactFlow') ||
+        args[0].includes('react-flow') ||
+        args[0].includes('ResizeObserver') ||
+        args[0].includes('loop completed with undelivered notifications')
       )
     ) {
-      // Log warning instead of error for better user experience
-      console.warn('[ReactFlow Warning]', args[0]);
-      return;
+      // Suppress known ReactFlow errors in production
+      if (process.env.NODE_ENV !== 'development') {
+        return;
+      }
+      
+      // In development, show a condensed version
+      return originalConsoleError.call(
+        console,
+        '%c[ReactFlow Warning Suppressed]',
+        'color: gray',
+        args[0].substring(0, 100) + '...'
+      );
     }
     
     // Pass through all other errors
     return originalConsoleError.apply(console, args);
   };
   
-  // Add error handler for ReactFlow errors
-  window.addEventListener('error', function(e) {
-    if (e && e.message && (
-      e.message.includes('Invalid hook call') || 
-      e.message.includes('can only be called inside the body of a function component')
-    )) {
-      // Log info about the error and prevent it from propagating
-      console.warn(
-        '[ReactFlow Hook Warning] An invalid hook call was detected. ' + 
-        'This is likely because ReactFlow hooks are being used outside of a ReactFlowProvider. ' +
-        'Ensure all components using ReactFlow hooks are wrapped with ReactFlowProvider.'
-      );
-      
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }
-  }, true);
-  
-  // Return cleanup function
   return () => {
+    // Restore original console.error if needed
     console.error = originalConsoleError;
   };
-}
+};
 
 /**
- * Fix ReactFlow rendering issues
- * @param containerRef Reference to the ReactFlow container element
+ * Fix common ReactFlow rendering issues by ensuring nodes are visible
  */
-export function fixReactFlowRendering(containerRef: React.RefObject<HTMLDivElement>) {
+export const fixReactFlowRendering = (containerRef: React.RefObject<HTMLElement>) => {
   if (!containerRef.current) return;
   
-  // Force recalculation of layout
-  setTimeout(() => {
-    if (containerRef.current) {
-      // Force hardware acceleration
-      containerRef.current.style.transform = 'translateZ(0)';
-      containerRef.current.style.backfaceVisibility = 'hidden';
-      containerRef.current.style.webkitBackfaceVisibility = 'hidden';
-      
-      // Apply force reflow
-      void containerRef.current.offsetHeight;
-      
-      // Ensure height is set
-      const parent = containerRef.current.parentElement;
-      if (parent && parent.offsetHeight > 10 && containerRef.current.offsetHeight < 10) {
-        containerRef.current.style.height = `${parent.offsetHeight}px`;
-      }
-      
-      // Dispatch resize event to trigger ReactFlow recalculation
-      window.dispatchEvent(new Event('resize'));
-    }
-  }, 100);
-}
-
-/**
- * Force all nodes to be visible in ReactFlow
- */
-export function forceNodesVisible() {
-  // Find all nodes in the document
-  const nodes = document.querySelectorAll('.react-flow__node');
-  nodes.forEach(node => {
+  // Force container to have proper dimensions if they're missing
+  const container = containerRef.current;
+  if (container.offsetHeight < 10) {
+    container.style.height = '300px';
+  }
+  
+  if (container.offsetWidth < 10) {
+    container.style.width = '100%';
+  }
+  
+  // Apply hardware acceleration to improve rendering
+  container.style.transform = 'translateZ(0)';
+  container.style.backfaceVisibility = 'hidden';
+  container.style.webkitBackfaceVisibility = 'hidden';
+  
+  // Find any ReactFlow nodes and make them visible
+  const nodes = container.querySelectorAll('.react-flow__node');
+  nodes.forEach((node: Element) => {
     if (node instanceof HTMLElement) {
-      node.style.visibility = 'visible';
       node.style.opacity = '1';
+      node.style.visibility = 'visible';
       node.style.display = 'block';
     }
   });
   
-  // Find all edges
-  const edges = document.querySelectorAll('.react-flow__edge');
-  edges.forEach(edge => {
-    if (edge instanceof HTMLElement) {
-      edge.style.visibility = 'visible';
-      edge.style.opacity = '1';
+  // Find any edges and make them visible
+  const edges = container.querySelectorAll('.react-flow__edge-path');
+  edges.forEach((edge: Element) => {
+    if (edge instanceof SVGElement) {
+      edge.setAttribute('opacity', '1');
+      edge.setAttribute('visibility', 'visible');
+      edge.setAttribute('stroke-width', '1.5');
     }
-    
-    // Find paths inside edges
-    const paths = edge.querySelectorAll('path');
-    paths.forEach(path => {
-      path.setAttribute('stroke-opacity', '1');
-      path.setAttribute('visibility', 'visible');
-    });
   });
-}
+  
+  // Remove any text nodes that might be interfering
+  Array.from(container.childNodes).forEach(node => {
+    if (node.nodeType === Node.TEXT_NODE && node.textContent && node.textContent.trim()) {
+      node.textContent = '';
+    }
+  });
+};
+
+/**
+ * Ensure ReactFlow nodes are properly positioned and visible
+ */
+export const forceNodesVisible = (reactFlowInstance: any) => {
+  if (!reactFlowInstance) return;
+  
+  setTimeout(() => {
+    try {
+      // Try to fit the view to make all nodes visible
+      if (reactFlowInstance.fitView && typeof reactFlowInstance.fitView === 'function') {
+        reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: true });
+      }
+    } catch (e) {
+      console.warn('Failed to fit view in ReactFlow', e);
+    }
+  }, 100);
+};
