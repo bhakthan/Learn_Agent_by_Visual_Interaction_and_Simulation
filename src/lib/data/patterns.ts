@@ -3633,5 +3633,540 @@ class TextToSpeechService {
       'Implement interruption handling and barge-in capability',
       'Design acoustic echo cancellation for device integration'
     ]
+  },
+  {
+    id: 'agent-evaluation',
+    name: 'Agent Evaluation',
+    description: 'Comprehensive evaluation framework for AI agents using Azure AI Foundry evaluation tools to assess performance, quality, and safety across multiple dimensions.',
+    category: 'Testing & Quality',
+    useCases: ['Agent Performance Testing', 'Quality Assurance', 'Safety Evaluation', 'Comparative Analysis'],
+    whenToUse: 'Use Agent Evaluation when you need to systematically assess agent performance, ensure quality standards, validate safety measures, or compare different agent implementations. This pattern is essential for production deployments, continuous improvement, regulatory compliance, and maintaining high standards in agent systems.',
+    nodes: [
+      {
+        id: 'agent-under-test',
+        type: 'input',
+        data: { label: 'Agent Under Test', nodeType: 'input' },
+        position: { x: 100, y: 100 }
+      },
+      {
+        id: 'evaluation-pipeline',
+        type: 'default',
+        data: { label: 'Evaluation Pipeline', nodeType: 'evaluator' },
+        position: { x: 300, y: 100 }
+      },
+      {
+        id: 'test-dataset',
+        type: 'default',
+        data: { label: 'Test Dataset', nodeType: 'tool' },
+        position: { x: 100, y: 200 }
+      },
+      {
+        id: 'llm-evaluator',
+        type: 'default',
+        data: { label: 'LLM Evaluator', nodeType: 'llm' },
+        position: { x: 500, y: 50 }
+      },
+      {
+        id: 'metric-calculator',
+        type: 'default',
+        data: { label: 'Metric Calculator', nodeType: 'aggregator' },
+        position: { x: 500, y: 150 }
+      },
+      {
+        id: 'safety-checker',
+        type: 'default',
+        data: { label: 'Safety Checker', nodeType: 'evaluator' },
+        position: { x: 500, y: 250 }
+      },
+      {
+        id: 'results-dashboard',
+        type: 'output',
+        data: { label: 'Results Dashboard', nodeType: 'output' },
+        position: { x: 700, y: 150 }
+      }
+    ],
+    edges: [
+      { id: 'e1-2', source: 'agent-under-test', target: 'evaluation-pipeline', animated: true, label: 'Agent Responses' },
+      { id: 'e3-2', source: 'test-dataset', target: 'evaluation-pipeline', animated: true, label: 'Test Cases' },
+      { id: 'e2-4', source: 'evaluation-pipeline', target: 'llm-evaluator', animated: true, label: 'Quality Assessment' },
+      { id: 'e2-5', source: 'evaluation-pipeline', target: 'metric-calculator', animated: true, label: 'Performance Metrics' },
+      { id: 'e2-6', source: 'evaluation-pipeline', target: 'safety-checker', animated: true, label: 'Safety Validation' },
+      { id: 'e4-7', source: 'llm-evaluator', target: 'results-dashboard', animated: true },
+      { id: 'e5-7', source: 'metric-calculator', target: 'results-dashboard', animated: true },
+      { id: 'e6-7', source: 'safety-checker', target: 'results-dashboard', animated: true }
+    ],
+    codeExample: `// Agent Evaluation using Azure AI Foundry
+import { EvaluationPipeline, LLMEvaluator, SafetyEvaluator } from '@azure/ai-evaluation';
+
+const evaluateAgent = async (agentFunction, testCases) => {
+  try {
+    // Initialize Azure AI Foundry evaluation pipeline
+    const evaluationPipeline = new EvaluationPipeline({
+      endpoint: process.env.AZURE_AI_ENDPOINT,
+      apiKey: process.env.AZURE_AI_KEY,
+      deploymentName: "gpt-4"
+    });
+
+    // Define evaluation criteria
+    const evaluationCriteria = [
+      {
+        name: "relevance",
+        description: "How well does the response address the user's query?",
+        scale: "1-5"
+      },
+      {
+        name: "accuracy",
+        description: "Is the information provided factually correct?",
+        scale: "1-5"
+      },
+      {
+        name: "completeness",
+        description: "Does the response fully address all aspects of the query?",
+        scale: "1-5"
+      },
+      {
+        name: "safety",
+        description: "Is the response safe and appropriate?",
+        scale: "pass/fail"
+      }
+    ];
+
+    // Run agent on test cases
+    console.log("Running agent on test cases...");
+    const agentResponses = [];
+    for (const testCase of testCases) {
+      const response = await agentFunction(testCase.query);
+      agentResponses.push({
+        query: testCase.query,
+        response: response,
+        expectedResponse: testCase.expectedResponse || null,
+        metadata: testCase.metadata || {}
+      });
+    }
+
+    // Evaluate responses using LLM-based evaluation
+    console.log("Evaluating responses with LLM evaluator...");
+    const llmEvaluator = new LLMEvaluator({
+      model: "gpt-4",
+      criteria: evaluationCriteria
+    });
+
+    const evaluationResults = await llmEvaluator.evaluate(agentResponses);
+
+    // Run safety evaluation
+    console.log("Running safety evaluation...");
+    const safetyEvaluator = new SafetyEvaluator({
+      endpoint: process.env.AZURE_CONTENT_SAFETY_ENDPOINT,
+      apiKey: process.env.AZURE_CONTENT_SAFETY_KEY
+    });
+
+    const safetyResults = await safetyEvaluator.evaluate(
+      agentResponses.map(r => r.response)
+    );
+
+    // Calculate aggregate metrics
+    const metrics = {
+      averageRelevance: evaluationResults.relevance.average,
+      averageAccuracy: evaluationResults.accuracy.average,
+      averageCompleteness: evaluationResults.completeness.average,
+      safetyPassRate: safetyResults.passRate,
+      totalTestCases: testCases.length,
+      executionTime: evaluationResults.executionTime
+    };
+
+    // Generate detailed report
+    const report = {
+      summary: {
+        overallScore: (metrics.averageRelevance + metrics.averageAccuracy + metrics.averageCompleteness) / 3,
+        safetyCompliance: metrics.safetyPassRate >= 0.95 ? 'PASS' : 'FAIL',
+        recommendations: generateRecommendations(metrics, evaluationResults)
+      },
+      detailedResults: evaluationResults,
+      safetyResults: safetyResults,
+      metrics: metrics,
+      testCases: agentResponses
+    };
+
+    return {
+      status: 'success',
+      report: report
+    };
+
+  } catch (error) {
+    return {
+      status: 'failed',
+      error: error.message
+    };
+  }
+};
+
+// Helper function to generate recommendations
+const generateRecommendations = (metrics, evaluationResults) => {
+  const recommendations = [];
+  
+  if (metrics.averageRelevance < 4.0) {
+    recommendations.push("Improve query understanding and context awareness");
+  }
+  
+  if (metrics.averageAccuracy < 4.0) {
+    recommendations.push("Enhance fact-checking and knowledge verification");
+  }
+  
+  if (metrics.averageCompleteness < 4.0) {
+    recommendations.push("Expand response comprehensiveness and detail");
+  }
+  
+  if (metrics.safetyPassRate < 0.95) {
+    recommendations.push("Strengthen safety filters and content moderation");
+  }
+  
+  return recommendations;
+};
+
+// Example usage
+const testCases = [
+  {
+    query: "What are the benefits of renewable energy?",
+    expectedResponse: "Renewable energy benefits include environmental sustainability, cost savings, and energy independence.",
+    metadata: { category: "environmental", difficulty: "intermediate" }
+  },
+  {
+    query: "How do I invest in stocks?",
+    expectedResponse: "Stock investment involves research, choosing a broker, and diversifying your portfolio.",
+    metadata: { category: "finance", difficulty: "beginner" }
+  }
+];
+
+// Your agent function to test
+const myAgent = async (query) => {
+  // Your agent implementation here
+  return "Sample response from your agent";
+};
+
+// Run evaluation
+evaluateAgent(myAgent, testCases).then(result => {
+  console.log('Evaluation completed:', result);
+});`,
+    pythonCodeExample: `# Agent Evaluation using Azure AI Foundry SDK
+import os
+import asyncio
+import json
+from typing import List, Dict, Any, Callable
+from azure.ai.evaluation import EvaluationPipeline, LLMEvaluator, SafetyEvaluator
+from azure.identity import DefaultAzureCredential
+
+class AgentEvaluator:
+    def __init__(self):
+        self.credential = DefaultAzureCredential()
+        self.endpoint = os.getenv("AZURE_AI_ENDPOINT")
+        self.api_key = os.getenv("AZURE_AI_KEY")
+        
+    async def evaluate_agent(self, agent_function: Callable, test_cases: List[Dict]) -> Dict[str, Any]:
+        """
+        Comprehensive evaluation of an AI agent using Azure AI Foundry tools.
+        
+        Args:
+            agent_function: The agent function to evaluate
+            test_cases: List of test cases with queries and expected responses
+            
+        Returns:
+            Detailed evaluation report with metrics and recommendations
+        """
+        try:
+            # Initialize evaluation pipeline
+            eval_pipeline = EvaluationPipeline(
+                endpoint=self.endpoint,
+                credential=self.credential,
+                deployment_name="gpt-4"
+            )
+            
+            # Define evaluation criteria based on Azure AI Foundry standards
+            evaluation_criteria = {
+                "relevance": {
+                    "description": "How well does the response address the user's query?",
+                    "scale": "1-5",
+                    "weight": 0.25
+                },
+                "accuracy": {
+                    "description": "Is the information provided factually correct?",
+                    "scale": "1-5", 
+                    "weight": 0.25
+                },
+                "completeness": {
+                    "description": "Does the response fully address all aspects?",
+                    "scale": "1-5",
+                    "weight": 0.25
+                },
+                "coherence": {
+                    "description": "Is the response well-structured and logical?",
+                    "scale": "1-5",
+                    "weight": 0.25
+                }
+            }
+            
+            # Generate agent responses for test cases
+            print("Generating agent responses...")
+            agent_responses = []
+            for i, test_case in enumerate(test_cases):
+                try:
+                    response = await agent_function(test_case["query"])
+                    agent_responses.append({
+                        "test_id": i,
+                        "query": test_case["query"],
+                        "response": response,
+                        "expected_response": test_case.get("expected_response"),
+                        "category": test_case.get("category", "general"),
+                        "metadata": test_case.get("metadata", {})
+                    })
+                except Exception as e:
+                    agent_responses.append({
+                        "test_id": i,
+                        "query": test_case["query"],
+                        "response": f"ERROR: {str(e)}",
+                        "error": True
+                    })
+            
+            # LLM-based evaluation using Azure AI
+            print("Running LLM-based evaluation...")
+            llm_evaluator = LLMEvaluator(
+                endpoint=self.endpoint,
+                credential=self.credential,
+                model="gpt-4"
+            )
+            
+            evaluation_results = []
+            for response_data in agent_responses:
+                if response_data.get("error"):
+                    continue
+                    
+                # Evaluate each criterion
+                criterion_scores = {}
+                for criterion, config in evaluation_criteria.items():
+                    score = await self._evaluate_criterion(
+                        llm_evaluator,
+                        response_data["query"],
+                        response_data["response"],
+                        criterion,
+                        config["description"]
+                    )
+                    criterion_scores[criterion] = score
+                
+                evaluation_results.append({
+                    "test_id": response_data["test_id"],
+                    "scores": criterion_scores,
+                    "weighted_score": self._calculate_weighted_score(
+                        criterion_scores, evaluation_criteria
+                    )
+                })
+            
+            # Safety evaluation using Azure AI Content Safety
+            print("Running safety evaluation...")
+            safety_evaluator = SafetyEvaluator(
+                endpoint=os.getenv("AZURE_CONTENT_SAFETY_ENDPOINT"),
+                credential=self.credential
+            )
+            
+            safety_results = await safety_evaluator.evaluate([
+                r["response"] for r in agent_responses if not r.get("error")
+            ])
+            
+            # Calculate aggregate metrics
+            metrics = self._calculate_metrics(evaluation_results, safety_results)
+            
+            # Generate recommendations
+            recommendations = self._generate_recommendations(metrics, evaluation_results)
+            
+            # Compile comprehensive report
+            report = {
+                "summary": {
+                    "overall_score": metrics["overall_score"],
+                    "safety_compliance": "PASS" if metrics["safety_pass_rate"] >= 0.95 else "FAIL",
+                    "test_cases_completed": len([r for r in agent_responses if not r.get("error")]),
+                    "test_cases_failed": len([r for r in agent_responses if r.get("error")]),
+                    "evaluation_date": asyncio.get_event_loop().time()
+                },
+                "detailed_metrics": metrics,
+                "recommendations": recommendations,
+                "test_results": agent_responses,
+                "evaluation_results": evaluation_results,
+                "safety_results": safety_results
+            }
+            
+            return {
+                "status": "success",
+                "report": report
+            }
+            
+        except Exception as e:
+            return {
+                "status": "error",
+                "message": str(e)
+            }
+    
+    async def _evaluate_criterion(self, evaluator, query: str, response: str, 
+                                 criterion: str, description: str) -> float:
+        """Evaluate a single criterion using LLM evaluator."""
+        prompt = f"""
+        Evaluate the following response based on {criterion}:
+        
+        Criterion: {description}
+        
+        Query: {query}
+        Response: {response}
+        
+        Rate from 1-5 where:
+        5 = Excellent
+        4 = Good  
+        3 = Satisfactory
+        2 = Poor
+        1 = Very Poor
+        
+        Provide only the numeric score.
+        """
+        
+        try:
+            result = await evaluator.evaluate(prompt)
+            # Extract numeric score from result
+            score = float(result.strip())
+            return max(1.0, min(5.0, score))  # Clamp between 1-5
+        except:
+            return 3.0  # Default score if evaluation fails
+    
+    def _calculate_weighted_score(self, scores: Dict[str, float], 
+                                 criteria: Dict[str, Dict]) -> float:
+        """Calculate weighted score based on criterion weights."""
+        total_weighted = 0
+        total_weight = 0
+        
+        for criterion, score in scores.items():
+            weight = criteria[criterion]["weight"]
+            total_weighted += score * weight
+            total_weight += weight
+            
+        return total_weighted / total_weight if total_weight > 0 else 0
+    
+    def _calculate_metrics(self, evaluation_results: List[Dict], 
+                          safety_results: Dict) -> Dict[str, float]:
+        """Calculate aggregate metrics across all evaluations."""
+        if not evaluation_results:
+            return {"overall_score": 0, "safety_pass_rate": 0}
+            
+        # Calculate averages for each criterion
+        criteria_averages = {}
+        for criterion in ["relevance", "accuracy", "completeness", "coherence"]:
+            scores = [r["scores"][criterion] for r in evaluation_results 
+                     if criterion in r["scores"]]
+            criteria_averages[criterion] = sum(scores) / len(scores) if scores else 0
+        
+        # Overall score
+        overall_score = sum(criteria_averages.values()) / len(criteria_averages)
+        
+        return {
+            "overall_score": overall_score,
+            "relevance_avg": criteria_averages.get("relevance", 0),
+            "accuracy_avg": criteria_averages.get("accuracy", 0),
+            "completeness_avg": criteria_averages.get("completeness", 0),
+            "coherence_avg": criteria_averages.get("coherence", 0),
+            "safety_pass_rate": safety_results.get("pass_rate", 0)
+        }
+    
+    def _generate_recommendations(self, metrics: Dict, 
+                                 evaluation_results: List[Dict]) -> List[str]:
+        """Generate actionable recommendations based on evaluation results."""
+        recommendations = []
+        
+        if metrics["relevance_avg"] < 4.0:
+            recommendations.append(
+                "Improve query understanding and context awareness"
+            )
+        
+        if metrics["accuracy_avg"] < 4.0:
+            recommendations.append(
+                "Enhance fact-checking and knowledge verification mechanisms"
+            )
+        
+        if metrics["completeness_avg"] < 4.0:
+            recommendations.append(
+                "Expand response comprehensiveness and detail coverage"
+            )
+        
+        if metrics["coherence_avg"] < 4.0:
+            recommendations.append(
+                "Improve response structure and logical flow"
+            )
+        
+        if metrics["safety_pass_rate"] < 0.95:
+            recommendations.append(
+                "Strengthen safety filters and content moderation"
+            )
+        
+        if metrics["overall_score"] < 3.5:
+            recommendations.append(
+                "Consider fundamental improvements to agent architecture"
+            )
+        
+        return recommendations
+
+# Example usage
+async def example_agent(query: str) -> str:
+    """Example agent function to evaluate."""
+    # This would be your actual agent implementation
+    return f"This is a sample response to: {query}"
+
+async def main():
+    # Test cases for evaluation
+    test_cases = [
+        {
+            "query": "What are the main benefits of renewable energy?",
+            "expected_response": "Renewable energy offers environmental, economic, and energy security benefits.",
+            "category": "environmental",
+            "metadata": {"difficulty": "intermediate"}
+        },
+        {
+            "query": "How does machine learning work?",
+            "expected_response": "Machine learning uses algorithms to find patterns in data and make predictions.",
+            "category": "technology", 
+            "metadata": {"difficulty": "beginner"}
+        },
+        {
+            "query": "Explain quantum computing in simple terms",
+            "expected_response": "Quantum computing uses quantum mechanics principles for powerful computation.",
+            "category": "technology",
+            "metadata": {"difficulty": "advanced"}
+        }
+    ]
+    
+    # Initialize evaluator
+    evaluator = AgentEvaluator()
+    
+    # Run evaluation
+    result = await evaluator.evaluate_agent(example_agent, test_cases)
+    
+    # Print results
+    print(json.dumps(result, indent=2))
+
+# Run the example
+# asyncio.run(main())
+`,
+    implementation: [
+      'Set up Azure AI Foundry evaluation pipeline with proper authentication',
+      'Define comprehensive evaluation criteria (relevance, accuracy, completeness, safety)',
+      'Create test datasets with diverse query types and expected responses',
+      'Implement LLM-based evaluation using Azure OpenAI for quality assessment',
+      'Integrate Azure AI Content Safety for safety and compliance validation',
+      'Build automated metric calculation and aggregation systems',
+      'Design comparative evaluation for A/B testing different agent versions',
+      'Create detailed reporting dashboard with actionable insights',
+      'Implement continuous evaluation pipelines for production monitoring',
+      'Add human-in-the-loop evaluation for complex scenarios'
+    ],
+    advantages: [
+      'Systematic and standardized evaluation methodology',
+      'Azure AI integration for enterprise-grade evaluation tools',
+      'Multi-dimensional assessment covering quality and safety',
+      'Automated reporting with actionable recommendations',
+      'Scalable evaluation pipeline for large test suites',
+      'Continuous monitoring capabilities for production systems'
+    ]
   }
 ];
