@@ -1504,10 +1504,10 @@ async def main():
   {
     id: 'model-context-protocol',
     name: 'Model Context Protocol (MCP)',
-    description: 'A standardized communication framework between models and context systems that ensures efficient information exchange.',
+    description: 'A standardized JSON-RPC based communication framework enabling AI agents to connect with external tools, databases, and APIs through type-safe interfaces. MCP focuses specifically on agent-to-tool communication, complementing A2A protocols for agent-to-agent coordination.',
     category: 'Core',
-    useCases: ['Enterprise Knowledge Management', 'Secure Data Access Patterns', 'Context-Aware Systems'],
-    whenToUse: 'Implement MCP when building enterprise-grade AI systems that require standardized, secure access to contextual information across various sources. This pattern is essential for applications handling sensitive data, requiring fine-grained access controls, or needing to integrate multiple knowledge sources while maintaining security boundaries and efficient context delivery.',
+    useCases: ['Agent-to-Tool Integration', 'Enterprise Tool Connectivity', 'Standardized API Access', 'Multi-Cloud Tool Orchestration'],
+    whenToUse: 'Implement MCP when building agent systems that need standardized, secure access to external tools and data sources. Essential for enterprise deployments requiring tool interoperability, when integrating agents with existing business systems, or when building agent ecosystems that span multiple vendors and platforms. MCP is the industry standard for agent-to-tool communication.',
     nodes: [
       {
         id: 'input',
@@ -1659,10 +1659,10 @@ const buildContext = async (results, query) => {
   {
     id: 'agent-to-agent',
     name: 'Agent to Agent (A2A)',
-    description: 'A communication framework where AI agents collaborate by exchanging structured messages to solve complex problems.',
+    description: 'A standardized communication framework enabling AI agents to collaborate through structured messaging, task delegation, and coordinated workflows using agent cards and discovery mechanisms. A2A focuses specifically on agent-to-agent coordination, complementing MCP protocols for agent-to-tool integration.',
     category: 'Core',
-    useCases: ['Multi-agent Systems', 'Collaborative Task Solving', 'Expert Networks'],
-    whenToUse: 'Use Agent to Agent (A2A) when tackling problems that benefit from specialized expertise across multiple domains or require parallelized problem-solving. This approach is ideal for complex tasks where breaking work into specialized roles improves overall quality, such as projects requiring research, analysis, critique, and synthesis working together in a coordinated manner.',
+    useCases: ['Multi-agent Collaboration', 'Distributed Problem Solving', 'Agent Orchestration', 'Specialized Expert Networks'],
+    whenToUse: 'Use A2A when building systems requiring coordination between multiple specialized agents, each with distinct capabilities. Ideal for complex workflows that benefit from agent specialization, such as recruitment systems (screening + scheduling agents), customer support (triage + resolution agents), or development workflows (coding + testing + deployment agents). A2A is the standard for agent-to-agent communication.',
     nodes: [
       {
         id: 'input',

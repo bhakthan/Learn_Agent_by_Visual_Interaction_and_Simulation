@@ -226,18 +226,45 @@ const ConceptsExplorer = () => {
                 <p>
                   Agent-to-Agent (A2A) communication enables different AI agents to collaborate, share information, 
                   delegate tasks, and coordinate actions. This creates multi-agent systems capable of handling 
-                  complex workflows and simulating specialized roles.
+                  complex workflows and simulating specialized roles through standardized protocols.
                 </p>
+                
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 p-4 rounded-md border border-blue-200 dark:border-blue-800">
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">🚀 MCP×A2A Integration Framework</h4>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    The cutting-edge MCP×A2A framework combines Model Context Protocol for agent-to-tool communication 
+                    with A2A protocol for agent-to-agent coordination, creating a layered architecture for autonomous LLM-based agents.
+                  </p>
+                </div>
+
                 <div className="bg-muted p-4 rounded-md">
-                  <h4 className="font-semibold">A2A Communication Patterns:</h4>
+                  <h4 className="font-semibold">Core A2A Communication Patterns:</h4>
                   <ul className="list-disc list-inside space-y-2 mt-2">
-                    <li>Direct message passing with structured data formats</li>
-                    <li>Centralized coordination through orchestrator agents</li>
-                    <li>Event-based communication triggered by state changes</li>
-                    <li>Shared memory and knowledge repositories</li>
-                    <li>Protocol-based interaction frameworks (like MCP)</li>
+                    <li><strong>Agent Cards:</strong> JSON metadata defining agent capabilities, functions, and authentication requirements</li>
+                    <li><strong>Task Management:</strong> Structured task creation, delegation, and lifecycle tracking with unique IDs</li>
+                    <li><strong>Message Validation:</strong> Standardized request/response formats with error handling and recovery</li>
+                    <li><strong>State Coordination:</strong> Distributed state management across multi-agent workflows</li>
+                    <li><strong>Security Layer:</strong> OAuth2, JWT tokens, and TLS encryption for secure agent communication</li>
                   </ul>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="border border-border rounded-md p-3">
+                    <h5 className="font-medium text-accent flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      Complementary to MCP
+                    </h5>
+                    <p className="text-sm">A2A handles agent↔agent communication while MCP manages agent↔tool interactions</p>
+                  </div>
+                  <div className="border border-border rounded-md p-3">
+                    <h5 className="font-medium text-accent flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      Enterprise Ready
+                    </h5>
+                    <p className="text-sm">Built-in security, scalability, and monitoring for production deployments</p>
+                  </div>
+                </div>
+
                 <div className="py-4">
                   <h4 className="font-semibold mb-2">A2A Interaction Models:</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -319,34 +346,61 @@ const ConceptsExplorer = () => {
             <CardContent>
               <div className="space-y-4">
                 <p>
-                  ModelContextProtocol (MCP) is a framework for standardizing how AI agents communicate, 
-                  maintain context, and collaborate. It provides structure for how agents share information, 
-                  pass control, and maintain conversational or task state across interactions.
+                  ModelContextProtocol (MCP) is a framework for standardizing how AI agents communicate with external tools and data sources, 
+                  enabling seamless integration between LLM-based agents and specialized services. MCP serves as the bridge between 
+                  agents and their environment, complementing A2A for comprehensive agent ecosystem architecture.
                 </p>
+                
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 p-4 rounded-md border border-purple-200 dark:border-purple-800">
+                  <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">🏗️ Layered MCP×A2A Architecture</h4>
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    MCP operates in the Tool Integration Layer while A2A works in the Agent Management Layer, 
+                    creating a complete stack from User Interface → Agent Management → Core Protocol → Tool Integration → Security.
+                  </p>
+                </div>
+
                 <div className="bg-muted p-4 rounded-md">
-                  <h4 className="font-semibold">Key MCP Components:</h4>
+                  <h4 className="font-semibold">MCP Core Components (JSON-RPC Based):</h4>
                   <ul className="list-disc list-inside space-y-2 mt-2">
-                    <li>Message formats for agent-to-agent communication</li>
-                    <li>Context management for maintaining conversation state</li>
-                    <li>Control flow mechanisms for task delegation and handoff</li>
-                    <li>Metadata standards for tracking message origins and purpose</li>
-                    <li>Error handling and recovery procedures</li>
+                    <li><strong>Tool Descriptions:</strong> JSON schemas defining available functions, parameters, and expected outputs</li>
+                    <li><strong>Function Calling:</strong> Standardized parameter validation, execution, and result conversion</li>
+                    <li><strong>Context Management:</strong> Session tracking, state management, and conversation history</li>
+                    <li><strong>Server Discovery:</strong> Dynamic tool registration and capability advertisement</li>
+                    <li><strong>Error Handling:</strong> Standard error codes, recovery strategies, and graceful degradation</li>
                   </ul>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="border border-border rounded-md p-3">
+                    <h5 className="font-medium text-accent flex items-center gap-2">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                      Agent ↔ Tool Focus
+                    </h5>
+                    <p className="text-sm">Specialized for connecting agents to external APIs, databases, and cloud services</p>
+                  </div>
+                  <div className="border border-border rounded-md p-3">
+                    <h5 className="font-medium text-accent flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      Type Safety
+                    </h5>
+                    <p className="text-sm">JSON schema validation ensures reliable tool integration with error prevention</p>
+                  </div>
+                </div>
+
                 <div className="py-4">
-                  <h4 className="font-semibold mb-2">MCP Benefits:</h4>
+                  <h4 className="font-semibold mb-2">MCP Implementation Benefits:</h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="border border-border rounded-md p-3">
-                      <h5 className="font-medium text-accent">Interoperability</h5>
-                      <p className="text-sm">Agents from different systems can communicate using common standards</p>
+                      <h5 className="font-medium text-accent">70% Code Reduction</h5>
+                      <p className="text-sm">Frameworks like LangGraph reduce integration complexity significantly</p>
                     </div>
                     <div className="border border-border rounded-md p-3">
-                      <h5 className="font-medium text-accent">Context Preservation</h5>
-                      <p className="text-sm">Maintaining conversation history and state across agent interactions</p>
+                      <h5 className="font-medium text-accent">65% Faster Integration</h5>
+                      <p className="text-sm">Standardized interfaces accelerate tool connection time</p>
                     </div>
                     <div className="border border-border rounded-md p-3">
-                      <h5 className="font-medium text-accent">Scalability</h5>
-                      <p className="text-sm">Easier integration of new agents into existing systems</p>
+                      <h5 className="font-medium text-accent">Enterprise Security</h5>
+                      <p className="text-sm">Built-in OAuth2, TLS, and access control for production deployments</p>
                     </div>
                   </div>
                 </div>
@@ -469,6 +523,143 @@ const ConceptsExplorer = () => {
           </p>
           
           <ACPMCPComparison />
+          
+          <Separator className="my-6" />
+          
+          <h2 className="text-2xl font-semibold tracking-tight mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                <div className="w-3 h-3 bg-white rounded-full"></div>
+              </div>
+              MCP×A2A Integration Framework
+            </div>
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            Explore the cutting-edge framework that combines Model Context Protocol (MCP) for agent-to-tool communication 
+            with Agent-to-Agent (A2A) protocol for agent coordination, enabling sophisticated autonomous LLM-based agent systems.
+          </p>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                  Protocol Complementarity
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-md">
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-sm mb-2">MCP Focus</h4>
+                  <p className="text-xs text-blue-700 dark:text-blue-300">Agent ↔ External Tool communication</p>
+                  <ul className="text-xs text-blue-600 dark:text-blue-400 mt-2 space-y-1">
+                    <li>• Tool invocation & API integration</li>
+                    <li>• Data retrieval & automation</li>
+                    <li>• JSON schema-based interfaces</li>
+                  </ul>
+                </div>
+                <div className="bg-purple-50 dark:bg-purple-950/30 p-3 rounded-md">
+                  <h4 className="font-semibold text-purple-900 dark:text-purple-100 text-sm mb-2">A2A Focus</h4>
+                  <p className="text-xs text-purple-700 dark:text-purple-300">Agent ↔ Agent communication</p>
+                  <ul className="text-xs text-purple-600 dark:text-purple-400 mt-2 space-y-1">
+                    <li>• Collaborative workflows</li>
+                    <li>• Task delegation & coordination</li>
+                    <li>• Agent cards & discovery</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                  Layered Architecture
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="bg-green-100 dark:bg-green-900/20 p-2 rounded text-xs">
+                    <strong>User Interface Layer:</strong> Multimodal content processing & UX negotiation
+                  </div>
+                  <div className="bg-blue-100 dark:bg-blue-900/20 p-2 rounded text-xs">
+                    <strong>Agent Management Layer:</strong> Agent cards, registry, task management, discovery
+                  </div>
+                  <div className="bg-purple-100 dark:bg-purple-900/20 p-2 rounded text-xs">
+                    <strong>Core Protocol Layer:</strong> A2A messaging, MCP content, artifact management
+                  </div>
+                  <div className="bg-orange-100 dark:bg-orange-900/20 p-2 rounded text-xs">
+                    <strong>Tool Integration Layer:</strong> Function calling, schema validation, result handling
+                  </div>
+                  <div className="bg-yellow-100 dark:bg-yellow-900/20 p-2 rounded text-xs">
+                    <strong>Security Layer:</strong> Authentication, authorization, encryption, access control
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="w-5 h-5 bg-gradient-to-r from-orange-500 to-red-500 rounded-full"></div>
+                Real-World Implementation Results
+              </CardTitle>
+              <CardDescription>Performance improvements from MCP×A2A framework adoption</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="text-3xl font-bold text-green-600 dark:text-green-400">70%</div>
+                  <div className="text-sm text-green-700 dark:text-green-300 font-medium">Code Reduction</div>
+                  <div className="text-xs text-green-600 dark:text-green-400 mt-1">Using LangGraph framework</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">65%</div>
+                  <div className="text-sm text-blue-700 dark:text-blue-300 font-medium">Faster Integration</div>
+                  <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">Tool integration time reduction</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/30 dark:to-violet-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">∞</div>
+                  <div className="text-sm text-purple-700 dark:text-purple-300 font-medium">Scalability</div>
+                  <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">Dozens of agents coordination</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="w-5 h-5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
+                Enterprise Use Cases
+              </CardTitle>
+              <CardDescription>Production applications of the MCP×A2A framework</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="border-l-4 border-blue-500 pl-4">
+                    <h4 className="font-semibold text-sm">Recruitment Automation</h4>
+                    <p className="text-xs text-muted-foreground">Screening agents use MCP for resume parsing, scheduling agents use MCP for calendar APIs, with A2A coordination</p>
+                  </div>
+                  <div className="border-l-4 border-green-500 pl-4">
+                    <h4 className="font-semibold text-sm">Customer Support</h4>
+                    <p className="text-xs text-muted-foreground">Multi-agent workflow: initial response → diagnosis → solution → escalation with MCP-CRM integration</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="border-l-4 border-purple-500 pl-4">
+                    <h4 className="font-semibold text-sm">Code Review Systems</h4>
+                    <p className="text-xs text-muted-foreground">Analysis, security, performance, and documentation agents with MCP connections to CI/CD tools</p>
+                  </div>
+                  <div className="border-l-4 border-orange-500 pl-4">
+                    <h4 className="font-semibold text-sm">Stock Information Systems</h4>
+                    <p className="text-xs text-muted-foreground">Orchestrator plans calls, stock agents use MCP APIs, news agents scrape data, analysis agents synthesize</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
         
         <TabsContent value="visualization" className="space-y-6 pt-6">
