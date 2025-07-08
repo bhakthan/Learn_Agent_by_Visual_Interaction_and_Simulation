@@ -187,7 +187,7 @@ export function EnlightenMe({ title, defaultPrompt, isOpen, onOpenChange }: Enli
                   <span className="ml-2">Generating insights...</span>
                 </div>
               ) : (
-                <ScrollArea className="h-[1500px]">
+                <ScrollArea className="h-[calc(80vh-200px)]">
                   <div className="prose prose-sm dark:prose-invert max-w-none pr-4">
                     <ReactMarkdown
                       components={markdownComponents}

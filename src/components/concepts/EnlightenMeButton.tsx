@@ -289,7 +289,7 @@ Please provide:
                     </div>
                     
                     <div className="flex-1 min-h-0">
-                      <ScrollArea className="h-[2000px]">
+                      <ScrollArea className="h-[calc(90vh-300px)]">
                         <div className="prose prose-base dark:prose-invert max-w-none pr-4">
                           <ReactMarkdown
                             components={markdownComponents}
