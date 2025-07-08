@@ -2,9 +2,78 @@
 
 **Where AI Agent Concepts Come to Life**
 
-An interactive educational platform for understanding AI agents, Agent-to-Agent (A2A) communication, Model Context Protocol (MCP), and Agent Communication Protocol (ACP). This application provides comprehensive visualizations, micro-learning modules, and hands-on demonstrations of modern AI agent architectures.
+An interactive educational platform for understanding AI agents, Agent-to-Agent (A2A) communication, Model Context Protocol (MCP), and Agent Communication Protocol (ACP). This application provides comprehensive visualizations, micro-learning modules, and hands-on ## 🎮 Interactive Demos
+
+### 💡 EnlightenMe: AI Learning Assistant
+**Personalized AI-Powered Explanations** - Context-aware learning that adapts to your needs:
+- **Intelligent Prompt Generation**: Automatically creates comprehensive prompts based on current concept
+- **Customizable Learning**: Edit prompts to focus on specific aspects or ask custom questions
+- **Rich Markdown Responses**: Beautifully formatted explanations with syntax-highlighted code blocks
+- **Azure AI Focused**: Specialized explanations for Microsoft Azure AI ecosystem and services
+- **Code Copy Features**: One-click copying of code snippets and examples
+- **Persistent Insights**: Locally cached responses for quick re-access to valuable explanations
+- **Universal Integration**: Available on every concept card, pattern, and Azure service throughout the app
+- **Progressive Disclosure**: Responses scale from basic concepts to advanced implementation details
+
+**EnlightenMe in Action**:
+- **Concept Cards**: Get detailed explanations of AI agent concepts with real-world examples
+- **Pattern Examples**: Understand implementation details and best practices for each pattern
+- **Azure Services**: Learn how to integrate with specific Azure AI services and APIs
+- **Security Patterns**: Comprehensive security guidance for enterprise implementations
+- **Code Examples**: Detailed breakdowns of code snippets with line-by-line explanations
+
+### 🎓 Adaptive Learning Quiz Systemonstrations of modern AI agent architectures.
 
 ## 🌟 Features
+
+### 💡 EnlightenMe: AI-Powered Learning Assistant
+**Context-Aware AI Explanations** - Revolutionary learning feature that provides personalized AI insights:
+- **Smart Context Detection**: Automatically generates detailed prompts based on the current concept or pattern
+- **Customizable Queries**: Edit AI prompts or use intelligent defaults for optimal learning
+- **Markdown-Rich Responses**: Beautifully formatted responses with syntax-highlighted code blocks
+- **Copy-to-Clipboard Code**: Hover over code blocks to copy snippets with one click
+- **Persistent Learning**: Responses are cached locally for quick re-access
+- **Universal Integration**: Available on every concept card, pattern example, and Azure service
+- **Role-Specific Explanations**: Tailored responses for different professional backgrounds
+- **Interactive Learning**: Ask follow-up questions and dive deeper into topics
+
+**EnlightenMe Features**:
+- **Azure AI Focus**: Specialized explanations for Azure AI Agent Service, OpenAI integration, and Microsoft tools
+- **Code Examples**: Real implementation examples with Azure SDK, REST APIs, and best practices
+- **Architecture Insights**: Detailed breakdowns of how concepts fit into larger Azure ecosystems
+- **Production Guidance**: Security, monitoring, and deployment considerations for enterprise use
+- **Cross-Reference Links**: Connections to related concepts and complementary technologies
+
+### 🏢 Azure AI Services Integration
+**Enterprise-Ready Azure Components** - Comprehensive coverage of Microsoft Azure AI ecosystem:
+- **Azure Services Overview**: Interactive cards covering Azure OpenAI, AI Search, Document Intelligence, and more
+- **Azure Integration Guide**: Step-by-step implementation patterns for Azure AI Agent Service
+- **Azure Security Implementation**: Enterprise security patterns with Azure Active Directory integration
+- **Azure Best Practices**: Production-ready patterns for scaling, monitoring, and cost optimization
+- **Service Reference**: Detailed API documentation and SDK usage examples
+
+### 📚 Code Playbook System
+**Practical Implementation Guides** - Hands-on coding resources for building production agents:
+- **Interactive Code Debugger**: Step-through debugging interface for agent workflows
+- **Code Step Visualizer**: Visual execution flow with variable tracking and state management
+- **Algorithm Visualizer**: Animated representations of agent decision-making processes
+- **Enhanced Code Visualizer**: Multi-language code examples with live editing capabilities
+- **Interactive Code Execution**: Safe sandbox environment for testing agent patterns
+
+### 🛡️ Security & Compliance Framework
+**Enterprise Security Patterns** - Comprehensive security guidance for production agent systems:
+- **Pattern Security Controls**: Security considerations for each agent pattern
+- **Azure Security Implementation**: Integration with Azure security services
+- **Compliance Guidelines**: GDPR, SOC2, and industry-specific compliance patterns
+- **Threat Modeling**: Security assessment tools for agent architectures
+
+### 🤝 Community & Collaboration
+**Knowledge Sharing Platform** - Community-driven pattern sharing and collaboration:
+- **Community Hub**: Central place for sharing custom agent patterns
+- **Pattern Sharing**: Upload and share your own agent implementations
+- **Community Pattern Cards**: Browse and discover patterns created by other developers
+- **Pattern Details**: In-depth documentation with usage examples and best practices
+- **Collaborative Learning**: Rate, comment, and improve community contributions
 
 ### Core Visualizations
 - **Agent Lifecycle Visual**: Interactive SVG-based visualization showing the complete cognitive cycle of AI agents from input processing to learning
@@ -129,11 +198,14 @@ npm test
 
 ### Technical Highlights
 - **Zero ReactFlow Dependencies**: All visualizations are hand-crafted SVG components for maximum performance and customization
+- **AI-Powered Learning**: EnlightenMe feature provides context-aware explanations using LLM integration
+- **Markdown Rendering**: Rich text formatting with syntax highlighting for code blocks and copy-to-clipboard functionality
 - **Responsive Design**: Fluid layouts that adapt to desktop, tablet, and mobile devices
 - **Performance Optimized**: Lazy loading, code splitting, and efficient re-renders
 - **Type Safety**: Comprehensive TypeScript coverage with strict mode enabled
 - **Accessibility First**: WCAG 2.1 AA compliance with screen reader support
 - **Theme System**: Consistent dark/light mode with smooth transitions
+- **Local Storage**: Persistent learning progress and cached AI responses for offline access
 
 ### Tech Stack
 - **Frontend**: React 18 with TypeScript for type-safe development
@@ -143,7 +215,10 @@ npm test
 - **Build**: Vite with optimized bundling and hot module replacement
 - **Animations**: Pure CSS animations with hand-crafted SVG-based visualizations
 - **State Management**: React Context for theme and sidebar state management
-- **Code Highlighting**: Syntax highlighting for code examples and patterns
+- **Code Highlighting**: Prism.js with react-syntax-highlighter for beautiful code displays
+- **Markdown Rendering**: ReactMarkdown with remark-gfm for rich text formatting
+- **AI Integration**: LLM integration for personalized learning experiences
+- **Copy-to-Clipboard**: Native Clipboard API for seamless code copying
 
 ### Project Structure
 
@@ -155,8 +230,34 @@ src/
 │   │   ├── A2ACommunicationPatterns.tsx
 │   │   ├── MCPArchitectureDiagram.tsx
 │   │   ├── AgentCommunicationPlayground.tsx
-│   │   └── ConceptsExplorer.tsx
-│   ├── interactive-demos/  # Interactive demonstrations
+│   │   ├── ConceptsExplorer.tsx
+│   │   └── EnlightenMeButton.tsx
+│   ├── enlighten/         # AI-powered learning assistant
+│   │   ├── EnlightenMeProvider.tsx
+│   │   ├── EnlightenMe.tsx
+│   │   └── EnlightenMeButton.tsx
+│   ├── azure-services/    # Azure AI services integration
+│   │   └── AzureServicesOverview.tsx
+│   ├── code-playbook/     # Interactive coding resources
+│   │   ├── CodePlaybook.tsx
+│   │   ├── CodeDebugger.tsx
+│   │   ├── CodeStepVisualizer.tsx
+│   │   ├── AlgorithmVisualizer.tsx
+│   │   ├── EnhancedCodeVisualizer.tsx
+│   │   ├── InteractiveCodeExecution.tsx
+│   │   ├── AzureServiceReference.tsx
+│   │   ├── AzureServicesBestPractices.tsx
+│   │   ├── AzureIntegrationGuide.tsx
+│   │   └── AzureSecurityImplementation.tsx
+│   ├── community/         # Community sharing platform
+│   │   ├── CommunityHub.tsx
+│   │   ├── CommunitySharing.tsx
+│   │   ├── CommunityPatternCard.tsx
+│   │   ├── CommunityPatternDetails.tsx
+│   │   └── CommunityPatternForm.tsx
+│   ├── security/          # Security & compliance framework
+│   │   └── PatternSecurityControls.tsx
+│   ├── interactive-demos/ # Interactive demonstrations
 │   ├── patterns/          # Agent pattern examples
 │   ├── quiz/              # Comprehensive quiz system
 │   │   ├── AdaptiveLearningQuiz.tsx
@@ -316,32 +417,37 @@ Create new visualizations by:
 ## 📚 Learning Paths
 
 ### For Beginners
-1. Start with Agent Lifecycle Visual
-2. Explore basic communication patterns
-3. Try interactive demos
+1. Start with Agent Lifecycle Visual and use **EnlightenMe** for detailed explanations
+2. Explore basic communication patterns with AI-guided learning
+3. Try interactive demos with contextual AI assistance
 4. Take the beginner-level quiz to assess understanding
-5. Progress to pattern examples
+5. Use **EnlightenMe** on quiz results for deeper insights
+6. Progress to pattern examples
 
 ### For Developers
-1. Review code examples at intermediate level
-2. Examine pattern implementations
-3. Explore protocol specifications
-4. Complete developer-focused quizzes
-5. Build custom agent patterns
+1. Review code examples at intermediate level with **EnlightenMe** code explanations
+2. Examine pattern implementations using AI-powered breakdowns
+3. Explore Azure service integrations with detailed AI guidance
+4. Use **Code Playbook** for hands-on implementation practice
+5. Complete developer-focused quizzes with AI-enhanced feedback
+6. Build custom agent patterns with AI assistance
 
 ### For Architects
-1. Study advanced patterns and optimizations
-2. Analyze protocol comparisons
-3. Review scalability considerations
-4. Take advanced-level assessments
-5. Design multi-agent systems
+1. Study advanced patterns and optimizations with **EnlightenMe** architecture insights
+2. Analyze protocol comparisons using AI-powered explanations
+3. Review scalability considerations with Azure-specific guidance
+4. Use **Azure Security Implementation** with AI-enhanced security patterns
+5. Take advanced-level assessments with detailed AI feedback
+6. Design multi-agent systems with AI architectural guidance
 
 ### Assessment-Driven Learning
 - **Start with a Quiz**: Identify knowledge gaps before diving into content
-- **Targeted Study**: Focus on areas identified through quiz feedback
+- **AI-Enhanced Learning**: Use **EnlightenMe** on any concept for personalized explanations
+- **Targeted Study**: Focus on areas identified through quiz feedback with AI assistance
 - **Progressive Assessment**: Move from beginner to advanced quizzes as you learn
 - **Performance Tracking**: Monitor your progress across different categories
 - **Expert Validation**: Advanced quizzes help validate professional expertise
+- **Continuous Learning**: Ask follow-up questions using **EnlightenMe** for deeper understanding
 
 ## 🤝 Contributing
 
