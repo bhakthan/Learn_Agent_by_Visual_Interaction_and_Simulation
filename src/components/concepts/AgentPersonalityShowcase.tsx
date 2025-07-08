@@ -29,8 +29,7 @@ interface ThinkingBubble {
 }
 
 const AgentPersonalityShowcase: React.FC = () => {
-  const { theme } = useTheme();
-  const isDarkMode = theme === 'dark';
+  const { theme, isDarkMode } = useTheme();
   
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [thinkingBubbles, setThinkingBubbles] = useState<ThinkingBubble[]>([]);

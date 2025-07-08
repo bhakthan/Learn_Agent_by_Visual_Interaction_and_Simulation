@@ -5,8 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useTheme } from '@/components/theme/ThemeProvider';
 
 const ACPProtocolStack: React.FC = () => {
-  const { theme } = useTheme();
-  const isDarkMode = theme === 'dark';
+  const { theme, isDarkMode } = useTheme();
   const [hoveredLayer, setHoveredLayer] = useState<string | null>(null);
   
   const colors = {

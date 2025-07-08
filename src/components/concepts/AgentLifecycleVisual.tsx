@@ -9,8 +9,7 @@ interface AgentLifecycleProps {
 }
 
 const AgentLifecycleVisual: React.FC<AgentLifecycleProps> = ({ autoPlay = false }) => {
-  const { theme } = useTheme();
-  const isDarkMode = theme === 'dark';
+  const { theme, isDarkMode } = useTheme();
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [activeMicroLesson, setActiveMicroLesson] = useState<number | null>(null);

@@ -40,7 +40,7 @@ interface FlowPreset {
 }
 
 const SimpleFlowDemo: React.FC<SimpleFlowDemoProps> = () => {
-  const { theme } = useTheme();
+  const { theme, isDarkMode } = useTheme();
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentPreset, setCurrentPreset] = useState('basic');
   const [showGrid, setShowGrid] = useState(true);
@@ -146,8 +146,8 @@ const SimpleFlowDemo: React.FC<SimpleFlowDemoProps> = () => {
     
     if (isActive) {
       return {
-        bg: theme === 'dark' ? '#1d4ed8' : '#3b82f6',
-        border: theme === 'dark' ? '#60a5fa' : '#1d4ed8',
+        bg: isDarkMode ? '#1d4ed8' : '#3b82f6',
+        border: isDarkMode ? '#60a5fa' : '#1d4ed8',
         text: '#ffffff'
       };
     }

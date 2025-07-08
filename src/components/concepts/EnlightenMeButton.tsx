@@ -1,206 +1,177 @@
 import React, { useState } from 'react';
-import { Lightbulb, SpinnerGap } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+import { Lightbulb, SpinnerGap } from '@phosphor-icons/react';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
+import { useEnlightenMe } from '../enlighten/EnlightenMeProvider';
 import { useKV } from '@github/spark/hooks';
-
-// Define spark API type to avoid TypeScript errors
-declare global {
-  interface Window {
-    spark: {
-      llmPrompt: (strings: TemplateStringsArray, ...values: any[]) => string;
-      llm: (prompt: string, modelName?: string, jsonMode?: boolean) => Promise<string>;
-      user: () => Promise<{
-        avatarUrl: string;
-        email: string;
-        id: string;
-        isOwner: boolean;
-        login: string;
-      }>;
-      kv: {
-        keys: () => Promise<string[]>;
-        get: <T>(key: string) => Promise<T | undefined>;
-        set: <T>(key: string, value: T) => Promise<void>;
-        delete: (key: string) => Promise<void>;
-      };
-    };
-  }
-}
 
 interface EnlightenMeButtonProps {
   title: string;
   conceptId: string;
   description?: string;
   customPrompt?: string;
-  className?: string;
 }
 
-const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({
-  title,
-  conceptId,
+const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({ 
+  title, 
+  conceptId, 
   description,
-  customPrompt,
-  className,
+  customPrompt 
 }) => {
+  // Get previously saved insights from KV store if available
+  const [savedInsights, setSavedInsights] = useKV<Record<string, string>>('enlighten-insights', {});
+  
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [prompt, setPrompt] = useState<string>('');
-  const [response, setResponse] = useState<string>('');
   const [showResponse, setShowResponse] = useState(false);
   
-  // Store recent insights using KV store to remember previous enlightenment
-  const [recentInsights, setRecentInsights] = useKV<Record<string, string>>('enlighten-me-insights', {});
-
-  // Create a detailed prompt based on the context description
+  // Check if we have a previously saved response for this concept
+  const hasSavedResponse = savedInsights && savedInsights[conceptId];
+  
+  // Generate a default prompt based on the concept details
   const generateDefaultPrompt = () => {
-    // The default prompt will be based on the concept's title and description
-    const basePrompt = `Explain the concept of ${title} in detail, covering:
-1. What it is and why it's important in the context of Azure AI Agents
+    if (customPrompt) return customPrompt;
+    
+    return `Explain the concept of "${title}" in detail in the context of Azure AI Agents.
+    
+${description ? `Context: ${description}` : ''}
+
+Please provide:
+1. What it is and why it's important
 2. How it works and its key components
-3. Real-world applications and use cases
-4. Best practices when implementing it
-5. How it relates to other agent patterns or concepts`;
-    
-    if (customPrompt) {
-      return customPrompt;
-    }
-    
-    return basePrompt;
+3. Real-world applications and examples
+4. Best practices for implementation
+5. How it relates to other AI agent concepts`;
   };
-
-  const handleOpen = () => {
-    setIsOpen(true);
-    setPrompt(generateDefaultPrompt());
-    
-    // Check if we have a saved response for this concept
-    if (recentInsights[conceptId]) {
-      setResponse(recentInsights[conceptId]);
-      setShowResponse(true);
-    } else {
-      setShowResponse(false);
-    }
-  };
-
-  const handleClose = () => {
-    setIsOpen(false);
-  };
-
-  const handleSubmit = async () => {
-    setIsLoading(true);
-    try {
-      // Ensure window.spark is defined
-      if (!window.spark || typeof window.spark.llmPrompt !== 'function') {
-        throw new Error('Spark API is not available');
+  
+  const [prompt, setPrompt] = useState<string>(generateDefaultPrompt());
+  const [response, setResponse] = useState<string | null>(hasSavedResponse ? savedInsights[conceptId] : null);
+  
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (open) {
+      // When opening, check if we have a saved response
+      if (hasSavedResponse) {
+        setResponse(savedInsights[conceptId]);
+        setShowResponse(true);
+      } else {
+        setPrompt(generateDefaultPrompt());
+        setShowResponse(false);
       }
+    }
+  };
+  
+  const handleSubmit = async () => {
+    if (!prompt.trim()) return;
+    
+    setIsLoading(true);
+    setShowResponse(true);
+    
+    try {
+      // Create the LLM prompt using the spark API
+      const generatedPrompt = window.spark.llmPrompt`${prompt}`;
       
-      // Create a prompt using the spark.llmPrompt template format
-      const llmPrompt = window.spark.llmPrompt`${prompt}`;
+      // Call the LLM
+      const result = await window.spark.llm(generatedPrompt);
       
-      // Call the LLM with the prompt
-      const result = await window.spark.llm(llmPrompt, "gpt-4o");
-      
+      // Update the response and save it to KV store
       setResponse(result);
-      setShowResponse(true);
-      
-      // Save this response for future reference
-      setRecentInsights(current => ({
+      setSavedInsights(current => ({
         ...current,
         [conceptId]: result
       }));
     } catch (error) {
-      setResponse(`An error occurred while processing your request: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setShowResponse(true);
+      console.error('Error in EnlightenMeButton:', error);
+      setResponse('Sorry, I encountered an error processing your request. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+  
+  const handleReset = () => {
+    setShowResponse(false);
+    setPrompt(generateDefaultPrompt());
+    setResponse(null);
+  };
 
   return (
-    <>
+    <div className="absolute top-3 right-3 z-10">
       <Button
         variant="ghost"
-        size="sm"
-        className={cn(
-          "absolute top-2 right-2 px-2 h-8 w-8 rounded-full hover:bg-yellow-100 hover:text-yellow-900 dark:hover:bg-yellow-900/20 dark:hover:text-yellow-400 transition-colors enlighten-button",
-          className
-        )}
-        onClick={handleOpen}
-        aria-label={`Learn more about ${title}`}
-        title="Enlighten me about this topic"
+        size="icon"
+        className="h-8 w-8 rounded-full hover:bg-yellow-100 hover:text-yellow-900 dark:hover:bg-yellow-900/20 dark:hover:text-yellow-400"
+        onClick={() => setIsOpen(true)}
+        title="Learn more about this topic"
       >
-        <Lightbulb size={18} weight="fill" className="text-yellow-500" />
+        <Lightbulb size={16} weight="fill" className="text-yellow-500" />
       </Button>
-
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col">
+      
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Lightbulb size={24} weight="fill" className="text-yellow-500" />
-              Enlighten Me: {title}
+              <Lightbulb className="text-yellow-500" size={20} weight="fill" />
+              Learn about: {title}
             </DialogTitle>
             <DialogDescription>
-              Learn more about this concept with AI assistance. Edit the prompt if you'd like to ask something specific.
+              {showResponse 
+                ? "Here's what I've found about this topic" 
+                : "Customize your query or use the default prompt to learn about this topic"}
             </DialogDescription>
           </DialogHeader>
-
-          <div className="flex flex-col gap-4 flex-grow">
-            <div>
-              <label htmlFor="prompt" className="text-sm font-medium mb-1 block">
-                Your Learning Prompt:
-              </label>
+          
+          {!showResponse ? (
+            <>
               <Textarea
-                id="prompt"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Enter your prompt..."
-                className="min-h-[120px]"
+                className="min-h-[150px]"
+                placeholder="Enter your question..."
               />
-              <div className="flex justify-end mt-2">
-                <Badge variant="outline" className="cursor-pointer hover:bg-muted" onClick={() => setPrompt(generateDefaultPrompt())}>
-                  Reset to Default
-                </Badge>
-              </div>
-            </div>
-
-            {showResponse && (
-              <div className="mt-2">
-                <label className="text-sm font-medium mb-1 block">Response:</label>
-                <Card className="p-4 overflow-hidden">
-                  <ScrollArea className="h-[320px]">
-                    <div className="whitespace-pre-wrap">{response}</div>
+              
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+                <Button onClick={handleSubmit}>Get Insights</Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-8 gap-2">
+                  <SpinnerGap size={32} className="animate-spin text-primary" />
+                  <p className="text-sm text-muted-foreground">Generating insights...</p>
+                </div>
+              ) : (
+                <>
+                  <ScrollArea className="h-[350px]">
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      {response?.split('\n').map((paragraph, i) => (
+                        paragraph.trim() ? <p key={i}>{paragraph}</p> : <br key={i} />
+                      ))}
+                    </div>
                   </ScrollArea>
-                </Card>
-              </div>
-            )}
-          </div>
-
-          <DialogFooter className="flex gap-2 items-center">
-            {isLoading && <SpinnerGap size={20} className="animate-spin mr-2" />}
-            <Button variant="outline" onClick={handleClose}>
-              Close
-            </Button>
-            <Button onClick={handleSubmit} disabled={isLoading || prompt.trim().length === 0}>
-              {isLoading ? 'Processing...' : showResponse ? 'Refresh Insights' : 'Get Insights'}
-            </Button>
-          </DialogFooter>
+                  
+                  <DialogFooter className="flex justify-between flex-row">
+                    <Button variant="outline" onClick={handleReset}>Ask Something Else</Button>
+                    <Button onClick={() => setIsOpen(false)}>Close</Button>
+                  </DialogFooter>
+                </>
+              )}
+            </>
+          )}
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 };
 
 export default EnlightenMeButton;
-
-</invoke>
