@@ -39,7 +39,7 @@ const ConceptsExplorer = () => {
   })
 
   const { startTutorial, registerTutorial, hasCompletedTutorial } = useTutorialContext();
-  const { isVisible, hideHelp, showHelp } = useFloatingContextualHelp('core-concepts', 15000);
+  const { isVisible, hideHelp, showHelp, toggleHelp } = useFloatingContextualHelp('core-concepts', 15000);
 
   // Register the concepts tutorial
   useEffect(() => {
@@ -896,6 +896,7 @@ const ConceptsExplorer = () => {
         pageKey="core-concepts"
         isVisible={isVisible}
         onClose={hideHelp}
+        onToggle={toggleHelp}
         onStartTutorial={() => startTutorial(conceptsExplorerTutorial.id)}
       />
 

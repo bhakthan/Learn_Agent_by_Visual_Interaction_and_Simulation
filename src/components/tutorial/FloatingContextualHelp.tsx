@@ -11,6 +11,7 @@ interface FloatingContextualHelpProps {
   pageKey: string;
   isVisible: boolean;
   onClose: () => void;
+  onToggle?: () => void;
   onStartTutorial?: () => void;
   className?: string;
 }
@@ -20,6 +21,7 @@ export const FloatingContextualHelp: React.FC<FloatingContextualHelpProps> = ({
   pageKey,
   isVisible,
   onClose,
+  onToggle,
   onStartTutorial,
   className
 }) => {
@@ -55,39 +57,57 @@ export const FloatingContextualHelp: React.FC<FloatingContextualHelpProps> = ({
     return icons[index % icons.length];
   };
 
-  if (!isVisible) return null;
-
   return (
-    <div className={cn(
-      "fixed bottom-6 right-6 z-50 transition-all duration-500 ease-in-out",
-      "animate-in slide-in-from-bottom-4 fade-in-0",
-      className
-    )}>
-      <Card className="w-80 shadow-2xl border-2 border-primary/20 bg-background/95 backdrop-blur-sm">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-primary/10 rounded-md">
-                <Lightbulb size={16} className="text-primary" />
+    <>
+      {/* Trigger Button - Always visible in bottom right */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          onClick={onToggle}
+          variant="default"
+          size="sm"
+          className={cn(
+            "h-10 w-10 rounded-full shadow-lg transition-all duration-300 hover:scale-110",
+            isVisible ? "bg-primary/80" : "bg-primary"
+          )}
+          aria-label="Toggle Learning Guide"
+        >
+          <Lightbulb size={18} />
+        </Button>
+      </div>
+
+      {/* Learning Guide Sidebar */}
+      {isVisible && (
+        <div className={cn(
+          "fixed bottom-20 right-6 z-50 transition-all duration-300 ease-in-out",
+          isVisible ? "translate-x-0 opacity-100 scale-100" : "translate-x-full opacity-0 scale-95",
+          className
+        )}>
+          <Card className="w-80 shadow-2xl border-2 border-primary/20 bg-background/95 backdrop-blur-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-primary/10 rounded-md">
+                    <Lightbulb size={16} className="text-primary" />
+                  </div>
+                  <CardTitle className="text-sm font-semibold">
+                    {isExpanded ? 'Quick Start Guide' : 'Learning Path'}
+                  </CardTitle>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onClose}
+                  className="h-6 w-6 p-0 hover:bg-destructive/10 rounded-full transition-all duration-200 hover:rotate-90"
+                  aria-label="Close Learning Guide"
+                >
+                  <X size={14} />
+                </Button>
               </div>
-              <CardTitle className="text-sm font-semibold">
-                {isExpanded ? 'Quick Start Guide' : 'Learning Path'}
-              </CardTitle>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="h-6 w-6 p-0 hover:bg-destructive/10"
-            >
-              <X size={14} />
-            </Button>
-          </div>
-          <CardDescription className="text-xs">
-            {isExpanded 
-              ? `Complete overview of ${pageSynopsis.title}`
-              : `Step ${currentStep + 1} of ${pageSynopsis.learningCategories.length}`
-            }
+              <CardDescription className="text-xs">
+                {isExpanded 
+                  ? `Complete overview of ${pageSynopsis.title}`
+                  : `Step ${currentStep + 1} of ${pageSynopsis.learningCategories.length}`
+                }
           </CardDescription>
         </CardHeader>
         
@@ -189,7 +209,9 @@ export const FloatingContextualHelp: React.FC<FloatingContextualHelpProps> = ({
           )}
         </CardContent>
       </Card>
-    </div>
+        </div>
+      )}
+    </>
   );
 };
 
@@ -203,28 +225,30 @@ export const useFloatingContextualHelp = (pageKey: string, delayMs: number = 100
     const hasSeenHelp = localStorage.getItem(`contextual-help-${pageKey}`);
     if (hasSeenHelp) {
       setHasShown(true);
-      return;
     }
 
-    const timer = setTimeout(() => {
-      if (!hasShown) {
-        setIsVisible(true);
-        setHasShown(true);
-      }
-    }, delayMs);
-
-    return () => clearTimeout(timer);
-  }, [pageKey, delayMs, hasShown]);
+    // Don't auto-show - let user control visibility
+    // Removed auto-show timer to keep help hidden until user clicks trigger
+  }, [pageKey, hasShown]);
 
   const hideHelp = () => {
     setIsVisible(false);
-    // Mark as seen so it doesn't show again
+    // Mark as seen so it doesn't show again automatically
     localStorage.setItem(`contextual-help-${pageKey}`, 'true');
   };
 
   const showHelp = () => {
     setIsVisible(true);
+    setHasShown(true);
   };
 
-  return { isVisible, hideHelp, showHelp, hasShown };
+  const toggleHelp = () => {
+    if (isVisible) {
+      hideHelp();
+    } else {
+      showHelp();
+    }
+  };
+
+  return { isVisible, hideHelp, showHelp, toggleHelp, hasShown };
 };

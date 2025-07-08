@@ -243,10 +243,8 @@ export const SmartPageAnalytics: React.FC<SmartPageAnalyticsProps> = ({
     if (analytics) {
       generateRecommendations();
       
-      // Show analytics after some engagement
-      if (analytics.timeSpent > 60000 || analytics.interactionsCount > 5) {
-        setIsVisible(true);
-      }
+      // Don't auto-show analytics - let user control visibility
+      // Removed auto-show logic to keep sidebar hidden until user clicks trigger
     }
   }, [analytics, generateRecommendations]);
 
@@ -266,95 +264,120 @@ export const SmartPageAnalytics: React.FC<SmartPageAnalyticsProps> = ({
     return { level: 'Low', color: 'text-red-600', bgColor: 'bg-red-100' };
   };
 
-  if (!analytics || !isVisible) return null;
+  if (!analytics) return null;
 
   const engagement = getEngagementLevel(analytics);
 
   return (
-    <div className="fixed bottom-6 left-6 z-40 w-72">
-      <Card className="shadow-lg border-l-4 border-l-primary bg-background/95 backdrop-blur-sm">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <TrendUp size={16} className="text-primary" />
-              Learning Progress
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsVisible(false)}
-              className="h-6 w-6 p-0"
-            >
-              ×
-            </Button>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
-          {/* Progress Overview */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Page Completion</span>
-              <span className="text-xs font-medium">{analytics.completionRate}%</span>
-            </div>
-            <Progress value={analytics.completionRate} className="h-2" />
-            
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center gap-1">
-                <Clock size={12} className="text-muted-foreground" />
-                <span>{formatTime(analytics.timeSpent)}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Eye size={12} className="text-muted-foreground" />
-                <span>{analytics.visitCount} visits</span>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Engagement:</span>
-              <Badge className={cn("text-xs", engagement.color, engagement.bgColor)}>
-                {engagement.level}
-              </Badge>
-            </div>
-          </div>
+    <>
+      {/* Trigger Button - Always visible in bottom left */}
+      <div className="fixed bottom-6 left-6 z-40">
+        <Button
+          onClick={() => setIsVisible(!isVisible)}
+          variant="default"
+          size="sm"
+          className={cn(
+            "h-10 w-10 rounded-full shadow-lg transition-all duration-300 hover:scale-110",
+            isVisible ? "bg-primary/80" : "bg-primary"
+          )}
+          aria-label="Toggle Learning Progress"
+        >
+          <TrendUp size={18} />
+        </Button>
+      </div>
 
-          {/* Recommendations */}
-          {recommendations.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="text-xs font-medium text-muted-foreground">Recommended Next Steps</h4>
-              {recommendations.map((rec) => (
-                <div
-                  key={rec.id}
-                  className="p-2 bg-muted/50 rounded-md cursor-pointer hover:bg-muted transition-colors"
-                  onClick={() => {
-                    rec.action();
-                    onRecommendationClick?.(rec);
-                  }}
+      {/* Learning Progress Sidebar */}
+      {isVisible && (
+        <div className={cn(
+          "fixed bottom-20 left-6 z-40 w-72 transition-all duration-300 ease-in-out",
+          isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
+        )}>
+          <Card className="shadow-lg border-l-4 border-l-primary bg-background/95 backdrop-blur-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <TrendUp size={16} className="text-primary" />
+                  Learning Progress
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsVisible(false)}
+                  className="h-6 w-6 p-0 hover:bg-muted rounded-full transition-all duration-200 hover:rotate-90"
+                  aria-label="Close Learning Progress"
                 >
-                  <div className="flex items-start gap-2">
-                    <div className="mt-0.5">{rec.icon}</div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-1 mb-1">
-                        <span className="text-xs font-medium">{rec.title}</span>
-                        <CaretRight size={10} className="text-muted-foreground" />
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-tight mb-1">
-                        {rec.description}
-                      </p>
-                      <div className="flex items-center gap-1">
-                        <Badge variant="outline" className="text-xs px-1.5 py-0">
-                          {rec.estimatedTime}
-                        </Badge>
-                      </div>
-                    </div>
+                  ×
+                </Button>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="space-y-4">
+              {/* Progress Overview */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Page Completion</span>
+                  <span className="text-xs font-medium">{analytics.completionRate}%</span>
+                </div>
+                <Progress value={analytics.completionRate} className="h-2" />
+                
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-1">
+                    <Clock size={12} className="text-muted-foreground" />
+                    <span>{formatTime(analytics.timeSpent)}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Eye size={12} className="text-muted-foreground" />
+                    <span>{analytics.visitCount} visits</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Engagement:</span>
+                  <Badge className={cn("text-xs", engagement.color, engagement.bgColor)}>
+                    {engagement.level}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Recommendations */}
+              {recommendations.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-medium text-muted-foreground">Recommended Next Steps</h4>
+                  {recommendations.map((rec) => (
+                    <div
+                      key={rec.id}
+                      className="p-2 bg-muted/50 rounded-md cursor-pointer hover:bg-muted transition-colors"
+                      onClick={() => {
+                        rec.action();
+                        onRecommendationClick?.(rec);
+                      }}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className="mt-0.5">{rec.icon}</div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1 mb-1">
+                            <span className="text-xs font-medium">{rec.title}</span>
+                            <CaretRight size={10} className="text-muted-foreground" />
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-tight mb-1">
+                            {rec.description}
+                          </p>
+                          <div className="flex items-center gap-1">
+                            <Badge variant="outline" className="text-xs px-1.5 py-0">
+                              {rec.estimatedTime}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </>
   );
 };
 
