@@ -19,6 +19,7 @@ import {
   Gauge,
   ClockClockwise
 } from '@phosphor-icons/react';
+import EnlightenMeButton from '../concepts/EnlightenMeButton';
 
 // Mock environment variables for browser environment
 const mockEnv = {
@@ -830,7 +831,13 @@ async function getUserRoles(userId) {
           <div className="space-y-4">
             <Accordion type="single" collapsible className="w-full">
               {practices.map((practice, index) => (
-              <AccordionItem key={index} value={`practice-${index}`} className="border bg-card">
+              <AccordionItem key={index} value={`practice-${index}`} className="border bg-card relative">
+                <EnlightenMeButton 
+                  title={`${practice.name} Best Practices`}
+                  conceptId={`azure-practice-${patternId}-${practice.name.toLowerCase().replace(/\s+/g, '-')}`}
+                  description={practice.description}
+                  customPrompt={`Provide comprehensive best practices for ${practice.name} when implementing the ${patternName} pattern in Azure AI environments. Cover: 1) Detailed explanation of ${practice.name} and why it's critical for the ${patternName} pattern, including common challenges and pitfalls, 2) Step-by-step implementation guide with complete Azure-specific code examples using Azure SDKs, Azure CLI, and ARM templates, 3) Security best practices including Azure Key Vault integration, managed identity configuration, network security, and compliance considerations (GDPR, HIPAA, SOC), 4) Performance optimization strategies including caching, connection pooling, retry policies, and resource allocation specific to Azure infrastructure, 5) Cost optimization techniques including resource sizing, auto-scaling configurations, and Azure cost management strategies, 6) Monitoring and observability setup using Azure Application Insights, Azure Monitor, and custom metrics relevant to ${practice.name}, 7) Integration patterns with other Azure services and how ${practice.name} fits into the broader Azure AI ecosystem, 8) Troubleshooting guide with common issues, debugging techniques, and resolution strategies specific to Azure environments, 9) Testing strategies including unit tests, integration tests, and load testing approaches for ${practice.name} in Azure, 10) Production deployment best practices including CI/CD pipelines, environment management, and rollback strategies using Azure DevOps or GitHub Actions.`}
+                />
                 <AccordionTrigger className="px-4 py-3 hover:bg-muted/50">
                   <div className="flex items-center gap-3 text-left">
                     {practice.icon}

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Cloud, Stack, Lightning, Database, LineSegments, ShieldCheck, Article } from '@phosphor-icons/react';
 import { AzureAIService, azureAIServices, AzureServicePatternMapping, azureServicePatternMappings } from '@/lib/data/azureAiServices';
+import EnlightenMeButton from '../concepts/EnlightenMeButton';
 
 interface AzureIntegrationGuideProps {
   patternId: string;
@@ -119,7 +120,13 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, integration, bestPra
   const [activeTab, setActiveTab] = useState<'integration' | 'practices'>('integration');
 
   return (
-    <Card className="border shadow-sm h-full overflow-hidden flex flex-col">
+    <Card className="border shadow-sm h-full overflow-hidden flex flex-col relative">
+      <EnlightenMeButton 
+        title={`${service.name} Integration`}
+        conceptId={`azure-integration-${service.id}`}
+        description={`Integration guide for ${service.name} with agent patterns`}
+        customPrompt={`Provide a comprehensive integration guide for ${service.name} with agent patterns. Cover: 1) Detailed overview of how ${service.name} integrates with AI agent architectures, including its specific role and value proposition in agent workflows, 2) Step-by-step integration process with Azure OpenAI Service, Azure AI Agent Service, and other relevant Azure AI services, including authentication, configuration, and connection management, 3) Complete code examples and implementation patterns using Azure SDKs (Python, TypeScript, C#), with proper error handling, retry logic, and production-ready practices, 4) Integration-specific best practices for performance optimization, cost management, and scaling considerations when using ${service.name} in agent systems, 5) Security implementation including Azure Key Vault integration, managed identity setup, network isolation, and compliance considerations, 6) Monitoring and observability setup using Azure Application Insights and Azure Monitor, including service-specific metrics and alerts, 7) Testing strategies for integration validation, including unit tests, integration tests, and end-to-end testing approaches, 8) Troubleshooting guide with common integration issues, debugging techniques, and resolution strategies specific to ${service.name}, 9) Advanced integration patterns including event-driven architectures, async processing, and integration with Azure Event Hubs or Service Bus, 10) Migration strategies for existing systems and gradual adoption approaches for ${service.name} integration.`}
+      />
       <CardHeader className="bg-muted/30 py-3 px-4">
         <CardTitle className="text-base flex items-center gap-2">
           {getServiceIcon(service.id)}

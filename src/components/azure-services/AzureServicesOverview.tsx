@@ -14,6 +14,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ReferenceLinks } from '../references/ReferenceLinks';
 import ReferenceSection from '../references/ReferenceSection';
 import { EnhancedTutorialButton, pagesSynopsis } from '../tutorial/EnhancedTutorialButton';
+import EnlightenMeButton from '../concepts/EnlightenMeButton';
 
 const AzureServicesOverview = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -131,7 +132,13 @@ const AzureServicesOverview = () => {
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredServices.map((service) => (
-            <Card key={service.id} className="overflow-hidden h-full flex flex-col">
+            <Card key={service.id} className="overflow-hidden h-full flex flex-col relative">
+              <EnlightenMeButton 
+                title={service.name}
+                conceptId={`azure-service-${service.id}`}
+                description={service.description}
+                customPrompt={`Explain ${service.name} in comprehensive detail for AI agent development. Cover: 1) What ${service.name} is and its core capabilities within the Azure AI ecosystem, including how it integrates with other Azure AI services, 2) Specific use cases for AI agent development, with detailed examples of how agents can leverage this service's capabilities, 3) Implementation details including Azure SDKs, REST APIs, authentication methods (Azure Active Directory, managed identity), and best practices for secure deployment, 4) Integration patterns with Azure OpenAI Service, Azure AI Agent Service, and other Azure AI services to create comprehensive agent solutions, 5) Performance optimization, cost management, and scaling strategies specific to this service, 6) Real-world enterprise examples and case studies showing successful implementations, 7) Monitoring and observability using Azure Application Insights and Azure Monitor, including key metrics to track, 8) Security best practices including data encryption, network isolation, compliance considerations (GDPR, HIPAA, SOC), and Azure Policy integration, 9) Troubleshooting common issues, error handling patterns, and debugging techniques, 10) Comparison with alternative Azure services and guidance on when to choose this service for specific agent patterns and use cases.`}
+              />
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div className="p-2 rounded-md bg-primary/10 text-primary">
@@ -196,7 +203,13 @@ const AzureServicesOverview = () => {
         <Card>
           <Accordion type="multiple" className="w-full">
             {filteredServices.map((service) => (
-              <AccordionItem key={service.id} value={service.id}>
+              <AccordionItem key={service.id} value={service.id} className="relative">
+                <EnlightenMeButton 
+                  title={service.name}
+                  conceptId={`azure-service-${service.id}`}
+                  description={service.description}
+                  customPrompt={`Explain ${service.name} in comprehensive detail for AI agent development. Cover: 1) What ${service.name} is and its core capabilities within the Azure AI ecosystem, including how it integrates with other Azure AI services, 2) Specific use cases for AI agent development, with detailed examples of how agents can leverage this service's capabilities, 3) Implementation details including Azure SDKs, REST APIs, authentication methods (Azure Active Directory, managed identity), and best practices for secure deployment, 4) Integration patterns with Azure OpenAI Service, Azure AI Agent Service, and other Azure AI services to create comprehensive agent solutions, 5) Performance optimization, cost management, and scaling strategies specific to this service, 6) Real-world enterprise examples and case studies showing successful implementations, 7) Monitoring and observability using Azure Application Insights and Azure Monitor, including key metrics to track, 8) Security best practices including data encryption, network isolation, compliance considerations (GDPR, HIPAA, SOC), and Azure Policy integration, 9) Troubleshooting common issues, error handling patterns, and debugging techniques, 10) Comparison with alternative Azure services and guidance on when to choose this service for specific agent patterns and use cases.`}
+                />
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-3 text-left">
                     <div className="p-2 rounded-md bg-primary/10 text-primary">

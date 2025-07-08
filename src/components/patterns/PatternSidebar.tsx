@@ -27,6 +27,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import EnlightenMeButton from '../concepts/EnlightenMeButton';
 
 interface PatternSidebarProps {
   activePatternId: string;
@@ -194,7 +195,7 @@ export function PatternSidebar({ activePatternId, onPatternSelect }: PatternSide
                           <TooltipTrigger asChild>
                             <div 
                               className={cn(
-                                "px-2 py-1.5 rounded-md cursor-pointer transition-colors text-sm",
+                                "px-2 py-1.5 rounded-md cursor-pointer transition-colors text-sm relative group",
                                 activePatternId === pattern.id 
                                   ? "bg-primary/10 text-primary border-l-2 border-primary" 
                                   : "hover:bg-muted"
@@ -202,6 +203,15 @@ export function PatternSidebar({ activePatternId, onPatternSelect }: PatternSide
                               onClick={() => onPatternSelect(pattern.id)}
                             >
                               <span>{pattern.name}</span>
+                              {/* EnlightenMeButton positioned to the right on hover */}
+                              <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <EnlightenMeButton 
+                                  title={`${pattern.name} Agent Pattern`}
+                                  conceptId={pattern.id}
+                                  description={`The ${pattern.name} agent pattern: ${pattern.description}`}
+                                  customPrompt={`Explain the ${pattern.name} agent pattern in comprehensive detail. Cover: 1) What this pattern is and when to use it in Azure AI environments, including specific scenarios where it outperforms other patterns, 2) Detailed architecture and implementation using Azure OpenAI Service, Azure AI Agent Service, and relevant Azure AI SDK components, 3) Step-by-step implementation guide with Azure-specific code examples, authentication, and best practices, 4) Real-world use cases and success stories, particularly in enterprise Azure environments, 5) Performance considerations, cost optimization, and scaling strategies on Azure infrastructure, 6) Integration patterns with other Azure services like Azure AI Search, Azure Cognitive Services, and Azure Functions, 7) Monitoring, debugging, and observability using Azure Application Insights and Azure Monitor, 8) Security best practices including Azure Key Vault integration, Azure Active Directory authentication, and compliance considerations, 9) Common pitfalls and troubleshooting guidance specific to Azure deployments, 10) Comparison with related patterns and guidance on when to choose this pattern over alternatives.`}
+                                />
+                              </div>
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="right" className="max-w-xs text-sm">

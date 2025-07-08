@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Cloud, TerminalWindow, Lightning, Lock, Cpu, Globe, Code, ArrowSquareOut } from '@phosphor-icons/react';
+import EnlightenMeButton from '../concepts/EnlightenMeButton';
 
 // Mock environment variables for browser environment
 const mockEnv = {
@@ -318,7 +319,13 @@ for criterion in evaluation_criteria:
       
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {services.map((service) => (
-            <Card key={service.name} className="overflow-hidden">
+            <Card key={service.name} className="overflow-hidden relative">
+              <EnlightenMeButton 
+                title={service.name}
+                conceptId={`azure-service-reference-${service.name.toLowerCase().replace(/\s+/g, '-')}`}
+                description={service.description}
+                customPrompt={`Provide a comprehensive technical reference for ${service.name} in the context of implementing the ${pattern} agent pattern. Cover: 1) Detailed technical overview of ${service.name} and its specific role in the ${pattern} pattern implementation, 2) Complete API reference including all relevant endpoints, SDKs (Python, TypeScript, C#), and authentication methods specific to agent development, 3) Step-by-step integration guide with Azure OpenAI Service and other Azure AI services for the ${pattern} pattern, 4) Production-ready code examples with error handling, retry logic, and best practices for enterprise deployment, 5) Performance tuning, cost optimization strategies, and scaling considerations specific to ${service.name}, 6) Security implementation including Azure Key Vault integration, managed identity setup, and network security configurations, 7) Monitoring and observability setup using Azure Application Insights, including custom metrics and alerts relevant to the ${pattern} pattern, 8) Troubleshooting guide with common issues, debugging techniques, and resolution strategies, 9) Integration testing strategies and validation approaches for ${service.name} in agent workflows, 10) Comparison with alternative services and decision criteria for choosing ${service.name} for specific ${pattern} pattern requirements.`}
+              />
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">

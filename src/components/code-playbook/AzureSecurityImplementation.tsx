@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShieldCheck, Lock, Warning } from '@phosphor-icons/react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import EnlightenMeButton from '../concepts/EnlightenMeButton';
 
 interface SecurityImplementation {
   patternId: string;
@@ -568,7 +569,13 @@ const AzureSecurityImplementation: React.FC<AzureSecurityImplementationProps> = 
         
         <TabsContent value="azure" className="space-y-6 pt-6">
           {implementation.azure.map((section, index) => (
-            <Card key={index}>
+            <Card key={index} className="relative">
+              <EnlightenMeButton 
+                title={`${section.title} Security Implementation`}
+                conceptId={`${patternId}-security-${index}`}
+                description={`Azure security implementation for ${patternName}: ${section.description}`}
+                customPrompt={`Explain the Azure security implementation "${section.title}" for the ${patternName} agent pattern in comprehensive detail. Cover: 1) The security purpose and importance of this implementation in Azure AI agent systems, 2) Detailed technical breakdown of each step including Azure services involved (Azure Key Vault, Azure Managed Identity, Azure Cosmos DB, etc.), 3) Security best practices and Azure-specific recommendations for hardening this implementation, 4) Common security vulnerabilities in agent systems and how this implementation addresses them, 5) Integration patterns with other Azure security services like Azure Active Directory, Azure Security Center, and Azure Monitor, 6) Compliance considerations for regulated industries when implementing this security pattern, 7) Performance and cost implications of the security measures, 8) Monitoring and alerting strategies for detecting security issues, 9) Incident response procedures for security breaches related to this implementation, 10) Advanced security configurations and enterprise-grade considerations for production deployments.`}
+              />
               <CardHeader>
                 <CardTitle className="text-base">{section.title}</CardTitle>
               </CardHeader>
@@ -624,7 +631,13 @@ const AzureSecurityImplementation: React.FC<AzureSecurityImplementationProps> = 
         
         <TabsContent value="general" className="space-y-6 pt-6">
           {implementation.general.map((section, index) => (
-            <Card key={index}>
+            <Card key={index} className="relative">
+              <EnlightenMeButton 
+                title={`${section.category} Best Practices`}
+                conceptId={`${patternId}-general-security-${index}`}
+                description={`General security best practices for ${patternName}: ${section.description}`}
+                customPrompt={`Explain the "${section.category}" security best practices for the ${patternName} agent pattern in comprehensive detail. Cover: 1) The fundamental security principles and threat models that these practices address in AI agent systems, 2) Detailed implementation guidance for each best practice with real-world examples, 3) How these practices integrate with Azure security services and overall enterprise security strategies, 4) Risk assessment and mitigation strategies specific to agent-based systems, 5) Industry standards and compliance frameworks that support these practices (SOC 2, ISO 27001, NIST, etc.), 6) Security testing and validation approaches for verifying implementation effectiveness, 7) Common implementation challenges and how to overcome them, 8) Integration with DevSecOps practices and continuous security monitoring, 9) Advanced threat modeling considerations for sophisticated agent systems, 10) Future security trends and evolving threat landscape for AI agent systems.`}
+              />
               <CardHeader>
                 <CardTitle className="text-base">{section.category}</CardTitle>
               </CardHeader>

@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowsCounterClockwise, Play, ArrowsHorizontal, ChartLine, Table, Plus, X } from '@phosphor-icons/react';
 import { PatternData, agentPatterns } from '@/lib/data/patterns';
 import { useTheme } from '@/components/theme/ThemeProvider';
+import EnlightenMeButton from '../concepts/EnlightenMeButton';
 
 interface SimpleMultiPatternVisualizerProps {
   initialPatterns?: string[];
@@ -380,7 +381,13 @@ const SimpleMultiPatternVisualizer: React.FC<SimpleMultiPatternVisualizerProps> 
                 const flowState = flowStates[pattern.id];
                 
                 return (
-                  <Card key={pattern.id} className="p-4">
+                  <Card key={pattern.id} className="p-4 relative">
+                    <EnlightenMeButton 
+                      title={`${pattern.name} Agent Pattern`}
+                      conceptId={pattern.id}
+                      description={`The ${pattern.name} agent pattern: ${pattern.description}`}
+                      customPrompt={`Explain the ${pattern.name} agent pattern in comprehensive detail. Cover: 1) What this pattern is and when to use it in Azure AI environments, including specific scenarios where it outperforms other patterns, 2) Detailed architecture and implementation using Azure OpenAI Service, Azure AI Agent Service, and relevant Azure AI SDK components, 3) Step-by-step implementation guide with Azure-specific code examples, authentication, and best practices, 4) Real-world use cases and success stories, particularly in enterprise Azure environments, 5) Performance considerations, cost optimization, and scaling strategies on Azure infrastructure, 6) Integration patterns with other Azure services like Azure AI Search, Azure Cognitive Services, and Azure Functions, 7) Monitoring, debugging, and observability using Azure Application Insights and Azure Monitor, 8) Security best practices including Azure Key Vault integration, Azure Active Directory authentication, and compliance considerations, 9) Common pitfalls and troubleshooting guidance specific to Azure deployments, 10) Comparison with related patterns and guidance on when to choose this pattern over alternatives.`}
+                    />
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold">{pattern.name}</h3>
@@ -470,7 +477,13 @@ const SimpleMultiPatternVisualizer: React.FC<SimpleMultiPatternVisualizerProps> 
                     const flowState = flowStates[pattern.id];
                     
                     return (
-                      <Card key={pattern.id} className="p-4">
+                      <Card key={pattern.id} className="p-4 relative">
+                        <EnlightenMeButton 
+                          title={`${pattern.name} Agent Pattern`}
+                          conceptId={pattern.id}
+                          description={`The ${pattern.name} agent pattern: ${pattern.description}`}
+                          customPrompt={`Explain the ${pattern.name} agent pattern in comprehensive detail. Cover: 1) What this pattern is and when to use it in Azure AI environments, including specific scenarios where it outperforms other patterns, 2) Detailed architecture and implementation using Azure OpenAI Service, Azure AI Agent Service, and relevant Azure AI SDK components, 3) Step-by-step implementation guide with Azure-specific code examples, authentication, and best practices, 4) Real-world use cases and success stories, particularly in enterprise Azure environments, 5) Performance considerations, cost optimization, and scaling strategies on Azure infrastructure, 6) Integration patterns with other Azure services like Azure AI Search, Azure Cognitive Services, and Azure Functions, 7) Monitoring, debugging, and observability using Azure Application Insights and Azure Monitor, 8) Security best practices including Azure Key Vault integration, Azure Active Directory authentication, and compliance considerations, 9) Common pitfalls and troubleshooting guidance specific to Azure deployments, 10) Comparison with related patterns and guidance on when to choose this pattern over alternatives.`}
+                        />
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
                             <div 

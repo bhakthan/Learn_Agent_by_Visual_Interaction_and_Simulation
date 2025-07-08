@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import ReferenceSection from "../references/ReferenceSection";
 import { PatternDemoSVG } from '../interactive-demos';
+import EnlightenMeButton from '../concepts/EnlightenMeButton';
 
 interface PatternDetailsProps {
   pattern: PatternData;
@@ -21,7 +22,13 @@ const PatternDetails: React.FC<PatternDetailsProps> = ({ pattern }) => {
   if (!content) return null;
   
   return (
-    <Card className="mb-6 border-primary/20">
+    <Card className="mb-6 border-primary/20 relative">
+      <EnlightenMeButton 
+        title={`${content.name} Pattern`}
+        conceptId={`pattern-${pattern.id}`}
+        description={pattern.description}
+        customPrompt={`Explain the ${content.name} agent pattern in comprehensive detail. Cover: 1) What this pattern is and when to use it in Azure AI environments, including specific scenarios where it outperforms other patterns, 2) Detailed architecture and implementation using Azure OpenAI Service, Azure AI Agent Service, and relevant Azure AI SDK components, 3) Step-by-step implementation guide with Azure-specific code examples, authentication, and best practices, 4) Real-world use cases and success stories, particularly in enterprise Azure environments, 5) Performance considerations, cost optimization, and scaling strategies on Azure infrastructure, 6) Integration patterns with other Azure services like Azure AI Search, Azure Cognitive Services, and Azure Functions, 7) Monitoring, debugging, and observability using Azure Application Insights and Azure Monitor, 8) Security best practices including Azure Key Vault integration, Azure Active Directory authentication, and compliance considerations, 9) Common pitfalls and troubleshooting guidance specific to Azure deployments, 10) Comparison with related patterns and guidance on when to choose this pattern over alternatives.`}
+      />
       <CardHeader className="bg-muted/30">
         <CardTitle className="flex items-center gap-2">
           <Info size={24} className="text-primary" />
