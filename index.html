@@ -116,6 +116,43 @@
             contain: layout;
             transform-style: preserve-3d;
         }
+        
+        /* Enlighten Me Button Styles */
+        .enlighten-button {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .enlighten-button:hover::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(16, 163, 127, 0.3);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1);
+            animation: enlighten-ripple 1s ease-out;
+        }
+        
+        @keyframes enlighten-ripple {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(40);
+                opacity: 0;
+            }
+        }
+        
+        /* Dialog improvement for enlighten me */
+        [role="dialog"] {
+            backdrop-filter: blur(4px);
+        }
     </style>
     <script src="/resizeObserverPolyfill.js"></script>
     <script>

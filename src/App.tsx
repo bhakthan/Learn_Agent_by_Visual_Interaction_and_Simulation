@@ -19,6 +19,8 @@ import { disableResizeObserverIfProblematic } from './lib/utils/resizeObserverUt
 import { setupGlobalFlowHandlers } from './lib/utils/flows/globalFlowHandlers';
 import { setupSimulationButtonHandlers } from './lib/utils/flows/visualizationFix';
 import LearningJourneyMap from './components/tutorial/LearningJourneyMap';
+import { EnlightenMeProvider } from './components/enlighten/EnlightenMeProvider';
+import { Toaster } from '@/components/ui/toaster';
 
 // Placeholder component (disabled)
 const AppTutorialButton = () => null;
@@ -185,7 +187,8 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="light" storageKey="azure-ai-agent-theme">
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <EnlightenMeProvider>
+        <div className="min-h-screen bg-background text-foreground flex flex-col">
           <header className="border-b border-border sticky top-0 z-10 bg-background">
             <div className="container mx-auto px-4 py-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -289,7 +292,11 @@ function App() {
             onClose={() => setShowJourneyMap(false)}
             onNavigate={handleNavigate}
           />
+
+          {/* Toast notifications */}
+          <Toaster />
         </div>
+      </EnlightenMeProvider>
     </ThemeProvider>
   );
 }
@@ -335,3 +342,43 @@ const ListItem = React.memo(function ListItem({ className, title, children, ...p
 });
 
 export default App
+
+const TabLink = React.memo(function TabLink({ to, icon, label }: { to: string, icon: React.ReactNode, label: string }) {
+  const location = useLocation();
+  const isActive = location.pathname === to;
+  
+  return (
+    <Button
+      asChild
+      variant={isActive ? "default" : "ghost"}
+      size="sm"
+      className="h-9"
+    >
+      <Link to={to} className="flex items-center gap-1">
+        {icon}
+        <span>{label}</span>
+      </Link>
+    </Button>
+  );
+});
+
+const ListItem = React.memo(function ListItem({ className, title, children, ...props }: React.ComponentPropsWithoutRef<"a"> & { title: string }) {
+  return (
+    <li>
+      <NavigationMenuLink asChild>
+        <a
+          className={cn(
+            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+            className
+          )}
+          {...props}
+        >
+          <div className="text-sm font-medium leading-none">{title}</div>
+          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+            {children}
+          </p>
+        </a>
+      </NavigationMenuLink>
+    </li>
+  )
+});

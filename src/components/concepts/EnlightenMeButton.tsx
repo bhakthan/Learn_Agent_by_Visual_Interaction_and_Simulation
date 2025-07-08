@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { useKV } from '@github/spark/hooks';
 
 // Define spark API type to avoid TypeScript errors
 declare global {
@@ -58,6 +59,9 @@ const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({
   const [prompt, setPrompt] = useState<string>('');
   const [response, setResponse] = useState<string>('');
   const [showResponse, setShowResponse] = useState(false);
+  
+  // Store recent insights using KV store to remember previous enlightenment
+  const [recentInsights, setRecentInsights] = useKV<Record<string, string>>('enlighten-me-insights', {});
 
   // Create a detailed prompt based on the context description
   const generateDefaultPrompt = () => {
@@ -79,13 +83,18 @@ const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({
   const handleOpen = () => {
     setIsOpen(true);
     setPrompt(generateDefaultPrompt());
-    setShowResponse(false);
+    
+    // Check if we have a saved response for this concept
+    if (recentInsights[conceptId]) {
+      setResponse(recentInsights[conceptId]);
+      setShowResponse(true);
+    } else {
+      setShowResponse(false);
+    }
   };
 
   const handleClose = () => {
     setIsOpen(false);
-    setResponse('');
-    setShowResponse(false);
   };
 
   const handleSubmit = async () => {
@@ -97,7 +106,6 @@ const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({
       }
       
       // Create a prompt using the spark.llmPrompt template format
-      // Use tagged template literals correctly
       const llmPrompt = window.spark.llmPrompt`${prompt}`;
       
       // Call the LLM with the prompt
@@ -105,6 +113,12 @@ const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({
       
       setResponse(result);
       setShowResponse(true);
+      
+      // Save this response for future reference
+      setRecentInsights(current => ({
+        ...current,
+        [conceptId]: result
+      }));
     } catch (error) {
       setResponse(`An error occurred while processing your request: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setShowResponse(true);
@@ -119,7 +133,7 @@ const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({
         variant="ghost"
         size="sm"
         className={cn(
-          "absolute top-2 right-2 px-2 h-8 w-8 rounded-full hover:bg-yellow-100 hover:text-yellow-900 dark:hover:bg-yellow-900/20 dark:hover:text-yellow-400 transition-colors",
+          "absolute top-2 right-2 px-2 h-8 w-8 rounded-full hover:bg-yellow-100 hover:text-yellow-900 dark:hover:bg-yellow-900/20 dark:hover:text-yellow-400 transition-colors enlighten-button",
           className
         )}
         onClick={handleOpen}
@@ -130,7 +144,7 @@ const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Lightbulb size={24} weight="fill" className="text-yellow-500" />
@@ -164,7 +178,7 @@ const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({
               <div className="mt-2">
                 <label className="text-sm font-medium mb-1 block">Response:</label>
                 <Card className="p-4 overflow-hidden">
-                  <ScrollArea className="h-[220px]">
+                  <ScrollArea className="h-[320px]">
                     <div className="whitespace-pre-wrap">{response}</div>
                   </ScrollArea>
                 </Card>
@@ -178,7 +192,7 @@ const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({
               Close
             </Button>
             <Button onClick={handleSubmit} disabled={isLoading || prompt.trim().length === 0}>
-              {isLoading ? 'Processing...' : 'Get Insights'}
+              {isLoading ? 'Processing...' : showResponse ? 'Refresh Insights' : 'Get Insights'}
             </Button>
           </DialogFooter>
         </DialogContent>
