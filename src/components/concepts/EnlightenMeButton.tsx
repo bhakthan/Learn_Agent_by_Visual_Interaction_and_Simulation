@@ -23,13 +23,17 @@ interface EnlightenMeButtonProps {
   conceptId: string;
   description?: string;
   customPrompt?: string;
+  variant?: 'floating' | 'inline'; // Add variant prop for different positioning
+  size?: 'sm' | 'md' | 'lg'; // Add size prop
 }
 
 const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({ 
   title, 
   conceptId, 
   description,
-  customPrompt 
+  customPrompt,
+  variant = 'floating', // Default to floating for backward compatibility
+  size = 'md' // Default size
 }) => {
   // Get previously saved insights from KV store if available
   const [savedInsights, setSavedInsights] = useKV<Record<string, string>>('enlighten-insights', {});
@@ -198,16 +202,41 @@ Please provide:
     em: ({ children }: any) => <em className="italic text-foreground">{children}</em>,
   };
 
+  // Size and styling configuration
+  const getButtonClasses = () => {
+    const baseClasses = "rounded-full hover:bg-yellow-100 hover:text-yellow-900 dark:hover:bg-yellow-900/20 dark:hover:text-yellow-400 transition-colors duration-150";
+    
+    switch (size) {
+      case 'sm':
+        return `h-6 w-6 ${baseClasses}`;
+      case 'md':
+        return `h-8 w-8 ${baseClasses}`;
+      case 'lg':
+        return `h-10 w-10 ${baseClasses}`;
+      default:
+        return `h-8 w-8 ${baseClasses}`;
+    }
+  };
+
+  const getIconSize = () => {
+    switch (size) {
+      case 'sm': return 12;
+      case 'md': return 16;
+      case 'lg': return 20;
+      default: return 16;
+    }
+  };
+
   return (
-    <div className="absolute top-3 right-3 z-10">
+    <div className={variant === 'floating' ? "absolute top-3 right-3 z-10" : ""}>
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 rounded-full hover:bg-yellow-100 hover:text-yellow-900 dark:hover:bg-yellow-900/20 dark:hover:text-yellow-400"
+        className={getButtonClasses()}
         onClick={() => setIsOpen(true)}
         title="Learn more about this topic"
       >
-        <Lightbulb size={16} weight="fill" className="text-yellow-500" />
+        <Lightbulb size={getIconSize()} weight="fill" className="text-yellow-500" />
       </Button>
       
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
