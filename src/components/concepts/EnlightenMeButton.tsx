@@ -16,6 +16,29 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
+// Define spark API type to avoid TypeScript errors
+declare global {
+  interface Window {
+    spark: {
+      llmPrompt: (strings: TemplateStringsArray, ...values: any[]) => string;
+      llm: (prompt: string, modelName?: string, jsonMode?: boolean) => Promise<string>;
+      user: () => Promise<{
+        avatarUrl: string;
+        email: string;
+        id: string;
+        isOwner: boolean;
+        login: string;
+      }>;
+      kv: {
+        keys: () => Promise<string[]>;
+        get: <T>(key: string) => Promise<T | undefined>;
+        set: <T>(key: string, value: T) => Promise<void>;
+        delete: (key: string) => Promise<void>;
+      };
+    };
+  }
+}
+
 interface EnlightenMeButtonProps {
   title: string;
   conceptId: string;
@@ -66,11 +89,17 @@ const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
+      // Ensure window.spark is defined
+      if (!window.spark || typeof window.spark.llmPrompt !== 'function') {
+        throw new Error('Spark API is not available');
+      }
+      
       // Create a prompt using the spark.llmPrompt template format
-      const llmPrompt = spark.llmPrompt`${prompt}`;
+      // Use tagged template literals correctly
+      const llmPrompt = window.spark.llmPrompt`${prompt}`;
       
       // Call the LLM with the prompt
-      const result = await spark.llm(llmPrompt, "gpt-4o");
+      const result = await window.spark.llm(llmPrompt, "gpt-4o");
       
       setResponse(result);
       setShowResponse(true);
@@ -156,5 +185,6 @@ const EnlightenMeButton: React.FC<EnlightenMeButtonProps> = ({
   );
 };
 
-export default EnlightenMeButton;</parameter>
+export default EnlightenMeButton;
+
 </invoke>
