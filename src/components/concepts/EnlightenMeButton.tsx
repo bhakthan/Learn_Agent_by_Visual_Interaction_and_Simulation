@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, SpinnerGap } from '@phosphor-icons/react';
+import { Lightbulb, SpinnerGap, Copy, Check } from '@phosphor-icons/react';
 import { 
   Dialog, 
   DialogContent, 
@@ -13,6 +13,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useEnlightenMe } from '../enlighten/EnlightenMeProvider';
 import { useKV } from '@github/spark/hooks';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import remarkGfm from 'remark-gfm';
 
 interface EnlightenMeButtonProps {
   title: string;
@@ -103,6 +107,97 @@ Please provide:
     setResponse(null);
   };
 
+  // State for tracking copied code blocks
+  const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
+
+  // Custom code block component with copy functionality
+  const CodeBlock = ({ children, className, ...props }: any) => {
+    const match = /language-(\w+)/.exec(className || '');
+    const language = match ? match[1] : '';
+    const codeString = String(children).replace(/\n$/, '');
+    const codeId = `code-${Math.random().toString(36).substr(2, 9)}`;
+
+    const copyToClipboard = async () => {
+      try {
+        await navigator.clipboard.writeText(codeString);
+        setCopiedStates(prev => ({ ...prev, [codeId]: true }));
+        setTimeout(() => {
+          setCopiedStates(prev => ({ ...prev, [codeId]: false }));
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy code:', err);
+      }
+    };
+
+    return (
+      <div className="relative group">
+        <div className="absolute right-2 top-2 z-10">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={copyToClipboard}
+          >
+            {copiedStates[codeId] ? (
+              <Check size={14} />
+            ) : (
+              <Copy size={14} />
+            )}
+          </Button>
+        </div>
+        <SyntaxHighlighter
+          style={oneDark}
+          language={language}
+          PreTag="div"
+          className="rounded-md text-sm"
+          showLineNumbers={language && codeString.split('\n').length > 3}
+          wrapLines={true}
+          {...props}
+        >
+          {codeString}
+        </SyntaxHighlighter>
+      </div>
+    );
+  };
+
+  // Custom components for markdown rendering
+  const markdownComponents = {
+    code: CodeBlock,
+    pre: ({ children }: any) => <div className="my-4">{children}</div>,
+    h1: ({ children }: any) => <h1 className="text-2xl font-bold mt-6 mb-4 text-foreground">{children}</h1>,
+    h2: ({ children }: any) => <h2 className="text-xl font-semibold mt-5 mb-3 text-foreground">{children}</h2>,
+    h3: ({ children }: any) => <h3 className="text-lg font-medium mt-4 mb-2 text-foreground">{children}</h3>,
+    h4: ({ children }: any) => <h4 className="text-base font-medium mt-3 mb-2 text-foreground">{children}</h4>,
+    p: ({ children }: any) => <p className="mb-3 text-foreground leading-relaxed">{children}</p>,
+    ul: ({ children }: any) => <ul className="list-disc list-inside mb-3 space-y-1 text-foreground">{children}</ul>,
+    ol: ({ children }: any) => <ol className="list-decimal list-inside mb-3 space-y-1 text-foreground">{children}</ol>,
+    li: ({ children }: any) => <li className="text-foreground">{children}</li>,
+    blockquote: ({ children }: any) => (
+      <blockquote className="border-l-4 border-primary pl-4 my-4 italic text-muted-foreground bg-muted/30 py-2 rounded-r">
+        {children}
+      </blockquote>
+    ),
+    table: ({ children }: any) => (
+      <div className="my-4 overflow-x-auto">
+        <table className="min-w-full border border-border rounded-lg">
+          {children}
+        </table>
+      </div>
+    ),
+    thead: ({ children }: any) => <thead className="bg-muted">{children}</thead>,
+    tbody: ({ children }: any) => <tbody>{children}</tbody>,
+    tr: ({ children }: any) => <tr className="border-b border-border">{children}</tr>,
+    th: ({ children }: any) => <th className="px-4 py-2 text-left font-semibold text-foreground">{children}</th>,
+    td: ({ children }: any) => <td className="px-4 py-2 text-foreground">{children}</td>,
+    a: ({ children, href }: any) => (
+      <a href={href} className="text-primary hover:text-primary/80 underline" target="_blank" rel="noopener noreferrer">
+        {children}
+      </a>
+    ),
+    strong: ({ children }: any) => <strong className="font-semibold text-foreground">{children}</strong>,
+    em: ({ children }: any) => <em className="italic text-foreground">{children}</em>,
+  };
+
   return (
     <div className="absolute top-3 right-3 z-10">
       <Button
@@ -116,7 +211,7 @@ Please provide:
       </Button>
       
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-6xl max-w-[95vw] h-[90vh] max-h-[900px] flex flex-col">
+        <DialogContent className="sm:max-w-6xl max-w-[95vw] h-[90vh] max-h-[95vh] min-h-[80vh] flex flex-col">
           <DialogHeader className="pb-4 border-b">
             <DialogTitle className="flex items-center gap-2 text-xl">
               <div className="p-2 rounded-full bg-yellow-100 dark:bg-yellow-900/20">
@@ -194,42 +289,14 @@ Please provide:
                     </div>
                     
                     <div className="flex-1 min-h-0">
-                      <ScrollArea className="h-full pr-4">
-                        <div className="prose prose-base dark:prose-invert max-w-none leading-relaxed">
-                          <div className="space-y-4">
-                            {response?.split('\n\n').map((section, i) => {
-                              if (!section.trim()) return null;
-                              
-                              // Check if it's a heading (starts with number or bullet)
-                              if (section.match(/^\d+[\.)]/)) {
-                                const [heading, ...content] = section.split('\n');
-                                return (
-                                  <div key={i} className="bg-muted/30 rounded-lg p-4 border-l-4 border-primary">
-                                    <h4 className="font-semibold text-primary mb-2">{heading}</h4>
-                                    {content.length > 0 && (
-                                      <div className="space-y-2">
-                                        {content.map((line, j) => line.trim() && (
-                                          <p key={j} className="text-sm text-muted-foreground">{line}</p>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              }
-                              
-                              return (
-                                <div key={i} className="text-sm leading-relaxed">
-                                  {section.split('\n').map((line, j) => 
-                                    line.trim() ? (
-                                      <p key={j} className="mb-2">{line}</p>
-                                    ) : (
-                                      <br key={j} />
-                                    )
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
+                      <ScrollArea className="h-[2000px]">
+                        <div className="prose prose-base dark:prose-invert max-w-none pr-4">
+                          <ReactMarkdown
+                            components={markdownComponents}
+                            remarkPlugins={[remarkGfm]}
+                          >
+                            {response || ''}
+                          </ReactMarkdown>
                         </div>
                       </ScrollArea>
                     </div>
