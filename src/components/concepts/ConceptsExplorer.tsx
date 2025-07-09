@@ -28,6 +28,7 @@ import ProtocolComparison from "./ProtocolComparison"
 import AgentCommunicationPlayground from "./AgentCommunicationPlayground"
 import AgentPersonalityShowcase from "./AgentPersonalityShowcase"
 import CodeToVisualMapper from "./CodeToVisualMapper"
+import MCPxA2AIntegrationFlow from "../visualization/MCPxA2AIntegrationFlow"
 import EnlightenMeButton from "./EnlightenMeButton"
 
 const ConceptsExplorer = () => {
@@ -66,11 +67,12 @@ const ConceptsExplorer = () => {
       </div>
 
       <Tabs defaultValue="agents" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="agents">AI Agents</TabsTrigger>
           <TabsTrigger value="a2a">Agent-to-Agent (A2A)</TabsTrigger>
           <TabsTrigger value="mcp">ModelContextProtocol (MCP)</TabsTrigger>
           <TabsTrigger value="acp">ACP</TabsTrigger>
+          <TabsTrigger value="mcpxa2a">MCP×A2A Integration</TabsTrigger>
           <TabsTrigger value="visualization">Flow Visualization</TabsTrigger>
           <TabsTrigger value="transformation">Data Transformation</TabsTrigger>
         </TabsList>
@@ -229,6 +231,30 @@ const ConceptsExplorer = () => {
                   complex workflows and simulating specialized roles through standardized protocols.
                 </p>
                 
+                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 p-4 rounded-md border border-emerald-200 dark:border-emerald-800 mb-4">
+                  <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-2">🎯 Multi-Agent Systems (MAS) Advantages</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <h5 className="font-medium text-emerald-800 dark:text-emerald-200 text-sm">Core Benefits</h5>
+                      <ul className="text-xs text-emerald-700 dark:text-emerald-300 space-y-1">
+                        <li>• <strong>Distributed problem solving:</strong> Complex tasks split across specialized agents</li>
+                        <li>• <strong>Scalability:</strong> Add agents dynamically based on workload</li>
+                        <li>• <strong>Robustness:</strong> System continues if individual agents fail</li>
+                        <li>• <strong>Diverse perspectives:</strong> Different agent personalities and capabilities</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h5 className="font-medium text-emerald-800 dark:text-emerald-200 text-sm">Enterprise Value</h5>
+                      <ul className="text-xs text-emerald-700 dark:text-emerald-300 space-y-1">
+                        <li>• <strong>Specialization:</strong> Agents focused on specific domains</li>
+                        <li>• <strong>Parallel processing:</strong> Multiple agents work simultaneously</li>
+                        <li>• <strong>Resource optimization:</strong> Efficient task distribution</li>
+                        <li>• <strong>Maintainability:</strong> Modular, composable architecture</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 p-4 rounded-md border border-blue-200 dark:border-blue-800">
                   <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">🚀 MCP×A2A Integration Framework</h4>
                   <p className="text-sm text-blue-700 dark:text-blue-300">
@@ -238,6 +264,11 @@ const ConceptsExplorer = () => {
                 </div>
 
                 <div className="bg-muted p-4 rounded-md">
+                  <h4 className="font-semibold">Need for Standard Protocols:</h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Collaboration among heterogeneous agents demands standardized communication protocols. 
+                    Integration with external tools and APIs is essential for real-world applications.
+                  </p>
                   <h4 className="font-semibold">Core A2A Communication Patterns:</h4>
                   <ul className="list-disc list-inside space-y-2 mt-2">
                     <li><strong>Agent Cards:</strong> JSON metadata defining agent capabilities, functions, and authentication requirements</li>
@@ -351,6 +382,30 @@ const ConceptsExplorer = () => {
                   agents and their environment, complementing A2A for comprehensive agent ecosystem architecture.
                 </p>
                 
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-4 rounded-md border border-amber-200 dark:border-amber-800 mb-4">
+                  <h4 className="font-semibold text-amber-900 dark:text-amber-100 mb-2">🔧 MCP Implementation Strategies</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <h5 className="font-medium text-amber-800 dark:text-amber-200 text-sm">Setup Steps</h5>
+                      <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-1">
+                        <li>• <strong>Define Tool Descriptions:</strong> JSON schemas for functions</li>
+                        <li>• <strong>Handle Function Calls:</strong> Parameter validation & execution</li>
+                        <li>• <strong>Manage Context:</strong> Session/state tracking</li>
+                        <li>• <strong>Implement Error Handling:</strong> Standard codes & recovery</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h5 className="font-medium text-amber-800 dark:text-amber-200 text-sm">Key Features</h5>
+                      <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-1">
+                        <li>• <strong>Type Safety:</strong> JSON schema validation</li>
+                        <li>• <strong>Streaming Support:</strong> Real-time data</li>
+                        <li>• <strong>Resource Management:</strong> Cleanup protocols</li>
+                        <li>• <strong>Capability Discovery:</strong> Dynamic negotiation</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                
                 <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 p-4 rounded-md border border-purple-200 dark:border-purple-800">
                   <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">🏗️ Layered MCP×A2A Architecture</h4>
                   <p className="text-sm text-purple-700 dark:text-purple-300">
@@ -360,7 +415,25 @@ const ConceptsExplorer = () => {
                 </div>
 
                 <div className="bg-muted p-4 rounded-md">
-                  <h4 className="font-semibold">MCP Core Components (JSON-RPC Based):</h4>
+                  <h4 className="font-semibold">MCP vs Traditional APIs - Key Differences:</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                    <div className="text-center">
+                      <h5 className="font-medium text-sm mb-1">Scope</h5>
+                      <p className="text-xs text-muted-foreground">APIs: Client-server</p>
+                      <p className="text-xs text-blue-600 dark:text-blue-400">MCP: Agent ↔ Tool</p>
+                    </div>
+                    <div className="text-center">
+                      <h5 className="font-medium text-sm mb-1">Interaction</h5>
+                      <p className="text-xs text-muted-foreground">APIs: Request/response</p>
+                      <p className="text-xs text-blue-600 dark:text-blue-400">MCP: Context-aware function calls</p>
+                    </div>
+                    <div className="text-center">
+                      <h5 className="font-medium text-sm mb-1">State</h5>
+                      <p className="text-xs text-muted-foreground">APIs: Stateless/session</p>
+                      <p className="text-xs text-blue-600 dark:text-blue-400">MCP: Context/state tracked</p>
+                    </div>
+                  </div>
+                  <h4 className="font-semibold mt-4">MCP Core Components (JSON-RPC Based):</h4>
                   <ul className="list-disc list-inside space-y-2 mt-2">
                     <li><strong>Tool Descriptions:</strong> JSON schemas defining available functions, parameters, and expected outputs</li>
                     <li><strong>Function Calling:</strong> Standardized parameter validation, execution, and result conversion</li>
@@ -660,6 +733,10 @@ const ConceptsExplorer = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="mcpxa2a" className="space-y-6 pt-6" data-section="mcpxa2a-integration">
+          <MCPxA2AIntegrationFlow />
         </TabsContent>
         
         <TabsContent value="visualization" className="space-y-6 pt-6">
