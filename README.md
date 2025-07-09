@@ -91,7 +91,7 @@ An interactive educational platform for understanding AI agents, Agent-to-Agent 
 - **Real-World Performance Metrics**: Live data on 70% code reduction, 65% faster integration, and infinite scalability
 - **Enterprise Use Case Gallery**: Recruitment automation, customer support, financial analysis, and content creation workflows
 - **A2A Interaction Models**: Hierarchical, peer-to-peer, multi-agent debate, and market-based coordination patterns
-- **Integration Framework Demo**: Step-by-step walkthrough of MCP×A2A implementation in LangGraph and other frameworks
+- **Integration Framework Demo**: Step-by-step walkthrough of MCP×A2A implementation in Azure AI Agents Framework and other frameworks
 
 ### Core Visualizations
 - **Agent Lifecycle Visual**: Interactive SVG-based visualization showing the complete cognitive cycle of AI agents from input processing to learning
@@ -351,7 +351,7 @@ The MCP×A2A framework implements a sophisticated 5-layer architecture:
 
 #### Real-World Performance Results
 Production implementations show remarkable improvements:
-- **70% Code Reduction** using LangGraph framework integration
+- **70% Code Reduction** using Azure AI Agents Framework integration
 - **65% Faster Integration** for tool integration workflows
 - **∞ Scalability** enabling coordination of dozens of agents simultaneously
 

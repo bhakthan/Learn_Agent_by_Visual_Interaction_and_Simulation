@@ -104,7 +104,7 @@ const MCPxA2AIntegrationFlow: React.FC = () => {
         title="MCP×A2A Integration Architecture" 
         conceptId="mcpxa2a-architecture"
         description="Comprehensive 5-layer architecture showing how MCP and A2A protocols integrate for enterprise LLM-based autonomous agents"
-        customPrompt="Explain the MCP×A2A Integration Architecture in comprehensive detail. Cover: 1) The 5-layer architecture (User Interface, Agent Management, Core Protocol, Tool Integration, Security & Authentication), 2) How MCP handles agent-to-tool communication with JSON schemas and function calls, 3) How A2A manages agent-to-agent coordination with agent cards and task management, 4) The complementary roles where MCP connects agents to external tools while A2A connects agents to each other, 5) Enterprise implementation strategies using Google's ADK and LangGraph frameworks, 6) Real-world performance benefits (70% code reduction, 65% faster integration), 7) Security considerations with OAuth2, JWT, TLS, and access control, 8) Use cases like recruitment automation, customer support, and stock information systems, 9) How this differs from traditional APIs with context-aware function calls and task-oriented messaging, 10) Emerging trends in interoperability, composable architectures, and multimodal agent support."
+        customPrompt="Explain the MCP×A2A Integration Architecture in comprehensive detail. Cover: 1) The 5-layer architecture (User Interface, Agent Management, Core Protocol, Tool Integration, Security & Authentication), 2) How MCP handles agent-to-tool communication with JSON schemas and function calls, 3) How A2A manages agent-to-agent coordination with agent cards and task management, 4) The complementary roles where MCP connects agents to external tools while A2A connects agents to each other, 5) Enterprise implementation strategies using Microsoft's Azure AI Agents Framework and Google's ADK, 6) Real-world performance benefits (70% code reduction, 65% faster integration), 7) Security considerations with OAuth2, JWT, TLS, and access control, 8) Use cases like recruitment automation, customer support, and stock information systems, 9) How this differs from traditional APIs with context-aware function calls and task-oriented messaging, 10) Emerging trends in interoperability, composable architectures, and multimodal agent support."
       />
       
       <CardHeader>
@@ -396,7 +396,7 @@ const MCPxA2AIntegrationFlow: React.FC = () => {
               <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-lg border border-green-200 dark:border-green-800">
                 <div className="text-3xl font-bold text-green-600 dark:text-green-400">70%</div>
                 <div className="text-sm text-green-700 dark:text-green-300 font-medium">Code Reduction</div>
-                <div className="text-xs text-green-600 dark:text-green-400 mt-1">Using LangGraph framework</div>
+                <div className="text-xs text-green-600 dark:text-green-400 mt-1">Using Azure AI Agents Framework</div>
               </div>
               <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
                 <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">65%</div>
@@ -407,6 +407,86 @@ const MCPxA2AIntegrationFlow: React.FC = () => {
                 <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">∞</div>
                 <div className="text-sm text-purple-700 dark:text-purple-300 font-medium">Scalability</div>
                 <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">Coordinate dozens of agents</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Azure AI Agents Framework Implementation */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"></div>
+              Azure AI Agents Framework Implementation
+            </CardTitle>
+            <CardDescription>Microsoft's enterprise solution for MCP×A2A integration with Azure ecosystem</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-sm mb-3">🏗️ Azure Framework Components</h4>
+                  <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-2">
+                    <li>• <strong>Azure AI Agent Service:</strong> Managed runtime for agent orchestration</li>
+                    <li>• <strong>Azure OpenAI Integration:</strong> Native LLM capabilities with enterprise security</li>
+                    <li>• <strong>Azure AI Studio:</strong> Visual designer for agent workflows and testing</li>
+                    <li>• <strong>Azure Functions:</strong> Serverless MCP tool hosting</li>
+                    <li>• <strong>Azure Service Bus:</strong> Reliable A2A message routing</li>
+                    <li>• <strong>Azure Key Vault:</strong> Secure credential management</li>
+                  </ul>
+                </div>
+                
+                <div className="bg-green-50 dark:bg-green-950/30 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                  <h4 className="font-semibold text-green-900 dark:text-green-100 text-sm mb-3">📊 Performance Benefits</h4>
+                  <ul className="text-xs text-green-700 dark:text-green-300 space-y-2">
+                    <li>• <strong>70% Code Reduction:</strong> Pre-built Azure integrations</li>
+                    <li>• <strong>65% Faster Deployment:</strong> Azure Resource Manager templates</li>
+                    <li>• <strong>Enterprise Security:</strong> Azure Active Directory integration</li>
+                    <li>• <strong>Auto-scaling:</strong> Azure Container Apps orchestration</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="bg-purple-50 dark:bg-purple-950/30 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <h4 className="font-semibold text-purple-900 dark:text-purple-100 text-sm mb-3">🔧 Implementation Stack</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-purple-700 dark:text-purple-300">Agent Orchestration:</span>
+                      <span className="font-medium">Azure AI Agent Service</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-purple-700 dark:text-purple-300">LLM Runtime:</span>
+                      <span className="font-medium">Azure OpenAI</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-purple-700 dark:text-purple-300">Tool Hosting:</span>
+                      <span className="font-medium">Azure Functions</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-purple-700 dark:text-purple-300">Message Queue:</span>
+                      <span className="font-medium">Azure Service Bus</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-purple-700 dark:text-purple-300">State Storage:</span>
+                      <span className="font-medium">Azure Cosmos DB</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-purple-700 dark:text-purple-300">Monitoring:</span>
+                      <span className="font-medium">Azure Application Insights</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-orange-50 dark:bg-orange-950/30 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
+                  <h4 className="font-semibold text-orange-900 dark:text-orange-100 text-sm mb-3">🚀 Azure Integration Patterns</h4>
+                  <ul className="text-xs text-orange-700 dark:text-orange-300 space-y-2">
+                    <li>• <strong>Azure Logic Apps:</strong> Workflow automation with A2A triggers</li>
+                    <li>• <strong>Azure Cognitive Services:</strong> MCP-enabled AI services</li>
+                    <li>• <strong>Azure Data Factory:</strong> ETL processes via agent coordination</li>
+                    <li>• <strong>Power Platform:</strong> Low-code agent integration</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </CardContent>

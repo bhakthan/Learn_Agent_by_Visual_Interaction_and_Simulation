@@ -465,7 +465,7 @@ const ConceptsExplorer = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="border border-border rounded-md p-3">
                       <h5 className="font-medium text-accent">70% Code Reduction</h5>
-                      <p className="text-sm">Frameworks like LangGraph reduce integration complexity significantly</p>
+                      <p className="text-sm">Frameworks like Azure AI Agents Framework reduce integration complexity significantly</p>
                     </div>
                     <div className="border border-border rounded-md p-3">
                       <h5 className="font-medium text-accent">65% Faster Integration</h5>
@@ -684,7 +684,7 @@ const ConceptsExplorer = () => {
                 <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-lg border border-green-200 dark:border-green-800">
                   <div className="text-3xl font-bold text-green-600 dark:text-green-400">70%</div>
                   <div className="text-sm text-green-700 dark:text-green-300 font-medium">Code Reduction</div>
-                  <div className="text-xs text-green-600 dark:text-green-400 mt-1">Using LangGraph framework</div>
+                  <div className="text-xs text-green-600 dark:text-green-400 mt-1">Using Azure AI Agents Framework</div>
                 </div>
                 <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
                   <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">65%</div>
