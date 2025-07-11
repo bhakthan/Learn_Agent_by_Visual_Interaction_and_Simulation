@@ -29,6 +29,7 @@ import AgentCommunicationPlayground from "./AgentCommunicationPlayground"
 import AgentPersonalityShowcase from "./AgentPersonalityShowcase"
 import CodeToVisualMapper from "./CodeToVisualMapper"
 import MCPxA2AIntegrationFlow from "../visualization/MCPxA2AIntegrationFlow"
+import ChatbotToAgentTransition from "./ChatbotToAgentTransition"
 import EnlightenMeButton from "./EnlightenMeButton"
 
 const ConceptsExplorer = () => {
@@ -132,6 +133,9 @@ const ConceptsExplorer = () => {
               </Button>
             </CardFooter>
           </Card>
+          
+          {/* Interactive Chatbot to Agent Transition Demo */}
+          <ChatbotToAgentTransition />
           
           {showDetails.agents && <ConceptDetails conceptId="agents" />}
           
