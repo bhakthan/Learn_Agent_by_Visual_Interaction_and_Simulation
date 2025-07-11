@@ -18,6 +18,7 @@ import {
   User
 } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import CodeBlock from '@/components/ui/CodeBlock';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Step {
@@ -420,7 +421,7 @@ app.post('/query/response', (req, res) => {
                         
                         {completedSteps.length === 0 ? (
                           <Button 
-                            variant="primary" 
+                            variant="default" 
                             size="sm" 
                             className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
                             onClick={() => setIsPlaying(true)}
@@ -548,15 +549,17 @@ app.post('/query/response', (req, res) => {
                 
                 <div className="bg-muted rounded-md p-4">
                   <AnimatePresence mode="wait">
-                    <motion.pre
+                    <motion.div
                       key={currentStep}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       className="text-sm overflow-x-auto font-mono"
                     >
-                      <code>{steps[currentStep].codeExample}</code>
-                    </motion.pre>
+                      <CodeBlock language="typescript">
+                        {steps[currentStep].codeExample}
+                      </CodeBlock>
+                    </motion.div>
                   </AnimatePresence>
                 </div>
                 
@@ -574,7 +577,7 @@ app.post('/query/response', (req, res) => {
                     
                     {completedSteps.length === 0 ? (
                       <Button 
-                        variant="primary" 
+                        variant="default" 
                         size="sm" 
                         className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
                         onClick={() => {

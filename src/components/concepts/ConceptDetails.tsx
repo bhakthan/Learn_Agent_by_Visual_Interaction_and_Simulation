@@ -4,8 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { conceptContents } from '@/lib/data/conceptContent';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ListBullets, Code, Cpu, Toolbox, Globe, LightbulbFilament } from "@phosphor-icons/react";
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import { nightOwl } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import CodeBlock from '@/components/ui/CodeBlock';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface ConceptDetailsProps {
@@ -105,18 +104,14 @@ const ConceptDetails: React.FC<ConceptDetailsProps> = ({ conceptId }) => {
                 <AccordionContent>
                   <p className="mb-3 text-sm text-muted-foreground">{example.description}</p>
                   {example.codeSnippet && (
-                    <SyntaxHighlighter 
-                      language="typescript" 
-                      style={nightOwl}
+                    <CodeBlock
+                      language="typescript"
                       customStyle={{
-                        borderRadius: '0.5rem',
-                        fontSize: '0.9rem',
-                        padding: '1rem',
                         marginBottom: '1rem'
                       }}
                     >
                       {example.codeSnippet.trim()}
-                    </SyntaxHighlighter>
+                    </CodeBlock>
                   )}
                 </AccordionContent>
               </AccordionItem>

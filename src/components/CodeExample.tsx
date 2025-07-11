@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Badge } from '@/components/ui/badge'
 import { Example } from '@/lib/data/examples'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import CodeBlock from '@/components/ui/CodeBlock'
 
 interface CodeExampleProps {
   example: Example
@@ -83,9 +84,9 @@ const CodeExample: FC<CodeExampleProps> = ({ example }) => {
           
           <TabsContent value="code">
             <div className="relative">
-              <pre className="rounded-md bg-muted p-4 overflow-x-auto text-sm">
-                <code>{example.code}</code>
-              </pre>
+              <CodeBlock language="typescript">
+                {example.code}
+              </CodeBlock>
             </div>
           </TabsContent>
           

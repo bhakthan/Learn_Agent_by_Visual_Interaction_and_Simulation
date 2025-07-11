@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Cloud, TerminalWindow, Lightning, Lock, Cpu, Globe, Code, ArrowSquareOut } from '@phosphor-icons/react';
 import EnlightenMeButton from '../concepts/EnlightenMeButton';
+import CodeBlock from '@/components/ui/CodeBlock';
 
 // Mock environment variables for browser environment
 const mockEnv = {
@@ -372,9 +373,12 @@ for criterion in evaluation_criteria:
                             <AccordionContent>
                               <p className="text-sm text-muted-foreground mb-2">{example.description}</p>
                               <div className="relative mt-2 rounded-md bg-muted p-4 overflow-x-auto">
-                                <pre className="text-xs">
-                                  <code>{example.code}</code>
-                                </pre>
+                                <CodeBlock 
+                                  language="typescript"
+                                  customStyle={{ fontSize: '0.75rem' }}
+                                >
+                                  {example.code}
+                                </CodeBlock>
                               </div>
                             </AccordionContent>
                           </AccordionItem>

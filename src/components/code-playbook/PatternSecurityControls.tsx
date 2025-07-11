@@ -5,6 +5,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import CodeBlock from '@/components/ui/CodeBlock';
 import { 
   Shield, 
   ShieldCheck,
@@ -877,9 +878,9 @@ stages:
                     Implementation Example
                   </summary>
                   <div className="mt-3 overflow-x-auto text-xs">
-                    <pre className="bg-muted p-4 rounded-md">
-                      <code>{control.implementation}</code>
-                    </pre>
+                    <CodeBlock language="typescript" customStyle={{ fontSize: '0.75rem' }}>
+                      {control.implementation}
+                    </CodeBlock>
                   </div>
                 </details>
               </CardContent>

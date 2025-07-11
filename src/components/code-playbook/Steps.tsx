@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { ArrowRight, ArrowLeft, Check } from '@phosphor-icons/react'
+import CodeBlock from '@/components/ui/CodeBlock'
 
 interface StepsProps {
   steps: string[]
@@ -61,7 +62,9 @@ export const Steps = ({ steps, currentStep, setCurrentStep }: StepsProps) => {
         {currentStep === 0 && (
           <div className="bg-muted p-4 rounded-md text-sm">
             <p><strong>Getting Started:</strong> Ensure you have the Azure AI SDK installed and have access to Azure OpenAI resources.</p>
-            <pre className="bg-background p-2 mt-2 rounded">npm install @azure/openai</pre>
+            <CodeBlock language="bash" showCopyButton={false}>
+              npm install @azure/openai
+            </CodeBlock>
           </div>
         )}
 

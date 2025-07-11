@@ -8,8 +8,7 @@ import { PatternData } from '@/lib/data/patterns'
 import SimplePatternFlow from '../interactive-demos/SimplePatternFlow'
 import BestPractices from './BestPractices'
 import PatternSecurityControls from './PatternSecurityControls'
-import SyntaxHighlighter from 'react-syntax-highlighter'
-import { nightOwl } from 'react-syntax-highlighter/dist/esm/styles/hljs'
+import CodeBlock from '@/components/ui/CodeBlock'
 import { Button } from '@/components/ui/button'
 import { pythonPatterns } from '@/lib/pythonPatterns'
 import CodeStepVisualizer from './CodeStepVisualizer'
@@ -264,29 +263,16 @@ const CodePlaybook = ({ patternData }: CodePlaybookProps) => {
               <LanguageSelector />
               
               <div className="relative">
-                <SyntaxHighlighter 
-                  language={language} 
-                  style={nightOwl}
+                <CodeBlock
+                  language={language}
                   customStyle={{
-                    borderRadius: '0.5rem',
-                    padding: '1rem',
                     marginBottom: '1rem',
                     maxHeight: '500px',
                     overflow: 'auto'
                   }}
                 >
                   {getCodeExample()}
-                </SyntaxHighlighter>
-                <div className="absolute top-4 right-4">
-                  <button 
-                    className="p-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-xs"
-                    onClick={() => {
-                      navigator.clipboard.writeText(getCodeExample())
-                    }}
-                  >
-                    Copy
-                  </button>
-                </div>
+                </CodeBlock>
               </div>
               
               <Alert className="mt-6">

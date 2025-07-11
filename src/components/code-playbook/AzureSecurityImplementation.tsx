@@ -5,6 +5,7 @@ import { ShieldCheck, Lock, Warning } from '@phosphor-icons/react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import EnlightenMeButton from '../concepts/EnlightenMeButton';
+import CodeBlock from '@/components/ui/CodeBlock';
 
 interface SecurityImplementation {
   patternId: string;
@@ -593,20 +594,12 @@ const AzureSecurityImplementation: React.FC<AzureSecurityImplementationProps> = 
                         
                         {step.code && (
                           <div className="relative">
-                            <pre className="bg-zinc-950 text-zinc-50 p-3 rounded text-xs overflow-x-auto">
-                              <code>{step.code}</code>
-                            </pre>
-                            <div className="absolute top-2 right-2 flex gap-1">
-                              <span className="bg-zinc-800 text-zinc-200 px-2 py-1 rounded text-[10px]">
-                                {step.language || 'typescript'}
-                              </span>
-                              <button 
-                                className="bg-primary text-primary-foreground px-2 py-1 rounded text-[10px]"
-                                onClick={() => navigator.clipboard.writeText(step.code || '')}
-                              >
-                                Copy
-                              </button>
-                            </div>
+                            <CodeBlock 
+                              language={step.language || 'typescript'}
+                              customStyle={{ fontSize: '0.75rem' }}
+                            >
+                              {step.code}
+                            </CodeBlock>
                           </div>
                         )}
                       </AccordionContent>

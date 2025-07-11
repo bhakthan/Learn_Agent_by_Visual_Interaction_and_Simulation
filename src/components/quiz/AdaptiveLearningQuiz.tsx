@@ -11,10 +11,11 @@ import { Separator } from "@/components/ui/separator";
 import { 
   Brain, PuzzlePiece, StackSimple, Books, Users, 
   CheckCircle, XCircle, Clock, Trophy, Target, 
-  Play, RotateCounterClockwise, ChartLine, Lightbulb,
+  Play, ArrowCounterClockwise, ChartLine, Lightbulb,
   User, GraduationCap, Briefcase, Gear
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import CodeBlock from '@/components/ui/CodeBlock';
 import { 
   QuizQuestion, QuizSession, QuizCategory, UserPersona, QuizFeedback,
   quizCategories, userPersonas, getQuizzesByPersona, getQuizzesByCategory,
@@ -481,9 +482,9 @@ const AdaptiveLearningQuiz: React.FC<AdaptiveLearningQuizProps> = ({ onQuizCompl
             {currentQuestion.codeExample && (
               <Card className="bg-muted/50">
                 <CardContent className="p-4">
-                  <pre className="text-sm text-muted-foreground">
-                    <code>{currentQuestion.codeExample}</code>
-                  </pre>
+                  <CodeBlock language="typescript">
+                    {currentQuestion.codeExample}
+                  </CodeBlock>
                 </CardContent>
               </Card>
             )}
@@ -513,7 +514,7 @@ const AdaptiveLearningQuiz: React.FC<AdaptiveLearningQuizProps> = ({ onQuizCompl
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={resetQuiz}>
-                <RotateCounterClockwise size={16} className="mr-1" />
+                <ArrowCounterClockwise size={16} className="mr-1" />
                 Reset
               </Button>
               <Button 
@@ -743,7 +744,7 @@ const AdaptiveLearningQuiz: React.FC<AdaptiveLearningQuizProps> = ({ onQuizCompl
           {/* Actions */}
           <div className="flex gap-2 justify-center print:hidden">
             <Button variant="outline" onClick={resetQuiz}>
-              <RotateCounterClockwise size={16} className="mr-1" />
+              <ArrowCounterClockwise size={16} className="mr-1" />
               Take Another Quiz
             </Button>
             <Button onClick={() => window.print()}>

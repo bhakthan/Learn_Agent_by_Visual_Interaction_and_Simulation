@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { Code, Eye, Play, Lightbulb } from '@phosphor-icons/react';
+import CodeBlock from '@/components/ui/CodeBlock';
 
 interface CodeBlock {
   id: string;
@@ -473,9 +474,9 @@ current_response = improved_response`,
             <TabsContent value="code" className="space-y-4">
               <Card>
                 <CardContent className="pt-6">
-                  <pre className="text-sm overflow-x-auto p-4 bg-muted rounded-lg">
-                    <code>{currentCodeBlock.code}</code>
-                  </pre>
+                  <CodeBlock language="typescript">
+                    {currentCodeBlock.code}
+                  </CodeBlock>
                 </CardContent>
               </Card>
               
